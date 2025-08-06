@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface RequesterControllerDoc {
             @ApiResponse(responseCode = "201", description = "Requester created successfully")
     })
     ResponseEntity<RequesterResponseDTO> create(
-            @Parameter(description = "Requester payload", required = true) RequesterRequestDTO dto);
+            @Parameter(description = "Requester payload", required = true) @Valid RequesterRequestDTO dto);
 
     @Operation(summary = "Update an existing requester")
     @ApiResponses({
@@ -40,7 +41,7 @@ public interface RequesterControllerDoc {
     })
     ResponseEntity<RequesterResponseDTO> update(
             @Parameter(description = "Requester id", required = true) Long id,
-            @Parameter(description = "Requester payload", required = true) RequesterRequestDTO dto);
+            @Parameter(description = "Requester payload", required = true) @Valid RequesterRequestDTO dto);
 
     @Operation(summary = "Delete a requester")
     @ApiResponses({
