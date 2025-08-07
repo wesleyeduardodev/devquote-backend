@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 @Builder
 public class SubTaskRequestDTO {
 
-    @NotNull(message = "Task ID is required")
     private Long taskId;
 
     @NotBlank(message = "Title is required")
