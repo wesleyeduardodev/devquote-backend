@@ -3,11 +3,13 @@ import br.com.devquote.adapter.SubTaskAdapter;
 import br.com.devquote.adapter.TaskAdapter;
 import br.com.devquote.dto.request.TaskRequestDTO;
 import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
+import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequestDTO;
 import br.com.devquote.dto.response.TaskResponseDTO;
 import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
 import br.com.devquote.entity.Requester;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
+import br.com.devquote.repository.QuoteRepository;
 import br.com.devquote.repository.RequesterRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.repository.TaskRepository;
@@ -26,6 +28,7 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final RequesterRepository requesterRepository;
     private final SubTaskRepository subTaskRepository;
+    private final QuoteRepository quoteRepository;
 
     @Override
     public List<TaskResponseDTO> findAll() {
@@ -117,5 +120,68 @@ public class TaskServiceImpl implements TaskService {
                 .updatedAt(task.getUpdatedAt())
                 .subTasks(subTasks.stream().map(SubTaskAdapter::toResponseDTO).toList())
                 .build();
+    }
+
+    @Override
+    public TaskWithSubTasksResponseDTO updateWithSubTasks(Long taskId, TaskWithSubTasksUpdateRequestDTO dto) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        Requester requester = requesterRepository.findById(dto.getRequesterId())
+                .orElseThrow(() -> new RuntimeException("Requester not found"));
+
+        // Atualiza dados da tarefa
+        TaskAdapter.updateEntityFromDto(TaskRequestDTO.builder()
+                .requesterId(dto.getRequesterId())
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .status(dto.getStatus())
+                .code(dto.getCode())
+                .link(dto.getLink())
+                .build(), task, requester);
+
+        task = taskRepository.save(task);
+
+        Task finalTask = task;
+        List<SubTask> updatedSubTasks = dto.getSubTasks().stream()
+                .map(subDto -> {
+                    SubTask subTask = subTaskRepository.findById(subDto.getId())
+                            .orElseThrow(() -> new RuntimeException("SubTask not found: " + subDto.getId()));
+                    SubTaskAdapter.updateEntityFromDto(subDto, subTask, finalTask);
+                    return subTaskRepository.save(subTask);
+                })
+                .toList();
+
+        return TaskWithSubTasksResponseDTO.builder()
+                .id(task.getId())
+                .requesterId(requester.getId())
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .status(task.getStatus())
+                .code(task.getCode())
+                .link(task.getLink())
+                .createdAt(task.getCreatedAt())
+                .updatedAt(task.getUpdatedAt())
+                .subTasks(SubTaskAdapter.toResponseDTOList(updatedSubTasks))
+                .build();
+    }
+
+    @Override
+    public void deleteTaskWithSubTasks(Long taskId) {
+        // Valida se existe quote vinculada
+        if (quoteRepository.existsByTaskId(taskId)) {
+            throw new RuntimeException("Cannot delete task. It is linked to a quote.");
+        }
+
+        // Valida existência da tarefa
+        if (!taskRepository.existsById(taskId)) {
+            throw new RuntimeException("Task not found");
+        }
+
+        // Remove subtarefas vinculadas
+        subTaskRepository.deleteByTaskId(taskId);
+
+        // Remove a tarefa
+        taskRepository.deleteById(taskId);
     }
 }

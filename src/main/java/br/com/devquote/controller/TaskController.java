@@ -2,6 +2,7 @@ package br.com.devquote.controller;
 import br.com.devquote.controller.doc.TaskControllerDoc;
 import br.com.devquote.dto.request.TaskRequestDTO;
 import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
+import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequestDTO;
 import br.com.devquote.dto.response.TaskResponseDTO;
 import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
 import br.com.devquote.service.TaskService;
@@ -12,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -57,5 +57,18 @@ public class TaskController implements TaskControllerDoc {
     public ResponseEntity<TaskWithSubTasksResponseDTO> createWithSubTasks(
             @RequestBody @Valid TaskWithSubTasksRequestDTO dto) {
         return new ResponseEntity<>(taskService.createWithSubTasks(dto), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/full/{taskId}")
+    public ResponseEntity<TaskWithSubTasksResponseDTO> updateWithSubTasks(
+            @PathVariable Long taskId,
+            @RequestBody @Valid TaskWithSubTasksUpdateRequestDTO dto) {
+        return ResponseEntity.ok(taskService.updateWithSubTasks(taskId, dto));
+    }
+
+    @DeleteMapping("/full/{taskId}")
+    public ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId) {
+        taskService.deleteTaskWithSubTasks(taskId);
+        return ResponseEntity.noContent().build();
     }
 }

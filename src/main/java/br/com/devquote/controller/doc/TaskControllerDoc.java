@@ -1,6 +1,7 @@
 package br.com.devquote.controller.doc;
 import br.com.devquote.dto.request.TaskRequestDTO;
 import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
+import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequestDTO;
 import br.com.devquote.dto.response.TaskResponseDTO;
 import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +11,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -59,4 +62,20 @@ public interface TaskControllerDoc {
             @ApiResponse(responseCode = "201", description = "Task with subtasks created successfully")
     })
     ResponseEntity<TaskWithSubTasksResponseDTO> createWithSubTasks(@Valid TaskWithSubTasksRequestDTO dto);
+
+    @Operation(summary = "Update task and its subtasks")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Task with subtasks updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Task or SubTask not found")
+    })
+
+    ResponseEntity<TaskWithSubTasksResponseDTO> updateWithSubTasks(Long taskId, @Valid  TaskWithSubTasksUpdateRequestDTO dto);
+
+    @Operation(summary = "Delete task and its subtasks")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Task and subtasks deleted"),
+            @ApiResponse(responseCode = "400", description = "Task is linked to a quote"),
+            @ApiResponse(responseCode = "404", description = "Task not found")
+    })
+    ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId);
 }

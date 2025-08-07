@@ -1,6 +1,7 @@
 package br.com.devquote.service;
 import br.com.devquote.dto.request.TaskRequestDTO;
 import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
+import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequestDTO;
 import br.com.devquote.dto.response.TaskResponseDTO;
 import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
 
@@ -19,4 +20,8 @@ public interface TaskService {
     void delete(Long id);
 
     TaskWithSubTasksResponseDTO createWithSubTasks(TaskWithSubTasksRequestDTO dto);
+
+    TaskWithSubTasksResponseDTO updateWithSubTasks(Long taskId, TaskWithSubTasksUpdateRequestDTO dto);
+
+    void deleteTaskWithSubTasks(Long taskId);
 }

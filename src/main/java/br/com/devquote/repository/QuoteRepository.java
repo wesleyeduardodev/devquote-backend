@@ -5,4 +5,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface QuoteRepository extends JpaRepository<Quote, Long> {
+
+    boolean existsByTaskId(Long taskId);
 }

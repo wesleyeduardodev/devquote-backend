@@ -1,5 +1,6 @@
 package br.com.devquote.adapter;
 import br.com.devquote.dto.request.SubTaskRequestDTO;
+import br.com.devquote.dto.request.SubTaskUpdateRequestDTO;
 import br.com.devquote.dto.response.SubTaskResponseDTO;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
@@ -42,6 +43,21 @@ public class SubTaskAdapter {
     }
 
     public static void updateEntityFromDto(SubTaskRequestDTO dto, SubTask entity, Task task) {
+        if (dto == null || entity == null) {
+            return;
+        }
+
+        if (task != null) {
+            entity.setTask(task);
+        }
+
+        entity.setTitle(dto.getTitle());
+        entity.setDescription(dto.getDescription());
+        entity.setAmount(dto.getAmount());
+        entity.setStatus(dto.getStatus());
+    }
+
+    public static void updateEntityFromDto(SubTaskUpdateRequestDTO dto, SubTask entity, Task task) {
         if (dto == null || entity == null) {
             return;
         }
