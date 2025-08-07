@@ -26,4 +26,6 @@ public class SubTaskUpdateRequestDTO {
 
     @NotBlank(message = "Status is required")
     private String status;
+
+    private boolean excluded;
 }

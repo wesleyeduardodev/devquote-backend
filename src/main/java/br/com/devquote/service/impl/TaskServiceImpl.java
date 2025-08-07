@@ -145,6 +145,7 @@ public class TaskServiceImpl implements TaskService {
         Task finalTask = task;
 
         List<SubTask> updatedSubTasks = dto.getSubTasks().stream()
+                .filter(subDto -> !subDto.isExcluded()) // ignora os que serão excluídos
                 .map(subDto -> {
                     if (subDto.getId() != null) {
                         SubTask subTask = subTaskRepository.findById(subDto.getId())
@@ -157,6 +158,10 @@ public class TaskServiceImpl implements TaskService {
                     }
                 })
                 .toList();
+
+        dto.getSubTasks().stream()
+                .filter(subDto -> subDto.isExcluded() && subDto.getId() != null)
+                .forEach(subDto -> subTaskRepository.deleteById(subDto.getId()));
 
         return TaskWithSubTasksResponseDTO.builder()
                 .id(task.getId())
