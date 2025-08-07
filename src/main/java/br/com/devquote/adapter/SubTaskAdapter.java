@@ -81,4 +81,18 @@ public class SubTaskAdapter {
                 .map(SubTaskAdapter::toResponseDTO)
                 .toList();
     }
+
+    public static SubTask toEntity(SubTaskUpdateRequestDTO dto, Task task) {
+        if (dto == null) {
+            return null;
+        }
+
+        return SubTask.builder()
+                .task(task)
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .amount(dto.getAmount())
+                .status(dto.getStatus())
+                .build();
+    }
 }

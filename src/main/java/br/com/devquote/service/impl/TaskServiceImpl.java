@@ -143,12 +143,18 @@ public class TaskServiceImpl implements TaskService {
         task = taskRepository.save(task);
 
         Task finalTask = task;
+
         List<SubTask> updatedSubTasks = dto.getSubTasks().stream()
                 .map(subDto -> {
-                    SubTask subTask = subTaskRepository.findById(subDto.getId())
-                            .orElseThrow(() -> new RuntimeException("SubTask not found: " + subDto.getId()));
-                    SubTaskAdapter.updateEntityFromDto(subDto, subTask, finalTask);
-                    return subTaskRepository.save(subTask);
+                    if (subDto.getId() != null) {
+                        SubTask subTask = subTaskRepository.findById(subDto.getId())
+                                .orElseThrow(() -> new RuntimeException("SubTask not found: " + subDto.getId()));
+                        SubTaskAdapter.updateEntityFromDto(subDto, subTask, finalTask);
+                        return subTaskRepository.save(subTask);
+                    } else {
+                        SubTask newSubTask = SubTaskAdapter.toEntity(subDto, finalTask);
+                        return subTaskRepository.save(newSubTask);
+                    }
                 })
                 .toList();
 
