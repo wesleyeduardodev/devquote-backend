@@ -1,6 +1,8 @@
 package br.com.devquote.controller.doc;
 import br.com.devquote.dto.request.TaskRequestDTO;
+import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
 import br.com.devquote.dto.response.TaskResponseDTO;
+import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -8,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+
 import java.util.List;
 
 @Tag(name = "Tasks")
@@ -50,4 +53,10 @@ public interface TaskControllerDoc {
     })
     ResponseEntity<Void> delete(
             @Parameter(description = "Task id", required = true) Long id);
+
+    @Operation(summary = "Create task with subtasks")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Task with subtasks created successfully")
+    })
+    ResponseEntity<TaskWithSubTasksResponseDTO> createWithSubTasks(@Valid TaskWithSubTasksRequestDTO dto);
 }

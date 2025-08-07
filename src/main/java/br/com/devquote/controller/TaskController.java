@@ -1,7 +1,9 @@
 package br.com.devquote.controller;
 import br.com.devquote.controller.doc.TaskControllerDoc;
 import br.com.devquote.dto.request.TaskRequestDTO;
+import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
 import br.com.devquote.dto.response.TaskResponseDTO;
+import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
 import br.com.devquote.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -49,5 +51,11 @@ public class TaskController implements TaskControllerDoc {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         taskService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/full")
+    public ResponseEntity<TaskWithSubTasksResponseDTO> createWithSubTasks(
+            @RequestBody @Valid TaskWithSubTasksRequestDTO dto) {
+        return new ResponseEntity<>(taskService.createWithSubTasks(dto), HttpStatus.CREATED);
     }
 }

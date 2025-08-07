@@ -5,6 +5,8 @@ import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
 import lombok.experimental.UtilityClass;
 
+import java.util.List;
+
 @UtilityClass
 public class SubTaskAdapter {
 
@@ -52,5 +54,15 @@ public class SubTaskAdapter {
         entity.setDescription(dto.getDescription());
         entity.setAmount(dto.getAmount());
         entity.setStatus(dto.getStatus());
+    }
+
+    public static List<SubTaskResponseDTO> toResponseDTOList(List<SubTask> entities) {
+        if (entities == null || entities.isEmpty()) {
+            return List.of();
+        }
+
+        return entities.stream()
+                .map(SubTaskAdapter::toResponseDTO)
+                .toList();
     }
 }
