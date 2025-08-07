@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface QuoteControllerDoc {
             @ApiResponse(responseCode = "201", description = "Quote created successfully")
     })
     ResponseEntity<QuoteResponseDTO> create(
-            @Parameter(description = "Quote payload", required = true) QuoteRequestDTO dto);
+            @Parameter(description = "Quote payload", required = true) @Valid QuoteRequestDTO dto);
 
     @Operation(summary = "Update an existing quote")
     @ApiResponses({
@@ -40,7 +41,7 @@ public interface QuoteControllerDoc {
     })
     ResponseEntity<QuoteResponseDTO> update(
             @Parameter(description = "Quote id", required = true) Long id,
-            @Parameter(description = "Quote payload", required = true) QuoteRequestDTO dto);
+            @Parameter(description = "Quote payload", required = true) @Valid QuoteRequestDTO dto);
 
     @Operation(summary = "Delete a quote")
     @ApiResponses({

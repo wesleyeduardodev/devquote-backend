@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface MeasurementControllerDoc {
             @ApiResponse(responseCode = "201", description = "Measurement created successfully")
     })
     ResponseEntity<MeasurementResponseDTO> create(
-            @Parameter(description = "Measurement payload", required = true) MeasurementRequestDTO dto);
+            @Parameter(description = "Measurement payload", required = true) @Valid MeasurementRequestDTO dto);
 
     @Operation(summary = "Update an existing measurement")
     @ApiResponses({
@@ -40,7 +41,7 @@ public interface MeasurementControllerDoc {
     })
     ResponseEntity<MeasurementResponseDTO> update(
             @Parameter(description = "Measurement id", required = true) Long id,
-            @Parameter(description = "Measurement payload", required = true) MeasurementRequestDTO dto);
+            @Parameter(description = "Measurement payload", required = true) @Valid MeasurementRequestDTO dto);
 
     @Operation(summary = "Delete a measurement")
     @ApiResponses({

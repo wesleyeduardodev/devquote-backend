@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface DeliveryControllerDoc {
             @ApiResponse(responseCode = "201", description = "Delivery created successfully")
     })
     ResponseEntity<DeliveryResponseDTO> create(
-            @Parameter(description = "Delivery payload", required = true) DeliveryRequestDTO dto);
+            @Parameter(description = "Delivery payload", required = true) @Valid DeliveryRequestDTO dto);
 
     @Operation(summary = "Update an existing delivery")
     @ApiResponses({
@@ -40,7 +41,7 @@ public interface DeliveryControllerDoc {
     })
     ResponseEntity<DeliveryResponseDTO> update(
             @Parameter(description = "Delivery id", required = true) Long id,
-            @Parameter(description = "Delivery payload", required = true) DeliveryRequestDTO dto);
+            @Parameter(description = "Delivery payload", required = true) @Valid DeliveryRequestDTO dto);
 
     @Operation(summary = "Delete a delivery")
     @ApiResponses({

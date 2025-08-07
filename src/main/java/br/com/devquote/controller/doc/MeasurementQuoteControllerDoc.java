@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface MeasurementQuoteControllerDoc {
             @ApiResponse(responseCode = "201", description = "MeasurementQuote created successfully")
     })
     ResponseEntity<MeasurementQuoteResponseDTO> create(
-            @Parameter(description = "MeasurementQuote payload", required = true) MeasurementQuoteRequestDTO dto);
+            @Parameter(description = "MeasurementQuote payload", required = true) @Valid MeasurementQuoteRequestDTO dto);
 
     @Operation(summary = "Update an existing measurement-quote relation")
     @ApiResponses({
@@ -40,7 +41,7 @@ public interface MeasurementQuoteControllerDoc {
     })
     ResponseEntity<MeasurementQuoteResponseDTO> update(
             @Parameter(description = "MeasurementQuote id", required = true) Long id,
-            @Parameter(description = "MeasurementQuote payload", required = true) MeasurementQuoteRequestDTO dto);
+            @Parameter(description = "MeasurementQuote payload", required = true) @Valid MeasurementQuoteRequestDTO dto);
 
     @Operation(summary = "Delete a measurement-quote relation")
     @ApiResponses({

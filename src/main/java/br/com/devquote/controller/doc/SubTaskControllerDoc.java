@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface SubTaskControllerDoc {
             @ApiResponse(responseCode = "201", description = "SubTask created successfully")
     })
     ResponseEntity<SubTaskResponseDTO> create(
-            @Parameter(description = "SubTask payload", required = true) SubTaskRequestDTO dto);
+            @Parameter(description = "SubTask payload", required = true) @Valid SubTaskRequestDTO dto);
 
     @Operation(summary = "Update an existing sub task")
     @ApiResponses({
@@ -40,7 +41,7 @@ public interface SubTaskControllerDoc {
     })
     ResponseEntity<SubTaskResponseDTO> update(
             @Parameter(description = "SubTask id", required = true) Long id,
-            @Parameter(description = "SubTask payload", required = true) SubTaskRequestDTO dto);
+            @Parameter(description = "SubTask payload", required = true) @Valid SubTaskRequestDTO dto);
 
     @Operation(summary = "Delete a sub task")
     @ApiResponses({

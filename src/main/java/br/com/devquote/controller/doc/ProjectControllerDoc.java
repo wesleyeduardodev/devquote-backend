@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface ProjectControllerDoc {
             @ApiResponse(responseCode = "201", description = "Project created successfully")
     })
     ResponseEntity<ProjectResponseDTO> create(
-            @Parameter(description = "Project payload", required = true) ProjectRequestDTO dto);
+            @Parameter(description = "Project payload", required = true) @Valid ProjectRequestDTO dto);
 
     @Operation(summary = "Update an existing project")
     @ApiResponses({
@@ -40,7 +41,7 @@ public interface ProjectControllerDoc {
     })
     ResponseEntity<ProjectResponseDTO> update(
             @Parameter(description = "Project id", required = true) Long id,
-            @Parameter(description = "Project payload", required = true) ProjectRequestDTO dto);
+            @Parameter(description = "Project payload", required = true) @Valid ProjectRequestDTO dto);
 
     @Operation(summary = "Delete a project")
     @ApiResponses({
