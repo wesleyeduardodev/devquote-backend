@@ -7,19 +7,21 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "measurement_quote")
+@Table(name = "quote_billing_month_quote",
+       uniqueConstraints = @UniqueConstraint(columnNames = {"quote_billing_month_id", "quote_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MeasurementQuote {
+public class QuoteBillingMonthQuote {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "measurement_id", nullable = false)
-    private Measurement measurement;
+    @JoinColumn(name = "quote_billing_month_id", nullable = false)
+    private QuoteBillingMonth quoteBillingMonth;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "quote_id", nullable = false)

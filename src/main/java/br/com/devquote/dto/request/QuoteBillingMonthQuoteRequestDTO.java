@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MeasurementQuoteRequestDTO {
+public class QuoteBillingMonthQuoteRequestDTO {
 
-    @NotNull(message = "Measurement ID is required")
-    private Long measurementId;
+    @NotNull(message = "quoteBillingMonthId is required")
+    private Long quoteBillingMonthId;
 
-    @NotNull(message = "Quote ID is required")
+    @NotNull(message = "quoteId is required")
     private Long quoteId;
 }

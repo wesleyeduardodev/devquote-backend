@@ -1,16 +1,17 @@
 package br.com.devquote.dto.request;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MeasurementRequestDTO {
+public class QuoteBillingMonthRequestDTO {
 
     @NotNull(message = "Month is required")
     @Min(value = 1, message = "Month must be at least 1")
@@ -20,8 +21,8 @@ public class MeasurementRequestDTO {
     @NotNull(message = "Year is required")
     private Integer year;
 
-    @PastOrPresent(message = "Payment date cannot be in the future")
-    private LocalDateTime paymentDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate paymentDate;
 
     @Size(max = 30, message = "Status must be at most 30 characters")
     private String status;

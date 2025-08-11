@@ -9,19 +9,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MeasurementResponseDTO {
-
+public class QuoteBillingMonthQuoteResponseDTO {
     private Long id;
-
-    private Integer month;
-
-    private Integer year;
-
-    private LocalDateTime paymentDate;
-
-    private String status;
-
+    private Long quoteBillingMonthId;
+    private Long quoteId;
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
 }

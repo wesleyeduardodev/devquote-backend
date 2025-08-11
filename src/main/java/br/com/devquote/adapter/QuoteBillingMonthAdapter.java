@@ -1,18 +1,18 @@
 package br.com.devquote.adapter;
-import br.com.devquote.dto.request.MeasurementRequestDTO;
-import br.com.devquote.dto.response.MeasurementResponseDTO;
-import br.com.devquote.entity.Measurement;
+import br.com.devquote.dto.request.QuoteBillingMonthRequestDTO;
+import br.com.devquote.dto.response.QuoteBillingMonthResponseDTO;
+import br.com.devquote.entity.QuoteBillingMonth;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class MeasurementAdapter {
+public class QuoteBillingMonthAdapter {
 
-    public static MeasurementResponseDTO toResponseDTO(Measurement entity) {
+    public static QuoteBillingMonthResponseDTO toResponseDTO(QuoteBillingMonth entity) {
         if (entity == null) {
             return null;
         }
 
-        return MeasurementResponseDTO.builder()
+        return QuoteBillingMonthResponseDTO.builder()
                 .id(entity.getId())
                 .month(entity.getMonth())
                 .year(entity.getYear())
@@ -23,12 +23,12 @@ public class MeasurementAdapter {
                 .build();
     }
 
-    public static Measurement toEntity(MeasurementRequestDTO dto) {
+    public static QuoteBillingMonth toEntity(QuoteBillingMonthRequestDTO dto) {
         if (dto == null) {
             return null;
         }
 
-        return Measurement.builder()
+        return QuoteBillingMonth.builder()
                 .month(dto.getMonth())
                 .year(dto.getYear())
                 .paymentDate(dto.getPaymentDate())
@@ -36,7 +36,7 @@ public class MeasurementAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(MeasurementRequestDTO dto, Measurement entity) {
+    public static void updateEntityFromDto(QuoteBillingMonthRequestDTO dto, QuoteBillingMonth entity) {
         if (dto == null || entity == null) {
             return;
         }
