@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
 
@@ -28,14 +29,14 @@ public interface QuoteBillingMonthControllerDoc {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Created")
     })
-    ResponseEntity<QuoteBillingMonthResponseDTO> create(QuoteBillingMonthRequestDTO dto);
+    ResponseEntity<QuoteBillingMonthResponseDTO> create(@Valid QuoteBillingMonthRequestDTO dto);
 
     @Operation(summary = "Update a quote billing month")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Updated"),
             @ApiResponse(responseCode = "404", description = "Not found")
     })
-    ResponseEntity<QuoteBillingMonthResponseDTO> update(Long id, QuoteBillingMonthRequestDTO dto);
+    ResponseEntity<QuoteBillingMonthResponseDTO> update(Long id, @Valid QuoteBillingMonthRequestDTO dto);
 
     @Operation(summary = "Delete a quote billing month")
     @ApiResponses({

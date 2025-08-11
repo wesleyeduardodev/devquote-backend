@@ -50,4 +50,10 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/by-billing-month/{billingMonthId}")
+    public ResponseEntity<List<QuoteBillingMonthQuoteResponseDTO>> getByBillingMonth(
+            @PathVariable Long billingMonthId) {
+        return ResponseEntity.ok(service.findByQuoteBillingMonthId(billingMonthId));
+    }
 }

@@ -73,4 +73,13 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
     public void delete(Long id) {
         repository.deleteById(id);
     }
+
+    @Override
+    public List<QuoteBillingMonthQuoteResponseDTO> findByQuoteBillingMonthId(Long billingMonthId) {
+        return repository.findByQuoteBillingMonth_Id(billingMonthId)
+                .stream()
+                .map(QuoteBillingMonthQuoteAdapter::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
 }
