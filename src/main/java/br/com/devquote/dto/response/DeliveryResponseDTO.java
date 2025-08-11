@@ -1,8 +1,7 @@
 package br.com.devquote.dto.response;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -12,24 +11,19 @@ import java.time.LocalDateTime;
 public class DeliveryResponseDTO {
 
     private Long id;
-
     private Long quoteId;
-
     private Long projectId;
-
     private String branch;
-
     private String pullRequest;
-
     private String script;
-
     private String status;
 
-    private LocalDateTime startedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate startedAt;
 
-    private LocalDateTime finishedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate finishedAt;
 
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
 }

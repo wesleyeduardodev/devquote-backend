@@ -1,13 +1,11 @@
 package br.com.devquote.dto.request;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import lombok.*;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -33,9 +31,8 @@ public class DeliveryRequestDTO {
     @Size(max = 30, message = "Status must be at most 30 characters")
     private String status;
 
-    @PastOrPresent(message = "Start time cannot be in the future")
-    private LocalDateTime startedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate startedAt;
 
-    @PastOrPresent(message = "Finish time cannot be in the future")
-    private LocalDateTime finishedAt;
-}
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate finishedAt;}

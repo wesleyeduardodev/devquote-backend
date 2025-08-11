@@ -10,9 +10,7 @@ import lombok.experimental.UtilityClass;
 public final class DeliveryAdapter {
 
     public static DeliveryResponseDTO toResponseDTO(Delivery entity) {
-        if (entity == null) {
-            return null;
-        }
+        if (entity == null) return null;
 
         return DeliveryResponseDTO.builder()
                 .id(entity.getId())
@@ -30,9 +28,7 @@ public final class DeliveryAdapter {
     }
 
     public static Delivery toEntity(DeliveryRequestDTO dto, Quote quote, Project project) {
-        if (dto == null) {
-            return null;
-        }
+        if (dto == null) return null;
 
         return Delivery.builder()
                 .quote(quote)
@@ -47,17 +43,10 @@ public final class DeliveryAdapter {
     }
 
     public static void updateEntityFromDto(DeliveryRequestDTO dto, Delivery entity, Quote quote, Project project) {
-        if (dto == null || entity == null) {
-            return;
-        }
+        if (dto == null || entity == null) return;
 
-        if (quote != null) {
-            entity.setQuote(quote);
-        }
-
-        if (project != null) {
-            entity.setProject(project);
-        }
+        if (quote != null) entity.setQuote(quote);
+        if (project != null) entity.setProject(project);
 
         entity.setBranch(dto.getBranch());
         entity.setPullRequest(dto.getPullRequest());
