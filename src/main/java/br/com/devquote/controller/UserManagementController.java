@@ -13,7 +13,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+//@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+@PreAuthorize("isAuthenticated()")
 public class UserManagementController {
 
     private final UserManagementService userManagementService;

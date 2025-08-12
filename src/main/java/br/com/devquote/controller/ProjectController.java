@@ -36,21 +36,24 @@ public class ProjectController implements ProjectControllerDoc {
 
     @Override
     @PostMapping
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProjectResponseDTO> create(@RequestBody @Valid ProjectRequestDTO dto) {
         return new ResponseEntity<>(projectService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProjectResponseDTO> update(@PathVariable Long id, @RequestBody @Valid ProjectRequestDTO dto) {
         return ResponseEntity.ok(projectService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         projectService.delete(id);
         return ResponseEntity.noContent().build();

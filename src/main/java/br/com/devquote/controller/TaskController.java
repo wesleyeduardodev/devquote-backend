@@ -39,35 +39,40 @@ public class TaskController implements TaskControllerDoc {
 
     @Override
     @PostMapping
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponseDTO> create(@RequestBody @Valid TaskRequestDTO dto) {
         return new ResponseEntity<>(taskService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponseDTO> update(@PathVariable Long id, @RequestBody @Valid TaskRequestDTO dto) {
         return ResponseEntity.ok(taskService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         taskService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/full")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskWithSubTasksResponseDTO> createWithSubTasks(
             @RequestBody @Valid TaskWithSubTasksRequestDTO dto) {
         return new ResponseEntity<>(taskService.createWithSubTasks(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/full/{taskId}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskWithSubTasksResponseDTO> updateWithSubTasks(
             @PathVariable Long taskId,
             @RequestBody @Valid TaskWithSubTasksUpdateRequestDTO dto) {
@@ -75,7 +80,8 @@ public class TaskController implements TaskControllerDoc {
     }
 
     @DeleteMapping("/full/{taskId}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId) {
         taskService.deleteTaskWithSubTasks(taskId);
         return ResponseEntity.noContent().build();

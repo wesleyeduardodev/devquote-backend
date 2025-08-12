@@ -36,21 +36,24 @@ public class SubTaskController implements SubTaskControllerDoc {
 
     @Override
     @PostMapping
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SubTaskResponseDTO> create(@RequestBody @Valid SubTaskRequestDTO dto) {
         return new ResponseEntity<>(subTaskService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SubTaskResponseDTO> update(@PathVariable Long id, @RequestBody @Valid SubTaskRequestDTO dto) {
         return ResponseEntity.ok(subTaskService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         subTaskService.delete(id);
         return ResponseEntity.noContent().build();

@@ -36,21 +36,24 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @Override
     @PostMapping
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DeliveryResponseDTO> create(@RequestBody @Valid DeliveryRequestDTO dto) {
         return new ResponseEntity<>(deliveryService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DeliveryResponseDTO> update(@PathVariable Long id, @RequestBody @Valid DeliveryRequestDTO dto) {
         return ResponseEntity.ok(deliveryService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deliveryService.delete(id);
         return ResponseEntity.noContent().build();

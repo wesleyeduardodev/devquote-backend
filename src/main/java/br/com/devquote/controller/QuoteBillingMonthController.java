@@ -36,21 +36,24 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
 
     @Override
     @PostMapping
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<QuoteBillingMonthResponseDTO> create(@RequestBody @Valid QuoteBillingMonthRequestDTO dto) {
         return new ResponseEntity<>(quoteBillingMonthService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<QuoteBillingMonthResponseDTO> update(@PathVariable Long id, @RequestBody @Valid QuoteBillingMonthRequestDTO dto) {
         return ResponseEntity.ok(quoteBillingMonthService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         quoteBillingMonthService.delete(id);
         return ResponseEntity.noContent().build();
