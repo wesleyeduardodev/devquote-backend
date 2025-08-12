@@ -1,10 +1,15 @@
 spring:
+  application:
+    name: devquote-backend
+
+  # Database Configuration
   datasource:
     url: jdbc:postgresql://localhost:5434/devquote
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver
 
+  # JPA Configuration
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,16 +19,56 @@ spring:
         format_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  # Jackson Configuration
   jackson:
     serialization:
       write-dates-as-timestamps: false
 
+  # Servlet Configuration
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  # OAuth2 Security
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:8080
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080
+
+# Server Configuration
 server:
   port: 8080
   error:
     include-message: always
+
+# DevQuote Security
+devquote:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+      - http://localhost:4200
+      - http://localhost:8080
+  security:
+    default-roles:
+      - USER
+    admin-emails:
+      - admin@devquote.com
+
+# JWT Configuration
+app:
+  jwtSecret: ZGV2UXVvdGVTZWNyZXRLZXlGb3JKV1RUb2tlbkdlbmVyYXRpb25BbmRWYWxpZGF0aW9u
+  jwtExpirationMs: 86400000
+  # jwtSecret acima é "devQuoteSecretKeyForJWTTokenGenerationAndValidation" em Base64
+  # jwtExpirationMs: 86400000 ms = 24 horas
+
+# Logging básico para debug de segurança
+logging:
+  level:
+    org.springframework.security: DEBUG
+    br.com.devquote.configuration.security: DEBUG
+    br.com.devquote: DEBUG
+    root: INFO
