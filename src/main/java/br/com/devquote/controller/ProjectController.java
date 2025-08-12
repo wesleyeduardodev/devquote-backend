@@ -7,13 +7,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-/**
- * REST controller for managing projects.
- */
 @RestController
 @RequestMapping("/api/projects")
 @Validated
@@ -24,30 +22,35 @@ public class ProjectController implements ProjectControllerDoc {
 
     @Override
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ProjectResponseDTO>> list() {
         return ResponseEntity.ok(projectService.findAll());
     }
 
     @Override
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProjectResponseDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(projectService.findById(id));
     }
 
     @Override
     @PostMapping
+    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
     public ResponseEntity<ProjectResponseDTO> create(@RequestBody @Valid ProjectRequestDTO dto) {
         return new ResponseEntity<>(projectService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
     public ResponseEntity<ProjectResponseDTO> update(@PathVariable Long id, @RequestBody @Valid ProjectRequestDTO dto) {
         return ResponseEntity.ok(projectService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         projectService.delete(id);
         return ResponseEntity.noContent().build();

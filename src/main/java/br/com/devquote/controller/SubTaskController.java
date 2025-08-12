@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -21,30 +22,35 @@ public class SubTaskController implements SubTaskControllerDoc {
 
     @Override
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<SubTaskResponseDTO>> list() {
         return ResponseEntity.ok(subTaskService.findAll());
     }
 
     @Override
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SubTaskResponseDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(subTaskService.findById(id));
     }
 
     @Override
     @PostMapping
+    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
     public ResponseEntity<SubTaskResponseDTO> create(@RequestBody @Valid SubTaskRequestDTO dto) {
         return new ResponseEntity<>(subTaskService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
     public ResponseEntity<SubTaskResponseDTO> update(@PathVariable Long id, @RequestBody @Valid SubTaskRequestDTO dto) {
         return ResponseEntity.ok(subTaskService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('SCOPE_admin:users')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         subTaskService.delete(id);
         return ResponseEntity.noContent().build();
