@@ -1,0 +1,11 @@
+.git
+.gitignore
+target/
+.mvn/
+.idea/
+logs/
+*.iml
+*.log
+*.tmp
+*.swp
+node_modules/
