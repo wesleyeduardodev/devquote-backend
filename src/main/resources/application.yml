@@ -4,7 +4,7 @@ spring:
 
   # Database Configuration (usa ENV quando existir; senão, defaults para DEV local)
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/devquote?sslmode=disable}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/devquote?sslmode=disable}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:root}
     driver-class-name: org.postgresql.Driver
@@ -12,11 +12,11 @@ spring:
   # JPA Configuration
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: false
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     properties:
       hibernate:
-        format_sql: false
+        format_sql: ${SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL:false}
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   # Jackson Configuration
@@ -27,8 +27,8 @@ spring:
   # Servlet Configuration
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:10MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:10MB}
 
   # OAuth2 Security (issuer pode ser sobrescrito por ENV)
   security:
@@ -41,9 +41,9 @@ spring:
 
 # Server Configuration
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${PORT:${SERVER_PORT:8080}}
   error:
-    include-message: always
+    include-message: ${SERVER_ERROR_INCLUDE_MESSAGE:always}
 
 # DevQuote Security
 devquote:
@@ -54,7 +54,7 @@ devquote:
     default-roles:
       - USER
     admin-emails:
-      - admin@devquote.com
+      - ${DEVQUOTE_ADMIN_EMAIL:admin@devquote.com}
 
 # JWT Configuration (usa ENV em produção)
 app:
@@ -69,4 +69,9 @@ logging:
     org.springframework.security: ${LOG_LEVEL_SECURITY:DEBUG}
     br.com.devquote.configuration.security: ${LOG_LEVEL_APP_SECURITY:DEBUG}
     br.com.devquote: ${LOG_LEVEL_APP:DEBUG}
+    org.springframework.web: ${LOG_LEVEL_WEB:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:INFO}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL_SQL_PARAMS:INFO}
     root: ${LOG_LEVEL_ROOT:INFO}
+  pattern:
+    console: ${LOGGING_PATTERN_CONSOLE:%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n}
