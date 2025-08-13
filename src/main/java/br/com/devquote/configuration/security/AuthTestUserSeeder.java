@@ -114,6 +114,15 @@ public class AuthTestUserSeeder {
                 ""
         );
 
+        upsertUser(
+                "joaovdscostal@gmail.com",
+                "joaovdscostal@gmail.com",
+                "123456",
+                "USER",
+                "João Victor",
+                ""
+        );
+
         log.info(">> Seeding finalizado.");
     }
 
