@@ -38,24 +38,80 @@ public class AuthTestUserSeeder {
     protected void seedAll() {
         log.info(">> Seeding permissions, roles and users...");
 
-        // 1) Garantir TODAS as permissions (a partir do enum)
         ensureAllPermissionsFromEnum();
 
-        // 2) Garantir roles com seus conjuntos de permissions
         ensureRoles();
 
-        // 3) Criar/atualizar usuários
         upsertUser(
-                "admin@devquote.com", "admin@devquote.com", "admin123",
-                "ADMIN", "System", "Administrator"
+                "admin@devquote.com",
+                "admin@devquote.com",
+                "admin123",
+                "ADMIN",
+                "System",
+                "Administrator"
         );
+
         upsertUser(
-                "dev@devquote.com", "dev@devquote.com", "dev123",
-                "DEVELOPER", "John", "Developer"
+                "dev@devquote.com",
+                "dev@devquote.com",
+                "dev123",
+                "DEVELOPER",
+                "John",
+                "Developer"
         );
+
         upsertUser(
-                "user@devquote.com", "user@devquote.com", "user123",
-                "USER", "Jane", "User"
+                "user@devquote.com",
+                "user@devquote.com",
+                "user123",
+                "USER",
+                "Jane",
+                "User"
+        );
+
+        upsertUser(
+                "jayron.barros@mentorconstrucao.com.br",
+                "jayron.barros@mentorconstrucao.com.br",
+                "123456",
+                "USER",
+                "Jayron",
+                "Barros"
+        );
+
+        upsertUser(
+                "gerdandourado@gmail.com",
+                "gerdandourado@gmail.com",
+                "123456",
+                "USER",
+                "Gerdan",
+                "Dourado"
+        );
+
+        upsertUser(
+                "ivo.perez@mentorconstrucao.com.br",
+                "ivo.perez@mentorconstrucao.com.br",
+                "123456",
+                "USER",
+                "Ivo",
+                "Perez"
+        );
+
+        upsertUser(
+                "licya.lucena@mentorconstrucao.com.br",
+                "licya.lucena@mentorconstrucao.com.br",
+                "123456",
+                "USER",
+                "Licya",
+                "Karine"
+        );
+
+        upsertUser(
+                "lionfrs@gmail.com",
+                "lionfrs@gmail.com",
+                "123456",
+                "USER",
+                "Lionel",
+                ""
         );
 
         log.info(">> Seeding finalizado.");
