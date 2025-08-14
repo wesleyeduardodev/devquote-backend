@@ -32,9 +32,9 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity()
 @RequiredArgsConstructor
-public class SecurityConfigBck {
+public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final AuthTokenFilter authTokenFilter;
@@ -42,8 +42,6 @@ public class SecurityConfigBck {
     @Value("${app.jwtSecret}")
     private String jwtSecret;
 
-    // Lê do application.yml: devquote.cors.allowed-origins
-    // Ex.: - http://localhost:3000, - http://localhost:5173
     @Value("#{'${devquote.cors.allowed-origins:}'.split(',')}")
     private List<String> allowedOriginsFromYaml;
 

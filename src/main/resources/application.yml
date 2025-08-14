@@ -64,14 +64,14 @@ app:
   jwtRefreshExpirationMs: ${APP_JWTREFRESHEXPIRATIONMS:2592000000}
 
 # Logging
-logging:
-  level:
-    org.springframework.security: ${LOG_LEVEL_SECURITY:DEBUG}
-    br.com.devquote.configuration.security: ${LOG_LEVEL_APP_SECURITY:DEBUG}
-    br.com.devquote: ${LOG_LEVEL_APP:DEBUG}
-    org.springframework.web: ${LOG_LEVEL_WEB:INFO}
-    org.hibernate.SQL: ${LOG_LEVEL_SQL:INFO}
-    org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL_SQL_PARAMS:INFO}
-    root: ${LOG_LEVEL_ROOT:INFO}
-  pattern:
-    console: ${LOGGING_PATTERN_CONSOLE:%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n}
+#logging:
+ # level:
+  #  org.springframework.security: ${LOG_LEVEL_SECURITY:DEBUG}
+    #  br.com.devquote.configuration.security: ${LOG_LEVEL_APP_SECURITY:DEBUG}
+    #br.com.devquote: ${LOG_LEVEL_APP:DEBUG}
+    #org.springframework.web: ${LOG_LEVEL_WEB:INFO}
+    #org.hibernate.SQL: ${LOG_LEVEL_SQL:INFO}
+    #org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL_SQL_PARAMS:INFO}
+  #root: ${LOG_LEVEL_ROOT:INFO}
+    #pattern:
+  #console: ${LOGGING_PATTERN_CONSOLE:%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n}

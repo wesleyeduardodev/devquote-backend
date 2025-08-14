@@ -1,222 +1,206 @@
-# DevQuote Backend - Configurações por Ambiente
+# DevQuote — Backend (Java 21, Spring Boot 3)
 
-Este projeto está configurado para rodar em três ambientes diferentes, cada um com suas próprias configurações.
+API REST do **DevQuote**, um sistema de gestão de orçamentos e projetos para desenvolvedores.  
+Construída com **Java 21** e **Spring Boot 3**, integrando com **PostgreSQL** e seguindo boas práticas de arquitetura, segurança e deploy.
 
-## 📁 Estrutura de Configuração
+---
 
+## 📌 Sumário
+- [Arquitetura e Tecnologias](#arquitetura-e-tecnologias)
+- [Requisitos](#requisitos)
+- [Perfis e Configurações](#perfis-e-configurações)
+- [Como rodar](#como-rodar)
+  - [Local (IDE / Maven)](#local-ide--maven)
+  - [Docker (dev local)](#docker-dev-local)
+  - [Produção (Render)](#produção-render)
+- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Banco de Dados](#banco-de-dados)
+- [Observabilidade (Actuator)](#observabilidade-actuator)
+- [Comandos Úteis](#comandos-úteis)
+- [Troubleshooting](#troubleshooting)
+- [Boas Práticas de Segurança](#boas-práticas-de-segurança)
+- [Licença](#licença)
+
+---
+
+## 🏗 Arquitetura e Tecnologias
+- **Java 21** + **Spring Boot 3**
+- **PostgreSQL** 15+
+- **Maven**
+- **Docker / Docker Compose**
+- **Spring Security** com JWT
+- **Spring Actuator** para healthchecks e métricas
+- **Perfis de configuração** (`default`, `docker`, `prod`)
+
+Estrutura simplificada de pacotes:
 ```
-src/main/resources/
-├── application.yml              # Configuração padrão (IDE/Local)
-├── application-docker.yml       # Configuração para Docker local
-└── application-prod.yml         # Configuração para produção (Render)
+src/main/java/br/com/devquote/
+├── api/            # Controllers REST
+├── configuration/  # Configurações (security, cors, profiles)
+├── domain/         # Entidades de negócio
+├── dto/            # DTOs de entrada/saída
+├── repository/     # Repositórios JPA
+├── service/        # Regras de negócio
+└── util/           # Utilitários comuns
 ```
 
-## 🔧 Ambientes de Execução
+---
 
-### 1. 🖥️ **Desenvolvimento Local (IDE)**
-**Arquivo:** `application.yml`
-**Profile:** `default` (padrão)
+## ⚙ Requisitos
+- Java 21+
+- Maven 3.9+
+- Docker 24+ (opcional)
+- PostgreSQL 15+ (se rodar localmente sem Docker)
 
-**Pré-requisitos:**
-- PostgreSQL instalado localmente na porta 5432
-- Banco `devquote` criado
-- Usuário `postgres` com senha `root`
+---
 
-**Como executar:**
+## 🌐 Perfis e Configurações
+- **default** → desenvolvimento local na IDE
+- **docker** → execução com Docker Compose
+- **prod** → deploy em ambiente de produção (ex.: Render)
+
+Perfis definidos via:
 ```bash
-# Via IDE (IntelliJ/VSCode)
-mvn spring-boot:run
+export SPRING_PROFILES_ACTIVE=docker
+```
+ou:
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=docker
+```
 
-# Via Maven
+---
+
+## 🚀 Como rodar
+
+### Local (IDE / Maven)
+1. Suba um PostgreSQL local (`localhost:5432`), crie o banco `devquote` e configure `application.yml`.
+2. Rode:
+```bash
+mvn spring-boot:run
+```
+ou:
+```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=default
 ```
 
-**Características:**
-- Logs detalhados para debug
-- Show SQL habilitado
-- Conecta no PostgreSQL local
-
 ---
 
-### 2. 🐳 **Docker Local**
-**Arquivo:** `application-docker.yml`
-**Profile:** `docker`
+### Docker (dev local)
+O projeto possui `Dockerfile` e `docker-compose.yml`.
 
-**Como executar:**
+Subir app + banco:
 ```bash
-# Construir e executar com Docker Compose
 docker-compose up --build
-
-# Executar em background
+```
+Em segundo plano:
+```bash
 docker-compose up -d --build
-
-# Parar os containers
+```
+Parar:
+```bash
 docker-compose down
 ```
 
-**Características:**
-- Usa PostgreSQL em container
-- Porta do banco: 5434 (host) → 5432 (container)
-- Logs otimizados
-- Profile automático via `SPRING_PROFILES_ACTIVE=docker`
+Padrões esperados:
+- App: `http://localhost:8080`
+- Postgres (host): `5434` → container `5432`
 
 ---
 
-### 3. 🚀 **Produção (Render)**
-**Arquivo:** `application-prod.yml`
-**Profile:** `prod`
-
-**Configuração no Render:**
-
-1. **Variáveis de Ambiente Obrigatórias:**
-```bash
+### Produção (Render)
+Variáveis mínimas:
+```dotenv
 SPRING_PROFILES_ACTIVE=prod
-APP_JWTSECRET=SeuSecretSuperForteAqui256Bits
-SECURITY_ISSUER=https://sua-app.render.com
+APP_JWTSECRET=<segredo-forte-256bits>
+SECURITY_ISSUER=https://<sua-app>.onrender.com
 DEVQUOTE_CORS_ALLOWED_ORIGINS=https://seu-frontend.com
 PORT=8080
+SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/devquote?sslmode=require
+SPRING_DATASOURCE_USERNAME=<usuario>
+SPRING_DATASOURCE_PASSWORD=<senha>
 ```
 
-2. **Build Command:**
+Build:
 ```bash
 mvn clean package -DskipTests
 ```
-
-3. **Start Command:**
+Rodar:
 ```bash
-java -jar target/devquote-0.0.1-SNAPSHOT.jar
+java -jar target/devquote-*.jar
 ```
-
-**Características:**
-- Conecta no PostgreSQL do Render
-- SSL obrigatório (`sslmode=require`)
-- Logs minimizados
-- Variáveis de ambiente para segurança
 
 ---
 
-## 🔐 Configuração de Segurança
+## 🔑 Variáveis de Ambiente
 
-### JWT Secret
-- **Desenvolvimento:** Usa valor padrão (não seguro)
-- **Produção:** **OBRIGATÓRIO** definir `APP_JWTSECRET` forte
+| Variável | Descrição | Exemplo |
+|----------|-----------|---------|
+| `SPRING_PROFILES_ACTIVE` | Perfil ativo | `default` \| `docker` \| `prod` |
+| `SPRING_DATASOURCE_URL` | JDBC URL | `jdbc:postgresql://postgres:5432/devquote?sslmode=disable` |
+| `SPRING_DATASOURCE_USERNAME` | Usuário do banco | `postgres` |
+| `SPRING_DATASOURCE_PASSWORD` | Senha do banco | `root` |
+| `APP_JWTSECRET` | Segredo JWT (HS256) | `base64:...` |
+| `SECURITY_ISSUER` | Issuer esperado no token | `http://localhost:8080` |
+| `DEVQUOTE_CORS_ALLOWED_ORIGINS` | Origens CORS permitidas | `http://localhost:3000` |
+| `PORT` | Porta HTTP | `8080` |
 
-### Gerar um JWT Secret seguro:
+---
+
+## 🗄 Banco de Dados
+- Migração de schema recomendada com **Flyway** ou **Liquibase**.
+- Para dev com Docker Compose:
+  - Host: `postgres`
+  - Porta container: `5432`
+  - Porta host: `5434`
+  - Database: `devquote`
+  - Usuário: `postgres`
+  - Senha: `root`
+
+---
+
+## 📊 Observabilidade (Actuator)
+Endpoints úteis:
+- `GET /actuator/health` — status da aplicação
+- `GET /actuator/info` — informações de build
+- `GET /actuator/env` — variáveis de ambiente (**restrito!**)
+- `GET /actuator/metrics` — métricas gerais
+
+> Em produção, exponha apenas `health`, `info` e `prometheus` e proteja-os.
+
+---
+
+## 🛠 Comandos Úteis
 ```bash
-# Opção 1: OpenSSL
-openssl rand -base64 32
+# Rodar testes
+mvn test
 
-# Opção 2: Java
-java -cp "target/classes" -c "System.out.println(java.util.Base64.getEncoder().encodeToString(java.security.SecureRandom.getInstanceStrong().generateSeed(32)))"
+# Limpar e buildar sem testes
+mvn clean package -DskipTests
+
+# Subir containers
+docker-compose up -d --build
+
+# Derrubar containers
+docker-compose down
 ```
 
 ---
 
-## 🌐 CORS Configuration
-
-### Desenvolvimento:
-```yaml
-devquote:
-  cors:
-    allowed-origins: http://localhost:3000,http://localhost:4200,http://localhost:8080
-```
-
-### Produção:
-```bash
-DEVQUOTE_CORS_ALLOWED_ORIGINS=https://meu-frontend.vercel.app,https://admin.meu-app.com
-```
+## 🐞 Troubleshooting
+- **Erro de conexão no Docker**  
+  Verifique se a `SPRING_DATASOURCE_URL` aponta para `postgres:5432` dentro do container.
+- **CORS bloqueando requisição**  
+  Ajuste `DEVQUOTE_CORS_ALLOWED_ORIGINS` para incluir o domínio da requisição.
 
 ---
 
-## 🗄️ Configuração do Banco
-
-### Local (IDE):
-```yaml
-url: jdbc:postgresql://localhost:5432/devquote?sslmode=disable
-username: postgres
-password: root
-```
-
-### Docker:
-```yaml
-url: jdbc:postgresql://postgres:5432/devquote?sslmode=disable
-username: postgres
-password: root
-```
-
-### Produção (Render):
-```yaml
-url: postgresql://devquote:senha@host.render.com/devquote?sslmode=require
-username: devquote
-password: khfOpZYqxTP60DvDA2dPJCxGehBvqlra
-```
+## 🔒 Boas Práticas de Segurança
+- Nunca commitar segredos ou senhas no repositório.
+- Usar segredo JWT com pelo menos **32 bytes** (256 bits) e trocar periodicamente.
+- Restringir CORS para origens confiáveis.
+- Proteger endpoints sensíveis do Actuator.
 
 ---
 
-## 📝 Comandos Úteis
-
-```bash
-# Executar com profile específico
-mvn spring-boot:run -Dspring-boot.run.profiles=docker
-
-# Verificar qual profile está ativo
-curl http://localhost:8080/actuator/env | grep "spring.profiles.active"
-
-# Logs em tempo real (Docker)
-docker-compose logs -f devquote-backend
-
-# Conectar no banco PostgreSQL local
-psql -h localhost -p 5432 -U postgres -d devquote
-
-# Conectar no banco Render
-PGPASSWORD=khfOpZYqxTP60DvDA2dPJCxGehBvqlra psql -h dpg-d2dqbi0dl3ps73b5lmp0-a.oregon-postgres.render.com -U devquote devquote
-```
-
----
-
-## ⚠️ Checklist de Deploy
-
-### Antes de fazer deploy em produção:
-
-- [ ] Definir `APP_JWTSECRET` forte
-- [ ] Configurar `SECURITY_ISSUER` com URL real
-- [ ] Ajustar `DEVQUOTE_CORS_ALLOWED_ORIGINS`
-- [ ] Verificar URL do banco de produção
-- [ ] Testar conexão com o banco
-- [ ] Configurar logs apropriados
-- [ ] Verificar variável `PORT` do Render
-
----
-
-## 🆘 Troubleshooting
-
-### Problema: Erro de conexão com banco
-**Solução:** Verificar se o banco está rodando e as credenciais estão corretas
-
-### Problema: CORS Error
-**Solução:** Ajustar `DEVQUOTE_CORS_ALLOWED_ORIGINS` com as URLs corretas
-
-### Problema: JWT Error
-**Solução:** Verificar se `APP_JWTSECRET` está definido e tem tamanho adequado
-
-### Problema: Profile não carrega
-**Solução:** Verificar `SPRING_PROFILES_ACTIVE` nas variáveis de ambiente
-
-
-### Comandos Docker
-docker stop $(docker ps -aq) 2>/dev/null
-docker rm -vf $(docker ps -aq) 2>/dev/null
-docker rmi -f $(docker images -aq) 2>/dev/null
-docker volume rm $(docker volume ls -q) 2>/dev/null
-docker system prune -af --volumes
-
-docker logs --follow devquote-backend
-docker logs --follow devquote-postgres
-
-
-# Testar se a imagem funciona
-docker run -p 8080:8080 \
--e SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/devquote?sslmode=disable" \
--e SPRING_DATASOURCE_USERNAME="postgres" \
--e SPRING_DATASOURCE_PASSWORD="root" \
-devquote-backend
+## 📄 Licença
+Distribuído sob a licença MIT. Consulte `LICENSE` para mais detalhes.
