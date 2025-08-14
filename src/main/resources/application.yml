@@ -4,7 +4,7 @@ spring:
 
   # Database Configuration (usa ENV quando existir; senão, defaults para DEV local)
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/devquote?sslmode=disable}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/devquote?sslmode=disable}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:root}
     driver-class-name: org.postgresql.Driver
