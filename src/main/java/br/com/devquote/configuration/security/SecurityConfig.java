@@ -32,9 +32,24 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity()
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private static final String[] SWAGGER_WHITELIST = {
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html"
+    };
+
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/api/auth/**",
+            "/api/public/**",
+            "/.well-known/**",
+            "/oauth2/**",
+            "/error",             // evita loop em erros
+            "/actuator/health"    // opcional
+    };
 
     private final UserDetailsServiceImpl userDetailsService;
     private final AuthTokenFilter authTokenFilter;
@@ -53,16 +68,24 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+                // Não queremos formLogin ou basic — evita redirecionar para /login
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+
                 .authorizeHttpRequests(auth -> auth
-                        // públicos
-                        .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
+                        // Swagger público
+                        .requestMatchers(SWAGGER_WHITELIST).permitAll()
+
+                        // Endpoints públicos (login/register/refresh etc.)
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+
+                        // H2 console (apenas para DEV)
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/.well-known/**").permitAll()
-                        .requestMatchers("/oauth2/**").permitAll()
-                        .requestMatchers("/login").permitAll()
+
+                        // Pré‑flight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // tudo de dashboard/projetos/tarefas/orçamentos/entregas/solicitantes: só precisa estar logado
+                        // Regras de domínio da aplicação — autenticado
                         .requestMatchers("/api/dashboard/**").authenticated()
                         .requestMatchers("/api/tasks/**").authenticated()
                         .requestMatchers("/api/projects/**").authenticated()
@@ -70,68 +93,22 @@ public class SecurityConfig {
                         .requestMatchers("/api/deliveries/**").authenticated()
                         .requestMatchers("/api/requesters/**").authenticated()
 
-                        // admin continua restrito
+                        // Admin com autoridade específica
                         .requestMatchers("/api/admin/**").hasAuthority("admin:users")
 
-                        // demais: autenticado
+                        // Demais rotas: autenticado
                         .anyRequest().authenticated()
                 )
 
-
-                //.authorizeHttpRequests(auth -> auth
-                // Públicos
-                // .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
-                //  .requestMatchers("/h2-console/**").permitAll()
-                //  .requestMatchers("/.well-known/**").permitAll()
-                // .requestMatchers("/oauth2/**").permitAll()
-                // .requestMatchers("/login").permitAll()
-                // .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                // Dashboard (exemplo de screen-level)
-                // .requestMatchers("/api/dashboard/**").hasAuthority("dashboard:view")
-
-                // ===== TASKS =====
-                // fluxo completo com subtarefas
-                //  .requestMatchers(HttpMethod.POST,   "/api/tasks/full").hasAnyAuthority("tasks:create","admin:users")
-                // .requestMatchers(HttpMethod.PUT,    "/api/tasks/full/**").hasAnyAuthority("tasks:edit","admin:users")
-                // .requestMatchers(HttpMethod.DELETE, "/api/tasks/full/**").hasAnyAuthority("tasks:delete","admin:users")
-                // CRUD simples
-                //  .requestMatchers("/api/tasks/create").hasAnyAuthority("tasks:create","admin:users")
-                //  .requestMatchers("/api/tasks/*/edit").hasAnyAuthority("tasks:edit","admin:users")
-                //  .requestMatchers("/api/tasks/*/delete").hasAnyAuthority("tasks:delete","admin:users")
-                // .requestMatchers("/api/tasks/**").hasAnyAuthority("tasks:view","admin:users")
-
-                // ===== REQUESTERS =====
-                // .requestMatchers(HttpMethod.POST,   "/api/requesters/**").hasAnyAuthority("admin:users")
-                // .requestMatchers(HttpMethod.PUT,    "/api/requesters/**").hasAnyAuthority("admin:users")
-                // .requestMatchers(HttpMethod.DELETE, "/api/requesters/**").hasAnyAuthority("admin:users")
-                // .requestMatchers("/api/requesters/**").authenticated()
-
-                // ===== PROJECTS =====
-                //  .requestMatchers("/api/projects/create").hasAnyAuthority("projects:create","admin:users")
-                // .requestMatchers("/api/projects/*/edit").hasAnyAuthority("projects:edit","admin:users")
-                //  .requestMatchers("/api/projects/*/delete").hasAnyAuthority("projects:delete","admin:users")
-                //  .requestMatchers("/api/projects/**").hasAnyAuthority("projects:view","admin:users")
-
-                // ===== QUOTES =====
-                //   .requestMatchers("/api/quotes/create").hasAnyAuthority("quotes:create","admin:users")
-                // .requestMatchers("/api/quotes/*/edit").hasAnyAuthority("quotes:edit","admin:users")
-                // .requestMatchers("/api/quotes/**").hasAnyAuthority("quotes:view","admin:users")
-
-                // ===== DELIVERIES =====
-                // .requestMatchers("/api/deliveries/**").hasAnyAuthority("deliveries:view","admin:users")
-
-                // ===== ADMIN =====
-                // .requestMatchers("/api/admin/**").hasAnyAuthority("admin:users")
-
-                // Demais rotas: logado
-                // .anyRequest().authenticated()
-
-                //)
-                .formLogin(form -> form.loginPage("/login").permitAll())
+                // Resource Server com JWT (HS256)
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.decoder(hs256Decoder()))
                 )
+
+                // H2 precisa disso para exibir frames
+                .headers(h -> h.frameOptions(f -> f.disable()))
+
+                // UserDetails + Filtro custom de JWT (se aplicável ao seu fluxo)
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -174,7 +151,7 @@ public class SecurityConfig {
         }
 
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(origins); // use Origin exatas quando allowCredentials=true
+        configuration.setAllowedOrigins(origins); // Use origins exatas quando allowCredentials=true
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));

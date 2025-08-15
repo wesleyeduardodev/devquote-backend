@@ -1,16 +1,21 @@
 package br.com.devquote.controller;
+import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.RequesterControllerDoc;
 import br.com.devquote.dto.request.RequesterRequestDTO;
+import br.com.devquote.dto.response.PagedResponseDTO;
 import br.com.devquote.dto.response.RequesterResponseDTO;
 import br.com.devquote.service.RequesterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/requesters")
@@ -23,8 +28,20 @@ public class RequesterController implements RequesterControllerDoc {
     @Override
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<RequesterResponseDTO>> list() {
-        return ResponseEntity.ok(requesterService.findAll());
+    public ResponseEntity<PagedResponseDTO<RequesterResponseDTO>> list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String search) {
+
+        Pageable pageable = PageRequest.of(page, size, sortDir.equals("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending());
+
+        Page<RequesterResponseDTO> pageResult = requesterService.findAllPaginated(pageable, search);
+
+        PagedResponseDTO<RequesterResponseDTO> response = PageAdapter.toPagedResponseDTO(pageResult);
+
+        return ResponseEntity.ok(response);
     }
 
     @Override

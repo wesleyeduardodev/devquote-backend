@@ -208,3 +208,7 @@ Distribuído sob a licença MIT. Consulte `LICENSE` para mais detalhes.
 
 ## 📄 Comandos úteis
 docker compose -f "/mnt/c/Users/Wesley Eduardo/Documents/projetos-git/devquote-backend/docker-compose.yml" up -d
+docker compose -f "/mnt/c/Users/WIN11/Documents/projetos-git/devquote-backend/docker-compose.yml" up -d
+
+## 📄 Swagger
+http://localhost:8080/swagger-ui/index.html
