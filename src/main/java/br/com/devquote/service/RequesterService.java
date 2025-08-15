@@ -18,5 +18,5 @@ public interface RequesterService {
 
     void delete(Long id);
 
-    Page<RequesterResponseDTO> findAllPaginated(Pageable pageable, String search);
+    Page<RequesterResponseDTO> findAllPaginated(Pageable pageable);
 }

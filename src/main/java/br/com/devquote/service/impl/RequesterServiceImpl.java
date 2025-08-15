@@ -56,14 +56,8 @@ public class RequesterServiceImpl implements RequesterService {
     }
 
     @Override
-    public Page<RequesterResponseDTO> findAllPaginated(Pageable pageable, String search) {
-        Page<Requester> page;
-        if (search != null && !search.trim().isEmpty()) {
-            page = requesterRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                    search, search, pageable);
-        } else {
-            page = requesterRepository.findAll(pageable);
-        }
+    public Page<RequesterResponseDTO> findAllPaginated(Pageable pageable) {
+        Page<Requester> page = requesterRepository.findAll(pageable);
         return page.map(RequesterAdapter::toResponseDTO);
     }
 }
