@@ -27,7 +27,7 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
 
     @Override
     public List<QuoteBillingMonthQuoteResponseDTO> findAll() {
-        return repository.findAll().stream()
+        return repository.findAllOrderedById().stream()
                 .map(QuoteBillingMonthQuoteAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -41,7 +41,6 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
 
     @Override
     public QuoteBillingMonthQuoteResponseDTO create(QuoteBillingMonthQuoteRequestDTO dto) {
-        // prevent duplicates
         if (repository.existsByQuoteBillingMonth_IdAndQuote_Id(dto.getQuoteBillingMonthId(), dto.getQuoteId())) {
             throw new DataIntegrityViolationException("This quote is already linked to the given billing month.");
         }
@@ -81,5 +80,4 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
                 .map(QuoteBillingMonthQuoteAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
-
 }

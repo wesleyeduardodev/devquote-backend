@@ -1,6 +1,7 @@
 package br.com.devquote.repository;
 import br.com.devquote.entity.QuoteBillingMonthQuote;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,4 +12,7 @@ public interface QuoteBillingMonthQuoteRepository extends JpaRepository<QuoteBil
     boolean existsByQuoteBillingMonth_IdAndQuote_Id(Long quoteBillingMonthId, Long quoteId);
 
     List<QuoteBillingMonthQuote> findByQuoteBillingMonth_Id(Long billingMonthId);
+
+    @Query("SELECT q FROM QuoteBillingMonthQuote q ORDER BY q.id ASC")
+    List<QuoteBillingMonthQuote> findAllOrderedById();
 }

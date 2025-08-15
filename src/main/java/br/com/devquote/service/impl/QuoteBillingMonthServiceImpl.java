@@ -8,7 +8,6 @@ import br.com.devquote.service.QuoteBillingMonthService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +20,7 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
 
     @Override
     public List<QuoteBillingMonthResponseDTO> findAll() {
-        return quoteBillingMonthRepository.findAll().stream()
+        return quoteBillingMonthRepository.findAllOrderedById().stream()
                 .map(QuoteBillingMonthAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }

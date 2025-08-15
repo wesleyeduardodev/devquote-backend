@@ -7,6 +7,8 @@ import br.com.devquote.repository.RequesterRepository;
 import br.com.devquote.service.RequesterService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +22,7 @@ public class RequesterServiceImpl implements RequesterService {
 
     @Override
     public List<RequesterResponseDTO> findAll() {
-        return requesterRepository.findAll().stream()
+        return requesterRepository.findAllOrderedById().stream()
                 .map(RequesterAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -51,5 +53,10 @@ public class RequesterServiceImpl implements RequesterService {
     @Override
     public void delete(Long id) {
         requesterRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<RequesterResponseDTO> findAllPaginated(Pageable pageable, String search) {
+        return null;
     }
 }

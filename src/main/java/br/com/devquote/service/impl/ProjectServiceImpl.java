@@ -20,7 +20,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<ProjectResponseDTO> findAll() {
-        return projectRepository.findAll().stream()
+        return projectRepository.findAllOrderedById().stream()
                 .map(ProjectAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }

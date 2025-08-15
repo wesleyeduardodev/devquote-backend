@@ -26,7 +26,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public List<DeliveryResponseDTO> findAll() {
-        return deliveryRepository.findAll().stream()
+        return deliveryRepository.findAllOrderedById().stream()
                 .map(DeliveryAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }

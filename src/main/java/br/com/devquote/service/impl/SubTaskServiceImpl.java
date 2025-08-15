@@ -23,7 +23,7 @@ public class SubTaskServiceImpl implements SubTaskService {
 
     @Override
     public List<SubTaskResponseDTO> findAll() {
-        return subTaskRepository.findAll().stream()
+        return subTaskRepository.findAllOrderedById().stream()
                 .map(SubTaskAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }

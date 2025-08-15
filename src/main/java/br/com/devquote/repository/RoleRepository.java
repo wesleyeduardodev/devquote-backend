@@ -3,6 +3,8 @@ import br.com.devquote.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -18,4 +20,7 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     @Query("SELECT r FROM Role r JOIN FETCH r.permissions WHERE r.name IN :names")
     Set<Role> findByNameInWithPermissions(Set<String> names);
+
+    @Query("SELECT r FROM Role r ORDER BY r.id ASC")
+    List<Role> findAllOrderedById();
 }

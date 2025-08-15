@@ -23,7 +23,7 @@ public class QuoteServiceImpl implements QuoteService {
 
     @Override
     public List<QuoteResponseDTO> findAll() {
-        return quoteRepository.findAll().stream()
+        return quoteRepository.findAllOrderedById().stream()
                 .map(QuoteAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
