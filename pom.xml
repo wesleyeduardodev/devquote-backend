@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>br.com.devquote</groupId>
-	<artifactId>devquote</artifactId>
+	<artifactId>devquote-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>devquote</name>
 	<description>Sistema de orçamentos automatizados</description>

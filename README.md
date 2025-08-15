@@ -204,3 +204,7 @@ docker-compose down
 
 ## 📄 Licença
 Distribuído sob a licença MIT. Consulte `LICENSE` para mais detalhes.
+
+
+## 📄 Comandos úteis
+docker compose -f "/mnt/c/Users/Wesley Eduardo/Documents/projetos-git/devquote-backend/docker-compose.yml" up -d
