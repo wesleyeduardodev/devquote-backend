@@ -38,7 +38,7 @@ public class RequesterController implements RequesterControllerDoc {
     public ResponseEntity<PagedResponseDTO<RequesterResponseDTO>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam MultiValueMap<String, String> params
+            @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
 
         List<String> sortParams = params.get("sort");
