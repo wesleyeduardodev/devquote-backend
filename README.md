@@ -217,6 +217,8 @@ http://localhost:8080/swagger-ui/index.html
 
 
 
+## 📄 Atualização da imagem do Deploy
+
 🚀 Build e Push da Imagem Docker para o Docker Hub
 1. Login no Docker Hub
    docker login -u SEU_USUARIO
@@ -242,12 +244,3 @@ Se tudo der certo, vai aparecer Login Succeeded.
 6. Mostrar a URL final para usar no Render
    echo "Image URL para o Render:"
    echo "docker.io/$IMAGE:$TAG"
-
-⚡ No Render
-
-Vá em Settings → Deploy → Image URL
-Cole o valor exibido no passo 6, por exemplo:
-
-docker.io/wesleyeduardodev/devquote-backend:17-08-2025-15-45-12
-
-Clique em Manual Deploy → Deploy latest image
