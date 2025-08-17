@@ -214,3 +214,40 @@ docker compose -f "/mnt/c/Users/WIN11/Documents/projetos-git/devquote-backend/do
 
 ## 📄 Swagger
 http://localhost:8080/swagger-ui/index.html
+
+
+
+🚀 Build e Push da Imagem Docker para o Docker Hub
+1. Login no Docker Hub
+   docker login -u SEU_USUARIO
+
+
+Digite sua senha quando solicitado (não aparece na tela).
+Se tudo der certo, vai aparecer Login Succeeded.
+
+2. Definir variáveis (imagem e tag com data/hora/segundo)
+   IMAGE=wesleyeduardodev/devquote-backend
+   TAG=$(date +%d-%m-%Y-%H-%M-%S)
+   echo "Usando tag: $TAG"
+
+3. Build da imagem
+   docker build -t $IMAGE:$TAG -t $IMAGE:latest .
+
+4. Push da imagem com tag única
+   docker push $IMAGE:$TAG
+
+5. Push da imagem latest
+   docker push $IMAGE:latest
+
+6. Mostrar a URL final para usar no Render
+   echo "Image URL para o Render:"
+   echo "docker.io/$IMAGE:$TAG"
+
+⚡ No Render
+
+Vá em Settings → Deploy → Image URL
+Cole o valor exibido no passo 6, por exemplo:
+
+docker.io/wesleyeduardodev/devquote-backend:17-08-2025-15-45-12
+
+Clique em Manual Deploy → Deploy latest image
