@@ -38,6 +38,12 @@ public class RequesterController implements RequesterControllerDoc {
     public ResponseEntity<PagedResponseDTO<RequesterResponseDTO>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String createdAt,
+            @RequestParam(required = false) String updatedAt,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
 
@@ -49,7 +55,10 @@ public class RequesterController implements RequesterControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        Page<RequesterResponseDTO> pageResult = requesterService.findAllPaginated(pageable);
+        Page<RequesterResponseDTO> pageResult = requesterService.findAllPaginated(
+                id, name, email, phone, createdAt, updatedAt, pageable
+        );
+
         PagedResponseDTO<RequesterResponseDTO> response = PageAdapter.toPagedResponseDTO(pageResult);
         return ResponseEntity.ok(response);
     }

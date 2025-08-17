@@ -56,8 +56,16 @@ public class RequesterServiceImpl implements RequesterService {
     }
 
     @Override
-    public Page<RequesterResponseDTO> findAllPaginated(Pageable pageable) {
-        Page<Requester> page = requesterRepository.findAll(pageable);
+    public Page<RequesterResponseDTO> findAllPaginated(Long id,
+                                                       String name,
+                                                       String email,
+                                                       String phone,
+                                                       String createdAt,
+                                                       String updatedAt,
+                                                       Pageable pageable) {
+        Page<Requester> page = requesterRepository.findByOptionalFieldsPaginated(
+                id, name, email, phone, createdAt, updatedAt, pageable
+        );
         return page.map(RequesterAdapter::toResponseDTO);
     }
 }

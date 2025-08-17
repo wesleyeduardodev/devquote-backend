@@ -3,7 +3,6 @@ import br.com.devquote.dto.request.RequesterRequestDTO;
 import br.com.devquote.dto.response.RequesterResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 import java.util.List;
 
 public interface RequesterService {
@@ -18,5 +17,13 @@ public interface RequesterService {
 
     void delete(Long id);
 
-    Page<RequesterResponseDTO> findAllPaginated(Pageable pageable);
+    Page<RequesterResponseDTO> findAllPaginated(
+            Long id,
+            String name,
+            String email,
+            String phone,
+            String createdAt,
+            String updatedAt,
+            Pageable pageable
+    );
 }
