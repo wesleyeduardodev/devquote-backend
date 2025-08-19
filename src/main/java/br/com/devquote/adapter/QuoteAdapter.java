@@ -16,6 +16,8 @@ public class QuoteAdapter {
         return QuoteResponseDTO.builder()
                 .id(entity.getId())
                 .taskId(entity.getTask() != null ? entity.getTask().getId() : null)
+                .taskName(entity.getTask() != null ? entity.getTask().getTitle() : null)
+                .taskCode(entity.getTask() != null ? entity.getTask().getCode() : null)
                 .status(entity.getStatus())
                 .totalAmount(entity.getTotalAmount())
                 .createdAt(entity.getCreatedAt())

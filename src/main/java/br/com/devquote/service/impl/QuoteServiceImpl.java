@@ -1,4 +1,5 @@
 package br.com.devquote.service.impl;
+
 import br.com.devquote.adapter.QuoteAdapter;
 import br.com.devquote.dto.request.QuoteRequestDTO;
 import br.com.devquote.dto.response.QuoteResponseDTO;
@@ -9,7 +10,10 @@ import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.QuoteService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,5 +62,22 @@ public class QuoteServiceImpl implements QuoteService {
     @Override
     public void delete(Long id) {
         quoteRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<QuoteResponseDTO> findAllPaginated(Long id,
+                                                   Long taskId,
+                                                   String taskName,
+                                                   String taskCode,
+                                                   String status,
+                                                   String createdAt,
+                                                   String updatedAt,
+                                                   Pageable pageable) {
+
+        Page<Quote> page = quoteRepository.findByOptionalFieldsPaginated(
+                id, taskId, taskName, taskCode, status, createdAt, updatedAt, pageable
+        );
+
+        return page.map(QuoteAdapter::toResponseDTO);
     }
 }

@@ -16,6 +16,10 @@ public class QuoteResponseDTO {
 
     private Long taskId;
 
+    private String taskName;
+
+    private String taskCode;
+
     private String status;
 
     private BigDecimal totalAmount;
