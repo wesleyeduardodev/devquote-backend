@@ -14,8 +14,11 @@ public final class DeliveryAdapter {
 
         return DeliveryResponseDTO.builder()
                 .id(entity.getId())
-                .quoteId(entity.getQuote() != null ? entity.getQuote().getId() : null)
+                .taskId(entity.getQuote() != null  && entity.getQuote().getTask() != null? entity.getQuote().getTask().getId() : null)
+                .taskName(entity.getQuote() != null  && entity.getQuote().getTask() != null? entity.getQuote().getTask().getDescription() : null)
+                .taskCode(entity.getQuote() != null  && entity.getQuote().getTask() != null? entity.getQuote().getTask().getCode() : null)
                 .projectId(entity.getProject() != null ? entity.getProject().getId() : null)
+                .projectName(entity.getProject() != null ? entity.getProject().getName() : null)
                 .branch(entity.getBranch())
                 .pullRequest(entity.getPullRequest())
                 .script(entity.getScript())

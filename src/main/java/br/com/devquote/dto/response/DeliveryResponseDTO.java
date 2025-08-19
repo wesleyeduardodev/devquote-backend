@@ -12,7 +12,11 @@ public class DeliveryResponseDTO {
 
     private Long id;
     private Long quoteId;
+    private Long taskId;
+    private String taskName;
+    private String taskCode;
     private Long projectId;
+    private String projectName;
     private String branch;
     private String pullRequest;
     private String script;

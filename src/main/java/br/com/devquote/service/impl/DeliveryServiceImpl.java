@@ -11,6 +11,8 @@ import br.com.devquote.repository.QuoteRepository;
 import br.com.devquote.service.DeliveryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,5 +67,27 @@ public class DeliveryServiceImpl implements DeliveryService {
     @Override
     public void delete(Long id) {
         deliveryRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<DeliveryResponseDTO> findAllPaginated(Long id,
+                                                      String taskName,
+                                                      String taskCode,
+                                                      String projectName,
+                                                      String branch,
+                                                      String pullRequest,
+                                                      String status,
+                                                      String startedAt,
+                                                      String finishedAt,
+                                                      String createdAt,
+                                                      String updatedAt,
+                                                      Pageable pageable) {
+
+        Page<Delivery> page = deliveryRepository.findByOptionalFieldsPaginated(
+                id, taskName, taskCode, projectName,
+                branch, pullRequest, status, startedAt, finishedAt, createdAt, updatedAt, pageable
+        );
+
+        return page.map(DeliveryAdapter::toResponseDTO);
     }
 }
