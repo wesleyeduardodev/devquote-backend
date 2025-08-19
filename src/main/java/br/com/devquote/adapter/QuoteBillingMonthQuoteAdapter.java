@@ -16,6 +16,8 @@ public class QuoteBillingMonthQuoteAdapter {
                 .id(entity.getId())
                 .quoteBillingMonthId(entity.getQuoteBillingMonth().getId())
                 .quoteId(entity.getQuote().getId())
+                .taskName(entity.getQuote().getTask().getDescription())
+                .taskCode(entity.getQuote().getTask().getCode())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

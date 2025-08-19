@@ -13,6 +13,8 @@ public class QuoteBillingMonthQuoteResponseDTO {
     private Long id;
     private Long quoteBillingMonthId;
     private Long quoteId;
+    private String taskName;
+    private String taskCode;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
