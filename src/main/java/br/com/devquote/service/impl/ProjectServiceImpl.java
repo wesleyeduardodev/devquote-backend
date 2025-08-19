@@ -7,6 +7,8 @@ import br.com.devquote.repository.ProjectRepository;
 import br.com.devquote.service.ProjectService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,5 +53,18 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void delete(Long id) {
         projectRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<ProjectResponseDTO> findAllPaginated(Long id,
+                                                     String name,
+                                                     String repositoryUrl,
+                                                     String createdAt,
+                                                     String updatedAt,
+                                                     Pageable pageable) {
+        Page<Project> page = projectRepository.findByOptionalFieldsPaginated(
+                id, name, repositoryUrl, createdAt, updatedAt, pageable
+        );
+        return page.map(ProjectAdapter::toResponseDTO);
     }
 }
