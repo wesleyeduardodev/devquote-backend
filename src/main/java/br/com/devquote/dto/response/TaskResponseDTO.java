@@ -16,6 +16,8 @@ public class TaskResponseDTO {
 
     private Long requesterId;
 
+    private String requesterName;
+
     private String title;
 
     private String description;

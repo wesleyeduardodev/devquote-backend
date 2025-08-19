@@ -16,6 +16,7 @@ public class TaskAdapter {
         return TaskResponseDTO.builder()
                 .id(entity.getId())
                 .requesterId(entity.getRequester() != null ? entity.getRequester().getId() : null)
+                .requesterName(entity.getRequester() != null ? entity.getRequester().getName() : null)
                 .title(entity.getTitle())
                 .description(entity.getDescription())
                 .status(entity.getStatus())
