@@ -14,4 +14,6 @@ public interface SubTaskRepository extends JpaRepository<SubTask, Long> {
 
     @Query("SELECT s FROM SubTask s ORDER BY s.id ASC")
     List<SubTask> findAllOrderedById();
+
+    List<SubTask> findByTaskIdIn(List<Long> taskIds);
 }

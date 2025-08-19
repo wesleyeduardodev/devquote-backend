@@ -16,8 +16,12 @@ import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.TaskService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -194,5 +198,47 @@ public class TaskServiceImpl implements TaskService {
 
         // Remove a tarefa
         taskRepository.deleteById(taskId);
+    }
+
+    @Override
+    public Page<TaskResponseDTO> findAllPaginated(Long id,
+                                                  Long requesterId,
+                                                  String requesterName,
+                                                  String title,
+                                                  String description,
+                                                  String status,
+                                                  String code,
+                                                  String link,
+                                                  String createdAt,
+                                                  String updatedAt,
+                                                  Pageable pageable) {
+
+        Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
+                id, requesterId, requesterName, title, description, status, code, link, createdAt, updatedAt, pageable
+        );
+
+        List<TaskResponseDTO> taskDtos = page.getContent().stream()
+                .map(TaskAdapter::toResponseDTO)
+                .collect(Collectors.toList());
+
+        if (taskDtos.isEmpty()) {
+            return new PageImpl<>(taskDtos, pageable, page.getTotalElements());
+        }
+
+        List<Long> taskIds = taskDtos.stream()
+                .map(TaskResponseDTO::getId)
+                .collect(Collectors.toList());
+
+        List<SubTask> allSubTasks = subTaskRepository.findByTaskIdIn(taskIds);
+
+        Map<Long, List<SubTask>> subTasksByTaskId = allSubTasks.stream()
+                .collect(Collectors.groupingBy(st -> st.getTask().getId()));
+
+        taskDtos.forEach(dto -> {
+            List<SubTask> list = subTasksByTaskId.getOrDefault(dto.getId(), List.of());
+            dto.setSubTasks(SubTaskAdapter.toResponseDTOList(list));
+        });
+
+        return new PageImpl<>(taskDtos, pageable, page.getTotalElements());
     }
 }
