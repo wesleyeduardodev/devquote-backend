@@ -76,7 +76,6 @@ public class TaskController implements TaskControllerDoc {
 
     @Override
     @PostMapping
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponse> create(@RequestBody @Valid TaskRequest dto) {
         return new ResponseEntity<>(taskService.create(dto), HttpStatus.CREATED);
@@ -84,7 +83,6 @@ public class TaskController implements TaskControllerDoc {
 
     @Override
     @PutMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponse> update(@PathVariable Long id, @RequestBody @Valid TaskRequest dto) {
         return ResponseEntity.ok(taskService.update(id, dto));
@@ -92,7 +90,6 @@ public class TaskController implements TaskControllerDoc {
 
     @Override
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         taskService.delete(id);
@@ -100,7 +97,6 @@ public class TaskController implements TaskControllerDoc {
     }
 
     @PostMapping("/full")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasks(
             @RequestBody @Valid TaskWithSubTasksCreateRequest dto) {
@@ -108,7 +104,6 @@ public class TaskController implements TaskControllerDoc {
     }
 
     @PutMapping("/full/{taskId}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskWithSubTasksResponse> updateWithSubTasks(
             @PathVariable Long taskId,
@@ -117,7 +112,6 @@ public class TaskController implements TaskControllerDoc {
     }
 
     @DeleteMapping("/full/{taskId}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId) {
         taskService.deleteTaskWithSubTasks(taskId);

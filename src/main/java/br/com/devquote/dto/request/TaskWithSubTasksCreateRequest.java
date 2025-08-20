@@ -31,6 +31,12 @@ public class TaskWithSubTasksCreateRequest {
 
     private String link;
 
+    @Size(max = 500, message = "meetingLink must be at most 500 characters")
+    private String meetingLink;
+
+    @Size(max = 256, message = "notes must be at most 256 characters")
+    private String notes;
+
     @Valid
     @NotNull(message = "Subtasks are required")
     private List<@Valid SubTaskRequest> subTasks;

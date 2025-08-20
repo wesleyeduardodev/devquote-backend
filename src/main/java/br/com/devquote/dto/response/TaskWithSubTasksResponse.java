@@ -23,6 +23,10 @@ public class TaskWithSubTasksResponse {
 
     private String link;
 
+    private String meetingLink;
+
+    private String notes;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

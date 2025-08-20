@@ -22,6 +22,8 @@ public class TaskAdapter {
                 .status(entity.getStatus())
                 .code(entity.getCode())
                 .link(entity.getLink())
+                .meetingLink(entity.getMeetingLink())
+                .notes(entity.getNotes())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -39,6 +41,8 @@ public class TaskAdapter {
                 .status(dto.getStatus())
                 .code(dto.getCode())
                 .link(dto.getLink())
+                .meetingLink(dto.getMeetingLink())
+                .notes(dto.getNotes())
                 .build();
     }
 
@@ -56,5 +60,7 @@ public class TaskAdapter {
         entity.setStatus(dto.getStatus());
         entity.setCode(dto.getCode());
         entity.setLink(dto.getLink());
+        entity.setMeetingLink(dto.getMeetingLink());
+        entity.setNotes(dto.getNotes());
     }
 }

@@ -118,7 +118,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void createDeliveries(TaskWithSubTasksCreateRequest dto, QuoteResponse quoteResponse) {
-        if (quoteResponse != null && dto.getProjectsIds() != null && !dto.getProjectsIds().isEmpty()) {
+        if (quoteResponse != null && dto.getCreateQuote() != null && dto.getCreateQuote() && dto.getProjectsIds() != null && !dto.getProjectsIds().isEmpty()) {
             for (Long projectId : dto.getProjectsIds()) {
                 DeliveryRequest deliveryRequest = DeliveryRequest
                         .builder()
@@ -146,6 +146,8 @@ public class TaskServiceImpl implements TaskService {
                 .status(dto.getStatus())
                 .code(dto.getCode())
                 .link(dto.getLink())
+                .meetingLink(dto.getMeetingLink())
+                .notes(dto.getNotes())
                 .build(), task, requester);
 
         task = taskRepository.save(task);
@@ -214,6 +216,8 @@ public class TaskServiceImpl implements TaskService {
                 .status(dto.getStatus())
                 .code(dto.getCode())
                 .link(dto.getLink())
+                .meetingLink(dto.getMeetingLink())
+                .notes(dto.getNotes())
                 .build(), requester);
         return taskRepository.save(task);
     }
@@ -291,6 +295,8 @@ public class TaskServiceImpl implements TaskService {
                 .status(task.getStatus())
                 .code(task.getCode())
                 .link(task.getLink())
+                .meetingLink(task.getMeetingLink())
+                .notes(task.getNotes())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .subTasks(SubTaskAdapter.toResponseDTOList(subTasks))

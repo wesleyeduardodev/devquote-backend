@@ -36,6 +36,12 @@ public class Task {
     @Column(length = 200)
     private String link;
 
+    @Column(name = "meeting_link", length = 500)
+    private String meetingLink;
+
+    @Column(name = "notes", length = 256)
+    private String notes;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
