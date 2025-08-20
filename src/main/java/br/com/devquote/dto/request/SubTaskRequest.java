@@ -22,7 +22,7 @@ public class SubTaskRequest {
     private String description;
 
     @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.00", inclusive = false, message = "Amount must be greater than zero")
+    @DecimalMin(value = "0.00", message = "Amount must be greater than or equal to zero")
     @Digits(integer = 8, fraction = 2, message = "Amount must be a valid monetary value with up to 8 digits and 2 decimal places")
     private BigDecimal amount;
 
