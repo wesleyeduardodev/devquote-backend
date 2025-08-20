@@ -14,15 +14,17 @@ public final class DeliveryAdapter {
 
         return DeliveryResponse.builder()
                 .id(entity.getId())
-                .taskId(entity.getQuote() != null  && entity.getQuote().getTask() != null? entity.getQuote().getTask().getId() : null)
-                .taskName(entity.getQuote() != null  && entity.getQuote().getTask() != null? entity.getQuote().getTask().getDescription() : null)
-                .taskCode(entity.getQuote() != null  && entity.getQuote().getTask() != null? entity.getQuote().getTask().getCode() : null)
+                .taskId(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getId() : null)
+                .taskName(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getDescription() : null)
+                .taskCode(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getCode() : null)
                 .projectId(entity.getProject() != null ? entity.getProject().getId() : null)
                 .projectName(entity.getProject() != null ? entity.getProject().getName() : null)
                 .branch(entity.getBranch())
                 .pullRequest(entity.getPullRequest())
                 .script(entity.getScript())
                 .status(entity.getStatus())
+                .notes(entity.getNotes())
+                .sourceBranch(entity.getSourceBranch())
                 .startedAt(entity.getStartedAt())
                 .finishedAt(entity.getFinishedAt())
                 .createdAt(entity.getCreatedAt())
@@ -40,6 +42,8 @@ public final class DeliveryAdapter {
                 .pullRequest(dto.getPullRequest())
                 .script(dto.getScript())
                 .status(dto.getStatus())
+                .notes(dto.getNotes())
+                .sourceBranch(dto.getSourceBranch())
                 .startedAt(dto.getStartedAt())
                 .finishedAt(dto.getFinishedAt())
                 .build();
@@ -57,5 +61,7 @@ public final class DeliveryAdapter {
         entity.setStatus(dto.getStatus());
         entity.setStartedAt(dto.getStartedAt());
         entity.setFinishedAt(dto.getFinishedAt());
+        entity.setNotes(dto.getNotes());
+        entity.setSourceBranch(dto.getSourceBranch());
     }
 }

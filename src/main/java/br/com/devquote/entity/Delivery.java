@@ -37,6 +37,12 @@ public class Delivery {
     @Column(nullable = false, length = 30)
     private String status;
 
+    @Column(name = "notes", length = 256)
+    private String notes;
+
+    @Column(name = "source_branch", length = 200)
+    private String sourceBranch;
+
     @Column(name = "started_at")
     private LocalDate startedAt;
 
