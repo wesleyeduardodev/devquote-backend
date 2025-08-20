@@ -1,9 +1,9 @@
 package br.com.devquote.controller;
 import br.com.devquote.dto.*;
-import br.com.devquote.dto.request.LoginRequestDto;
-import br.com.devquote.dto.request.RegisterRequestDto;
-import br.com.devquote.dto.response.JwtResponseDto;
-import br.com.devquote.dto.response.MessageResponseDto;
+import br.com.devquote.dto.request.LoginRequest;
+import br.com.devquote.dto.request.RegisterRequest;
+import br.com.devquote.dto.response.JwtResponse;
+import br.com.devquote.dto.response.MessageResponse;
 import br.com.devquote.service.impl.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,24 +22,24 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequestDto loginRequest) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         try {
-            JwtResponseDto jwtResponse = authService.authenticateUser(loginRequest);
+            JwtResponse jwtResponse = authService.authenticateUser(loginRequest);
             return ResponseEntity.ok(jwtResponse);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageResponseDto("Invalid credentials: " + e.getMessage()));
+                    .body(new MessageResponse("Invalid credentials: " + e.getMessage()));
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<MessageResponseDto> registerUser(@Valid @RequestBody RegisterRequestDto request) {
+    public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody RegisterRequest request) {
         try {
-            MessageResponseDto response = authService.registerUser(request);
+            MessageResponse response = authService.registerUser(request);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
-                    .body(new MessageResponseDto(e.getMessage()));
+                    .body(new MessageResponse(e.getMessage()));
         }
     }
 
@@ -62,7 +62,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<MessageResponseDto> logout() {
-        return ResponseEntity.ok(new MessageResponseDto("Logged out successfully!"));
+    public ResponseEntity<MessageResponse> logout() {
+        return ResponseEntity.ok(new MessageResponse("Logged out successfully!"));
     }
 }

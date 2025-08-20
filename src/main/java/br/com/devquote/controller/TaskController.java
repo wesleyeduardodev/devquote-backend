@@ -1,12 +1,12 @@
 package br.com.devquote.controller;
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.TaskControllerDoc;
-import br.com.devquote.dto.request.TaskRequestDTO;
-import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
-import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequestDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
-import br.com.devquote.dto.response.TaskResponseDTO;
-import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
+import br.com.devquote.dto.request.TaskRequest;
+import br.com.devquote.dto.request.TaskWithSubTasksCreateRequest;
+import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequest;
+import br.com.devquote.dto.response.PagedResponse;
+import br.com.devquote.dto.response.TaskResponse;
+import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.service.TaskService;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
@@ -37,7 +37,7 @@ public class TaskController implements TaskControllerDoc {
     @Override
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PagedResponseDTO<TaskResponseDTO>> list(
+    public ResponseEntity<PagedResponse<TaskResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -60,7 +60,7 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        Page<TaskResponseDTO> pageResult = taskService.findAllPaginated(
+        Page<TaskResponse> pageResult = taskService.findAllPaginated(
                 id, requesterId, requesterName, title, description, status, code, link, createdAt, updatedAt, pageable
         );
 
@@ -70,7 +70,7 @@ public class TaskController implements TaskControllerDoc {
     @Override
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<TaskResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(taskService.findById(id));
     }
 
@@ -78,7 +78,7 @@ public class TaskController implements TaskControllerDoc {
     @PostMapping
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskResponseDTO> create(@RequestBody @Valid TaskRequestDTO dto) {
+    public ResponseEntity<TaskResponse> create(@RequestBody @Valid TaskRequest dto) {
         return new ResponseEntity<>(taskService.create(dto), HttpStatus.CREATED);
     }
 
@@ -86,7 +86,7 @@ public class TaskController implements TaskControllerDoc {
     @PutMapping("/{id}")
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskResponseDTO> update(@PathVariable Long id, @RequestBody @Valid TaskRequestDTO dto) {
+    public ResponseEntity<TaskResponse> update(@PathVariable Long id, @RequestBody @Valid TaskRequest dto) {
         return ResponseEntity.ok(taskService.update(id, dto));
     }
 
@@ -102,17 +102,17 @@ public class TaskController implements TaskControllerDoc {
     @PostMapping("/full")
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskWithSubTasksResponseDTO> createWithSubTasks(
-            @RequestBody @Valid TaskWithSubTasksRequestDTO dto) {
+    public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasks(
+            @RequestBody @Valid TaskWithSubTasksCreateRequest dto) {
         return new ResponseEntity<>(taskService.createWithSubTasks(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/full/{taskId}")
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskWithSubTasksResponseDTO> updateWithSubTasks(
+    public ResponseEntity<TaskWithSubTasksResponse> updateWithSubTasks(
             @PathVariable Long taskId,
-            @RequestBody @Valid TaskWithSubTasksUpdateRequestDTO dto) {
+            @RequestBody @Valid TaskWithSubTasksUpdateRequest dto) {
         return ResponseEntity.ok(taskService.updateWithSubTasks(taskId, dto));
     }
 

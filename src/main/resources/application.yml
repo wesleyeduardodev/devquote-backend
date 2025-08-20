@@ -55,6 +55,8 @@ devquote:
       - USER
     admin-emails:
       - ${DEVQUOTE_ADMIN_EMAIL:admin@devquote.com}
+    billing:
+      payment-day: ${DEVQUOTE_BILLING_PAYMENT_DAY:20}
 
 # JWT Configuration (usa ENV em produção)
 app:

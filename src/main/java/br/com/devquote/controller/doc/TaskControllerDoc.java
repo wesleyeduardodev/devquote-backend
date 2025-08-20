@@ -1,10 +1,10 @@
 package br.com.devquote.controller.doc;
-import br.com.devquote.dto.request.TaskRequestDTO;
-import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
-import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequestDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
-import br.com.devquote.dto.response.TaskResponseDTO;
-import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
+import br.com.devquote.dto.request.TaskRequest;
+import br.com.devquote.dto.request.TaskWithSubTasksCreateRequest;
+import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequest;
+import br.com.devquote.dto.response.PagedResponse;
+import br.com.devquote.dto.response.TaskResponse;
+import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,7 +40,7 @@ public interface TaskControllerDoc {
             description = "Repeatable. Format: field,(asc|desc). Allowed: id,requesterId,title,description,status,code,link,createdAt,updatedAt",
             array = @ArraySchema(schema = @Schema(type = "string", example = "id,desc"))
     )
-    ResponseEntity<PagedResponseDTO<TaskResponseDTO>> list(
+    ResponseEntity<PagedResponse<TaskResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -61,24 +61,24 @@ public interface TaskControllerDoc {
             @ApiResponse(responseCode = "200", description = "Successful retrieval of task"),
             @ApiResponse(responseCode = "404", description = "Task not found")
     })
-    ResponseEntity<TaskResponseDTO> getById(
+    ResponseEntity<TaskResponse> getById(
             @Parameter(description = "Task id", required = true) Long id);
 
     @Operation(summary = "Create a new task")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Task created successfully")
     })
-    ResponseEntity<TaskResponseDTO> create(
-            @Parameter(description = "Task payload", required = true) @Valid TaskRequestDTO dto);
+    ResponseEntity<TaskResponse> create(
+            @Parameter(description = "Task payload", required = true) @Valid TaskRequest dto);
 
     @Operation(summary = "Update an existing task")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Task updated successfully"),
             @ApiResponse(responseCode = "404", description = "Task not found")
     })
-    ResponseEntity<TaskResponseDTO> update(
+    ResponseEntity<TaskResponse> update(
             @Parameter(description = "Task id", required = true) Long id,
-            @Parameter(description = "Task payload", required = true) @Valid TaskRequestDTO dto);
+            @Parameter(description = "Task payload", required = true) @Valid TaskRequest dto);
 
     @Operation(summary = "Delete a task")
     @ApiResponses({
@@ -92,14 +92,14 @@ public interface TaskControllerDoc {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Task with subtasks created successfully")
     })
-    ResponseEntity<TaskWithSubTasksResponseDTO> createWithSubTasks(@Valid TaskWithSubTasksRequestDTO dto);
+    ResponseEntity<TaskWithSubTasksResponse> createWithSubTasks(@Valid TaskWithSubTasksCreateRequest dto);
 
     @Operation(summary = "Update task and its subtasks")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Task with subtasks updated successfully"),
             @ApiResponse(responseCode = "404", description = "Task or SubTask not found")
     })
-    ResponseEntity<TaskWithSubTasksResponseDTO> updateWithSubTasks(Long taskId, @Valid TaskWithSubTasksUpdateRequestDTO dto);
+    ResponseEntity<TaskWithSubTasksResponse> updateWithSubTasks(Long taskId, @Valid TaskWithSubTasksUpdateRequest dto);
 
     @Operation(summary = "Delete task and its subtasks")
     @ApiResponses({

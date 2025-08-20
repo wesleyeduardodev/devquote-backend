@@ -1,6 +1,6 @@
 package br.com.devquote.adapter;
-import br.com.devquote.dto.request.QuoteBillingMonthQuoteRequestDTO;
-import br.com.devquote.dto.response.QuoteBillingMonthQuoteResponseDTO;
+import br.com.devquote.dto.request.QuoteBillingMonthQuoteRequest;
+import br.com.devquote.dto.response.QuoteBillingMonthQuoteResponse;
 import br.com.devquote.entity.Quote;
 import br.com.devquote.entity.QuoteBillingMonth;
 import br.com.devquote.entity.QuoteBillingMonthQuote;
@@ -9,10 +9,10 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class QuoteBillingMonthQuoteAdapter {
 
-    public static QuoteBillingMonthQuoteResponseDTO toResponseDTO(QuoteBillingMonthQuote entity) {
+    public static QuoteBillingMonthQuoteResponse toResponseDTO(QuoteBillingMonthQuote entity) {
         if (entity == null) return null;
 
-        return QuoteBillingMonthQuoteResponseDTO.builder()
+        return QuoteBillingMonthQuoteResponse.builder()
                 .id(entity.getId())
                 .quoteBillingMonthId(entity.getQuoteBillingMonth().getId())
                 .quoteId(entity.getQuote().getId())
@@ -23,7 +23,7 @@ public class QuoteBillingMonthQuoteAdapter {
                 .build();
     }
 
-    public static QuoteBillingMonthQuote toEntity(QuoteBillingMonthQuoteRequestDTO dto, QuoteBillingMonth qbm, Quote quote) {
+    public static QuoteBillingMonthQuote toEntity(QuoteBillingMonthQuoteRequest dto, QuoteBillingMonth qbm, Quote quote) {
         if (dto == null) return null;
 
         return QuoteBillingMonthQuote.builder()
@@ -32,7 +32,7 @@ public class QuoteBillingMonthQuoteAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(QuoteBillingMonthQuoteRequestDTO dto, QuoteBillingMonthQuote entity,
+    public static void updateEntityFromDto(QuoteBillingMonthQuoteRequest dto, QuoteBillingMonthQuote entity,
                                            QuoteBillingMonth qbm, Quote quote) {
         if (dto == null || entity == null) return;
         entity.setQuoteBillingMonth(qbm);

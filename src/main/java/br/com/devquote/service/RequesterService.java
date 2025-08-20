@@ -1,23 +1,23 @@
 package br.com.devquote.service;
-import br.com.devquote.dto.request.RequesterRequestDTO;
-import br.com.devquote.dto.response.RequesterResponseDTO;
+import br.com.devquote.dto.request.RequesterRequest;
+import br.com.devquote.dto.response.RequesterResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface RequesterService {
 
-    List<RequesterResponseDTO> findAll();
+    List<RequesterResponse> findAll();
 
-    RequesterResponseDTO findById(Long id);
+    RequesterResponse findById(Long id);
 
-    RequesterResponseDTO create(RequesterRequestDTO dto);
+    RequesterResponse create(RequesterRequest dto);
 
-    RequesterResponseDTO update(Long id, RequesterRequestDTO dto);
+    RequesterResponse update(Long id, RequesterRequest dto);
 
     void delete(Long id);
 
-    Page<RequesterResponseDTO> findAllPaginated(
+    Page<RequesterResponse> findAllPaginated(
             Long id,
             String name,
             String email,

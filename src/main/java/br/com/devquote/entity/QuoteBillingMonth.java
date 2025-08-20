@@ -8,7 +8,18 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "quote_billing_month")
+@Table(
+        name = "quote_billing_month",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_quote_billing_month_year_month",
+                        columnNames = {"year", "month"}
+                )
+        },
+        indexes = {
+                @Index(name = "idx_qbm_year_month", columnList = "year, month")
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -35,6 +46,14 @@ public class QuoteBillingMonth {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by")
+    private User updatedBy;
 
     @PrePersist
     protected void onCreate() {

@@ -1,9 +1,9 @@
 package br.com.devquote.controller;
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.DeliveryControllerDoc;
-import br.com.devquote.dto.request.DeliveryRequestDTO;
-import br.com.devquote.dto.response.DeliveryResponseDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
+import br.com.devquote.dto.request.DeliveryRequest;
+import br.com.devquote.dto.response.DeliveryResponse;
+import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.service.DeliveryService;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
@@ -36,7 +36,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     @Override
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PagedResponseDTO<DeliveryResponseDTO>> list(
+    public ResponseEntity<PagedResponse<DeliveryResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -60,7 +60,7 @@ public class DeliveryController implements DeliveryControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        Page<DeliveryResponseDTO> pageResult = deliveryService.findAllPaginated(
+        Page<DeliveryResponse> pageResult = deliveryService.findAllPaginated(
                 id, taskName, taskCode, projectName,
                 branch, pullRequest, status, startedAt, finishedAt, createdAt, updatedAt, pageable
         );
@@ -71,7 +71,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     @Override
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<DeliveryResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<DeliveryResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(deliveryService.findById(id));
     }
 
@@ -79,7 +79,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     @PostMapping
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<DeliveryResponseDTO> create(@RequestBody @Valid DeliveryRequestDTO dto) {
+    public ResponseEntity<DeliveryResponse> create(@RequestBody @Valid DeliveryRequest dto) {
         return new ResponseEntity<>(deliveryService.create(dto), HttpStatus.CREATED);
     }
 
@@ -87,7 +87,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     @PutMapping("/{id}")
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<DeliveryResponseDTO> update(@PathVariable Long id, @RequestBody @Valid DeliveryRequestDTO dto) {
+    public ResponseEntity<DeliveryResponse> update(@PathVariable Long id, @RequestBody @Valid DeliveryRequest dto) {
         return ResponseEntity.ok(deliveryService.update(id, dto));
     }
 

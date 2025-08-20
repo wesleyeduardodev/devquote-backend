@@ -1,9 +1,9 @@
 package br.com.devquote.controller;
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.ProjectControllerDoc;
-import br.com.devquote.dto.request.ProjectRequestDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
-import br.com.devquote.dto.response.ProjectResponseDTO;
+import br.com.devquote.dto.request.ProjectRequest;
+import br.com.devquote.dto.response.PagedResponse;
+import br.com.devquote.dto.response.ProjectResponse;
 import br.com.devquote.service.ProjectService;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
@@ -35,7 +35,7 @@ public class ProjectController implements ProjectControllerDoc {
     @Override
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PagedResponseDTO<ProjectResponseDTO>> list(
+    public ResponseEntity<PagedResponse<ProjectResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -53,7 +53,7 @@ public class ProjectController implements ProjectControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        Page<ProjectResponseDTO> pageResult = projectService.findAllPaginated(
+        Page<ProjectResponse> pageResult = projectService.findAllPaginated(
                 id, name, repositoryUrl, createdAt, updatedAt, pageable
         );
 
@@ -63,7 +63,7 @@ public class ProjectController implements ProjectControllerDoc {
     @Override
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ProjectResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<ProjectResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(projectService.findById(id));
     }
 
@@ -71,7 +71,7 @@ public class ProjectController implements ProjectControllerDoc {
     @PostMapping
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ProjectResponseDTO> create(@RequestBody @Valid ProjectRequestDTO dto) {
+    public ResponseEntity<ProjectResponse> create(@RequestBody @Valid ProjectRequest dto) {
         return new ResponseEntity<>(projectService.create(dto), HttpStatus.CREATED);
     }
 
@@ -79,7 +79,7 @@ public class ProjectController implements ProjectControllerDoc {
     @PutMapping("/{id}")
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ProjectResponseDTO> update(@PathVariable Long id, @RequestBody @Valid ProjectRequestDTO dto) {
+    public ResponseEntity<ProjectResponse> update(@PathVariable Long id, @RequestBody @Valid ProjectRequest dto) {
         return ResponseEntity.ok(projectService.update(id, dto));
     }
 

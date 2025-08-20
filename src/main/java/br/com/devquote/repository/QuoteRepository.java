@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface QuoteRepository extends JpaRepository<Quote, Long> {
@@ -37,4 +38,10 @@ public interface QuoteRepository extends JpaRepository<Quote, Long> {
             @Param("updatedAt") String updatedAt,
             Pageable pageable
     );
+
+    @Query("""
+           SELECT q FROM Quote q
+           WHERE q.task.id = :taskId
+           """)
+    Optional<Quote> findByTaskId(@Param("taskId") Long taskId);
 }

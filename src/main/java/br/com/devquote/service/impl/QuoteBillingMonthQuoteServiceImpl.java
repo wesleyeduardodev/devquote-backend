@@ -1,7 +1,7 @@
 package br.com.devquote.service.impl;
 import br.com.devquote.adapter.QuoteBillingMonthQuoteAdapter;
-import br.com.devquote.dto.request.QuoteBillingMonthQuoteRequestDTO;
-import br.com.devquote.dto.response.QuoteBillingMonthQuoteResponseDTO;
+import br.com.devquote.dto.request.QuoteBillingMonthQuoteRequest;
+import br.com.devquote.dto.response.QuoteBillingMonthQuoteResponse;
 import br.com.devquote.entity.Quote;
 import br.com.devquote.entity.QuoteBillingMonth;
 import br.com.devquote.entity.QuoteBillingMonthQuote;
@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,21 +27,21 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
     private final QuoteRepository quoteRepository;
 
     @Override
-    public List<QuoteBillingMonthQuoteResponseDTO> findAll() {
+    public List<QuoteBillingMonthQuoteResponse> findAll() {
         return repository.findAllOrderedById().stream()
                 .map(QuoteBillingMonthQuoteAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public QuoteBillingMonthQuoteResponseDTO findById(Long id) {
+    public QuoteBillingMonthQuoteResponse findById(Long id) {
         QuoteBillingMonthQuote entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("QuoteBillingMonthQuote not found"));
         return QuoteBillingMonthQuoteAdapter.toResponseDTO(entity);
     }
 
     @Override
-    public QuoteBillingMonthQuoteResponseDTO create(QuoteBillingMonthQuoteRequestDTO dto) {
+    public QuoteBillingMonthQuoteResponse create(QuoteBillingMonthQuoteRequest dto) {
         if (repository.existsByQuoteBillingMonth_IdAndQuote_Id(dto.getQuoteBillingMonthId(), dto.getQuoteId())) {
             throw new DataIntegrityViolationException("This quote is already linked to the given billing month.");
         }
@@ -55,7 +56,7 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
     }
 
     @Override
-    public QuoteBillingMonthQuoteResponseDTO update(Long id, QuoteBillingMonthQuoteRequestDTO dto) {
+    public QuoteBillingMonthQuoteResponse update(Long id, QuoteBillingMonthQuoteRequest dto) {
         QuoteBillingMonthQuote entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("QuoteBillingMonthQuote not found"));
 
@@ -74,10 +75,16 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
     }
 
     @Override
-    public List<QuoteBillingMonthQuoteResponseDTO> findByQuoteBillingMonthId(Long billingMonthId) {
+    public List<QuoteBillingMonthQuoteResponse> findByQuoteBillingMonthId(Long billingMonthId) {
         return repository.findByQuoteBillingMonth_Id(billingMonthId)
                 .stream()
                 .map(QuoteBillingMonthQuoteAdapter::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public QuoteBillingMonthQuote findByQuoteBillingMonthIdAndQuoteId(Long billingMonthId, Long quoteId){
+        Optional<QuoteBillingMonthQuote> quote = repository.findByQuoteBillingMonthIdAndQuoteId(billingMonthId, quoteId);
+        return quote.orElse(null);
     }
 }

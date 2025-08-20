@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DeliveryResponseDTO {
+public class DeliveryResponse {
 
     private Long id;
     private Long quoteId;

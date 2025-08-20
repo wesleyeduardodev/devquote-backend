@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class QuoteRequestDTO {
+public class QuoteRequest {
 
     @NotNull(message = "Task ID is required")
     private Long taskId;

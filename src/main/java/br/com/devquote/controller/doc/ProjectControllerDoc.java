@@ -1,7 +1,7 @@
 package br.com.devquote.controller.doc;
-import br.com.devquote.dto.request.ProjectRequestDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
-import br.com.devquote.dto.response.ProjectResponseDTO;
+import br.com.devquote.dto.request.ProjectRequest;
+import br.com.devquote.dto.response.PagedResponse;
+import br.com.devquote.dto.response.ProjectResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,7 +31,7 @@ public interface ProjectControllerDoc {
             description = "Repeatable. Format: field,(asc|desc). Allowed: id,name,repositoryUrl,createdAt,updatedAt",
             array = @ArraySchema(schema = @Schema(type = "string", example = "id,desc"))
     )
-    ResponseEntity<PagedResponseDTO<ProjectResponseDTO>> list(
+    ResponseEntity<PagedResponse<ProjectResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -47,24 +47,24 @@ public interface ProjectControllerDoc {
             @ApiResponse(responseCode = "200", description = "Successful retrieval of project"),
             @ApiResponse(responseCode = "404", description = "Project not found")
     })
-    ResponseEntity<ProjectResponseDTO> getById(
+    ResponseEntity<ProjectResponse> getById(
             @Parameter(description = "Project id", required = true) Long id);
 
     @Operation(summary = "Create a new project")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Project created successfully")
     })
-    ResponseEntity<ProjectResponseDTO> create(
-            @Parameter(description = "Project payload", required = true) @Valid ProjectRequestDTO dto);
+    ResponseEntity<ProjectResponse> create(
+            @Parameter(description = "Project payload", required = true) @Valid ProjectRequest dto);
 
     @Operation(summary = "Update an existing project")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Project updated successfully"),
             @ApiResponse(responseCode = "404", description = "Project not found")
     })
-    ResponseEntity<ProjectResponseDTO> update(
+    ResponseEntity<ProjectResponse> update(
             @Parameter(description = "Project id", required = true) Long id,
-            @Parameter(description = "Project payload", required = true) @Valid ProjectRequestDTO dto);
+            @Parameter(description = "Project payload", required = true) @Valid ProjectRequest dto);
 
     @Operation(summary = "Delete a project")
     @ApiResponses({

@@ -1,8 +1,7 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.QuoteAdapter;
-import br.com.devquote.dto.request.QuoteRequestDTO;
-import br.com.devquote.dto.response.QuoteResponseDTO;
+import br.com.devquote.dto.request.QuoteRequest;
+import br.com.devquote.dto.response.QuoteResponse;
 import br.com.devquote.entity.Quote;
 import br.com.devquote.entity.Task;
 import br.com.devquote.repository.QuoteRepository;
@@ -13,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,21 +25,21 @@ public class QuoteServiceImpl implements QuoteService {
     private final TaskRepository taskRepository;
 
     @Override
-    public List<QuoteResponseDTO> findAll() {
+    public List<QuoteResponse> findAll() {
         return quoteRepository.findAllOrderedById().stream()
                 .map(QuoteAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public QuoteResponseDTO findById(Long id) {
+    public QuoteResponse findById(Long id) {
         Quote entity = quoteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Quote not found"));
         return QuoteAdapter.toResponseDTO(entity);
     }
 
     @Override
-    public QuoteResponseDTO create(QuoteRequestDTO dto) {
+    public QuoteResponse create(QuoteRequest dto) {
         Task task = taskRepository.findById(dto.getTaskId())
                 .orElseThrow(() -> new RuntimeException("Task not found"));
         Quote entity = QuoteAdapter.toEntity(dto, task);
@@ -49,7 +48,7 @@ public class QuoteServiceImpl implements QuoteService {
     }
 
     @Override
-    public QuoteResponseDTO update(Long id, QuoteRequestDTO dto) {
+    public QuoteResponse update(Long id, QuoteRequest dto) {
         Quote entity = quoteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Quote not found"));
         Task task = taskRepository.findById(dto.getTaskId())
@@ -65,19 +64,25 @@ public class QuoteServiceImpl implements QuoteService {
     }
 
     @Override
-    public Page<QuoteResponseDTO> findAllPaginated(Long id,
-                                                   Long taskId,
-                                                   String taskName,
-                                                   String taskCode,
-                                                   String status,
-                                                   String createdAt,
-                                                   String updatedAt,
-                                                   Pageable pageable) {
+    public Page<QuoteResponse> findAllPaginated(Long id,
+                                                Long taskId,
+                                                String taskName,
+                                                String taskCode,
+                                                String status,
+                                                String createdAt,
+                                                String updatedAt,
+                                                Pageable pageable) {
 
         Page<Quote> page = quoteRepository.findByOptionalFieldsPaginated(
                 id, taskId, taskName, taskCode, status, createdAt, updatedAt, pageable
         );
 
         return page.map(QuoteAdapter::toResponseDTO);
+    }
+
+    @Override
+    public Quote findByTaskId(Long taskId){
+        Optional<Quote> quote = quoteRepository.findByTaskId(taskId);
+        return quote.orElse(null);
     }
 }

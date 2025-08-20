@@ -1,18 +1,18 @@
 package br.com.devquote.adapter;
-import br.com.devquote.dto.request.ProjectRequestDTO;
-import br.com.devquote.dto.response.ProjectResponseDTO;
+import br.com.devquote.dto.request.ProjectRequest;
+import br.com.devquote.dto.response.ProjectResponse;
 import br.com.devquote.entity.Project;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ProjectAdapter {
 
-    public static ProjectResponseDTO toResponseDTO(Project entity) {
+    public static ProjectResponse toResponseDTO(Project entity) {
         if (entity == null) {
             return null;
         }
 
-        return ProjectResponseDTO.builder()
+        return ProjectResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
                 .repositoryUrl(entity.getRepositoryUrl())
@@ -21,7 +21,7 @@ public class ProjectAdapter {
                 .build();
     }
 
-    public static Project toEntity(ProjectRequestDTO dto) {
+    public static Project toEntity(ProjectRequest dto) {
         if (dto == null) {
             return null;
         }
@@ -32,7 +32,7 @@ public class ProjectAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(ProjectRequestDTO dto, Project entity) {
+    public static void updateEntityFromDto(ProjectRequest dto, Project entity) {
         if (dto == null || entity == null) {
             return;
         }

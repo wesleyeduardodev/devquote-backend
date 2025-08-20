@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class QuoteBillingMonthRequestDTO {
+public class QuoteBillingMonthRequest {
 
     @NotNull(message = "Month is required")
     @Min(value = 1, message = "Month must be at least 1")

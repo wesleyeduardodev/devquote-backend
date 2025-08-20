@@ -1,7 +1,7 @@
 package br.com.devquote.controller;
 import br.com.devquote.controller.doc.SubTaskControllerDoc;
-import br.com.devquote.dto.request.SubTaskRequestDTO;
-import br.com.devquote.dto.response.SubTaskResponseDTO;
+import br.com.devquote.dto.request.SubTaskRequest;
+import br.com.devquote.dto.response.SubTaskResponse;
 import br.com.devquote.service.SubTaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +23,14 @@ public class SubTaskController implements SubTaskControllerDoc {
     @Override
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<SubTaskResponseDTO>> list() {
+    public ResponseEntity<List<SubTaskResponse>> list() {
         return ResponseEntity.ok(subTaskService.findAll());
     }
 
     @Override
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<SubTaskResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<SubTaskResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(subTaskService.findById(id));
     }
 
@@ -38,7 +38,7 @@ public class SubTaskController implements SubTaskControllerDoc {
     @PostMapping
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<SubTaskResponseDTO> create(@RequestBody @Valid SubTaskRequestDTO dto) {
+    public ResponseEntity<SubTaskResponse> create(@RequestBody @Valid SubTaskRequest dto) {
         return new ResponseEntity<>(subTaskService.create(dto), HttpStatus.CREATED);
     }
 
@@ -46,7 +46,7 @@ public class SubTaskController implements SubTaskControllerDoc {
     @PutMapping("/{id}")
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<SubTaskResponseDTO> update(@PathVariable Long id, @RequestBody @Valid SubTaskRequestDTO dto) {
+    public ResponseEntity<SubTaskResponse> update(@PathVariable Long id, @RequestBody @Valid SubTaskRequest dto) {
         return ResponseEntity.ok(subTaskService.update(id, dto));
     }
 

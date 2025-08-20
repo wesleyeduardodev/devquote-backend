@@ -1,6 +1,6 @@
 package br.com.devquote.controller.doc;
-import br.com.devquote.dto.request.SubTaskRequestDTO;
-import br.com.devquote.dto.response.SubTaskResponseDTO;
+import br.com.devquote.dto.request.SubTaskRequest;
+import br.com.devquote.dto.response.SubTaskResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,31 +17,31 @@ public interface SubTaskControllerDoc {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successful retrieval of sub tasks")
     })
-    ResponseEntity<List<SubTaskResponseDTO>> list();
+    ResponseEntity<List<SubTaskResponse>> list();
 
     @Operation(summary = "Get sub task by id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successful retrieval of sub task"),
             @ApiResponse(responseCode = "404", description = "SubTask not found")
     })
-    ResponseEntity<SubTaskResponseDTO> getById(
+    ResponseEntity<SubTaskResponse> getById(
             @Parameter(description = "SubTask id", required = true) Long id);
 
     @Operation(summary = "Create a new sub task")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "SubTask created successfully")
     })
-    ResponseEntity<SubTaskResponseDTO> create(
-            @Parameter(description = "SubTask payload", required = true) @Valid SubTaskRequestDTO dto);
+    ResponseEntity<SubTaskResponse> create(
+            @Parameter(description = "SubTask payload", required = true) @Valid SubTaskRequest dto);
 
     @Operation(summary = "Update an existing sub task")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "SubTask updated successfully"),
             @ApiResponse(responseCode = "404", description = "SubTask not found")
     })
-    ResponseEntity<SubTaskResponseDTO> update(
+    ResponseEntity<SubTaskResponse> update(
             @Parameter(description = "SubTask id", required = true) Long id,
-            @Parameter(description = "SubTask payload", required = true) @Valid SubTaskRequestDTO dto);
+            @Parameter(description = "SubTask payload", required = true) @Valid SubTaskRequest dto);
 
     @Operation(summary = "Delete a sub task")
     @ApiResponses({

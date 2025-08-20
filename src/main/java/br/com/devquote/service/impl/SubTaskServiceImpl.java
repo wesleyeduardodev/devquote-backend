@@ -1,7 +1,7 @@
 package br.com.devquote.service.impl;
 import br.com.devquote.adapter.SubTaskAdapter;
-import br.com.devquote.dto.request.SubTaskRequestDTO;
-import br.com.devquote.dto.response.SubTaskResponseDTO;
+import br.com.devquote.dto.request.SubTaskRequest;
+import br.com.devquote.dto.response.SubTaskResponse;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
 import br.com.devquote.repository.SubTaskRepository;
@@ -22,21 +22,21 @@ public class SubTaskServiceImpl implements SubTaskService {
     private final TaskRepository taskRepository;
 
     @Override
-    public List<SubTaskResponseDTO> findAll() {
+    public List<SubTaskResponse> findAll() {
         return subTaskRepository.findAllOrderedById().stream()
                 .map(SubTaskAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public SubTaskResponseDTO findById(Long id) {
+    public SubTaskResponse findById(Long id) {
         SubTask entity = subTaskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("SubTask not found"));
         return SubTaskAdapter.toResponseDTO(entity);
     }
 
     @Override
-    public SubTaskResponseDTO create(SubTaskRequestDTO dto) {
+    public SubTaskResponse create(SubTaskRequest dto) {
         Task task = taskRepository.findById(dto.getTaskId())
                 .orElseThrow(() -> new RuntimeException("Task not found"));
         SubTask entity = SubTaskAdapter.toEntity(dto, task);
@@ -45,7 +45,7 @@ public class SubTaskServiceImpl implements SubTaskService {
     }
 
     @Override
-    public SubTaskResponseDTO update(Long id, SubTaskRequestDTO dto) {
+    public SubTaskResponse update(Long id, SubTaskRequest dto) {
         SubTask entity = subTaskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("SubTask not found"));
         Task task = taskRepository.findById(dto.getTaskId())

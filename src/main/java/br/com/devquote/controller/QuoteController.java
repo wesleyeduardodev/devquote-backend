@@ -1,9 +1,9 @@
 package br.com.devquote.controller;
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.QuoteControllerDoc;
-import br.com.devquote.dto.request.QuoteRequestDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
-import br.com.devquote.dto.response.QuoteResponseDTO;
+import br.com.devquote.dto.request.QuoteRequest;
+import br.com.devquote.dto.response.PagedResponse;
+import br.com.devquote.dto.response.QuoteResponse;
 import br.com.devquote.service.QuoteService;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
@@ -35,7 +35,7 @@ public class QuoteController implements QuoteControllerDoc {
     @Override
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PagedResponseDTO<QuoteResponseDTO>> list(
+    public ResponseEntity<PagedResponse<QuoteResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -55,7 +55,7 @@ public class QuoteController implements QuoteControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        Page<QuoteResponseDTO> pageResult = quoteService.findAllPaginated(
+        Page<QuoteResponse> pageResult = quoteService.findAllPaginated(
                 id, taskId, taskName, taskCode, status, createdAt, updatedAt, pageable
         );
 
@@ -65,7 +65,7 @@ public class QuoteController implements QuoteControllerDoc {
     @Override
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<QuoteResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(quoteService.findById(id));
     }
 
@@ -73,7 +73,7 @@ public class QuoteController implements QuoteControllerDoc {
     @PostMapping
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteResponseDTO> create(@RequestBody @Valid QuoteRequestDTO dto) {
+    public ResponseEntity<QuoteResponse> create(@RequestBody @Valid QuoteRequest dto) {
         return new ResponseEntity<>(quoteService.create(dto), HttpStatus.CREATED);
     }
 
@@ -81,7 +81,7 @@ public class QuoteController implements QuoteControllerDoc {
     @PutMapping("/{id}")
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteResponseDTO> update(@PathVariable Long id, @RequestBody @Valid QuoteRequestDTO dto) {
+    public ResponseEntity<QuoteResponse> update(@PathVariable Long id, @RequestBody @Valid QuoteRequest dto) {
         return ResponseEntity.ok(quoteService.update(id, dto));
     }
 

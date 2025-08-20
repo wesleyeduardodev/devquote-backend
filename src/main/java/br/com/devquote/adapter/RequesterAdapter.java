@@ -1,18 +1,18 @@
 package br.com.devquote.adapter;
-import br.com.devquote.dto.request.RequesterRequestDTO;
-import br.com.devquote.dto.response.RequesterResponseDTO;
+import br.com.devquote.dto.request.RequesterRequest;
+import br.com.devquote.dto.response.RequesterResponse;
 import br.com.devquote.entity.Requester;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class RequesterAdapter {
 
-    public static RequesterResponseDTO toResponseDTO(Requester entity) {
+    public static RequesterResponse toResponseDTO(Requester entity) {
         if (entity == null) {
             return null;
         }
 
-        return RequesterResponseDTO.builder()
+        return RequesterResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
                 .email(entity.getEmail())
@@ -22,7 +22,7 @@ public class RequesterAdapter {
                 .build();
     }
 
-    public static Requester toEntity(RequesterRequestDTO dto) {
+    public static Requester toEntity(RequesterRequest dto) {
         if (dto == null) {
             return null;
         }
@@ -34,7 +34,7 @@ public class RequesterAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(RequesterRequestDTO dto, Requester entity) {
+    public static void updateEntityFromDto(RequesterRequest dto, Requester entity) {
         if (dto == null || entity == null) {
             return;
         }

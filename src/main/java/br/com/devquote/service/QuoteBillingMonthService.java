@@ -1,12 +1,15 @@
 package br.com.devquote.service;
-import br.com.devquote.dto.request.QuoteBillingMonthRequestDTO;
-import br.com.devquote.dto.response.QuoteBillingMonthResponseDTO;
+import br.com.devquote.dto.request.QuoteBillingMonthRequest;
+import br.com.devquote.dto.response.QuoteBillingMonthResponse;
+import br.com.devquote.entity.QuoteBillingMonth;
+
 import java.util.List;
 
 public interface QuoteBillingMonthService {
-    List<QuoteBillingMonthResponseDTO> findAll();
-    QuoteBillingMonthResponseDTO findById(Long id);
-    QuoteBillingMonthResponseDTO create(QuoteBillingMonthRequestDTO dto);
-    QuoteBillingMonthResponseDTO update(Long id, QuoteBillingMonthRequestDTO dto);
+    List<QuoteBillingMonthResponse> findAll();
+    QuoteBillingMonthResponse findById(Long id);
+    QuoteBillingMonthResponse create(QuoteBillingMonthRequest dto);
+    QuoteBillingMonthResponse update(Long id, QuoteBillingMonthRequest dto);
     void delete(Long id);
+    QuoteBillingMonth findByYearAndMonth(Integer year, Integer month);
 }

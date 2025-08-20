@@ -1,6 +1,6 @@
 package br.com.devquote.controller.doc;
-import br.com.devquote.dto.request.QuoteBillingMonthRequestDTO;
-import br.com.devquote.dto.response.QuoteBillingMonthResponseDTO;
+import br.com.devquote.dto.request.QuoteBillingMonthRequest;
+import br.com.devquote.dto.response.QuoteBillingMonthResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,27 +16,27 @@ public interface QuoteBillingMonthControllerDoc {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successful retrieval")
     })
-    ResponseEntity<List<QuoteBillingMonthResponseDTO>> list();
+    ResponseEntity<List<QuoteBillingMonthResponse>> list();
 
     @Operation(summary = "Get quote billing month by id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successful retrieval"),
             @ApiResponse(responseCode = "404", description = "Not found")
     })
-    ResponseEntity<QuoteBillingMonthResponseDTO> getById(Long id);
+    ResponseEntity<QuoteBillingMonthResponse> getById(Long id);
 
     @Operation(summary = "Create a quote billing month")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Created")
     })
-    ResponseEntity<QuoteBillingMonthResponseDTO> create(@Valid QuoteBillingMonthRequestDTO dto);
+    ResponseEntity<QuoteBillingMonthResponse> create(@Valid QuoteBillingMonthRequest dto);
 
     @Operation(summary = "Update a quote billing month")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Updated"),
             @ApiResponse(responseCode = "404", description = "Not found")
     })
-    ResponseEntity<QuoteBillingMonthResponseDTO> update(Long id, @Valid QuoteBillingMonthRequestDTO dto);
+    ResponseEntity<QuoteBillingMonthResponse> update(Long id, @Valid QuoteBillingMonthRequest dto);
 
     @Operation(summary = "Delete a quote billing month")
     @ApiResponses({

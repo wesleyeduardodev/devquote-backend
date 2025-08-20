@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SubTaskRequestDTO {
+public class SubTaskRequest {
 
     private Long taskId;
 

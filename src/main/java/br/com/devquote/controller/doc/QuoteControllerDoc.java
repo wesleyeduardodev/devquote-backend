@@ -1,7 +1,7 @@
 package br.com.devquote.controller.doc;
-import br.com.devquote.dto.request.QuoteRequestDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
-import br.com.devquote.dto.response.QuoteResponseDTO;
+import br.com.devquote.dto.request.QuoteRequest;
+import br.com.devquote.dto.response.PagedResponse;
+import br.com.devquote.dto.response.QuoteResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,7 +33,7 @@ public interface QuoteControllerDoc {
             description = "Repeatable. Format: field,(asc|desc). Allowed: id,taskId,taskName,taskCode,status,totalAmount,createdAt,updatedAt",
             array = @ArraySchema(schema = @Schema(type = "string", example = "id,desc"))
     )
-    ResponseEntity<PagedResponseDTO<QuoteResponseDTO>> list(
+    ResponseEntity<PagedResponse<QuoteResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -51,24 +51,24 @@ public interface QuoteControllerDoc {
             @ApiResponse(responseCode = "200", description = "Successful retrieval of quote"),
             @ApiResponse(responseCode = "404", description = "Quote not found")
     })
-    ResponseEntity<QuoteResponseDTO> getById(
+    ResponseEntity<QuoteResponse> getById(
             @Parameter(description = "Quote id", required = true) Long id);
 
     @Operation(summary = "Create a new quote")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Quote created successfully")
     })
-    ResponseEntity<QuoteResponseDTO> create(
-            @Parameter(description = "Quote payload", required = true) @Valid QuoteRequestDTO dto);
+    ResponseEntity<QuoteResponse> create(
+            @Parameter(description = "Quote payload", required = true) @Valid QuoteRequest dto);
 
     @Operation(summary = "Update an existing quote")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Quote updated successfully"),
             @ApiResponse(responseCode = "404", description = "Quote not found")
     })
-    ResponseEntity<QuoteResponseDTO> update(
+    ResponseEntity<QuoteResponse> update(
             @Parameter(description = "Quote id", required = true) Long id,
-            @Parameter(description = "Quote payload", required = true) @Valid QuoteRequestDTO dto);
+            @Parameter(description = "Quote payload", required = true) @Valid QuoteRequest dto);
 
     @Operation(summary = "Delete a quote")
     @ApiResponses({

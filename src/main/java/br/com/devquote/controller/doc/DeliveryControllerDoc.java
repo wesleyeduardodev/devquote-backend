@@ -1,7 +1,7 @@
 package br.com.devquote.controller.doc;
-import br.com.devquote.dto.request.DeliveryRequestDTO;
-import br.com.devquote.dto.response.DeliveryResponseDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
+import br.com.devquote.dto.request.DeliveryRequest;
+import br.com.devquote.dto.response.DeliveryResponse;
+import br.com.devquote.dto.response.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -40,7 +40,7 @@ public interface DeliveryControllerDoc {
             description = "Repeatable. Format: field,(asc|desc). Allowed: id,quoteId,taskId,taskName,taskCode,projectId,projectName,branch,pullRequest,status,startedAt,finishedAt,createdAt,updatedAt",
             array = @ArraySchema(schema = @Schema(type = "string", example = "id,desc"))
     )
-    ResponseEntity<PagedResponseDTO<DeliveryResponseDTO>> list(
+    ResponseEntity<PagedResponse<DeliveryResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -62,24 +62,24 @@ public interface DeliveryControllerDoc {
             @ApiResponse(responseCode = "200", description = "Successful retrieval of delivery"),
             @ApiResponse(responseCode = "404", description = "Delivery not found")
     })
-    ResponseEntity<DeliveryResponseDTO> getById(
+    ResponseEntity<DeliveryResponse> getById(
             @Parameter(description = "Delivery id", required = true) Long id);
 
     @Operation(summary = "Create a new delivery")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Delivery created successfully")
     })
-    ResponseEntity<DeliveryResponseDTO> create(
-            @Parameter(description = "Delivery payload", required = true) @Valid DeliveryRequestDTO dto);
+    ResponseEntity<DeliveryResponse> create(
+            @Parameter(description = "Delivery payload", required = true) @Valid DeliveryRequest dto);
 
     @Operation(summary = "Update an existing delivery")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Delivery updated successfully"),
             @ApiResponse(responseCode = "404", description = "Delivery not found")
     })
-    ResponseEntity<DeliveryResponseDTO> update(
+    ResponseEntity<DeliveryResponse> update(
             @Parameter(description = "Delivery id", required = true) Long id,
-            @Parameter(description = "Delivery payload", required = true) @Valid DeliveryRequestDTO dto);
+            @Parameter(description = "Delivery payload", required = true) @Valid DeliveryRequest dto);
 
     @Operation(summary = "Delete a delivery")
     @ApiResponses({

@@ -1,7 +1,7 @@
 package br.com.devquote.adapter;
-import br.com.devquote.dto.request.SubTaskRequestDTO;
-import br.com.devquote.dto.request.SubTaskUpdateRequestDTO;
-import br.com.devquote.dto.response.SubTaskResponseDTO;
+import br.com.devquote.dto.request.SubTaskRequest;
+import br.com.devquote.dto.request.SubTaskUpdateRequest;
+import br.com.devquote.dto.response.SubTaskResponse;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
 import lombok.experimental.UtilityClass;
@@ -11,12 +11,12 @@ import java.util.List;
 @UtilityClass
 public class SubTaskAdapter {
 
-    public static SubTaskResponseDTO toResponseDTO(SubTask entity) {
+    public static SubTaskResponse toResponseDTO(SubTask entity) {
         if (entity == null) {
             return null;
         }
 
-        return SubTaskResponseDTO.builder()
+        return SubTaskResponse.builder()
                 .id(entity.getId())
                 .taskId(entity.getTask() != null ? entity.getTask().getId() : null)
                 .title(entity.getTitle())
@@ -28,7 +28,7 @@ public class SubTaskAdapter {
                 .build();
     }
 
-    public static SubTask toEntity(SubTaskRequestDTO dto, Task task) {
+    public static SubTask toEntity(SubTaskRequest dto, Task task) {
         if (dto == null) {
             return null;
         }
@@ -42,7 +42,7 @@ public class SubTaskAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(SubTaskRequestDTO dto, SubTask entity, Task task) {
+    public static void updateEntityFromDto(SubTaskRequest dto, SubTask entity, Task task) {
         if (dto == null || entity == null) {
             return;
         }
@@ -57,7 +57,7 @@ public class SubTaskAdapter {
         entity.setStatus(dto.getStatus());
     }
 
-    public static void updateEntityFromDto(SubTaskUpdateRequestDTO dto, SubTask entity, Task task) {
+    public static void updateEntityFromDto(SubTaskUpdateRequest dto, SubTask entity, Task task) {
         if (dto == null || entity == null) {
             return;
         }
@@ -72,7 +72,7 @@ public class SubTaskAdapter {
         entity.setStatus(dto.getStatus());
     }
 
-    public static List<SubTaskResponseDTO> toResponseDTOList(List<SubTask> entities) {
+    public static List<SubTaskResponse> toResponseDTOList(List<SubTask> entities) {
         if (entities == null || entities.isEmpty()) {
             return List.of();
         }
@@ -82,7 +82,7 @@ public class SubTaskAdapter {
                 .toList();
     }
 
-    public static SubTask toEntity(SubTaskUpdateRequestDTO dto, Task task) {
+    public static SubTask toEntity(SubTaskUpdateRequest dto, Task task) {
         if (dto == null) {
             return null;
         }

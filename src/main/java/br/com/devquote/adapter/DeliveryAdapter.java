@@ -1,6 +1,6 @@
 package br.com.devquote.adapter;
-import br.com.devquote.dto.request.DeliveryRequestDTO;
-import br.com.devquote.dto.response.DeliveryResponseDTO;
+import br.com.devquote.dto.request.DeliveryRequest;
+import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Project;
 import br.com.devquote.entity.Quote;
@@ -9,10 +9,10 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public final class DeliveryAdapter {
 
-    public static DeliveryResponseDTO toResponseDTO(Delivery entity) {
+    public static DeliveryResponse toResponseDTO(Delivery entity) {
         if (entity == null) return null;
 
-        return DeliveryResponseDTO.builder()
+        return DeliveryResponse.builder()
                 .id(entity.getId())
                 .taskId(entity.getQuote() != null  && entity.getQuote().getTask() != null? entity.getQuote().getTask().getId() : null)
                 .taskName(entity.getQuote() != null  && entity.getQuote().getTask() != null? entity.getQuote().getTask().getDescription() : null)
@@ -30,7 +30,7 @@ public final class DeliveryAdapter {
                 .build();
     }
 
-    public static Delivery toEntity(DeliveryRequestDTO dto, Quote quote, Project project) {
+    public static Delivery toEntity(DeliveryRequest dto, Quote quote, Project project) {
         if (dto == null) return null;
 
         return Delivery.builder()
@@ -45,7 +45,7 @@ public final class DeliveryAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(DeliveryRequestDTO dto, Delivery entity, Quote quote, Project project) {
+    public static void updateEntityFromDto(DeliveryRequest dto, Delivery entity, Quote quote, Project project) {
         if (dto == null || entity == null) return;
 
         if (quote != null) entity.setQuote(quote);

@@ -1,6 +1,6 @@
 package br.com.devquote.adapter;
-import br.com.devquote.dto.request.TaskRequestDTO;
-import br.com.devquote.dto.response.TaskResponseDTO;
+import br.com.devquote.dto.request.TaskRequest;
+import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.entity.Requester;
 import br.com.devquote.entity.Task;
 import lombok.experimental.UtilityClass;
@@ -8,12 +8,12 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class TaskAdapter {
 
-    public static TaskResponseDTO toResponseDTO(Task entity) {
+    public static TaskResponse toResponseDTO(Task entity) {
         if (entity == null) {
             return null;
         }
 
-        return TaskResponseDTO.builder()
+        return TaskResponse.builder()
                 .id(entity.getId())
                 .requesterId(entity.getRequester() != null ? entity.getRequester().getId() : null)
                 .requesterName(entity.getRequester() != null ? entity.getRequester().getName() : null)
@@ -27,7 +27,7 @@ public class TaskAdapter {
                 .build();
     }
 
-    public static Task toEntity(TaskRequestDTO dto, Requester requester) {
+    public static Task toEntity(TaskRequest dto, Requester requester) {
         if (dto == null) {
             return null;
         }
@@ -42,7 +42,7 @@ public class TaskAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(TaskRequestDTO dto, Task entity, Requester requester) {
+    public static void updateEntityFromDto(TaskRequest dto, Task entity, Requester requester) {
         if (dto == null || entity == null) {
             return;
         }

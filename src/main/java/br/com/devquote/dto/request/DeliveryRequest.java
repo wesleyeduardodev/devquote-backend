@@ -2,7 +2,6 @@ package br.com.devquote.dto.request;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import java.time.LocalDate;
@@ -11,7 +10,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DeliveryRequestDTO {
+public class DeliveryRequest {
 
     @NotNull(message = "Quote ID is required")
     private Long quoteId;

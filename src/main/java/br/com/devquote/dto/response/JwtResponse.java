@@ -9,7 +9,7 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class JwtResponseDto {
+public class JwtResponse {
     private String token;
     private String type = "Bearer";
     private String username;
@@ -17,7 +17,7 @@ public class JwtResponseDto {
     private Set<String> roles;
     private Set<String> permissions;
 
-    public JwtResponseDto(String token, String username, String email, Set<String> roles, Set<String> permissions) {
+    public JwtResponse(String token, String username, String email, Set<String> roles, Set<String> permissions) {
         this.token = token;
         this.username = username;
         this.email = email;

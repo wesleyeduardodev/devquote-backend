@@ -1,9 +1,9 @@
 package br.com.devquote.controller;
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.RequesterControllerDoc;
-import br.com.devquote.dto.request.RequesterRequestDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
-import br.com.devquote.dto.response.RequesterResponseDTO;
+import br.com.devquote.dto.request.RequesterRequest;
+import br.com.devquote.dto.response.PagedResponse;
+import br.com.devquote.dto.response.RequesterResponse;
 import br.com.devquote.service.RequesterService;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
@@ -35,7 +35,7 @@ public class RequesterController implements RequesterControllerDoc {
     @Override
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PagedResponseDTO<RequesterResponseDTO>> list(
+    public ResponseEntity<PagedResponse<RequesterResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -55,29 +55,29 @@ public class RequesterController implements RequesterControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        Page<RequesterResponseDTO> pageResult = requesterService.findAllPaginated(
+        Page<RequesterResponse> pageResult = requesterService.findAllPaginated(
                 id, name, email, phone, createdAt, updatedAt, pageable
         );
 
-        PagedResponseDTO<RequesterResponseDTO> response = PageAdapter.toPagedResponseDTO(pageResult);
+        PagedResponse<RequesterResponse> response = PageAdapter.toPagedResponseDTO(pageResult);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<RequesterResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<RequesterResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(requesterService.findById(id));
     }
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<RequesterResponseDTO> create(@RequestBody @Valid RequesterRequestDTO dto) {
+    public ResponseEntity<RequesterResponse> create(@RequestBody @Valid RequesterRequest dto) {
         return new ResponseEntity<>(requesterService.create(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<RequesterResponseDTO> update(@PathVariable Long id, @RequestBody @Valid RequesterRequestDTO dto) {
+    public ResponseEntity<RequesterResponse> update(@PathVariable Long id, @RequestBody @Valid RequesterRequest dto) {
         return ResponseEntity.ok(requesterService.update(id, dto));
     }
 

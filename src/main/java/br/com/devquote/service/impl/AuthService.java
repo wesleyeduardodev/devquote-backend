@@ -2,10 +2,10 @@ package br.com.devquote.service.impl;
 
 import br.com.devquote.configuration.security.JwtUtils;
 import br.com.devquote.dto.*;
-import br.com.devquote.dto.request.LoginRequestDto;
-import br.com.devquote.dto.request.RegisterRequestDto;
-import br.com.devquote.dto.response.JwtResponseDto;
-import br.com.devquote.dto.response.MessageResponseDto;
+import br.com.devquote.dto.request.LoginRequest;
+import br.com.devquote.dto.request.RegisterRequest;
+import br.com.devquote.dto.response.JwtResponse;
+import br.com.devquote.dto.response.MessageResponse;
 import br.com.devquote.entity.Permission;
 import br.com.devquote.entity.Role;
 import br.com.devquote.entity.User;
@@ -36,7 +36,7 @@ public class AuthService {
     private final JwtUtils jwtUtils;
 
     @Transactional
-    public MessageResponseDto registerUser(RegisterRequestDto signUpRequest) {
+    public MessageResponse registerUser(RegisterRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             throw new RuntimeException("Error: Username is already taken!");
         }
@@ -65,7 +65,7 @@ public class AuthService {
         user.setRoles(Set.of(userRole));
         userRepository.save(user);
 
-        return new MessageResponseDto("User registered successfully!");
+        return new MessageResponse("User registered successfully!");
     }
 
     public UserInfoDto getCurrentUser(Authentication authentication) {
@@ -135,7 +135,7 @@ public class AuthService {
                 .collect(Collectors.toSet());
     }
 
-    public JwtResponseDto authenticateUser(LoginRequestDto loginRequest) {
+    public JwtResponse authenticateUser(LoginRequest loginRequest) {
         // Autenticar o usuário
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -165,7 +165,7 @@ public class AuthService {
                 .map(perm -> perm.substring(6)) // Remove "SCOPE_" prefix
                 .collect(Collectors.toSet());
 
-        return new JwtResponseDto(
+        return new JwtResponse(
                 jwt,
                 userDetails.getUsername(),
                 userDetails.getEmail(),

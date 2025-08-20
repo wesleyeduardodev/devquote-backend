@@ -1,7 +1,7 @@
 package br.com.devquote.service.impl;
 import br.com.devquote.adapter.DeliveryAdapter;
-import br.com.devquote.dto.request.DeliveryRequestDTO;
-import br.com.devquote.dto.response.DeliveryResponseDTO;
+import br.com.devquote.dto.request.DeliveryRequest;
+import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Project;
 import br.com.devquote.entity.Quote;
@@ -27,21 +27,21 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final ProjectRepository projectRepository;
 
     @Override
-    public List<DeliveryResponseDTO> findAll() {
+    public List<DeliveryResponse> findAll() {
         return deliveryRepository.findAllOrderedById().stream()
                 .map(DeliveryAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public DeliveryResponseDTO findById(Long id) {
+    public DeliveryResponse findById(Long id) {
         Delivery entity = deliveryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
         return DeliveryAdapter.toResponseDTO(entity);
     }
 
     @Override
-    public DeliveryResponseDTO create(DeliveryRequestDTO dto) {
+    public DeliveryResponse create(DeliveryRequest dto) {
         Quote quote = quoteRepository.findById(dto.getQuoteId())
                 .orElseThrow(() -> new RuntimeException("Quote not found"));
         Project project = projectRepository.findById(dto.getProjectId())
@@ -52,7 +52,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public DeliveryResponseDTO update(Long id, DeliveryRequestDTO dto) {
+    public DeliveryResponse update(Long id, DeliveryRequest dto) {
         Delivery entity = deliveryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
         Quote quote = quoteRepository.findById(dto.getQuoteId())
@@ -70,18 +70,18 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public Page<DeliveryResponseDTO> findAllPaginated(Long id,
-                                                      String taskName,
-                                                      String taskCode,
-                                                      String projectName,
-                                                      String branch,
-                                                      String pullRequest,
-                                                      String status,
-                                                      String startedAt,
-                                                      String finishedAt,
-                                                      String createdAt,
-                                                      String updatedAt,
-                                                      Pageable pageable) {
+    public Page<DeliveryResponse> findAllPaginated(Long id,
+                                                   String taskName,
+                                                   String taskCode,
+                                                   String projectName,
+                                                   String branch,
+                                                   String pullRequest,
+                                                   String status,
+                                                   String startedAt,
+                                                   String finishedAt,
+                                                   String createdAt,
+                                                   String updatedAt,
+                                                   Pageable pageable) {
 
         Page<Delivery> page = deliveryRepository.findByOptionalFieldsPaginated(
                 id, taskName, taskCode, projectName,

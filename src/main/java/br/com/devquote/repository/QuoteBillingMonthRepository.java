@@ -2,12 +2,21 @@ package br.com.devquote.repository;
 import br.com.devquote.entity.QuoteBillingMonth;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface QuoteBillingMonthRepository extends JpaRepository<QuoteBillingMonth, Long> {
 
     @Query("SELECT q FROM QuoteBillingMonth q ORDER BY q.id ASC")
     List<QuoteBillingMonth> findAllOrderedById();
+
+
+    @Query("SELECT q FROM QuoteBillingMonth q WHERE q.year = :year AND q.month = :month")
+    Optional<QuoteBillingMonth> findByYearAndMonth(@Param("year") Integer year,
+                                                   @Param("month") Integer month);
+
+    boolean existsByYearAndMonth(Integer year, Integer month);
 }

@@ -1,40 +1,40 @@
 package br.com.devquote.service;
-import br.com.devquote.dto.request.TaskRequestDTO;
-import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
-import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequestDTO;
-import br.com.devquote.dto.response.TaskResponseDTO;
-import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
+import br.com.devquote.dto.request.TaskRequest;
+import br.com.devquote.dto.request.TaskWithSubTasksCreateRequest;
+import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequest;
+import br.com.devquote.dto.response.TaskResponse;
+import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface TaskService {
 
-    List<TaskResponseDTO> findAll();
+    List<TaskResponse> findAll();
 
-    TaskResponseDTO findById(Long id);
+    TaskResponse findById(Long id);
 
-    TaskResponseDTO create(TaskRequestDTO dto);
+    TaskResponse create(TaskRequest dto);
 
-    TaskResponseDTO update(Long id, TaskRequestDTO dto);
+    TaskResponse update(Long id, TaskRequest dto);
 
     void delete(Long id);
 
-    TaskWithSubTasksResponseDTO createWithSubTasks(TaskWithSubTasksRequestDTO dto);
+    TaskWithSubTasksResponse createWithSubTasks(TaskWithSubTasksCreateRequest dto);
 
-    TaskWithSubTasksResponseDTO updateWithSubTasks(Long taskId, TaskWithSubTasksUpdateRequestDTO dto);
+    TaskWithSubTasksResponse updateWithSubTasks(Long taskId, TaskWithSubTasksUpdateRequest dto);
 
     void deleteTaskWithSubTasks(Long taskId);
 
-    Page<TaskResponseDTO> findAllPaginated(Long id,
-                                           Long requesterId,
-                                           String requesterName,
-                                           String title,
-                                           String description,
-                                           String status,
-                                           String code,
-                                           String link,
-                                           String createdAt,
-                                           String updatedAt,
-                                           Pageable pageable);
+    Page<TaskResponse> findAllPaginated(Long id,
+                                        Long requesterId,
+                                        String requesterName,
+                                        String title,
+                                        String description,
+                                        String status,
+                                        String code,
+                                        String link,
+                                        String createdAt,
+                                        String updatedAt,
+                                        Pageable pageable);
 }

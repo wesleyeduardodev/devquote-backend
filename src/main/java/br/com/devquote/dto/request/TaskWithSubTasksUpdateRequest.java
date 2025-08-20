@@ -8,7 +8,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TaskWithSubTasksUpdateRequestDTO {
+public class TaskWithSubTasksUpdateRequest {
 
     @NotNull(message = "Requester ID is required")
     private Long requesterId;
@@ -26,6 +26,12 @@ public class TaskWithSubTasksUpdateRequestDTO {
 
     private String link;
 
+    @Builder.Default
+    private Boolean createQuote = Boolean.FALSE;
+
+    @Builder.Default
+    private Boolean linkQuoteToBilling = Boolean.FALSE;
+
     @Valid
-    private List<@Valid SubTaskUpdateRequestDTO> subTasks;
+    private List<@Valid SubTaskUpdateRequest> subTasks;
 }

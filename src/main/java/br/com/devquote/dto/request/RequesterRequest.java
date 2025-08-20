@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RequesterRequestDTO {
+public class RequesterRequest {
 
     @NotBlank(message = "Name is required")
     @Size(max = 200, message = "Name must be at most 200 characters")

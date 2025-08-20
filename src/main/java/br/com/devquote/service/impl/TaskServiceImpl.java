@@ -1,27 +1,32 @@
 package br.com.devquote.service.impl;
+
+import br.com.devquote.adapter.QuoteAdapter;
+import br.com.devquote.adapter.QuoteBillingMonthAdapter;
 import br.com.devquote.adapter.SubTaskAdapter;
 import br.com.devquote.adapter.TaskAdapter;
-import br.com.devquote.dto.request.TaskRequestDTO;
-import br.com.devquote.dto.request.TaskWithSubTasksRequestDTO;
-import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequestDTO;
-import br.com.devquote.dto.response.TaskResponseDTO;
-import br.com.devquote.dto.response.TaskWithSubTasksResponseDTO;
-import br.com.devquote.entity.Requester;
-import br.com.devquote.entity.SubTask;
-import br.com.devquote.entity.Task;
+import br.com.devquote.configuration.BillingProperties;
+import br.com.devquote.dto.request.*;
+import br.com.devquote.dto.response.QuoteBillingMonthResponse;
+import br.com.devquote.dto.response.QuoteResponse;
+import br.com.devquote.dto.response.TaskResponse;
+import br.com.devquote.dto.response.TaskWithSubTasksResponse;
+import br.com.devquote.entity.*;
 import br.com.devquote.repository.QuoteRepository;
 import br.com.devquote.repository.RequesterRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.repository.TaskRepository;
-import br.com.devquote.service.TaskService;
+import br.com.devquote.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,50 +38,52 @@ public class TaskServiceImpl implements TaskService {
     private final RequesterRepository requesterRepository;
     private final SubTaskRepository subTaskRepository;
     private final QuoteRepository quoteRepository;
+    private final QuoteService quoteService;
+    private final QuoteBillingMonthService quoteBillingMonthService;
+    private final QuoteBillingMonthQuoteService quoteBillingMonthQuoteService;
+    private final BillingProperties billingProperties;
+    private final DeliveryService deliveryService;
 
     @Override
-    public List<TaskResponseDTO> findAll() {
-
-        List<TaskResponseDTO> collect = taskRepository.findAllOrderedById().stream()
+    public List<TaskResponse> findAll() {
+        List<TaskResponse> tasks = taskRepository.findAllOrderedById().stream()
                 .map(TaskAdapter::toResponseDTO)
                 .collect(Collectors.toList());
 
-        collect.forEach(taskResponseDTO -> {
-            List<SubTask> subTasks = subTaskRepository.findByTaskId(taskResponseDTO.getId());
-            taskResponseDTO.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
+        tasks.forEach(dto -> {
+            List<SubTask> subTasks = subTaskRepository.findByTaskId(dto.getId());
+            dto.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
         });
 
-        return collect;
+        return tasks;
     }
 
     @Override
-    public TaskResponseDTO findById(Long id) {
-
-        Task entity = taskRepository.findById(id)
+    public TaskResponse findById(Long id) {
+        Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-        TaskResponseDTO responseDTO = TaskAdapter.toResponseDTO(entity);
 
-        List<SubTask> subTasks = subTaskRepository.findByTaskId(responseDTO.getId());
-        responseDTO.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
-
-        return responseDTO;
+        TaskResponse response = TaskAdapter.toResponseDTO(task);
+        List<SubTask> subTasks = subTaskRepository.findByTaskId(response.getId());
+        response.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
+        return response;
     }
 
     @Override
-    public TaskResponseDTO create(TaskRequestDTO dto) {
+    public TaskResponse create(TaskRequest dto) {
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
-        Task entity = TaskAdapter.toEntity(dto, requester);
-        entity = taskRepository.save(entity);
+        Task entity = taskRepository.save(TaskAdapter.toEntity(dto, requester));
         return TaskAdapter.toResponseDTO(entity);
     }
 
     @Override
-    public TaskResponseDTO update(Long id, TaskRequestDTO dto) {
+    public TaskResponse update(Long id, TaskRequest dto) {
         Task entity = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
+
         TaskAdapter.updateEntityFromDto(dto, entity, requester);
         entity = taskRepository.save(entity);
         return TaskAdapter.toResponseDTO(entity);
@@ -88,54 +95,51 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskWithSubTasksResponseDTO createWithSubTasks(TaskWithSubTasksRequestDTO dto) {
+    public TaskWithSubTasksResponse createWithSubTasks(TaskWithSubTasksCreateRequest dto) {
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
 
-        Task task = TaskAdapter.toEntity(TaskRequestDTO.builder()
-                .requesterId(dto.getRequesterId())
-                .title(dto.getTitle())
-                .description(dto.getDescription())
-                .status(dto.getStatus())
-                .code(dto.getCode())
-                .link(dto.getLink())
-                .build(), requester);
+        Task task = buildAndPersistTask(dto, requester);
 
-        task = taskRepository.save(task);
+        List<SubTask> persistedSubTasks = persistSubTasks(task, dto.getSubTasks());
 
-        Task finalTask = task;
-        List<SubTask> subTasks = dto.getSubTasks().stream()
-                .map(subTaskDTO -> {
-                    SubTask subTask = SubTaskAdapter.toEntity(subTaskDTO, finalTask);
-                    return subTaskRepository.save(subTask);
-                })
-                .toList();
+        QuoteResponse quoteResponse = ensureQuoteIfRequested(task, dto);
 
-        return TaskWithSubTasksResponseDTO.builder()
-                .id(task.getId())
-                .requesterId(task.getRequester().getId())
-                .title(task.getTitle())
-                .description(task.getDescription())
-                .status(task.getStatus())
-                .code(task.getCode())
-                .link(task.getLink())
-                .createdAt(task.getCreatedAt())
-                .updatedAt(task.getUpdatedAt())
-                .subTasks(subTasks.stream().map(SubTaskAdapter::toResponseDTO).toList())
-                .build();
+        if (isTrue(dto.getLinkQuoteToBilling()) && quoteResponse != null) {
+            LocalDate today = LocalDate.now();
+            QuoteBillingMonth billingMonth = getOrCreateBillingMonth(today);
+            ensureQuoteLinkedToBillingMonth(quoteResponse.getId(), billingMonth.getId());
+        }
+
+        createDeliveries(dto, quoteResponse);
+
+        return buildTaskWithSubTasksResponse(task, persistedSubTasks);
+    }
+
+    private void createDeliveries(TaskWithSubTasksCreateRequest dto, QuoteResponse quoteResponse) {
+        if (quoteResponse != null && dto.getProjectsIds() != null && !dto.getProjectsIds().isEmpty()) {
+            for (Long projectId : dto.getProjectsIds()) {
+                DeliveryRequest deliveryRequest = DeliveryRequest
+                        .builder()
+                        .quoteId(quoteResponse.getId())
+                        .projectId(projectId)
+                        .status("PENDING")
+                        .build();
+                deliveryService.create(deliveryRequest);
+            }
+        }
     }
 
     @Override
-    public TaskWithSubTasksResponseDTO updateWithSubTasks(Long taskId, TaskWithSubTasksUpdateRequestDTO dto) {
+    public TaskWithSubTasksResponse updateWithSubTasks(Long taskId, TaskWithSubTasksUpdateRequest dto) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
 
-        // Atualiza dados da tarefa
-        TaskAdapter.updateEntityFromDto(TaskRequestDTO.builder()
+        TaskAdapter.updateEntityFromDto(TaskRequest.builder()
                 .requesterId(dto.getRequesterId())
                 .title(dto.getTitle())
                 .description(dto.getDescription())
@@ -146,30 +150,142 @@ public class TaskServiceImpl implements TaskService {
 
         task = taskRepository.save(task);
 
-        Task finalTask = task;
+        List<SubTask> updated = upsertAndDeleteSubTasks(task, dto.getSubTasks());
 
-        List<SubTask> updatedSubTasks = dto.getSubTasks().stream()
-                .filter(subDto -> !subDto.isExcluded()) // ignora os que serão excluídos
-                .map(subDto -> {
-                    if (subDto.getId() != null) {
-                        SubTask subTask = subTaskRepository.findById(subDto.getId())
-                                .orElseThrow(() -> new RuntimeException("SubTask not found: " + subDto.getId()));
-                        SubTaskAdapter.updateEntityFromDto(subDto, subTask, finalTask);
-                        return subTaskRepository.save(subTask);
-                    } else {
-                        SubTask newSubTask = SubTaskAdapter.toEntity(subDto, finalTask);
-                        return subTaskRepository.save(newSubTask);
-                    }
-                })
+        return buildTaskWithSubTasksResponse(task, updated);
+    }
+
+    @Override
+    public void deleteTaskWithSubTasks(Long taskId) {
+        if (quoteRepository.existsByTaskId(taskId)) {
+            throw new RuntimeException("Cannot delete task. It is linked to a quote.");
+        }
+        if (!taskRepository.existsById(taskId)) {
+            throw new RuntimeException("Task not found");
+        }
+        subTaskRepository.deleteByTaskId(taskId);
+        taskRepository.deleteById(taskId);
+    }
+
+    @Override
+    public Page<TaskResponse> findAllPaginated(Long id,
+                                               Long requesterId,
+                                               String requesterName,
+                                               String title,
+                                               String description,
+                                               String status,
+                                               String code,
+                                               String link,
+                                               String createdAt,
+                                               String updatedAt,
+                                               Pageable pageable) {
+
+        Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
+                id, requesterId, requesterName, title, description, status, code, link, createdAt, updatedAt, pageable
+        );
+
+        List<TaskResponse> dtos = page.getContent().stream()
+                .map(TaskAdapter::toResponseDTO)
+                .collect(Collectors.toList());
+
+        if (dtos.isEmpty()) {
+            return new PageImpl<>(dtos, pageable, page.getTotalElements());
+        }
+
+        List<Long> taskIds = dtos.stream().map(TaskResponse::getId).toList();
+        List<SubTask> allSubTasks = subTaskRepository.findByTaskIdIn(taskIds);
+
+        Map<Long, List<SubTask>> subTasksByTaskId = allSubTasks.stream()
+                .collect(Collectors.groupingBy(st -> st.getTask().getId()));
+
+        dtos.forEach(dto -> {
+            List<SubTask> list = subTasksByTaskId.getOrDefault(dto.getId(), List.of());
+            dto.setSubTasks(SubTaskAdapter.toResponseDTOList(list));
+        });
+
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
+    }
+
+    private Task buildAndPersistTask(TaskWithSubTasksCreateRequest dto, Requester requester) {
+        Task task = TaskAdapter.toEntity(TaskRequest.builder()
+                .requesterId(dto.getRequesterId())
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .status(dto.getStatus())
+                .code(dto.getCode())
+                .link(dto.getLink())
+                .build(), requester);
+        return taskRepository.save(task);
+    }
+
+    private List<SubTask> persistSubTasks(Task task, List<SubTaskRequest> subTasks) {
+        List<SubTaskRequest> safe = subTasks == null ? List.of() : subTasks.stream()
+                .filter(Objects::nonNull)
                 .toList();
 
-        dto.getSubTasks().stream()
-                .filter(subDto -> subDto.isExcluded() && subDto.getId() != null)
-                .forEach(subDto -> subTaskRepository.deleteById(subDto.getId()));
+        return safe.stream()
+                .map(stDto -> subTaskRepository.save(SubTaskAdapter.toEntity(stDto, task)))
+                .toList();
+    }
 
-        return TaskWithSubTasksResponseDTO.builder()
+
+    private QuoteResponse ensureQuoteIfRequested(Task task, TaskWithSubTasksCreateRequest dto) {
+        if (isTrue(dto.getCreateQuote())) {
+            QuoteRequest req = QuoteRequest.builder()
+                    .taskId(task.getId())
+                    .status("PENDING")
+                    .totalAmount(dto.getTotalAmount())
+                    .build();
+            return quoteService.create(req);
+        }
+
+        Quote existing = quoteService.findByTaskId(task.getId());
+        return existing != null ? QuoteAdapter.toResponseDTO(existing) : null;
+    }
+
+    private QuoteBillingMonth getOrCreateBillingMonth(LocalDate baseDate) {
+        int year = baseDate.getYear();
+        int month = baseDate.getMonthValue();
+
+        QuoteBillingMonth found = quoteBillingMonthService.findByYearAndMonth(year, month);
+        if (found != null) return found;
+
+        LocalDate paymentDate = computeNextMonthPaymentDate(baseDate, billingProperties.getPaymentDay());
+
+        QuoteBillingMonthRequest createDto = QuoteBillingMonthRequest.builder()
+                .year(year)
+                .month(month)
+                .paymentDate(paymentDate)
+                .status("PENDING")
+                .build();
+
+        QuoteBillingMonthResponse created = quoteBillingMonthService.create(createDto);
+        return QuoteBillingMonthAdapter.toEntity(created);
+    }
+
+    private LocalDate computeNextMonthPaymentDate(LocalDate base, int desiredDay) {
+        LocalDate nextMonthFirst = base.plusMonths(1).withDayOfMonth(1);
+        int day = Math.min(Math.max(desiredDay, 1), nextMonthFirst.lengthOfMonth());
+        return nextMonthFirst.withDayOfMonth(day);
+    }
+
+    private void ensureQuoteLinkedToBillingMonth(Long quoteId, Long billingMonthId) {
+        QuoteBillingMonthQuote existing =
+                quoteBillingMonthQuoteService.findByQuoteBillingMonthIdAndQuoteId(billingMonthId, quoteId);
+        if (existing != null) return;
+
+        QuoteBillingMonthQuoteRequest linkReq = QuoteBillingMonthQuoteRequest.builder()
+                .quoteId(quoteId)
+                .quoteBillingMonthId(billingMonthId)
+                .build();
+
+        quoteBillingMonthQuoteService.create(linkReq);
+    }
+
+    private TaskWithSubTasksResponse buildTaskWithSubTasksResponse(Task task, List<SubTask> subTasks) {
+        return TaskWithSubTasksResponse.builder()
                 .id(task.getId())
-                .requesterId(requester.getId())
+                .requesterId(task.getRequester().getId())
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .status(task.getStatus())
@@ -177,68 +293,34 @@ public class TaskServiceImpl implements TaskService {
                 .link(task.getLink())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
-                .subTasks(SubTaskAdapter.toResponseDTOList(updatedSubTasks))
+                .subTasks(SubTaskAdapter.toResponseDTOList(subTasks))
                 .build();
     }
 
-    @Override
-    public void deleteTaskWithSubTasks(Long taskId) {
-        // Valida se existe quote vinculada
-        if (quoteRepository.existsByTaskId(taskId)) {
-            throw new RuntimeException("Cannot delete task. It is linked to a quote.");
-        }
+    private List<SubTask> upsertAndDeleteSubTasks(Task task, List<SubTaskUpdateRequest> subTaskDtos) {
+        List<SubTaskUpdateRequest> safe = subTaskDtos == null ? List.of() : subTaskDtos;
 
-        // Valida existência da tarefa
-        if (!taskRepository.existsById(taskId)) {
-            throw new RuntimeException("Task not found");
-        }
+        List<SubTask> upserted = safe.stream()
+                .filter(st -> !st.isExcluded())
+                .map(st -> {
+                    if (st.getId() != null) {
+                        SubTask entity = subTaskRepository.findById(st.getId())
+                                .orElseThrow(() -> new RuntimeException("SubTask not found: " + st.getId()));
+                        SubTaskAdapter.updateEntityFromDto(st, entity, task);
+                        return subTaskRepository.save(entity);
+                    }
+                    return subTaskRepository.save(SubTaskAdapter.toEntity(st, task));
+                })
+                .toList();
 
-        // Remove subtarefas vinculadas
-        subTaskRepository.deleteByTaskId(taskId);
+        safe.stream()
+                .filter(st -> st.isExcluded() && st.getId() != null)
+                .forEach(st -> subTaskRepository.deleteById(st.getId()));
 
-        // Remove a tarefa
-        taskRepository.deleteById(taskId);
+        return upserted;
     }
 
-    @Override
-    public Page<TaskResponseDTO> findAllPaginated(Long id,
-                                                  Long requesterId,
-                                                  String requesterName,
-                                                  String title,
-                                                  String description,
-                                                  String status,
-                                                  String code,
-                                                  String link,
-                                                  String createdAt,
-                                                  String updatedAt,
-                                                  Pageable pageable) {
-
-        Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, status, code, link, createdAt, updatedAt, pageable
-        );
-
-        List<TaskResponseDTO> taskDtos = page.getContent().stream()
-                .map(TaskAdapter::toResponseDTO)
-                .collect(Collectors.toList());
-
-        if (taskDtos.isEmpty()) {
-            return new PageImpl<>(taskDtos, pageable, page.getTotalElements());
-        }
-
-        List<Long> taskIds = taskDtos.stream()
-                .map(TaskResponseDTO::getId)
-                .collect(Collectors.toList());
-
-        List<SubTask> allSubTasks = subTaskRepository.findByTaskIdIn(taskIds);
-
-        Map<Long, List<SubTask>> subTasksByTaskId = allSubTasks.stream()
-                .collect(Collectors.groupingBy(st -> st.getTask().getId()));
-
-        taskDtos.forEach(dto -> {
-            List<SubTask> list = subTasksByTaskId.getOrDefault(dto.getId(), List.of());
-            dto.setSubTasks(SubTaskAdapter.toResponseDTOList(list));
-        });
-
-        return new PageImpl<>(taskDtos, pageable, page.getTotalElements());
+    private boolean isTrue(Boolean flag) {
+        return Boolean.TRUE.equals(flag);
     }
 }

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class QuoteBillingMonthQuoteRequestDTO {
+public class QuoteBillingMonthQuoteRequest {
 
     @NotNull(message = "quoteBillingMonthId is required")
     private Long quoteBillingMonthId;

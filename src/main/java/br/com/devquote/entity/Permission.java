@@ -23,7 +23,7 @@ public class Permission {
     private String description;
 
     @Column(name = "screen_path")
-    private String screenPath; // Para controle de telas
+    private String screenPath;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

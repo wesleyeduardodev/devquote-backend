@@ -1,7 +1,7 @@
 package br.com.devquote.controller.doc;
-import br.com.devquote.dto.request.RequesterRequestDTO;
-import br.com.devquote.dto.response.PagedResponseDTO;
-import br.com.devquote.dto.response.RequesterResponseDTO;
+import br.com.devquote.dto.request.RequesterRequest;
+import br.com.devquote.dto.response.PagedResponse;
+import br.com.devquote.dto.response.RequesterResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,7 +35,7 @@ public interface RequesterControllerDoc {
             description = "Repeatable. Format: field,(asc|desc). Allowed: id,name,email,phone,createdAt,updatedAt",
             array = @ArraySchema(schema = @Schema(type = "string", example = "id,desc"))
     )
-    ResponseEntity<PagedResponseDTO<RequesterResponseDTO>> list(
+    ResponseEntity<PagedResponse<RequesterResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -52,24 +52,24 @@ public interface RequesterControllerDoc {
             @ApiResponse(responseCode = "200", description = "Successful retrieval of requester"),
             @ApiResponse(responseCode = "404", description = "Requester not found")
     })
-    ResponseEntity<RequesterResponseDTO> getById(
+    ResponseEntity<RequesterResponse> getById(
             @Parameter(description = "Requester id", required = true) Long id);
 
     @Operation(summary = "Create a new requester")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Requester created successfully")
     })
-    ResponseEntity<RequesterResponseDTO> create(
-            @Parameter(description = "Requester payload", required = true) @Valid RequesterRequestDTO dto);
+    ResponseEntity<RequesterResponse> create(
+            @Parameter(description = "Requester payload", required = true) @Valid RequesterRequest dto);
 
     @Operation(summary = "Update an existing requester")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Requester updated successfully"),
             @ApiResponse(responseCode = "404", description = "Requester not found")
     })
-    ResponseEntity<RequesterResponseDTO> update(
+    ResponseEntity<RequesterResponse> update(
             @Parameter(description = "Requester id", required = true) Long id,
-            @Parameter(description = "Requester payload", required = true) @Valid RequesterRequestDTO dto);
+            @Parameter(description = "Requester payload", required = true) @Valid RequesterRequest dto);
 
     @Operation(summary = "Delete a requester")
     @ApiResponses({

@@ -1,7 +1,7 @@
 package br.com.devquote.service.impl;
 import br.com.devquote.adapter.RequesterAdapter;
-import br.com.devquote.dto.request.RequesterRequestDTO;
-import br.com.devquote.dto.response.RequesterResponseDTO;
+import br.com.devquote.dto.request.RequesterRequest;
+import br.com.devquote.dto.response.RequesterResponse;
 import br.com.devquote.entity.Requester;
 import br.com.devquote.repository.RequesterRepository;
 import br.com.devquote.service.RequesterService;
@@ -21,28 +21,28 @@ public class RequesterServiceImpl implements RequesterService {
     private final RequesterRepository requesterRepository;
 
     @Override
-    public List<RequesterResponseDTO> findAll() {
+    public List<RequesterResponse> findAll() {
         return requesterRepository.findAllOrderedById().stream()
                 .map(RequesterAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public RequesterResponseDTO findById(Long id) {
+    public RequesterResponse findById(Long id) {
         Requester entity = requesterRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
         return RequesterAdapter.toResponseDTO(entity);
     }
 
     @Override
-    public RequesterResponseDTO create(RequesterRequestDTO dto) {
+    public RequesterResponse create(RequesterRequest dto) {
         Requester entity = RequesterAdapter.toEntity(dto);
         entity = requesterRepository.save(entity);
         return RequesterAdapter.toResponseDTO(entity);
     }
 
     @Override
-    public RequesterResponseDTO update(Long id, RequesterRequestDTO dto) {
+    public RequesterResponse update(Long id, RequesterRequest dto) {
         Requester entity = requesterRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
         RequesterAdapter.updateEntityFromDto(dto, entity);
@@ -56,13 +56,13 @@ public class RequesterServiceImpl implements RequesterService {
     }
 
     @Override
-    public Page<RequesterResponseDTO> findAllPaginated(Long id,
-                                                       String name,
-                                                       String email,
-                                                       String phone,
-                                                       String createdAt,
-                                                       String updatedAt,
-                                                       Pageable pageable) {
+    public Page<RequesterResponse> findAllPaginated(Long id,
+                                                    String name,
+                                                    String email,
+                                                    String phone,
+                                                    String createdAt,
+                                                    String updatedAt,
+                                                    Pageable pageable) {
         Page<Requester> page = requesterRepository.findByOptionalFieldsPaginated(
                 id, name, email, phone, createdAt, updatedAt, pageable
         );

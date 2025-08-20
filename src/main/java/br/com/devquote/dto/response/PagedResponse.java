@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PagedResponseDTO<T> {
+public class PagedResponse<T> {
     private List<T> content;
     private int currentPage;
     private int totalPages;

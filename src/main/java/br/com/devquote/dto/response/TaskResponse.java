@@ -3,19 +3,34 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class QuoteBillingMonthResponseDTO {
+public class TaskResponse {
+
     private Long id;
-    private Integer month;
-    private Integer year;
-    private LocalDate paymentDate;
+
+    private Long requesterId;
+
+    private String requesterName;
+
+    private String title;
+
+    private String description;
+
     private String status;
+
+    private String code;
+
+    private String link;
+
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
+
+    private List<SubTaskResponse> subTasks;
 }

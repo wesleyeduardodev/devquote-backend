@@ -1,18 +1,18 @@
 package br.com.devquote.adapter;
-import br.com.devquote.dto.request.QuoteBillingMonthRequestDTO;
-import br.com.devquote.dto.response.QuoteBillingMonthResponseDTO;
+import br.com.devquote.dto.request.QuoteBillingMonthRequest;
+import br.com.devquote.dto.response.QuoteBillingMonthResponse;
 import br.com.devquote.entity.QuoteBillingMonth;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class QuoteBillingMonthAdapter {
 
-    public static QuoteBillingMonthResponseDTO toResponseDTO(QuoteBillingMonth entity) {
+    public static QuoteBillingMonthResponse toResponseDTO(QuoteBillingMonth entity) {
         if (entity == null) {
             return null;
         }
 
-        return QuoteBillingMonthResponseDTO.builder()
+        return QuoteBillingMonthResponse.builder()
                 .id(entity.getId())
                 .month(entity.getMonth())
                 .year(entity.getYear())
@@ -23,7 +23,7 @@ public class QuoteBillingMonthAdapter {
                 .build();
     }
 
-    public static QuoteBillingMonth toEntity(QuoteBillingMonthRequestDTO dto) {
+    public static QuoteBillingMonth toEntity(QuoteBillingMonthRequest dto) {
         if (dto == null) {
             return null;
         }
@@ -36,7 +36,23 @@ public class QuoteBillingMonthAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(QuoteBillingMonthRequestDTO dto, QuoteBillingMonth entity) {
+    public static QuoteBillingMonth toEntity(QuoteBillingMonthResponse dto) {
+        if (dto == null) {
+            return null;
+        }
+        return QuoteBillingMonth.builder()
+                .id(dto.getId())
+                .month(dto.getMonth())
+                .year(dto.getYear())
+                .paymentDate(dto.getPaymentDate())
+                .status(dto.getStatus())
+                .createdAt(dto.getCreatedAt())
+                .updatedAt(dto.getUpdatedAt())
+                .build();
+    }
+
+
+    public static void updateEntityFromDto(QuoteBillingMonthRequest dto, QuoteBillingMonth entity) {
         if (dto == null || entity == null) {
             return;
         }

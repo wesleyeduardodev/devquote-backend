@@ -1,30 +1,31 @@
 package br.com.devquote.dto.response;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
+import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SubTaskResponseDTO {
+public class TaskWithSubTasksResponse {
 
     private Long id;
 
-    private Long taskId;
+    private Long requesterId;
 
     private String title;
 
     private String description;
 
-    private BigDecimal amount;
-
     private String status;
+
+    private String code;
+
+    private String link;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private List<SubTaskResponse> subTasks;
 }

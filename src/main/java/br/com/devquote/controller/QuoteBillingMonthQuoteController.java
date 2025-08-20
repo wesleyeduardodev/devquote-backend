@@ -1,7 +1,7 @@
 package br.com.devquote.controller;
 import br.com.devquote.controller.doc.QuoteBillingMonthQuoteControllerDoc;
-import br.com.devquote.dto.request.QuoteBillingMonthQuoteRequestDTO;
-import br.com.devquote.dto.response.QuoteBillingMonthQuoteResponseDTO;
+import br.com.devquote.dto.request.QuoteBillingMonthQuoteRequest;
+import br.com.devquote.dto.response.QuoteBillingMonthQuoteResponse;
 import br.com.devquote.service.QuoteBillingMonthQuoteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,14 +24,14 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
     @Override
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<QuoteBillingMonthQuoteResponseDTO>> list() {
+    public ResponseEntity<List<QuoteBillingMonthQuoteResponse>> list() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @Override
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteBillingMonthQuoteResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<QuoteBillingMonthQuoteResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
@@ -39,7 +39,7 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
     @PostMapping
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteBillingMonthQuoteResponseDTO> create(@RequestBody @Valid QuoteBillingMonthQuoteRequestDTO dto) {
+    public ResponseEntity<QuoteBillingMonthQuoteResponse> create(@RequestBody @Valid QuoteBillingMonthQuoteRequest dto) {
         return new ResponseEntity<>(service.create(dto), HttpStatus.CREATED);
     }
 
@@ -47,7 +47,7 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
     @PutMapping("/{id}")
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteBillingMonthQuoteResponseDTO> update(@PathVariable Long id, @RequestBody @Valid QuoteBillingMonthQuoteRequestDTO dto) {
+    public ResponseEntity<QuoteBillingMonthQuoteResponse> update(@PathVariable Long id, @RequestBody @Valid QuoteBillingMonthQuoteRequest dto) {
         return ResponseEntity.ok(service.update(id, dto));
     }
 
@@ -63,7 +63,7 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
     @GetMapping("/by-billing-month/{billingMonthId}")
     //@PreAuthorize("isAuthenticated()")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<QuoteBillingMonthQuoteResponseDTO>> getByBillingMonth(
+    public ResponseEntity<List<QuoteBillingMonthQuoteResponse>> getByBillingMonth(
             @PathVariable Long billingMonthId) {
         return ResponseEntity.ok(service.findByQuoteBillingMonthId(billingMonthId));
     }

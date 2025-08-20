@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TaskRequestDTO {
+public class TaskRequest {
 
     @NotNull(message = "Requester ID is required")
     private Long requesterId;

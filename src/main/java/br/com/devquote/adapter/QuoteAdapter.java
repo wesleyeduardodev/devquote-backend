@@ -1,6 +1,6 @@
 package br.com.devquote.adapter;
-import br.com.devquote.dto.request.QuoteRequestDTO;
-import br.com.devquote.dto.response.QuoteResponseDTO;
+import br.com.devquote.dto.request.QuoteRequest;
+import br.com.devquote.dto.response.QuoteResponse;
 import br.com.devquote.entity.Quote;
 import br.com.devquote.entity.Task;
 import lombok.experimental.UtilityClass;
@@ -8,12 +8,12 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class QuoteAdapter {
 
-    public static QuoteResponseDTO toResponseDTO(Quote entity) {
+    public static QuoteResponse toResponseDTO(Quote entity) {
         if (entity == null) {
             return null;
         }
 
-        return QuoteResponseDTO.builder()
+        return QuoteResponse.builder()
                 .id(entity.getId())
                 .taskId(entity.getTask() != null ? entity.getTask().getId() : null)
                 .taskName(entity.getTask() != null ? entity.getTask().getTitle() : null)
@@ -25,7 +25,7 @@ public class QuoteAdapter {
                 .build();
     }
 
-    public static Quote toEntity(QuoteRequestDTO dto, Task task) {
+    public static Quote toEntity(QuoteRequest dto, Task task) {
         if (dto == null) {
             return null;
         }
@@ -37,7 +37,7 @@ public class QuoteAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(QuoteRequestDTO dto, Quote entity, Task task) {
+    public static void updateEntityFromDto(QuoteRequest dto, Quote entity, Task task) {
         if (dto == null || entity == null) {
             return;
         }

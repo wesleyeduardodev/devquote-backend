@@ -1,7 +1,7 @@
 package br.com.devquote.controller;
 import br.com.devquote.controller.doc.QuoteBillingMonthControllerDoc;
-import br.com.devquote.dto.request.QuoteBillingMonthRequestDTO;
-import br.com.devquote.dto.response.QuoteBillingMonthResponseDTO;
+import br.com.devquote.dto.request.QuoteBillingMonthRequest;
+import br.com.devquote.dto.response.QuoteBillingMonthResponse;
 import br.com.devquote.service.QuoteBillingMonthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +23,14 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
     @Override
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<QuoteBillingMonthResponseDTO>> list() {
+    public ResponseEntity<List<QuoteBillingMonthResponse>> list() {
         return ResponseEntity.ok(quoteBillingMonthService.findAll());
     }
 
     @Override
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteBillingMonthResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<QuoteBillingMonthResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(quoteBillingMonthService.findById(id));
     }
 
@@ -38,7 +38,7 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
     @PostMapping
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteBillingMonthResponseDTO> create(@RequestBody @Valid QuoteBillingMonthRequestDTO dto) {
+    public ResponseEntity<QuoteBillingMonthResponse> create(@RequestBody @Valid QuoteBillingMonthRequest dto) {
         return new ResponseEntity<>(quoteBillingMonthService.create(dto), HttpStatus.CREATED);
     }
 
@@ -46,7 +46,7 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
     @PutMapping("/{id}")
     //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteBillingMonthResponseDTO> update(@PathVariable Long id, @RequestBody @Valid QuoteBillingMonthRequestDTO dto) {
+    public ResponseEntity<QuoteBillingMonthResponse> update(@PathVariable Long id, @RequestBody @Valid QuoteBillingMonthRequest dto) {
         return ResponseEntity.ok(quoteBillingMonthService.update(id, dto));
     }
 

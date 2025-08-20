@@ -9,12 +9,15 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class QuoteBillingMonthQuoteResponseDTO {
+public class ProjectResponse {
+
     private Long id;
-    private Long quoteBillingMonthId;
-    private Long quoteId;
-    private String taskName;
-    private String taskCode;
+
+    private String name;
+
+    private String repositoryUrl;
+
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 }
