@@ -1,6 +1,9 @@
 package br.com.devquote.configuration.openapi;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
@@ -11,8 +14,25 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
+
         final String securitySchemeName = "bearerAuth";
+
         return new OpenAPI()
+                .info(new Info()
+                        .title("DevQuote API")
+                        .description("Sistema de orçamentos automatizados.\n\n" +
+                                "📅 Data da subida: 21/08/2025\n" +
+                                "🔖 Versão: 1.0.0\n" +
+                                "👨‍💻 Autor: Wesley Eduardo\n")
+                        .version("1.0.0")
+                        .termsOfService("https://devquote.com.br/terms")
+                        .contact(new Contact()
+                                .name("Suporte DevQuote")
+                                .email("wesleyeduardo.dev@gmail.com")
+                                .url("https://devquote.com"))
+                        .license(new License()
+                                .name("MIT License")
+                                .url("https://opensource.org/licenses/MIT")))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()

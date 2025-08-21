@@ -221,22 +221,16 @@ http://localhost:8080/swagger-ui/index.html
 
 
 
-## 📄 Atualização da imagem do Deploy
-
-
-Opção A — Enviar somente a tag latest
-
+## 📄 Atualização da imagem do Deploy Opção A — Enviar somente a tag latest
 
 docker login -u SEU_USUARIO
 
-# 2) Build da imagem com tag latest
 docker build -t wesleyeduardodev/devquote-backend:latest .
 
-# 3) Push para o Docker Hub
 docker push wesleyeduardodev/devquote-backend:latest
 
 
-Opção B — Enviar somente a TAG  de Data
+## 📄 Atualização da imagem do Deploy Opção B — Enviar somente a TAG  de Data
 
 🚀 Build e Push da Imagem Docker para o Docker Hub
 1. Login no Docker Hub
