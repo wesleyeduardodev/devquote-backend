@@ -20,7 +20,7 @@ public class QuoteRequest {
     private String status;
 
     @NotNull(message = "Total amount is required")
-    @DecimalMin(value = "0.00", inclusive = false, message = "Total amount must be greater than zero")
+    @DecimalMin(value = "0.00", message = "Total Amount must be greater than or equal to zero")
     @Digits(integer = 8, fraction = 2, message = "Total amount must be a valid monetary value with up to 8 digits and 2 decimal places")
     private BigDecimal totalAmount;
 }
