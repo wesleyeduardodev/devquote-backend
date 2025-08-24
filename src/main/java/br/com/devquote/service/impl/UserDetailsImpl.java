@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
@@ -22,13 +23,15 @@ public class UserDetailsImpl implements UserDetails {
     private String username;
     private String email;
     private String password;
-    private String firstName;
-    private String lastName;
+    private String name;
     private Collection<? extends GrantedAuthority> authorities;
-    private boolean enabled;
+    private boolean active;
     private boolean accountNonExpired;
     private boolean accountNonLocked;
     private boolean credentialsNonExpired;
+    
+    // Campos específicos do novo sistema de permissões
+    private Set<String> profileCodes;
 
     public static UserDetailsImpl build(User user) {
         List<GrantedAuthority> authorities = user.getAuthorities().stream()
@@ -40,13 +43,13 @@ public class UserDetailsImpl implements UserDetails {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
-                user.getFirstName(),
-                user.getLastName(),
+                user.getName(),
                 authorities,
-                user.isEnabled(),
+                user.getActive(),
                 user.isAccountNonExpired(),
                 user.isAccountNonLocked(),
-                user.isCredentialsNonExpired()
+                user.isCredentialsNonExpired(),
+                user.getActiveProfileCodes()
         );
     }
 
@@ -82,7 +85,24 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return enabled;
+        return active;
+    }
+    
+    // Métodos auxiliares para o novo sistema de permissões
+    public boolean hasProfile(String profileCode) {
+        return profileCodes != null && profileCodes.contains(profileCode);
+    }
+    
+    public boolean isAdmin() {
+        return hasProfile("ADMIN");
+    }
+    
+    public boolean isManager() {
+        return hasProfile("MANAGER");
+    }
+    
+    public Set<String> getProfileCodes() {
+        return profileCodes;
     }
 
     @Override
