@@ -66,14 +66,6 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<UserProfile> userProfiles;
 
-    // Mantendo compatibilidade com sistema anterior (opcional - pode ser removido futuramente)
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles;
 
     @PrePersist
     protected void onCreate() {
@@ -107,21 +99,6 @@ public class User implements UserDetails {
             authorities.addAll(profileSpecificAuthorities);
         }
         
-        // SISTEMA ANTERIOR: Mantendo compatibilidade (pode ser removido futuramente)
-        if (roles != null) {
-            // ROLE_ para os papéis
-            var roleAuthorities = roles.stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
-                    .collect(Collectors.toSet());
-            authorities.addAll(roleAuthorities);
-
-            // SCOPE_ para as permissões (como você já usa nos matchers)
-            var scopeAuthorities = roles.stream()
-                    .flatMap(role -> role.getPermissions().stream())
-                    .map(permission -> new SimpleGrantedAuthority("SCOPE_" + permission.getName()))
-                    .collect(Collectors.toSet());
-            authorities.addAll(scopeAuthorities);
-        }
         
         return authorities;
     }

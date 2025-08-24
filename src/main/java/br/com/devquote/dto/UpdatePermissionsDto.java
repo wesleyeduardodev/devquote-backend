@@ -6,5 +6,5 @@ import java.util.Set;
 
 @Data
 public class UpdatePermissionsDto {
-    private Set<String> roleNames;
+    private Set<String> profileCodes;
 }

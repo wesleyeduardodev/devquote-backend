@@ -188,12 +188,16 @@ public class AuthService {
                     .collect(Collectors.toSet());
         }
 
+        // Obter telas permitidas para o usuário
+        Set<String> allowedScreens = getAllowedScreens(authentication);
+        
         return new JwtResponse(
                 jwt,
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 roles,
-                permissions
+                permissions,
+                allowedScreens
         );
     }
 }

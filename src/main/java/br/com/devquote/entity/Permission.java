@@ -2,7 +2,6 @@ package br.com.devquote.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @Table(name = "permissions")
@@ -30,9 +29,6 @@ public class Permission {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @ManyToMany(mappedBy = "permissions")
-    private Set<Role> roles;
 
     @PrePersist
     protected void onCreate() {

@@ -9,5 +9,5 @@ public class UpdateUserDto {
     private String firstName;
     private String lastName;
     private Boolean enabled;
-    private Set<String> roleNames;
+    private Set<String> profileCodes;
 }

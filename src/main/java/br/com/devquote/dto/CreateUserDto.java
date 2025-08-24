@@ -20,5 +20,5 @@ public class CreateUserDto {
 
     private String firstName;
     private String lastName;
-    private Set<String> roleNames;
+    private Set<String> profileCodes;
 }

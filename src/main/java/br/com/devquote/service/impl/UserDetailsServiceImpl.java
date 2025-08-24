@@ -23,12 +23,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("Carregando usuário: {}", username);
         
-        // NOVO SISTEMA: Prioriza busca com perfis
+        // Busca usuário com perfis
         User user = userRepository.findByUsernameWithProfiles(username)
                 .or(() -> userRepository.findByEmailWithProfiles(username))
-                // FALLBACK: Sistema anterior (compatibilidade)
-                .or(() -> userRepository.findByUsernameWithRolesAndPermissions(username))
-                .or(() -> userRepository.findByEmailWithRolesAndPermissions(username))
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
 
         log.debug("Usuário encontrado: {}, Perfis: {}", user.getUsername(), user.getActiveProfileCodes());

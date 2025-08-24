@@ -25,12 +25,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.userProfiles up LEFT JOIN FETCH up.profile WHERE u.username = :username AND u.active = true")
     Optional<User> findByUsernameWithProfiles(String username);
 
-    // SISTEMA ANTERIOR: Mantido para compatibilidade
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.email = :email")
-    Optional<User> findByEmailWithRolesAndPermissions(String email);
-
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.username = :username")
-    Optional<User> findByUsernameWithRolesAndPermissions(String username);
 
     @Query("SELECT u FROM User u ORDER BY u.id ASC")
     List<User> findAllOrderedById();

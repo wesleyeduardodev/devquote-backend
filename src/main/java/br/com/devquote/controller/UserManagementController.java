@@ -56,12 +56,6 @@ public class UserManagementController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/roles")
-    public ResponseEntity<List<RoleDto>> getAllRoles() {
-        List<RoleDto> roles = userManagementService.getAllRoles();
-        return ResponseEntity.ok(roles);
-    }
-
     @GetMapping("/permissions")
     public ResponseEntity<List<PermissionDto>> getAllPermissions() {
         List<PermissionDto> permissions = userManagementService.getAllPermissions();

@@ -60,8 +60,8 @@ public class UserManagementService {
         user = userRepository.save(user);
         
         // Atribuir perfis ao usuário
-        if (request.getRoleNames() != null && !request.getRoleNames().isEmpty()) {
-            for (String profileCode : request.getRoleNames()) {
+        if (request.getProfileCodes() != null && !request.getProfileCodes().isEmpty()) {
+            for (String profileCode : request.getProfileCodes()) {
                 Profile profile = profileRepository.findByCode(profileCode)
                         .orElseThrow(() -> new RuntimeException("Profile not found: " + profileCode));
                 
@@ -87,11 +87,11 @@ public class UserManagementService {
         user.setName(request.getFirstName() + " " + request.getLastName());
         user.setActive(request.getEnabled());
 
-        if (request.getRoleNames() != null) {
+        if (request.getProfileCodes() != null) {
             // Remove todos os perfis atuais
             userProfileService.removeAllProfilesFromUser(user.getId());
             // Adiciona os novos perfis
-            for (String profileCode : request.getRoleNames()) {
+            for (String profileCode : request.getProfileCodes()) {
                 Profile profile = profileRepository.findByCode(profileCode)
                         .orElseThrow(() -> new RuntimeException("Profile not found: " + profileCode));
                 
@@ -117,7 +117,7 @@ public class UserManagementService {
         // Remove todos os perfis atuais
         userProfileService.removeAllProfilesFromUser(user.getId());
         // Adiciona os novos perfis
-        for (String profileCode : request.getRoleNames()) {
+        for (String profileCode : request.getProfileCodes()) {
             Profile profile = profileRepository.findByCode(profileCode)
                     .orElseThrow(() -> new RuntimeException("Profile not found: " + profileCode));
             
@@ -142,11 +142,6 @@ public class UserManagementService {
         userRepository.deleteById(id);
     }
 
-    public List<RoleDto> getAllRoles() {
-        return profileRepository.findAllOrderedByLevel().stream()
-                .map(this::convertToRoleDto)
-                .collect(Collectors.toList());
-    }
 
     private UserDto convertToDto(User user) {
         Set<String> profileCodes = user.getActiveProfileCodes();
@@ -165,12 +160,4 @@ public class UserManagementService {
                 .build();
     }
 
-    private RoleDto convertToRoleDto(Profile profile) {
-        return RoleDto.builder()
-                .id(profile.getId())
-                .name(profile.getCode())
-                .description(profile.getDescription())
-                .permissions(Set.of(profile.getCode())) // Por enquanto, usando o código do perfil
-                .build();
-    }
 }
