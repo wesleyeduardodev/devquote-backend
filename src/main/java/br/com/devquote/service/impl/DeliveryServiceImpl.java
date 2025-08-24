@@ -37,6 +37,17 @@ public class DeliveryServiceImpl implements DeliveryService {
     public DeliveryResponse findById(Long id) {
         Delivery entity = deliveryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
+
+        if (entity.getQuote() != null) {
+            entity.getQuote().getId();
+            if (entity.getQuote().getTask() != null) {
+                entity.getQuote().getTask().getId();
+            }
+        }
+        if (entity.getProject() != null) {
+            entity.getProject().getId();
+        }
+
         return DeliveryAdapter.toResponseDTO(entity);
     }
 

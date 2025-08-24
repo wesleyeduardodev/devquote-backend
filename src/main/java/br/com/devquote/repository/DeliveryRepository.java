@@ -8,12 +8,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 
     @Query("SELECT d FROM Delivery d ORDER BY d.id ASC")
     List<Delivery> findAllOrderedById();
+
+    @EntityGraph(attributePaths = {"quote", "quote.task", "project"})
+    @Override
+    Optional<Delivery> findById(Long id);
 
     @EntityGraph(attributePaths = {"quote", "quote.task", "project"})
     @Query("""
