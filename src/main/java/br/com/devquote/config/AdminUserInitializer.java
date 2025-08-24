@@ -1,11 +1,7 @@
 package br.com.devquote.config;
-
 import br.com.devquote.entity.*;
 import br.com.devquote.enums.ProfileType;
-import br.com.devquote.enums.ResourceType;
-import br.com.devquote.enums.OperationType;
 import br.com.devquote.repository.*;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -13,7 +9,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -32,18 +27,18 @@ public class AdminUserInitializer {
     private final PasswordEncoder passwordEncoder;
 
     @EventListener(ApplicationReadyEvent.class)
-    @Order(1000) // Executa depois de outros listeners  
+    @Order(1000) // Executa depois de outros listeners
     public void initializeDefaultUsers() {
         log.info("=== INICIALIZANDO USUÁRIOS PADRÃO ===");
         try {
             // Criar usuários padrão
-            createUserIfNotExists("admin", "admin@devquote.com", "Administrador", "admin123", ProfileType.ADMIN);
-            createUserIfNotExists("manager", "manager@devquote.com", "Gerente", "admin123", ProfileType.MANAGER);
-            createUserIfNotExists("user", "user@devquote.com", "Usuário", "admin123", ProfileType.USER);
-            
+            createUserIfNotExists("wesley", "wesley@devquote.com", "Administrador", "wesley", ProfileType.ADMIN);
+            createUserIfNotExists("jayron", "jayron@devquote.com", "Gerente", "jayron", ProfileType.MANAGER);
+            createUserIfNotExists("licya", "licya@devquote.com", "Usuário", "licya", ProfileType.USER);
+            createUserIfNotExists("ivo", "ivo@devquote.com", "Usuário", "ivo", ProfileType.USER);
+            createUserIfNotExists("gerdan", "gerdan@devquote.com", "Usuário", "gerdan", ProfileType.USER);
             // Configurar permissões específicas
             configureUserPermissions();
-            
             log.info("Usuários padrão inicializados com sucesso!");
         } catch (Exception e) {
             log.error("Erro ao inicializar usuários padrão", e);
@@ -119,66 +114,66 @@ public class AdminUserInitializer {
     private void configureUserPermissions() {
         try {
             log.info("Configurando permissões específicas dos usuários...");
-            
+
             // Buscar perfis
             Profile adminProfile = profileRepository.findByCode(ProfileType.ADMIN.getCode()).orElse(null);
             Profile managerProfile = profileRepository.findByCode(ProfileType.MANAGER.getCode()).orElse(null);
             Profile userProfile = profileRepository.findByCode(ProfileType.USER.getCode()).orElse(null);
-            
+
             if (adminProfile == null || managerProfile == null || userProfile == null) {
                 log.warn("Alguns perfis não foram encontrados para configuração de permissões");
                 return;
             }
-            
+
             // Buscar recursos e operações
             List<Resource> allResources = resourceRepository.findAllOrderedByName();
             List<Operation> allOperations = operationRepository.findAllOrderedByName();
-            
+
             if (allResources.isEmpty() || allOperations.isEmpty()) {
                 log.warn("Recursos ou operações não encontrados. Execute o PermissionService primeiro.");
                 return;
             }
-            
+
             // ADMIN: Acesso total a todas as telas
             configureProfilePermissions(adminProfile, allResources, allOperations);
-            
+
             // MANAGER: Apenas tasks, deliveries, billing (quotes - orçamento)
             List<Resource> managerResources = allResources.stream()
-                .filter(r -> Arrays.asList("tasks", "deliveries", "billing", "quotes").contains(r.getCode()))
-                .toList();
+                    .filter(r -> Arrays.asList("tasks", "deliveries", "billing", "quotes").contains(r.getCode()))
+                    .toList();
             configureProfilePermissions(managerProfile, managerResources, allOperations);
-            
+
             // USER: Apenas tasks e deliveries
             List<Resource> userResources = allResources.stream()
-                .filter(r -> Arrays.asList("tasks", "deliveries").contains(r.getCode()))
-                .toList();
+                    .filter(r -> Arrays.asList("tasks", "deliveries").contains(r.getCode()))
+                    .toList();
             configureProfilePermissions(userProfile, userResources, allOperations);
-            
+
             log.info("Permissões específicas configuradas com sucesso!");
-            
+
         } catch (Exception e) {
             log.error("Erro ao configurar permissões específicas", e);
         }
     }
-    
+
     private void configureProfilePermissions(Profile profile, List<Resource> resources, List<Operation> operations) {
         try {
             for (Resource resource : resources) {
                 for (Operation operation : operations) {
                     // Verificar se permissão já existe
                     Optional<ResourcePermission> existing = resourcePermissionRepository
-                        .findByProfileIdAndResourceCodeAndOperationCode(
-                            profile.getId(), resource.getCode(), operation.getCode());
-                    
+                            .findByProfileIdAndResourceCodeAndOperationCode(
+                                    profile.getId(), resource.getCode(), operation.getCode());
+
                     if (existing.isEmpty()) {
                         // Criar permissão
                         ResourcePermission permission = ResourcePermission.builder()
-                            .profile(profile)
-                            .resource(resource)
-                            .operation(operation)
-                            .granted(true)
-                            .active(true)
-                            .build();
+                                .profile(profile)
+                                .resource(resource)
+                                .operation(operation)
+                                .granted(true)
+                                .active(true)
+                                .build();
                         resourcePermissionRepository.save(permission);
                     }
                 }
