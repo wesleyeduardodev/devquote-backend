@@ -1,6 +1,10 @@
 package br.com.devquote.controller.doc;
 import br.com.devquote.dto.request.QuoteBillingMonthRequest;
 import br.com.devquote.dto.response.QuoteBillingMonthResponse;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -44,4 +48,18 @@ public interface QuoteBillingMonthControllerDoc {
             @ApiResponse(responseCode = "404", description = "Not found")
     })
     ResponseEntity<Void> delete(Long id);
+
+    @Operation(summary = "Delete multiple quote billing months")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Quote billing months deleted successfully")
+    })
+
+    ResponseEntity<Void> deleteBulk(
+            @RequestBody(
+                    description = "List of QuoteBillingMonth IDs to delete",
+                    required = true,
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Long.class)))
+            )
+            List<Long> ids
+    );
 }

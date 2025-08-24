@@ -96,6 +96,13 @@ public class TaskController implements TaskControllerDoc {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
+        taskService.deleteBulk(ids);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/full")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasks(

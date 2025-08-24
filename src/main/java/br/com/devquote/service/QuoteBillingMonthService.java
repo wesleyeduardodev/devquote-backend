@@ -11,5 +11,6 @@ public interface QuoteBillingMonthService {
     QuoteBillingMonthResponse create(QuoteBillingMonthRequest dto);
     QuoteBillingMonthResponse update(Long id, QuoteBillingMonthRequest dto);
     void delete(Long id);
+    void deleteBulk(List<Long> ids);
     QuoteBillingMonth findByYearAndMonth(Integer year, Integer month);
 }

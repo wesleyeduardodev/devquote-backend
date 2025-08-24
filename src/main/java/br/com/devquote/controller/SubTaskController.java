@@ -36,7 +36,6 @@ public class SubTaskController implements SubTaskControllerDoc {
 
     @Override
     @PostMapping
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SubTaskResponse> create(@RequestBody @Valid SubTaskRequest dto) {
         return new ResponseEntity<>(subTaskService.create(dto), HttpStatus.CREATED);
@@ -44,7 +43,6 @@ public class SubTaskController implements SubTaskControllerDoc {
 
     @Override
     @PutMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SubTaskResponse> update(@PathVariable Long id, @RequestBody @Valid SubTaskRequest dto) {
         return ResponseEntity.ok(subTaskService.update(id, dto));
@@ -52,10 +50,16 @@ public class SubTaskController implements SubTaskControllerDoc {
 
     @Override
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         subTaskService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
+        subTaskService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
 }

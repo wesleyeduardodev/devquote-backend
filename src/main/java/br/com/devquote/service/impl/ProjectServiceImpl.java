@@ -56,6 +56,14 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public void deleteBulk(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        projectRepository.deleteAllById(ids);
+    }
+
+    @Override
     public Page<ProjectResponse> findAllPaginated(Long id,
                                                   String name,
                                                   String repositoryUrl,

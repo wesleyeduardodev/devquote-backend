@@ -16,6 +16,8 @@ public interface ProjectService {
 
     void delete(Long id);
 
+    void deleteBulk(List<Long> ids);
+
     Page<ProjectResponse> findAllPaginated(Long id,
                                            String name,
                                            String repositoryUrl,

@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.QuoteAdapter;
 import br.com.devquote.adapter.QuoteBillingMonthAdapter;
 import br.com.devquote.adapter.SubTaskAdapter;
@@ -22,7 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +90,16 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void delete(Long id) {
         taskRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteBulk(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        for (Long id : ids) {
+            deleteTaskWithSubTasks(id);
+        }
     }
 
     @Override

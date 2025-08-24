@@ -4,7 +4,9 @@ import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.dto.response.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -13,6 +15,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Tag(name = "Deliveries")
 public interface DeliveryControllerDoc {
@@ -88,4 +92,17 @@ public interface DeliveryControllerDoc {
     })
     ResponseEntity<Void> delete(
             @Parameter(description = "Delivery id", required = true) Long id);
+
+    @Operation(summary = "Delete multiple deliveries")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Deliveries deleted successfully")
+    })
+    ResponseEntity<Void> deleteBulk(
+            @RequestBody(
+                    description = "List of Delivery IDs to delete",
+                    required = true,
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Long.class)))
+            )
+            List<Long> ids
+    );
 }

@@ -3,7 +3,9 @@ import br.com.devquote.dto.request.ProjectRequest;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.dto.response.ProjectResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,6 +15,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Tag(name = "Projects")
 public interface ProjectControllerDoc {
@@ -73,4 +77,17 @@ public interface ProjectControllerDoc {
     })
     ResponseEntity<Void> delete(
             @Parameter(description = "Project id", required = true) Long id);
+
+    @Operation(summary = "Delete multiple projects")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Projects deleted successfully")
+    })
+    ResponseEntity<Void> deleteBulk(
+            @RequestBody(
+                    description = "List of Project IDs to delete",
+                    required = true,
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Long.class)))
+            )
+            List<Long> ids
+    );
 }

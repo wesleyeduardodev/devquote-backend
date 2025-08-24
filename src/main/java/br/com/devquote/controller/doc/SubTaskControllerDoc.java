@@ -1,6 +1,10 @@
 package br.com.devquote.controller.doc;
 import br.com.devquote.dto.request.SubTaskRequest;
 import br.com.devquote.dto.response.SubTaskResponse;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -50,4 +54,17 @@ public interface SubTaskControllerDoc {
     })
     ResponseEntity<Void> delete(
             @Parameter(description = "SubTask id", required = true) Long id);
+
+    @Operation(summary = "Delete multiple sub-tasks")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Sub-tasks deleted successfully")
+    })
+    ResponseEntity<Void> deleteBulk(
+            @RequestBody(
+                    description = "List of SubTask IDs to delete",
+                    required = true,
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Long.class)))
+            )
+            List<Long> ids
+    );
 }

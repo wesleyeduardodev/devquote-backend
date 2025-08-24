@@ -56,6 +56,14 @@ public class RequesterServiceImpl implements RequesterService {
     }
 
     @Override
+    public void deleteBulk(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        requesterRepository.deleteAllById(ids);
+    }
+
+    @Override
     public Page<RequesterResponse> findAllPaginated(Long id,
                                                     String name,
                                                     String email,

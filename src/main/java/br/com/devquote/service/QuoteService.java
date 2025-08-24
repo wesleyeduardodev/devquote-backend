@@ -17,6 +17,8 @@ public interface QuoteService {
 
     void delete(Long id);
 
+    void deleteBulk(List<Long> ids);
+
     Page<QuoteResponse> findAllPaginated(Long id,
                                          Long taskId,
                                          String taskName,

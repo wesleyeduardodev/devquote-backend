@@ -77,7 +77,6 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @Override
     @PostMapping
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DeliveryResponse> create(@RequestBody @Valid DeliveryRequest dto) {
         return new ResponseEntity<>(deliveryService.create(dto), HttpStatus.CREATED);
@@ -85,7 +84,6 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @Override
     @PutMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DeliveryResponse> update(@PathVariable Long id, @RequestBody @Valid DeliveryRequest dto) {
         return ResponseEntity.ok(deliveryService.update(id, dto));
@@ -93,10 +91,16 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @Override
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deliveryService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
+        deliveryService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
 }

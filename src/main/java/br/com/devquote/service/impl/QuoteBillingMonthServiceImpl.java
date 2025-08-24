@@ -57,6 +57,14 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
     }
 
     @Override
+    public void deleteBulk(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        quoteBillingMonthRepository.deleteAllById(ids);
+    }
+
+    @Override
     public QuoteBillingMonth findByYearAndMonth(Integer year, Integer month) {
         Optional<QuoteBillingMonth> billingMonth = quoteBillingMonthRepository.findByYearAndMonth(year, month);
         return billingMonth.orElse(null);

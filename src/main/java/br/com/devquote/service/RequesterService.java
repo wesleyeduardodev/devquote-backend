@@ -17,6 +17,8 @@ public interface RequesterService {
 
     void delete(Long id);
 
+    void deleteBulk(List<Long> ids);
+
     Page<RequesterResponse> findAllPaginated(
             Long id,
             String name,

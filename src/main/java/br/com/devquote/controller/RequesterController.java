@@ -87,4 +87,11 @@ public class RequesterController implements RequesterControllerDoc {
         requesterService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
+        requesterService.deleteBulk(ids);
+        return ResponseEntity.noContent().build();
+    }
 }

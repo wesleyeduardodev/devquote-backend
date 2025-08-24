@@ -64,6 +64,14 @@ public class QuoteServiceImpl implements QuoteService {
     }
 
     @Override
+    public void deleteBulk(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        quoteRepository.deleteAllById(ids);
+    }
+
+    @Override
     public Page<QuoteResponse> findAllPaginated(Long id,
                                                 Long taskId,
                                                 String taskName,

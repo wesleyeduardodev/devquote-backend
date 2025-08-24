@@ -70,6 +70,14 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    public void deleteBulk(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        deliveryRepository.deleteAllById(ids);
+    }
+
+    @Override
     public Page<DeliveryResponse> findAllPaginated(Long id,
                                                    String taskName,
                                                    String taskCode,

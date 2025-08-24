@@ -3,7 +3,9 @@ import br.com.devquote.dto.request.QuoteRequest;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.dto.response.QuoteResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,6 +15,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Tag(name = "Quotes")
 public interface QuoteControllerDoc {
@@ -77,4 +81,17 @@ public interface QuoteControllerDoc {
     })
     ResponseEntity<Void> delete(
             @Parameter(description = "Quote id", required = true) Long id);
+
+    @Operation(summary = "Delete multiple quotes")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Quotes deleted successfully")
+    })
+    ResponseEntity<Void> deleteBulk(
+            @RequestBody(
+                    description = "List of Quote IDs to delete",
+                    required = true,
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Long.class)))
+            )
+            List<Long> ids
+    );
 }

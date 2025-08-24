@@ -59,4 +59,12 @@ public class SubTaskServiceImpl implements SubTaskService {
     public void delete(Long id) {
         subTaskRepository.deleteById(id);
     }
+
+    @Override
+    public void deleteBulk(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        subTaskRepository.deleteAllById(ids);
+    }
 }

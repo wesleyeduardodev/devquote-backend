@@ -20,6 +20,8 @@ public interface TaskService {
 
     void delete(Long id);
 
+    void deleteBulk(List<Long> ids);
+
     TaskWithSubTasksResponse createWithSubTasks(TaskWithSubTasksCreateRequest dto);
 
     TaskWithSubTasksResponse updateWithSubTasks(Long taskId, TaskWithSubTasksUpdateRequest dto);

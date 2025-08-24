@@ -9,4 +9,5 @@ public interface SubTaskService {
     SubTaskResponse create(SubTaskRequest dto);
     SubTaskResponse update(Long id, SubTaskRequest dto);
     void delete(Long id);
+    void deleteBulk(List<Long> ids);
 }

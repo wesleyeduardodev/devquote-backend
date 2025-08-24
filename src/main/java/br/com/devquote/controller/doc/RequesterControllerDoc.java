@@ -2,6 +2,8 @@ package br.com.devquote.controller.doc;
 import br.com.devquote.dto.request.RequesterRequest;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.dto.response.RequesterResponse;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,6 +15,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Tag(name = "Requesters")
 public interface RequesterControllerDoc {
@@ -78,4 +82,17 @@ public interface RequesterControllerDoc {
     })
     ResponseEntity<Void> delete(
             @Parameter(description = "Requester id", required = true) Long id);
+
+    @Operation(summary = "Delete multiple requesters")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Requesters deleted successfully")
+    })
+    ResponseEntity<Void> deleteBulk(
+            @RequestBody(
+                    description = "List of Requester IDs to delete",
+                    required = true,
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Long.class)))
+            )
+            List<Long> ids
+    );
 }

@@ -71,7 +71,6 @@ public class QuoteController implements QuoteControllerDoc {
 
     @Override
     @PostMapping
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<QuoteResponse> create(@RequestBody @Valid QuoteRequest dto) {
         return new ResponseEntity<>(quoteService.create(dto), HttpStatus.CREATED);
@@ -79,7 +78,6 @@ public class QuoteController implements QuoteControllerDoc {
 
     @Override
     @PutMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<QuoteResponse> update(@PathVariable Long id, @RequestBody @Valid QuoteRequest dto) {
         return ResponseEntity.ok(quoteService.update(id, dto));
@@ -87,10 +85,16 @@ public class QuoteController implements QuoteControllerDoc {
 
     @Override
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         quoteService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
+        quoteService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
 }

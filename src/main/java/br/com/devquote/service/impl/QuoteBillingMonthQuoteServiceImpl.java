@@ -75,6 +75,14 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
     }
 
     @Override
+    public void deleteBulk(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        repository.deleteAllById(ids);
+    }
+
+    @Override
     public List<QuoteBillingMonthQuoteResponse> findByQuoteBillingMonthId(Long billingMonthId) {
         return repository.findByQuoteBillingMonth_Id(billingMonthId)
                 .stream()

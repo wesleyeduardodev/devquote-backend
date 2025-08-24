@@ -69,7 +69,6 @@ public class ProjectController implements ProjectControllerDoc {
 
     @Override
     @PostMapping
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProjectResponse> create(@RequestBody @Valid ProjectRequest dto) {
         return new ResponseEntity<>(projectService.create(dto), HttpStatus.CREATED);
@@ -77,7 +76,6 @@ public class ProjectController implements ProjectControllerDoc {
 
     @Override
     @PutMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProjectResponse> update(@PathVariable Long id, @RequestBody @Valid ProjectRequest dto) {
         return ResponseEntity.ok(projectService.update(id, dto));
@@ -85,10 +83,16 @@ public class ProjectController implements ProjectControllerDoc {
 
     @Override
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         projectService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
+        projectService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
 }

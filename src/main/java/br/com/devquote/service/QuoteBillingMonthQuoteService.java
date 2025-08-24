@@ -12,6 +12,7 @@ public interface QuoteBillingMonthQuoteService {
     QuoteBillingMonthQuoteResponse create(QuoteBillingMonthQuoteRequest dto);
     QuoteBillingMonthQuoteResponse update(Long id, QuoteBillingMonthQuoteRequest dto);
     void delete(Long id);
+    void deleteBulk(List<Long> ids);
     List<QuoteBillingMonthQuoteResponse> findByQuoteBillingMonthId(Long billingMonthId);
     QuoteBillingMonthQuote findByQuoteBillingMonthIdAndQuoteId(Long billingMonthId, Long quoteId);
 }

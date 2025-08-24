@@ -6,7 +6,9 @@ import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Tag(name = "Tasks")
 public interface TaskControllerDoc {
@@ -108,4 +112,17 @@ public interface TaskControllerDoc {
             @ApiResponse(responseCode = "404", description = "Task not found")
     })
     ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId);
+
+    @Operation(summary = "Delete multiple tasks")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Tasks deleted successfully")
+    })
+    ResponseEntity<Void> deleteBulk(
+            @RequestBody(
+                    description = "List of Task IDs to delete",
+                    required = true,
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Long.class)))
+            )
+            List<Long> ids
+    );
 }

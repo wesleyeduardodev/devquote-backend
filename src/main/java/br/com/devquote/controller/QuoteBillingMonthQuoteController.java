@@ -37,7 +37,6 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
 
     @Override
     @PostMapping
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<QuoteBillingMonthQuoteResponse> create(@RequestBody @Valid QuoteBillingMonthQuoteRequest dto) {
         return new ResponseEntity<>(service.create(dto), HttpStatus.CREATED);
@@ -45,7 +44,6 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
 
     @Override
     @PutMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<QuoteBillingMonthQuoteResponse> update(@PathVariable Long id, @RequestBody @Valid QuoteBillingMonthQuoteRequest dto) {
         return ResponseEntity.ok(service.update(id, dto));
@@ -53,15 +51,20 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
 
     @Override
     @DeleteMapping("/{id}")
-    //@PreAuthorize("hasAuthority('SCOPE_admin:users')")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
+        service.deleteBulk(ids);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/by-billing-month/{billingMonthId}")
-    //@PreAuthorize("isAuthenticated()")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<QuoteBillingMonthQuoteResponse>> getByBillingMonth(
             @PathVariable Long billingMonthId) {
