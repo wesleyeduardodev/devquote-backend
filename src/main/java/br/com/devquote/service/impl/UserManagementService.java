@@ -1,11 +1,12 @@
 package br.com.devquote.service.impl;
 import br.com.devquote.dto.*;
-import br.com.devquote.entity.Permission;
-import br.com.devquote.entity.Role;
+import br.com.devquote.dto.request.UserProfileRequest;
+import br.com.devquote.entity.Profile;
 import br.com.devquote.entity.User;
-import br.com.devquote.repository.PermissionRepository;
-import br.com.devquote.repository.RoleRepository;
+import br.com.devquote.entity.UserProfile;
+import br.com.devquote.repository.ProfileRepository;
 import br.com.devquote.repository.UserRepository;
+import br.com.devquote.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,8 +22,8 @@ import java.util.stream.Collectors;
 public class UserManagementService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PermissionRepository permissionRepository;
+    private final ProfileRepository profileRepository;
+    private final UserProfileService userProfileService;
     private final PasswordEncoder passwordEncoder;
 
     public Page<UserDto> findAll(Pageable pageable) {
@@ -45,16 +46,34 @@ public class UserManagementService {
             throw new RuntimeException("Email already exists");
         }
 
-        Set<Role> roles = roleRepository.findByNameInWithPermissions(request.getRoleNames());
-
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .roles(roles)
+                .name(request.getFirstName() + " " + request.getLastName())
+                .active(true)
+                .accountNonExpired(true)
+                .accountNonLocked(true)
+                .credentialsNonExpired(true)
                 .build();
+
+        user = userRepository.save(user);
+        
+        // Atribuir perfis ao usuário
+        if (request.getRoleNames() != null && !request.getRoleNames().isEmpty()) {
+            for (String profileCode : request.getRoleNames()) {
+                Profile profile = profileRepository.findByCode(profileCode)
+                        .orElseThrow(() -> new RuntimeException("Profile not found: " + profileCode));
+                
+                UserProfileRequest profileRequest = UserProfileRequest.builder()
+                        .userId(user.getId())
+                        .profileId(profile.getId())
+                        .active(true)
+                        .build();
+                
+                userProfileService.assignProfileToUser(profileRequest);
+            }
+        }
 
         user = userRepository.save(user);
         return convertToDto(user);
@@ -65,13 +84,25 @@ public class UserManagementService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setEnabled(request.getEnabled());
+        user.setName(request.getFirstName() + " " + request.getLastName());
+        user.setActive(request.getEnabled());
 
         if (request.getRoleNames() != null) {
-            Set<Role> roles = roleRepository.findByNameInWithPermissions(request.getRoleNames());
-            user.setRoles(roles);
+            // Remove todos os perfis atuais
+            userProfileService.removeAllProfilesFromUser(user.getId());
+            // Adiciona os novos perfis
+            for (String profileCode : request.getRoleNames()) {
+                Profile profile = profileRepository.findByCode(profileCode)
+                        .orElseThrow(() -> new RuntimeException("Profile not found: " + profileCode));
+                
+                UserProfileRequest profileRequest = UserProfileRequest.builder()
+                        .userId(user.getId())
+                        .profileId(profile.getId())
+                        .active(true)
+                        .build();
+                
+                userProfileService.assignProfileToUser(profileRequest);
+            }
         }
 
         user = userRepository.save(user);
@@ -83,8 +114,21 @@ public class UserManagementService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Set<Role> roles = roleRepository.findByNameInWithPermissions(request.getRoleNames());
-        user.setRoles(roles);
+        // Remove todos os perfis atuais
+        userProfileService.removeAllProfilesFromUser(user.getId());
+        // Adiciona os novos perfis
+        for (String profileCode : request.getRoleNames()) {
+            Profile profile = profileRepository.findByCode(profileCode)
+                    .orElseThrow(() -> new RuntimeException("Profile not found: " + profileCode));
+            
+            UserProfileRequest profileRequest = UserProfileRequest.builder()
+                    .userId(user.getId())
+                    .profileId(profile.getId())
+                    .active(true)
+                    .build();
+            
+            userProfileService.assignProfileToUser(profileRequest);
+        }
 
         user = userRepository.save(user);
         return convertToDto(user);
@@ -99,60 +143,34 @@ public class UserManagementService {
     }
 
     public List<RoleDto> getAllRoles() {
-        return roleRepository.findAll().stream()
+        return profileRepository.findAllOrderedByLevel().stream()
                 .map(this::convertToRoleDto)
                 .collect(Collectors.toList());
     }
 
-    public List<PermissionDto> getAllPermissions() {
-        return permissionRepository.findAll().stream()
-                .map(this::convertToPermissionDto)
-                .collect(Collectors.toList());
-    }
-
     private UserDto convertToDto(User user) {
-        Set<String> roles = user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet());
-
-        Set<String> permissions = user.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
-
+        Set<String> profileCodes = user.getActiveProfileCodes();
+        
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .enabled(user.getEnabled())
-                .roles(roles)
-                .permissions(permissions)
+                .firstName(user.getName())
+                .lastName("")
+                .enabled(user.getActive())
+                .roles(profileCodes)
+                .permissions(profileCodes) // Por enquanto, usando os códigos dos perfis como permissions
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
     }
 
-    private RoleDto convertToRoleDto(Role role) {
-        Set<String> permissions = role.getPermissions().stream()
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
-
+    private RoleDto convertToRoleDto(Profile profile) {
         return RoleDto.builder()
-                .id(role.getId())
-                .name(role.getName())
-                .description(role.getDescription())
-                .permissions(permissions)
-                .build();
-    }
-
-    private PermissionDto convertToPermissionDto(Permission permission) {
-        return PermissionDto.builder()
-                .id(permission.getId())
-                .name(permission.getName())
-                .description(permission.getDescription())
-                .screenPath(permission.getScreenPath())
+                .id(profile.getId())
+                .name(profile.getCode())
+                .description(profile.getDescription())
+                .permissions(Set.of(profile.getCode())) // Por enquanto, usando o código do perfil
                 .build();
     }
 }

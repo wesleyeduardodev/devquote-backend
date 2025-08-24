@@ -11,7 +11,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(of = "id")
 public class FieldPermission extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1,5 +1,5 @@
 package br.com.devquote.configuration.security;
-import br.com.devquote.service.impl.UserDetailsServiceImpl;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import io.jsonwebtoken.io.Decoders;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +51,7 @@ public class SecurityConfig {
             "/actuator/health"    // opcional
     };
 
-    private final UserDetailsServiceImpl userDetailsService;
+    private final UserDetailsService userDetailsService;
     private final AuthTokenFilter authTokenFilter;
 
     @Value("${app.jwtSecret}")
@@ -93,8 +93,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/deliveries/**").authenticated()
                         .requestMatchers("/api/requesters/**").authenticated()
 
-                        // Admin com autoridade específica
-                        .requestMatchers("/api/admin/**").hasAuthority("admin:users")
+                        // Admin com perfil específico
+                        .requestMatchers("/api/admin/**").hasAuthority("PROFILE_ADMIN")
 
                         // Demais rotas: autenticado
                         .anyRequest().authenticated()

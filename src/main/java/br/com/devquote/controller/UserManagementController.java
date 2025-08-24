@@ -1,3 +1,4 @@
+/*
 package br.com.devquote.controller;
 import br.com.devquote.dto.*;
 import br.com.devquote.service.impl.UserManagementService;
@@ -66,4 +67,4 @@ public class UserManagementController {
         List<PermissionDto> permissions = userManagementService.getAllPermissions();
         return ResponseEntity.ok(permissions);
     }
-}
+}*/

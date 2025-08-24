@@ -11,7 +11,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(of = "id")
 public class Resource extends BaseEntity {
 
     @Column(unique = true, nullable = false, length = 50)

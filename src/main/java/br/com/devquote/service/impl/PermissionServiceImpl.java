@@ -217,31 +217,29 @@ public class PermissionServiceImpl implements PermissionService {
             return;
         }
 
-        List<Resource> resources = resourceRepository.findAllOrderedByName();
-        List<Operation> operations = operationRepository.findAllOrderedByName();
+        List<Resource> allResources = resourceRepository.findAllOrderedByName();
+        List<Operation> allOperations = operationRepository.findAllOrderedByName();
 
-        // ADMIN: Todas as permissões
-        createProfilePermissions(adminProfile, resources, operations);
+        // ADMIN: Acesso total a todas as telas
+        createProfilePermissions(adminProfile, allResources, allOperations);
+        log.info("Permissões criadas para perfil: {}", adminProfile.getCode());
 
-        // MANAGER: Permissões de gestão (exceto usuários e configurações)
-        List<Resource> managerResources = resources.stream()
-            .filter(r -> !r.getCode().equals(ResourceType.USERS.getCode()) && 
-                        !r.getCode().equals(ResourceType.SETTINGS.getCode()))
+        // MANAGER: Apenas tasks, deliveries, billing (todas as operações)
+        List<Resource> managerResources = allResources.stream()
+            .filter(r -> r.getCode().equals("tasks") || 
+                        r.getCode().equals("deliveries") || 
+                        r.getCode().equals("billing"))
             .collect(Collectors.toList());
-        createProfilePermissions(managerProfile, managerResources, operations);
+        createProfilePermissions(managerProfile, managerResources, allOperations);
+        log.info("Permissões criadas para perfil: {}", managerProfile.getCode());
 
-        // USER: Apenas leitura e operações básicas
-        List<Operation> userOperations = operations.stream()
-            .filter(o -> o.getCode().equals(OperationType.READ.getCode()) || 
-                        o.getCode().equals(OperationType.CREATE.getCode()))
+        // USER: Apenas tasks e deliveries (todas as operações)
+        List<Resource> userResources = allResources.stream()
+            .filter(r -> r.getCode().equals("tasks") || 
+                        r.getCode().equals("deliveries"))
             .collect(Collectors.toList());
-        
-        List<Resource> userResources = resources.stream()
-            .filter(r -> !r.getCode().equals(ResourceType.USERS.getCode()) && 
-                        !r.getCode().equals(ResourceType.SETTINGS.getCode()) &&
-                        !r.getCode().equals(ResourceType.BILLING.getCode()))
-            .collect(Collectors.toList());
-        createProfilePermissions(userProfile, userResources, userOperations);
+        createProfilePermissions(userProfile, userResources, allOperations);
+        log.info("Permissões criadas para perfil: {}", userProfile.getCode());
     }
 
     private void createProfilePermissions(Profile profile, List<Resource> resources, List<Operation> operations) {

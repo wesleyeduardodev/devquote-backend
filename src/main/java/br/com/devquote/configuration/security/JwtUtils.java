@@ -1,5 +1,5 @@
 package br.com.devquote.configuration.security;
-import br.com.devquote.service.impl.UserDetailsImpl;
+import br.com.devquote.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -22,13 +22,13 @@ public class JwtUtils {
     private int jwtExpirationMs;
 
     public String generateJwtToken(Authentication authentication) {
-        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+        User userPrincipal = (User) authentication.getPrincipal();
 
         return Jwts.builder()
                 .setSubject(userPrincipal.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-                .signWith(key(), SignatureAlgorithm.HS256) // <<< trocado
+                .signWith(key(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
