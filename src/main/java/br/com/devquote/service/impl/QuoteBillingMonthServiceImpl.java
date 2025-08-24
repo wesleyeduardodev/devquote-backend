@@ -8,9 +8,13 @@ import br.com.devquote.repository.QuoteBillingMonthRepository;
 import br.com.devquote.service.QuoteBillingMonthService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -68,5 +72,43 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
     public QuoteBillingMonth findByYearAndMonth(Integer year, Integer month) {
         Optional<QuoteBillingMonth> billingMonth = quoteBillingMonthRepository.findByYearAndMonth(year, month);
         return billingMonth.orElse(null);
+    }
+
+    @Override
+    public Page<QuoteBillingMonthResponse> findAllPaginated(Integer month, Integer year, String status, Pageable pageable) {
+        Page<QuoteBillingMonth> page = quoteBillingMonthRepository.findByOptionalFiltersPaginated(month, year, status, pageable);
+        return page.map(QuoteBillingMonthAdapter::toResponseDTO);
+    }
+
+    @Override
+    public Map<String, Object> getStatistics() {
+        Map<String, Object> statistics = new HashMap<>();
+        
+        // Total de períodos
+        long totalPeriods = quoteBillingMonthRepository.count();
+        statistics.put("totalPeriods", totalPeriods);
+        
+        // Estatísticas por status
+        List<Object[]> statusStats = quoteBillingMonthRepository.getStatusStatistics();
+        Map<String, Long> statusCounts = new HashMap<>();
+        
+        for (Object[] stat : statusStats) {
+            String status = (String) stat[0];
+            Long count = (Long) stat[1];
+            statusCounts.put(status, count);
+        }
+        
+        statistics.put("byStatus", statusCounts);
+        
+        // Anos únicos
+        List<Integer> years = quoteBillingMonthRepository.findAll().stream()
+            .map(QuoteBillingMonth::getYear)
+            .distinct()
+            .sorted((a, b) -> b.compareTo(a)) // Ordem decrescente
+            .collect(Collectors.toList());
+        
+        statistics.put("availableYears", years);
+        
+        return statistics;
     }
 }

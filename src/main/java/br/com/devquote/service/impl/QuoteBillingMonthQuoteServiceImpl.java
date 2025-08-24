@@ -12,7 +12,10 @@ import br.com.devquote.service.QuoteBillingMonthQuoteService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -94,5 +97,49 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
     public QuoteBillingMonthQuote findByQuoteBillingMonthIdAndQuoteId(Long billingMonthId, Long quoteId){
         Optional<QuoteBillingMonthQuote> quote = repository.findByQuoteBillingMonthIdAndQuoteId(billingMonthId, quoteId);
         return quote.orElse(null);
+    }
+
+    @Override
+    public Page<QuoteBillingMonthQuoteResponse> findByQuoteBillingMonthIdPaginated(Long billingMonthId, Pageable pageable) {
+        Page<QuoteBillingMonthQuote> page = repository.findByQuoteBillingMonthIdPaginated(billingMonthId, pageable);
+        return page.map(QuoteBillingMonthQuoteAdapter::toResponseDTO);
+    }
+
+    @Override
+    public List<QuoteBillingMonthQuoteResponse> bulkCreate(List<QuoteBillingMonthQuoteRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<QuoteBillingMonthQuote> entities = new ArrayList<>();
+        
+        for (QuoteBillingMonthQuoteRequest dto : requests) {
+            // Verifica se já existe
+            if (repository.existsByQuoteBillingMonth_IdAndQuote_Id(dto.getQuoteBillingMonthId(), dto.getQuoteId())) {
+                continue; // Pula se já existir
+            }
+            
+            QuoteBillingMonth qbm = quoteBillingMonthRepository.findById(dto.getQuoteBillingMonthId())
+                    .orElseThrow(() -> new RuntimeException("QuoteBillingMonth not found: " + dto.getQuoteBillingMonthId()));
+            Quote quote = quoteRepository.findById(dto.getQuoteId())
+                    .orElseThrow(() -> new RuntimeException("Quote not found: " + dto.getQuoteId()));
+
+            QuoteBillingMonthQuote entity = QuoteBillingMonthQuoteAdapter.toEntity(dto, qbm, quote);
+            entities.add(entity);
+        }
+        
+        List<QuoteBillingMonthQuote> savedEntities = repository.saveAll(entities);
+        
+        return savedEntities.stream()
+                .map(QuoteBillingMonthQuoteAdapter::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void bulkUnlinkByBillingMonthAndQuoteIds(Long billingMonthId, List<Long> quoteIds) {
+        if (quoteIds == null || quoteIds.isEmpty()) {
+            return;
+        }
+        repository.deleteByQuoteBillingMonthIdAndQuoteIdIn(billingMonthId, quoteIds);
     }
 }

@@ -5,6 +5,10 @@ import br.com.devquote.dto.response.QuoteBillingMonthResponse;
 import br.com.devquote.service.QuoteBillingMonthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -61,5 +65,29 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         quoteBillingMonthService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/paginated")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Page<QuoteBillingMonthResponse>> findAllPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) String status) {
+        
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        
+        return ResponseEntity.ok(quoteBillingMonthService.findAllPaginated(
+            month, year, status, pageable));
+    }
+
+    @GetMapping("/statistics")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getStatistics() {
+        return ResponseEntity.ok(quoteBillingMonthService.getStatistics());
     }
 }

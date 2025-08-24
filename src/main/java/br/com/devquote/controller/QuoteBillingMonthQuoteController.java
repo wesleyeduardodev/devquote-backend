@@ -5,6 +5,10 @@ import br.com.devquote.dto.response.QuoteBillingMonthQuoteResponse;
 import br.com.devquote.service.QuoteBillingMonthQuoteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -69,5 +73,36 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
     public ResponseEntity<List<QuoteBillingMonthQuoteResponse>> getByBillingMonth(
             @PathVariable Long billingMonthId) {
         return ResponseEntity.ok(service.findByQuoteBillingMonthId(billingMonthId));
+    }
+
+    @GetMapping("/by-billing-month/{billingMonthId}/paginated")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Page<QuoteBillingMonthQuoteResponse>> getByBillingMonthPaginated(
+            @PathVariable Long billingMonthId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        
+        return ResponseEntity.ok(service.findByQuoteBillingMonthIdPaginated(billingMonthId, pageable));
+    }
+
+    @PostMapping("/bulk-link")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<QuoteBillingMonthQuoteResponse>> bulkLink(
+            @RequestBody @Valid List<QuoteBillingMonthQuoteRequest> requests) {
+        return new ResponseEntity<>(service.bulkCreate(requests), HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/by-billing-month/{billingMonthId}/bulk")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> bulkUnlinkFromBillingMonth(
+            @PathVariable Long billingMonthId,
+            @RequestBody List<Long> quoteIds) {
+        service.bulkUnlinkByBillingMonthAndQuoteIds(billingMonthId, quoteIds);
+        return ResponseEntity.noContent().build();
     }
 }
