@@ -108,6 +108,24 @@ public class UserManagementService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Verifica se está alterando o username
+        if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
+            // Verifica se o novo username já existe
+            if (userRepository.existsByUsername(request.getUsername())) {
+                throw new RuntimeException("Username já existe: " + request.getUsername());
+            }
+            user.setUsername(request.getUsername());
+        }
+
+        // Verifica se está alterando o email
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            // Verifica se o novo email já existe
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new RuntimeException("Email já existe: " + request.getEmail());
+            }
+            user.setEmail(request.getEmail());
+        }
+
         user.setName(request.getFirstName() + " " + request.getLastName());
         user.setActive(request.getEnabled());
 
@@ -223,12 +241,25 @@ public class UserManagementService {
     private UserDto convertToDto(User user) {
         Set<String> profileCodes = user.getActiveProfileCodes();
         
+        // Divide o nome completo em firstName e lastName
+        String fullName = user.getName() != null ? user.getName() : "";
+        String firstName = "";
+        String lastName = "";
+        
+        if (!fullName.trim().isEmpty()) {
+            String[] nameParts = fullName.trim().split("\\s+", 2);
+            firstName = nameParts[0];
+            if (nameParts.length > 1) {
+                lastName = nameParts[1];
+            }
+        }
+        
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .firstName(user.getName())
-                .lastName("")
+                .firstName(firstName)
+                .lastName(lastName)
                 .enabled(user.getActive())
                 .roles(profileCodes)
                 .permissions(profileCodes) // Por enquanto, usando os códigos dos perfis como permissions
