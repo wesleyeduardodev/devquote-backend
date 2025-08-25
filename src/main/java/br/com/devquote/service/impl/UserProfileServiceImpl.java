@@ -179,9 +179,8 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public void removeAllProfilesFromUser(Long userId) {
-        List<UserProfile> userProfiles = userProfileRepository.findActiveByUserId(userId);
-        userProfiles.forEach(up -> up.setActive(false));
-        userProfileRepository.saveAll(userProfiles);
+        List<UserProfile> userProfiles = userProfileRepository.findByUserId(userId);
+        userProfileRepository.deleteAll(userProfiles);
     }
 
     @Override
