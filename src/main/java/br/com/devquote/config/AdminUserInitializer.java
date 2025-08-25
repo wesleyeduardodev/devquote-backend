@@ -32,11 +32,11 @@ public class AdminUserInitializer {
         log.info("=== INICIALIZANDO USUÁRIOS PADRÃO ===");
         try {
             // Criar usuários padrão
-            createUserIfNotExists("wesley", "wesley@devquote.com", "Administrador", "wesley", ProfileType.ADMIN);
-            createUserIfNotExists("jayron", "jayron@devquote.com", "Gerente", "jayron", ProfileType.MANAGER);
+            createUserIfNotExists("wesley", "wesley@devquote.com", "Wesley Eduardo", "wesley", ProfileType.ADMIN);
+           /* createUserIfNotExists("jayron", "jayron@devquote.com", "Gerente", "jayron", ProfileType.MANAGER);
             createUserIfNotExists("licya", "licya@devquote.com", "Usuário", "licya", ProfileType.USER);
             createUserIfNotExists("ivo", "ivo@devquote.com", "Usuário", "ivo", ProfileType.USER);
-            createUserIfNotExists("gerdan", "gerdan@devquote.com", "Usuário", "gerdan", ProfileType.USER);
+            createUserIfNotExists("gerdan", "gerdan@devquote.com", "Usuário", "gerdan", ProfileType.USER);*/
             // Configurar permissões específicas
             configureUserPermissions();
             log.info("Usuários padrão inicializados com sucesso!");
