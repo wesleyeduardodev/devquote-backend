@@ -12,6 +12,8 @@ import br.com.devquote.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -162,6 +164,16 @@ public class UserManagementService {
             throw new RuntimeException("User not found");
         }
         
+        // Verifica se está tentando deletar o próprio usuário
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getName() != null) {
+            User currentUser = userRepository.findByUsername(authentication.getName())
+                    .orElse(null);
+            if (currentUser != null && currentUser.getId().equals(id)) {
+                throw new RuntimeException("Você não pode excluir sua própria conta");
+            }
+        }
+        
         // Remove todos os perfis do usuário antes de deletar
         userProfileService.removeAllProfilesFromUser(id);
         
@@ -171,6 +183,16 @@ public class UserManagementService {
     
     @Transactional
     public void deleteBulk(List<Long> ids) {
+        // Verifica se o usuário atual está na lista
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getName() != null) {
+            User currentUser = userRepository.findByUsername(authentication.getName())
+                    .orElse(null);
+            if (currentUser != null && ids.contains(currentUser.getId())) {
+                throw new RuntimeException("Você não pode excluir sua própria conta");
+            }
+        }
+        
         for (Long id : ids) {
             if (userRepository.existsById(id)) {
                 // Remove todos os perfis e permissões do usuário antes de deletar
