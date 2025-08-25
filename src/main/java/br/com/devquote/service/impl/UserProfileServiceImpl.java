@@ -12,8 +12,8 @@ import br.com.devquote.repository.UserProfileRepository;
 import br.com.devquote.repository.UserRepository;
 import br.com.devquote.service.PermissionService;
 import br.com.devquote.service.UserProfileService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -113,6 +113,19 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
 
         profileRepository.delete(profile);
+    }
+    
+    @Override
+    @Transactional
+    public void deleteProfilesBulk(List<Long> ids) {
+        for (Long id : ids) {
+            try {
+                deleteProfile(id);
+            } catch (RuntimeException e) {
+                // Log o erro mas continua com os outros
+                System.err.println("Erro ao deletar perfil " + id + ": " + e.getMessage());
+            }
+        }
     }
 
     @Override

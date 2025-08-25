@@ -33,6 +33,25 @@ public class UserManagementService {
         return userRepository.findAll(pageable)
                 .map(this::convertToDto);
     }
+    
+    public Page<UserDto> findAllWithFilters(Long id, String username, String email, 
+                                           String firstName, String lastName, Boolean enabled, 
+                                           Pageable pageable) {
+        // Como o User tem apenas o campo "name" e não firstName/lastName separados,
+        // vamos combinar firstName e lastName para buscar no campo name
+        String name = null;
+        if (firstName != null && !firstName.isEmpty()) {
+            name = firstName;
+            if (lastName != null && !lastName.isEmpty()) {
+                name = name + " " + lastName;
+            }
+        } else if (lastName != null && !lastName.isEmpty()) {
+            name = lastName;
+        }
+        
+        return userRepository.findAllWithFilters(id, username, email, name, enabled, pageable)
+                .map(this::convertToDto);
+    }
 
     public UserDto findById(Long id) {
         User user = userRepository.findById(id)
@@ -142,7 +161,25 @@ public class UserManagementService {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("User not found");
         }
+        
+        // Remove todos os perfis do usuário antes de deletar
+        userProfileService.removeAllProfilesFromUser(id);
+        
+        // Deleta o usuário
         userRepository.deleteById(id);
+    }
+    
+    @Transactional
+    public void deleteBulk(List<Long> ids) {
+        for (Long id : ids) {
+            if (userRepository.existsById(id)) {
+                // Remove todos os perfis e permissões do usuário antes de deletar
+                userProfileService.removeAllProfilesFromUser(id);
+                
+                // Deleta o usuário
+                userRepository.deleteById(id);
+            }
+        }
     }
 
     public List<PermissionDto> getAllPermissions() {

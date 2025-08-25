@@ -19,6 +19,7 @@ public interface UserProfileService {
     ProfileResponse createProfile(ProfileRequest request);
     ProfileResponse updateProfile(Long id, ProfileRequest request);
     void deleteProfile(Long id);
+    void deleteProfilesBulk(List<Long> ids);
 
     // Gerenciamento de perfis de usuários
     List<ProfileResponse> findUserProfiles(Long userId);

@@ -71,7 +71,7 @@ public class PermissionController {
     public ResponseEntity<?> getAllProfiles(
             @RequestParam(required = false, defaultValue = "false") boolean paginated,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String code,
             @RequestParam(required = false) String name,
@@ -125,6 +125,13 @@ public class PermissionController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProfile(@PathVariable Long id) {
         userProfileService.deleteProfile(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @DeleteMapping("/profiles/bulk")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteProfilesBulk(@RequestBody List<Long> ids) {
+        userProfileService.deleteProfilesBulk(ids);
         return ResponseEntity.noContent().build();
     }
 
