@@ -4,6 +4,8 @@ import br.com.devquote.dto.request.ProfileRequest;
 import br.com.devquote.dto.request.UserProfileRequest;
 import br.com.devquote.dto.response.ProfileResponse;
 import br.com.devquote.dto.response.UserPermissionResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -11,6 +13,8 @@ public interface UserProfileService {
 
     // Gerenciamento de perfis
     List<ProfileResponse> findAllProfiles();
+    Page<ProfileResponse> findAllProfilesPaged(Pageable pageable);
+    Page<ProfileResponse> findAllProfilesPaged(Long id, String code, String name, String description, Integer level, Boolean active, Pageable pageable);
     ProfileResponse findProfileById(Long id);
     ProfileResponse createProfile(ProfileRequest request);
     ProfileResponse updateProfile(Long id, ProfileRequest request);

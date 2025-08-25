@@ -14,6 +14,8 @@ import br.com.devquote.service.PermissionService;
 import br.com.devquote.service.UserProfileService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,6 +37,22 @@ public class UserProfileServiceImpl implements UserProfileService {
         return profileRepository.findAllOrderedByLevel().stream()
             .map(this::toProfileResponse)
             .collect(Collectors.toList());
+    }
+    
+    @Override
+    public Page<ProfileResponse> findAllProfilesPaged(Pageable pageable) {
+        Page<Profile> profiles = profileRepository.findAll(pageable);
+        return profiles.map(this::toProfileResponse);
+    }
+    
+    @Override
+    public Page<ProfileResponse> findAllProfilesPaged(Long id, String code, String name, 
+                                                      String description, Integer level, 
+                                                      Boolean active, Pageable pageable) {
+        Page<Profile> profiles = profileRepository.findAllWithFilters(
+            id, code, name, description, level, active, pageable
+        );
+        return profiles.map(this::toProfileResponse);
     }
 
     @Override

@@ -24,5 +24,20 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
     @Query("SELECT p FROM Profile p WHERE p.active = true AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))")
     Page<Profile> findByNameContainingIgnoreCase(@Param("name") String name, Pageable pageable);
 
+    @Query("SELECT p FROM Profile p WHERE " +
+           "(:id IS NULL OR p.id = :id) AND " +
+           "(:code IS NULL OR :code = '' OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%'))) AND " +
+           "(:name IS NULL OR :name = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+           "(:description IS NULL OR :description = '' OR p.description IS NULL OR LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%'))) AND " +
+           "(:level IS NULL OR p.level = :level) AND " +
+           "(:active IS NULL OR p.active = :active)")
+    Page<Profile> findAllWithFilters(@Param("id") Long id,
+                                      @Param("code") String code,
+                                      @Param("name") String name,
+                                      @Param("description") String description,
+                                      @Param("level") Integer level,
+                                      @Param("active") Boolean active,
+                                      Pageable pageable);
+
     boolean existsByCode(String code);
 }

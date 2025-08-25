@@ -1,20 +1,28 @@
 package br.com.devquote.controller;
 
+import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.dto.request.ProfileRequest;
 import br.com.devquote.dto.request.UserProfileRequest;
+import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.dto.response.ProfileResponse;
 import br.com.devquote.dto.response.UserPermissionResponse;
 import br.com.devquote.service.PermissionService;
 import br.com.devquote.service.UserProfileService;
+import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/permissions")
@@ -23,6 +31,10 @@ public class PermissionController {
 
     private final PermissionService permissionService;
     private final UserProfileService userProfileService;
+
+    private static final Set<String> ALLOWED_PROFILE_SORT_FIELDS = Set.of(
+            "id", "code", "name", "description", "level", "active", "createdAt", "updatedAt"
+    );
 
     // ===== VERIFICAÇÃO DE PERMISSÕES =====
 
@@ -56,8 +68,37 @@ public class PermissionController {
 
     @GetMapping("/profiles")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<ProfileResponse>> getAllProfiles() {
-        return ResponseEntity.ok(userProfileService.findAllProfiles());
+    public ResponseEntity<?> getAllProfiles(
+            @RequestParam(required = false, defaultValue = "false") boolean paginated,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) Integer level,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) MultiValueMap<String, String> params) {
+        
+        if (!paginated) {
+            List<ProfileResponse> profiles = userProfileService.findAllProfiles();
+            return ResponseEntity.ok(profiles);
+        }
+        
+        List<String> sortParams = params != null ? params.get("sort") : null;
+        
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                SortUtils.buildAndSanitize(sortParams, ALLOWED_PROFILE_SORT_FIELDS, "id")
+        );
+        
+        Page<ProfileResponse> pageResult = userProfileService.findAllProfilesPaged(
+                id, code, name, description, level, active, pageable
+        );
+        
+        PagedResponse<ProfileResponse> response = PageAdapter.toPagedResponseDTO(pageResult);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/profiles/{id}")
