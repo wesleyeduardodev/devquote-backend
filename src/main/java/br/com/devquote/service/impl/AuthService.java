@@ -3,7 +3,7 @@ package br.com.devquote.service.impl;
 
 import br.com.devquote.configuration.security.JwtUtils;
 import br.com.devquote.dto.UserInfoDto;
-import br.com.devquote.dto.UserPermissionsDto;
+import br.com.devquote.dto.response.UserPermissionResponse;
 import br.com.devquote.dto.request.LoginRequest;
 import br.com.devquote.dto.request.RegisterRequest;
 import br.com.devquote.dto.request.UserProfileRequest;
@@ -106,25 +106,14 @@ public class AuthService {
                 .build();
     }
 
-    public UserPermissionsDto getUserPermissions(Authentication authentication) {
+    public UserPermissionResponse getUserPermissions(Authentication authentication) {
         String username = authentication.getName();
         User currentUser = userRepository.findByUsernameWithProfiles(username)
                 .or(() -> userRepository.findByEmailWithProfiles(username))
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Usar o PermissionService para obter permissões detalhadas
-        var userPermissions = permissionService.getUserPermissions(currentUser.getId());
-
-        Set<String> profiles = currentUser.getActiveProfileCodes();
-        Set<String> allowedScreens = userPermissions.getResourcePermissions().keySet();
-
-        return UserPermissionsDto.builder()
-                .permissions(profiles) // Códigos dos perfis
-                .allowedScreens(allowedScreens) // Recursos (telas) permitidos
-                .roles(profiles)
-                .resourcePermissions(userPermissions.getResourcePermissions()) // Operações por tela
-                .fieldPermissions(userPermissions.getFieldPermissions()) // Permissões de campo
-                .build();
+        // Usar o PermissionService para obter permissões detalhadas - já retorna UserPermissionResponse
+        return permissionService.getUserPermissions(currentUser.getId());
     }
 
     public Set<String> getAllowedScreens(Authentication authentication) {

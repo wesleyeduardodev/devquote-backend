@@ -1,6 +1,5 @@
 package br.com.devquote.configuration.security;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import io.jsonwebtoken.io.Decoders;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,16 +16,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,9 +47,6 @@ public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
     private final AuthTokenFilter authTokenFilter;
-
-    @Value("${app.jwtSecret}")
-    private String jwtSecret;
 
     @Value("#{'${devquote.cors.allowed-origins:}'.split(',')}")
     private List<String> allowedOriginsFromYaml;
@@ -94,34 +85,35 @@ public class SecurityConfig {
                         .requestMatchers("/api/requesters/**").authenticated()
 
                         // Admin com perfil específico
-                        .requestMatchers("/api/admin/**").hasAuthority("PROFILE_ADMIN")
+                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
 
                         // Demais rotas: autenticado
                         .anyRequest().authenticated()
                 )
 
-                // Resource Server com JWT (HS256)
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.decoder(hs256Decoder()))
-                )
+                // REMOVIDO OAuth2 Resource Server - Usamos apenas o AuthTokenFilter
+                // .oauth2ResourceServer(oauth2 -> oauth2
+                //         .jwt(jwt -> jwt.decoder(hs256Decoder()))
+                // )
 
                 // H2 precisa disso para exibir frames
                 .headers(h -> h.frameOptions(f -> f.disable()))
 
-                // UserDetails + Filtro custom de JWT (se aplicável ao seu fluxo)
+                // UserDetails + Filtro custom de JWT
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    private JwtDecoder hs256Decoder() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        SecretKey key = new SecretKeySpec(keyBytes, "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(key)
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
-    }
+    // Removido - não precisamos mais do JwtDecoder do OAuth2
+    // private JwtDecoder hs256Decoder() {
+    //     byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+    //     SecretKey key = new SecretKeySpec(keyBytes, "HmacSHA256");
+    //     return NimbusJwtDecoder.withSecretKey(key)
+    //             .macAlgorithm(MacAlgorithm.HS256)
+    //             .build();
+    // }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

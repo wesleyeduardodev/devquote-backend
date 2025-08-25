@@ -1,9 +1,11 @@
 package br.com.devquote.service.impl;
 import br.com.devquote.dto.*;
 import br.com.devquote.dto.request.UserProfileRequest;
+import br.com.devquote.entity.Permission;
 import br.com.devquote.entity.Profile;
 import br.com.devquote.entity.User;
 import br.com.devquote.entity.UserProfile;
+import br.com.devquote.repository.PermissionRepository;
 import br.com.devquote.repository.ProfileRepository;
 import br.com.devquote.repository.UserRepository;
 import br.com.devquote.service.UserProfileService;
@@ -23,6 +25,7 @@ public class UserManagementService {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final PermissionRepository permissionRepository;
     private final UserProfileService userProfileService;
     private final PasswordEncoder passwordEncoder;
 
@@ -142,6 +145,21 @@ public class UserManagementService {
         userRepository.deleteById(id);
     }
 
+    public List<PermissionDto> getAllPermissions() {
+        List<Permission> permissions = permissionRepository.findAllOrderedById();
+        return permissions.stream()
+                .map(this::convertPermissionToDto)
+                .collect(Collectors.toList());
+    }
+
+    private PermissionDto convertPermissionToDto(Permission permission) {
+        return PermissionDto.builder()
+                .id(permission.getId())
+                .name(permission.getName())
+                .description(permission.getDescription())
+                .screenPath(permission.getScreenPath())
+                .build();
+    }
 
     private UserDto convertToDto(User user) {
         Set<String> profileCodes = user.getActiveProfileCodes();
