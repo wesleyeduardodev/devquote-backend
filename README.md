@@ -208,11 +208,13 @@ Distribuído sob a licença MIT. Consulte `LICENSE` para mais detalhes.
 
 ## 📄 Comandos úteis
 
+cd "/mnt/c/Users/Wesley Eduardo/Documents/projetos-git/devquote-backend"
+docker compose -f "/mnt/c/Users/Wesley Eduardo/Documents/projetos-git/devquote-backend/docker-compose.yml" up -d
+
 cd "/mnt/c/Users/wesle/OneDrive/Documentos/projetos-git/devquote-backend"
 docker compose -f "/mnt/c/Users/wesle/OneDrive/Documentos/projetos-git/devquote-backend/docker-compose.yml" up -d
 
-cd "/mnt/c/Users/Wesley Eduardo/Documents/projetos-git/devquote-backend
-docker compose -f "/mnt/c/Users/Wesley Eduardo/Documents/projetos-git/devquote-backend/docker-compose.yml" up -d
+
 
 ## 📄 Swagger
 http://localhost:8080/swagger-ui/index.html
