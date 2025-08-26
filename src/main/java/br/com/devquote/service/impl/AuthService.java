@@ -100,8 +100,7 @@ public class AuthService {
                 .id(currentUser.getId())
                 .username(currentUser.getUsername())
                 .email(currentUser.getEmail())
-                .firstName(currentUser.getName())
-                .lastName("")
+                .name(currentUser.getName())
                 .roles(profiles)
                 .permissions(permissions)
                 .build();
