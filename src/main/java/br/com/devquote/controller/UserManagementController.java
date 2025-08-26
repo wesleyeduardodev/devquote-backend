@@ -35,8 +35,7 @@ public class UserManagementController {
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String email,
-            @RequestParam(required = false) String firstName,
-            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String name,
             @RequestParam(required = false) Boolean enabled,
             @RequestParam(required = false) MultiValueMap<String, String> params) {
         
@@ -49,7 +48,7 @@ public class UserManagementController {
         );
         
         Page<UserDto> pageResult = userManagementService.findAllWithFilters(
-                id, username, email, firstName, lastName, enabled, pageable
+                id, username, email, name, enabled, pageable
         );
         
         PagedResponse<UserDto> response = PageAdapter.toPagedResponseDTO(pageResult);

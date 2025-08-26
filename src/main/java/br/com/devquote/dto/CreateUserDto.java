@@ -18,7 +18,7 @@ public class CreateUserDto {
     @NotBlank
     private String password;
 
-    private String firstName;
-    private String lastName;
+    @NotBlank
+    private String name;
     private Set<String> profileCodes;
 }

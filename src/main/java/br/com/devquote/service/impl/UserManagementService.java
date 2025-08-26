@@ -37,20 +37,8 @@ public class UserManagementService {
     }
     
     public Page<UserDto> findAllWithFilters(Long id, String username, String email, 
-                                           String firstName, String lastName, Boolean enabled, 
+                                           String name, Boolean enabled, 
                                            Pageable pageable) {
-        // Como o User tem apenas o campo "name" e não firstName/lastName separados,
-        // vamos combinar firstName e lastName para buscar no campo name
-        String name = null;
-        if (firstName != null && !firstName.isEmpty()) {
-            name = firstName;
-            if (lastName != null && !lastName.isEmpty()) {
-                name = name + " " + lastName;
-            }
-        } else if (lastName != null && !lastName.isEmpty()) {
-            name = lastName;
-        }
-        
         return userRepository.findAllWithFilters(id, username, email, name, enabled, pageable)
                 .map(this::convertToDto);
     }
@@ -74,7 +62,7 @@ public class UserManagementService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getFirstName() + " " + request.getLastName())
+                .name(request.getName())
                 .active(true)
                 .accountNonExpired(true)
                 .accountNonLocked(true)
@@ -241,25 +229,11 @@ public class UserManagementService {
     private UserDto convertToDto(User user) {
         Set<String> profileCodes = user.getActiveProfileCodes();
         
-        // Divide o nome completo em firstName e lastName
-        String fullName = user.getName() != null ? user.getName() : "";
-        String firstName = "";
-        String lastName = "";
-        
-        if (!fullName.trim().isEmpty()) {
-            String[] nameParts = fullName.trim().split("\\s+", 2);
-            firstName = nameParts[0];
-            if (nameParts.length > 1) {
-                lastName = nameParts[1];
-            }
-        }
-        
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .firstName(firstName)
-                .lastName(lastName)
+                .name(user.getName())
                 .enabled(user.getActive())
                 .roles(profileCodes)
                 .permissions(profileCodes) // Por enquanto, usando os códigos dos perfis como permissions

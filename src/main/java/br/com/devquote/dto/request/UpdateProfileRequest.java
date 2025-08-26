@@ -23,9 +23,7 @@ public class UpdateProfileRequest {
     @Size(max = 100, message = "Email must not exceed 100 characters")
     private String email;
     
-    @Size(min = 6, max = 40, message = "Password must be between 6 and 40 characters")
     private String password;
     
-    @Size(min = 6, max = 40, message = "Password must be between 6 and 40 characters")
     private String confirmPassword;
 }

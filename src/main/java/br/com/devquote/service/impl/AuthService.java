@@ -210,6 +210,9 @@ public class AuthService {
         
         // Se uma nova senha foi fornecida, validar e atualizar
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            if (request.getPassword().length() < 6) {
+                throw new RuntimeException("Password must be at least 6 characters long!");
+            }
             if (!request.getPassword().equals(request.getConfirmPassword())) {
                 throw new RuntimeException("Passwords do not match!");
             }
