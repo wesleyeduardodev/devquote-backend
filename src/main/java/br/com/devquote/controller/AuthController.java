@@ -2,6 +2,7 @@ package br.com.devquote.controller;
 import br.com.devquote.dto.*;
 import br.com.devquote.dto.request.LoginRequest;
 import br.com.devquote.dto.request.RegisterRequest;
+import br.com.devquote.dto.request.UpdateProfileRequest;
 import br.com.devquote.dto.response.JwtResponse;
 import br.com.devquote.dto.response.MessageResponse;
 import br.com.devquote.dto.response.UserPermissionResponse;
@@ -65,5 +66,18 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<MessageResponse> logout() {
         return ResponseEntity.ok(new MessageResponse("Logged out successfully!"));
+    }
+    
+    @PutMapping("/profile")
+    public ResponseEntity<MessageResponse> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request,
+            Authentication authentication) {
+        try {
+            MessageResponse response = authService.updateUserProfile(request, authentication);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse(e.getMessage()));
+        }
     }
 }

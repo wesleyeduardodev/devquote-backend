@@ -6,6 +6,7 @@ import br.com.devquote.dto.UserInfoDto;
 import br.com.devquote.dto.response.UserPermissionResponse;
 import br.com.devquote.dto.request.LoginRequest;
 import br.com.devquote.dto.request.RegisterRequest;
+import br.com.devquote.dto.request.UpdateProfileRequest;
 import br.com.devquote.dto.request.UserProfileRequest;
 import br.com.devquote.dto.response.JwtResponse;
 import br.com.devquote.dto.response.MessageResponse;
@@ -188,5 +189,35 @@ public class AuthService {
                 permissions,
                 allowedScreens
         );
+    }
+    
+    @Transactional
+    public MessageResponse updateUserProfile(UpdateProfileRequest request, Authentication authentication) {
+        String username = authentication.getName();
+        User currentUser = userRepository.findByUsernameWithProfiles(username)
+                .or(() -> userRepository.findByEmailWithProfiles(username))
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Verificar se o novo email já está em uso por outro usuário
+        if (!currentUser.getEmail().equals(request.getEmail()) && 
+            userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email is already in use by another user!");
+        }
+        
+        // Atualizar dados básicos (username não pode ser alterado)
+        currentUser.setName(request.getName());
+        currentUser.setEmail(request.getEmail());
+        
+        // Se uma nova senha foi fornecida, validar e atualizar
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            if (!request.getPassword().equals(request.getConfirmPassword())) {
+                throw new RuntimeException("Passwords do not match!");
+            }
+            currentUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        
+        userRepository.save(currentUser);
+        
+        return new MessageResponse("Profile updated successfully! Please login again.");
     }
 }
