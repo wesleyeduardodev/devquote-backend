@@ -81,25 +81,25 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
-        
+
         // NOVO SISTEMA: Authorities baseadas em perfis
         if (userProfiles != null) {
             // ROLE_ para os perfis (ROLE_ADMIN, ROLE_MANAGER, ROLE_USER)
             var profileAuthorities = userProfiles.stream()
-                    .filter(up -> up.getActive())
+                    .filter(UserProfile::getActive)
                     .map(up -> new SimpleGrantedAuthority("ROLE_" + up.getProfile().getCode()))
                     .collect(Collectors.toSet());
             authorities.addAll(profileAuthorities);
-            
+
             // PROFILE_ para identificação específica de perfil
             var profileSpecificAuthorities = userProfiles.stream()
-                    .filter(up -> up.getActive())
+                    .filter(UserProfile::getActive)
                     .map(up -> new SimpleGrantedAuthority("PROFILE_" + up.getProfile().getCode()))
                     .collect(Collectors.toSet());
             authorities.addAll(profileSpecificAuthorities);
         }
-        
-        
+
+
         return authorities;
     }
 
@@ -122,24 +122,24 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return active != null ? active : true;
     }
-    
+
     // Método auxiliar para obter perfis ativos
     public Set<String> getActiveProfileCodes() {
         if (userProfiles == null) {
             return new HashSet<>();
         }
-        
+
         return userProfiles.stream()
                 .filter(up -> up.getActive())
                 .map(up -> up.getProfile().getCode())
                 .collect(Collectors.toSet());
     }
-    
+
     // Método auxiliar para verificar se tem um perfil específico
     public boolean hasProfile(String profileCode) {
         return getActiveProfileCodes().contains(profileCode);
     }
-    
+
     // Método auxiliar para verificar se é admin
     public boolean isAdmin() {
         return hasProfile("ADMIN");

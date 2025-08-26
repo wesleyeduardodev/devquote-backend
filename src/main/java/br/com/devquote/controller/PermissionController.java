@@ -1,5 +1,4 @@
 package br.com.devquote.controller;
-
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.dto.request.ProfileRequest;
 import br.com.devquote.dto.request.UserProfileRequest;
@@ -19,9 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -35,8 +32,6 @@ public class PermissionController {
     private static final Set<String> ALLOWED_PROFILE_SORT_FIELDS = Set.of(
             "id", "code", "name", "description", "level", "active", "createdAt", "updatedAt"
     );
-
-    // ===== VERIFICAÇÃO DE PERMISSÕES =====
 
     @GetMapping("/check/{userId}")
     @PreAuthorize("isAuthenticated()")
@@ -79,24 +74,24 @@ public class PermissionController {
             @RequestParam(required = false) Integer level,
             @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) MultiValueMap<String, String> params) {
-        
+
         if (!paginated) {
             List<ProfileResponse> profiles = userProfileService.findAllProfiles();
             return ResponseEntity.ok(profiles);
         }
-        
+
         List<String> sortParams = params != null ? params.get("sort") : null;
-        
+
         Pageable pageable = PageRequest.of(
                 page,
                 size,
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_PROFILE_SORT_FIELDS, "id")
         );
-        
+
         Page<ProfileResponse> pageResult = userProfileService.findAllProfilesPaged(
                 id, code, name, description, level, active, pageable
         );
-        
+
         PagedResponse<ProfileResponse> response = PageAdapter.toPagedResponseDTO(pageResult);
         return ResponseEntity.ok(response);
     }
@@ -116,7 +111,7 @@ public class PermissionController {
     @PutMapping("/profiles/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProfileResponse> updateProfile(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @Valid @RequestBody ProfileRequest request) {
         return ResponseEntity.ok(userProfileService.updateProfile(id, request));
     }
@@ -127,7 +122,7 @@ public class PermissionController {
         userProfileService.deleteProfile(id);
         return ResponseEntity.noContent().build();
     }
-    
+
     @DeleteMapping("/profiles/bulk")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProfilesBulk(@RequestBody List<Long> ids) {
@@ -152,7 +147,7 @@ public class PermissionController {
     @DeleteMapping("/users/{userId}/profiles/{profileId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> removeProfileFromUser(
-            @PathVariable Long userId, 
+            @PathVariable Long userId,
             @PathVariable Long profileId) {
         userProfileService.removeProfileFromUser(userId, profileId);
         return ResponseEntity.noContent().build();
@@ -164,8 +159,6 @@ public class PermissionController {
         userProfileService.removeAllProfilesFromUser(userId);
         return ResponseEntity.noContent().build();
     }
-
-    // ===== UTILITÁRIOS =====
 
     @GetMapping("/users/{userId}/has-profile")
     @PreAuthorize("isAuthenticated()")
@@ -180,12 +173,5 @@ public class PermissionController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Boolean> isAdmin(@PathVariable Long userId) {
         return ResponseEntity.ok(permissionService.isAdmin(userId));
-    }
-
-    @PostMapping("/initialize")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> initializeDefaultData() {
-        permissionService.initializeDefaultData();
-        return ResponseEntity.ok(Map.of("message", "Dados padrão inicializados com sucesso"));
     }
 }

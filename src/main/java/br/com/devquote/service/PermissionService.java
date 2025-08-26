@@ -36,9 +36,4 @@ public interface PermissionService {
      * Verifica se o usuário é administrador
      */
     boolean isAdmin(Long userId);
-
-    /**
-     * Inicializa dados básicos do sistema de permissões
-     */
-    void initializeDefaultData();
 }

@@ -1,3 +1,4 @@
+/*
 package br.com.devquote.config;
 import br.com.devquote.entity.*;
 import br.com.devquote.enums.ProfileType;
@@ -31,7 +32,7 @@ public class AdminUserInitializer {
     public void initializeDefaultUsers() {
         log.info("=== INICIALIZANDO USUÁRIOS PADRÃO ===");
         try {
-            createUserIfNotExists("wesley", "wesley@devquote.com", "Wesley Eduardo", "wesley", ProfileType.ADMIN);
+            createUserIfNotExists("wesley", "wesley@devquote.com", "Wesley Eduardo", "172839", ProfileType.ADMIN);
             configureUserPermissions();
             log.info("Usuários padrão inicializados com sucesso!");
         } catch (Exception e) {
@@ -178,3 +179,4 @@ public class AdminUserInitializer {
         }
     }
 }
+*/

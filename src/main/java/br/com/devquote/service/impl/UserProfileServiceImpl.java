@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.dto.request.ProfileRequest;
 import br.com.devquote.dto.request.UserProfileRequest;
 import br.com.devquote.dto.response.ProfileResponse;
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,16 +36,16 @@ public class UserProfileServiceImpl implements UserProfileService {
             .map(this::toProfileResponse)
             .collect(Collectors.toList());
     }
-    
+
     @Override
     public Page<ProfileResponse> findAllProfilesPaged(Pageable pageable) {
         Page<Profile> profiles = profileRepository.findAll(pageable);
         return profiles.map(this::toProfileResponse);
     }
-    
+
     @Override
-    public Page<ProfileResponse> findAllProfilesPaged(Long id, String code, String name, 
-                                                      String description, Integer level, 
+    public Page<ProfileResponse> findAllProfilesPaged(Long id, String code, String name,
+                                                      String description, Integer level,
                                                       Boolean active, Pageable pageable) {
         Page<Profile> profiles = profileRepository.findAllWithFilters(
             id, code, name, description, level, active, pageable
@@ -105,16 +103,13 @@ public class UserProfileServiceImpl implements UserProfileService {
     public void deleteProfile(Long id) {
         Profile profile = profileRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Perfil não encontrado"));
-
-        // Verifica se há usuários usando este perfil
         List<UserProfile> userProfiles = userProfileRepository.findActiveByProfileId(id);
         if (!userProfiles.isEmpty()) {
             throw new RuntimeException("Não é possível excluir perfil que está sendo usado por usuários");
         }
-
         profileRepository.delete(profile);
     }
-    
+
     @Override
     @Transactional
     public void deleteProfilesBulk(List<Long> ids) {
@@ -122,7 +117,6 @@ public class UserProfileServiceImpl implements UserProfileService {
             try {
                 deleteProfile(id);
             } catch (RuntimeException e) {
-                // Log o erro mas continua com os outros
                 System.err.println("Erro ao deletar perfil " + id + ": " + e.getMessage());
             }
         }
