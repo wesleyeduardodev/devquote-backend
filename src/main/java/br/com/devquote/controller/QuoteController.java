@@ -97,4 +97,10 @@ public class QuoteController implements QuoteControllerDoc {
         quoteService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<QuoteResponse> updateStatus(@PathVariable Long id, @RequestParam String status) {
+        return ResponseEntity.ok(quoteService.updateStatus(id, status));
+    }
 }

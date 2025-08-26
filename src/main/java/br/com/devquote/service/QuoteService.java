@@ -29,4 +29,6 @@ public interface QuoteService {
                                          Pageable pageable);
 
     Quote findByTaskId(Long taskId);
+
+    QuoteResponse updateStatus(Long id, String status);
 }

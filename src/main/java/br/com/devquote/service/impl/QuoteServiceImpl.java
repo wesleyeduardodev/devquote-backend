@@ -93,4 +93,13 @@ public class QuoteServiceImpl implements QuoteService {
         Optional<Quote> quote = quoteRepository.findByTaskId(taskId);
         return quote.orElse(null);
     }
+
+    @Override
+    public QuoteResponse updateStatus(Long id, String status) {
+        Quote entity = quoteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Quote not found"));
+        entity.setStatus(status);
+        entity = quoteRepository.save(entity);
+        return QuoteAdapter.toResponseDTO(entity);
+    }
 }
