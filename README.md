@@ -207,10 +207,11 @@ Distribuído sob a licença MIT. Consulte `LICENSE` para mais detalhes.
 
 
 ## 📄 Comandos úteis
-
-cd "/mnt/c/Users/Wesley Eduardo/Documents/projetos-git/devquote-backend"
+M-01
+cd "/mnt/c/Users/Wesley Eduardo/Documents/projetos-git/devquote/devquote-backend"
 docker compose -f "/mnt/c/Users/Wesley Eduardo/Documents/projetos-git/devquote-backend/docker-compose.yml" up -d
 
+M-02
 cd "/mnt/c/Users/wesle/OneDrive/Documentos/projetos-git/devquote-backend"
 docker compose -f "/mnt/c/Users/wesle/OneDrive/Documentos/projetos-git/devquote-backend/docker-compose.yml" up -d
 
