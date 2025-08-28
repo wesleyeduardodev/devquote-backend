@@ -21,15 +21,15 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("DevQuote API")
                         .description("Sistema de orçamentos automatizados.\n\n" +
-                                "📅 Data da subida: 28/08/2025 - 11:30\n" +
+                                "📅 Data da subida: 28/08/2025 - 12:00\n" +
                                 "🔖 Versão: 1.0.0\n" +
                                 "👨‍💻 Autor: Wesley Eduardo\n")
                         .version("1.0.0")
-                        .termsOfService("https://devquote.com.br/terms")
+                        .termsOfService("https://www.devquote.com.br/terms")
                         .contact(new Contact()
                                 .name("Suporte DevQuote")
                                 .email("wesleyeduardo.dev@gmail.com")
-                                .url("https://devquote.com"))
+                                .url("https://www.devquote.com.br"))
                         .license(new License()
                                 .name("MIT License")
                                 .url("https://opensource.org/licenses/MIT")))
