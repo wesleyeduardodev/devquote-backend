@@ -1,5 +1,4 @@
 package br.com.devquote.entity;
-
 import jakarta.persistence.*;
 import lombok.*;
 
