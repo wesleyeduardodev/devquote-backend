@@ -26,49 +26,49 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
 
     @Override
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<QuoteBillingMonthResponse>> list() {
         return ResponseEntity.ok(quoteBillingMonthService.findAll());
     }
 
     @Override
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<QuoteBillingMonthResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(quoteBillingMonthService.findById(id));
     }
 
     @Override
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<QuoteBillingMonthResponse> create(@RequestBody @Valid QuoteBillingMonthRequest dto) {
         return new ResponseEntity<>(quoteBillingMonthService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<QuoteBillingMonthResponse> update(@PathVariable Long id, @RequestBody @Valid QuoteBillingMonthRequest dto) {
         return ResponseEntity.ok(quoteBillingMonthService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         quoteBillingMonthService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         quoteBillingMonthService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/paginated")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Page<QuoteBillingMonthResponse>> findAllPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -86,7 +86,7 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
     }
 
     @GetMapping("/statistics")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<?> getStatistics() {
         return ResponseEntity.ok(quoteBillingMonthService.getStatistics());
     }

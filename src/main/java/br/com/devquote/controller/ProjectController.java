@@ -34,7 +34,7 @@ public class ProjectController implements ProjectControllerDoc {
 
     @Override
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PagedResponse<ProjectResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -62,35 +62,35 @@ public class ProjectController implements ProjectControllerDoc {
 
     @Override
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(projectService.findById(id));
     }
 
     @Override
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectResponse> create(@RequestBody @Valid ProjectRequest dto) {
         return new ResponseEntity<>(projectService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectResponse> update(@PathVariable Long id, @RequestBody @Valid ProjectRequest dto) {
         return ResponseEntity.ok(projectService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         projectService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         projectService.deleteBulk(ids);
         return ResponseEntity.noContent().build();

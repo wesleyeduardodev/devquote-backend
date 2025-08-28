@@ -34,7 +34,7 @@ public class QuoteController implements QuoteControllerDoc {
 
     @Override
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<PagedResponse<QuoteResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -64,35 +64,35 @@ public class QuoteController implements QuoteControllerDoc {
 
     @Override
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<QuoteResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(quoteService.findById(id));
     }
 
     @Override
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<QuoteResponse> create(@RequestBody @Valid QuoteRequest dto) {
         return new ResponseEntity<>(quoteService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<QuoteResponse> update(@PathVariable Long id, @RequestBody @Valid QuoteRequest dto) {
         return ResponseEntity.ok(quoteService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         quoteService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         quoteService.deleteBulk(ids);
         return ResponseEntity.noContent().build();

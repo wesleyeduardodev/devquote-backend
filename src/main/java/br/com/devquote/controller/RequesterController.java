@@ -34,7 +34,7 @@ public class RequesterController implements RequesterControllerDoc {
 
     @Override
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER','USER')")
     public ResponseEntity<PagedResponse<RequesterResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -64,32 +64,32 @@ public class RequesterController implements RequesterControllerDoc {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RequesterResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(requesterService.findById(id));
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RequesterResponse> create(@RequestBody @Valid RequesterRequest dto) {
         return new ResponseEntity<>(requesterService.create(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RequesterResponse> update(@PathVariable Long id, @RequestBody @Valid RequesterRequest dto) {
         return ResponseEntity.ok(requesterService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         requesterService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         requesterService.deleteBulk(ids);
         return ResponseEntity.noContent().build();

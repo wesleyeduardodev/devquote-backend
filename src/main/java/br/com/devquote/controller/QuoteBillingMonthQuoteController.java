@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -27,56 +26,56 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
 
     @Override
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<QuoteBillingMonthQuoteResponse>> list() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @Override
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<QuoteBillingMonthQuoteResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
     @Override
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<QuoteBillingMonthQuoteResponse> create(@RequestBody @Valid QuoteBillingMonthQuoteRequest dto) {
         return new ResponseEntity<>(service.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<QuoteBillingMonthQuoteResponse> update(@PathVariable Long id, @RequestBody @Valid QuoteBillingMonthQuoteRequest dto) {
         return ResponseEntity.ok(service.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         service.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/by-billing-month/{billingMonthId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<QuoteBillingMonthQuoteResponse>> getByBillingMonth(
             @PathVariable Long billingMonthId) {
         return ResponseEntity.ok(service.findByQuoteBillingMonthId(billingMonthId));
     }
 
     @GetMapping("/by-billing-month/{billingMonthId}/paginated")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Page<QuoteBillingMonthQuoteResponse>> getByBillingMonthPaginated(
             @PathVariable Long billingMonthId,
             @RequestParam(defaultValue = "0") int page,
@@ -91,14 +90,14 @@ public class QuoteBillingMonthQuoteController implements QuoteBillingMonthQuoteC
     }
 
     @PostMapping("/bulk-link")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<QuoteBillingMonthQuoteResponse>> bulkLink(
             @RequestBody @Valid List<QuoteBillingMonthQuoteRequest> requests) {
         return new ResponseEntity<>(service.bulkCreate(requests), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/by-billing-month/{billingMonthId}/bulk")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> bulkUnlinkFromBillingMonth(
             @PathVariable Long billingMonthId,
             @RequestBody List<Long> quoteIds) {
