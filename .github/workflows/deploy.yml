@@ -1,14 +1,15 @@
-name: Deploy Backend to Render
+name: Deploy to Render
 
 on:
+  push:
+    branches: [main]
   pull_request:
-    branches: [master, main]
+    branches: [main]
     types: [closed]
-    paths: ['devquote-backend/**']
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     steps:
@@ -29,9 +30,7 @@ jobs:
         restore-keys: ${{ runner.os }}-m2
     
     - name: Run tests
-      run: |
-        cd devquote-backend
-        mvn clean test
+      run: mvn clean test
     
     - name: Login to Docker Hub
       uses: docker/login-action@v3
@@ -42,7 +41,8 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./devquote-backend
+        context: .
+        file: ./Dockerfile
         push: true
         tags: |
           wesleyeduardodev/devquote-backend:latest
