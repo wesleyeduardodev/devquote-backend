@@ -16,7 +16,7 @@ public final class DeliveryAdapter {
                 .id(entity.getId())
                 .quoteId(entity.getQuote() != null && entity.getQuote().getId() != null ? entity.getQuote().getId() : null)
                 .taskId(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getId() : null)
-                .taskName(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getDescription() : null)
+                .taskName(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getTitle() : null)
                 .taskCode(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getCode() : null)
                 .projectId(entity.getProject() != null ? entity.getProject().getId() : null)
                 .projectName(entity.getProject() != null ? entity.getProject().getName() : null)
