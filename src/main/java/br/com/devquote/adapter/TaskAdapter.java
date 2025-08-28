@@ -26,6 +26,10 @@ public class TaskAdapter {
                 .notes(entity.getNotes())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .createdByUserId(entity.getCreatedBy() != null ? entity.getCreatedBy().getId() : null)
+                .createdByUserName(entity.getCreatedBy() != null ? entity.getCreatedBy().getName() : null)
+                .updatedByUserId(entity.getUpdatedBy() != null ? entity.getUpdatedBy().getId() : null)
+                .updatedByUserName(entity.getUpdatedBy() != null ? entity.getUpdatedBy().getName() : null)
                 .build();
     }
 
