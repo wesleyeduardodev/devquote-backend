@@ -1,0 +1,68 @@
+name: Deploy Backend to Render
+
+on:
+  pull_request:
+    branches: [master, main]
+    types: [closed]
+    paths: ['devquote-backend/**']
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+    
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+    
+    - name: Run tests
+      run: |
+        cd devquote-backend
+        mvn clean test
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./devquote-backend
+        push: true
+        tags: |
+          wesleyeduardodev/devquote-backend:latest
+          wesleyeduardodev/devquote-backend:${{ github.sha }}
+    
+    - name: Deploy to Render
+      run: |
+        echo "🚀 Triggering Render deployment..."
+        response=$(curl -s -w "%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
+        http_code=$(echo "$response" | tail -c 4)
+        
+        if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+          echo "✅ Deploy triggered successfully! HTTP Code: $http_code"
+        else
+          echo "❌ Deploy failed! HTTP Code: $http_code"
+          exit 1
+        fi
+    
+    - name: Notify completion
+      run: |
+        echo "🎉 Pipeline completed successfully!"
+        echo "📦 Docker image: wesleyeduardodev/devquote-backend:${{ github.sha }}"
+        echo "🔄 Render deployment triggered"
