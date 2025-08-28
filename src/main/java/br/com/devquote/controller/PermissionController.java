@@ -59,10 +59,8 @@ public class PermissionController {
         return ResponseEntity.ok(permission.name());
     }
 
-    // ===== GERENCIAMENTO DE PERFIS =====
-
     @GetMapping("/profiles")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllProfiles(
             @RequestParam(required = false, defaultValue = "false") boolean paginated,
             @RequestParam(defaultValue = "0") int page,
@@ -97,7 +95,7 @@ public class PermissionController {
     }
 
     @GetMapping("/profiles/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProfileResponse> getProfileById(@PathVariable Long id) {
         return ResponseEntity.ok(userProfileService.findProfileById(id));
     }
@@ -130,10 +128,8 @@ public class PermissionController {
         return ResponseEntity.noContent().build();
     }
 
-    // ===== GERENCIAMENTO DE PERFIS DE USUÁRIOS =====
-
     @GetMapping("/users/{userId}/profiles")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ProfileResponse>> getUserProfiles(@PathVariable Long userId) {
         return ResponseEntity.ok(userProfileService.findUserProfiles(userId));
     }
