@@ -1,8 +1,6 @@
 package br.com.devquote.entity;
-
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.Set;
 
 @Entity
