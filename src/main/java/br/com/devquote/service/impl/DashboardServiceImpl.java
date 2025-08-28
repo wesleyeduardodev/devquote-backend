@@ -1,6 +1,7 @@
 package br.com.devquote.service.impl;
 
 import br.com.devquote.dto.response.DashboardStatsResponse;
+import br.com.devquote.dto.response.UserPermissionResponse;
 import br.com.devquote.entity.User;
 import br.com.devquote.repository.*;
 import br.com.devquote.entity.SubTask;
@@ -16,6 +17,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -46,50 +48,24 @@ public class DashboardServiceImpl implements DashboardService {
 
             log.debug("User found: {}, ID: {}", currentUser.getUsername(), currentUser.getId());
 
-            // Obter permissões do usuário
-            var userPermissions = permissionService.getUserPermissions(currentUser.getId());
-            Set<String> allowedScreens = userPermissions.getResourcePermissions().keySet();
-            
-            log.debug("Allowed screens for user {}: {}", username, allowedScreens);
+            log.debug("Generating dashboard stats focused on tasks and deliveries for all users");
 
-            // Construir resposta baseada nas permissões
+            // Construir resposta focada em tarefas e entregas para todos os usuários
             DashboardStatsResponse.DashboardStatsResponseBuilder builder = DashboardStatsResponse.builder();
 
-            // Estatísticas gerais (sempre incluídas)
-            builder.general(buildGeneralStats(allowedScreens));
+            // Estatísticas gerais baseadas em tarefas e entregas
+            builder.general(buildTasksAndDeliveriesGeneralStats());
 
-            // Estatísticas por módulo (baseadas nas permissões)
-            if (allowedScreens.contains("users")) {
-                builder.requesters(buildRequestersStats());
-            }
+            // Sempre incluir dados de tarefas e entregas para todos os usuários
+            builder.tasks(buildTasksStats());
+            builder.tasksChart(buildTasksChart());
+            builder.tasksByStatus(buildMonthlyTasksStats());
+            
+            builder.deliveries(buildDeliveriesStats());
+            builder.deliveriesByStatus(buildMonthlyDeliveriesStats());
 
-            if (allowedScreens.contains("tasks")) {
-                builder.tasks(buildTasksStats());
-                builder.tasksChart(buildTasksChart());
-                builder.tasksByStatus(buildTasksByStatus());
-            }
-
-            if (allowedScreens.contains("quotes")) {
-                builder.quotes(buildQuotesStats());
-                builder.quotesChart(buildQuotesChart());
-                builder.quotesByStatus(buildQuotesByStatus());
-            }
-
-            if (allowedScreens.contains("projects")) {
-                builder.projects(buildProjectsStats());
-            }
-
-            if (allowedScreens.contains("deliveries")) {
-                builder.deliveries(buildDeliveriesStats());
-                builder.deliveriesByStatus(buildDeliveriesByStatus());
-            }
-
-            if (allowedScreens.contains("billing")) {
-                builder.billing(buildBillingStats());
-            }
-
-            // Atividades recentes (baseadas nas permissões)
-            builder.recentActivities(buildRecentActivities(allowedScreens));
+            // Atividades recentes focadas em tarefas e entregas
+            builder.recentActivities(buildTasksAndDeliveriesRecentActivities());
 
             log.debug("Dashboard stats generated successfully for user: {}", username);
             return builder.build();
@@ -295,28 +271,55 @@ public class DashboardServiceImpl implements DashboardService {
         return chartData;
     }
 
-    private List<DashboardStatsResponse.StatusCount> buildTasksByStatus() {
+    private List<DashboardStatsResponse.StatusCount> buildMonthlyTasksStats() {
+        var now = LocalDateTime.now();
+        var startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        var endOfMonth = now.withDayOfMonth(now.toLocalDate().lengthOfMonth()).withHour(23).withMinute(59).withSecond(59);
+        
         var allTasks = taskRepository.findAll();
-        long total = allTasks.size();
         
-        List<DashboardStatsResponse.StatusCount> statusCounts = new ArrayList<>();
+        // Tarefas criadas no mês corrente
+        long tasksCreatedThisMonth = allTasks.stream()
+                .filter(task -> task.getCreatedAt().isAfter(startOfMonth) && task.getCreatedAt().isBefore(endOfMonth))
+                .count();
         
-        var statusGroups = allTasks.stream()
-                .collect(java.util.stream.Collectors.groupingBy(
-                    task -> task.getStatus() != null ? task.getStatus() : "UNKNOWN",
-                    java.util.stream.Collectors.counting()
-                ));
+        // Tarefas concluídas no mês corrente
+        long tasksCompletedThisMonth = allTasks.stream()
+                .filter(task -> "COMPLETED".equals(task.getStatus()) && 
+                               task.getUpdatedAt() != null &&
+                               task.getUpdatedAt().isAfter(startOfMonth) && 
+                               task.getUpdatedAt().isBefore(endOfMonth))
+                .count();
+        
+        // Tarefas em progresso no mês
+        long tasksInProgressThisMonth = allTasks.stream()
+                .filter(task -> "IN_PROGRESS".equals(task.getStatus()) && 
+                               task.getUpdatedAt() != null &&
+                               task.getUpdatedAt().isAfter(startOfMonth) && 
+                               task.getUpdatedAt().isBefore(endOfMonth))
+                .count();
+        
+        List<DashboardStatsResponse.StatusCount> monthlyStats = new ArrayList<>();
+        
+        monthlyStats.add(DashboardStatsResponse.StatusCount.builder()
+                .status("Criadas este mês")
+                .count((int) tasksCreatedThisMonth)
+                .percentage(0.0) // Não aplicável para dados mensais
+                .build());
+                
+        monthlyStats.add(DashboardStatsResponse.StatusCount.builder()
+                .status("Concluídas este mês")
+                .count((int) tasksCompletedThisMonth)
+                .percentage(0.0)
+                .build());
+                
+        monthlyStats.add(DashboardStatsResponse.StatusCount.builder()
+                .status("Em progresso este mês")
+                .count((int) tasksInProgressThisMonth)
+                .percentage(0.0)
+                .build());
 
-        statusGroups.forEach((status, count) -> {
-            double percentage = total > 0 ? (double) count / total * 100.0 : 0.0;
-            statusCounts.add(DashboardStatsResponse.StatusCount.builder()
-                    .status(status)
-                    .count(count.intValue())
-                    .percentage(Math.round(percentage * 100.0) / 100.0)
-                    .build());
-        });
-
-        return statusCounts;
+        return monthlyStats;
     }
 
     private List<DashboardStatsResponse.StatusCount> buildQuotesByStatus() {
@@ -343,28 +346,53 @@ public class DashboardServiceImpl implements DashboardService {
         return statusCounts;
     }
 
-    private List<DashboardStatsResponse.StatusCount> buildDeliveriesByStatus() {
+    private List<DashboardStatsResponse.StatusCount> buildMonthlyDeliveriesStats() {
+        var now = LocalDateTime.now();
+        var startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        var endOfMonth = now.withDayOfMonth(now.toLocalDate().lengthOfMonth()).withHour(23).withMinute(59).withSecond(59);
+        
         var allDeliveries = deliveryRepository.findAll();
-        long total = allDeliveries.size();
         
-        List<DashboardStatsResponse.StatusCount> statusCounts = new ArrayList<>();
+        // Entregas criadas no mês corrente
+        long deliveriesCreatedThisMonth = allDeliveries.stream()
+                .filter(delivery -> delivery.getCreatedAt().isAfter(startOfMonth) && delivery.getCreatedAt().isBefore(endOfMonth))
+                .count();
         
-        var statusGroups = allDeliveries.stream()
-                .collect(java.util.stream.Collectors.groupingBy(
-                    delivery -> delivery.getStatus() != null ? delivery.getStatus() : "UNKNOWN",
-                    java.util.stream.Collectors.counting()
-                ));
+        // Entregas iniciadas no mês (com startedAt preenchido)
+        long deliveriesStartedThisMonth = allDeliveries.stream()
+                .filter(delivery -> delivery.getStartedAt() != null && 
+                                   delivery.getStartedAt().isAfter(startOfMonth.toLocalDate()) && 
+                                   delivery.getStartedAt().isBefore(endOfMonth.toLocalDate()))
+                .count();
+        
+        // Entregas finalizadas no mês (com finishedAt preenchido)
+        long deliveriesFinishedThisMonth = allDeliveries.stream()
+                .filter(delivery -> delivery.getFinishedAt() != null && 
+                                   delivery.getFinishedAt().isAfter(startOfMonth.toLocalDate()) && 
+                                   delivery.getFinishedAt().isBefore(endOfMonth.toLocalDate()))
+                .count();
+        
+        List<DashboardStatsResponse.StatusCount> monthlyStats = new ArrayList<>();
+        
+        monthlyStats.add(DashboardStatsResponse.StatusCount.builder()
+                .status("Criadas este mês")
+                .count((int) deliveriesCreatedThisMonth)
+                .percentage(0.0) // Não aplicável para dados mensais
+                .build());
+                
+        monthlyStats.add(DashboardStatsResponse.StatusCount.builder()
+                .status("Iniciadas este mês")
+                .count((int) deliveriesStartedThisMonth)
+                .percentage(0.0)
+                .build());
+                
+        monthlyStats.add(DashboardStatsResponse.StatusCount.builder()
+                .status("Finalizadas este mês")
+                .count((int) deliveriesFinishedThisMonth)
+                .percentage(0.0)
+                .build());
 
-        statusGroups.forEach((status, count) -> {
-            double percentage = total > 0 ? (double) count / total * 100.0 : 0.0;
-            statusCounts.add(DashboardStatsResponse.StatusCount.builder()
-                    .status(status)
-                    .count(count.intValue())
-                    .percentage(Math.round(percentage * 100.0) / 100.0)
-                    .build());
-        });
-
-        return statusCounts;
+        return monthlyStats;
     }
 
     private List<DashboardStatsResponse.RecentActivity> buildRecentActivities(Set<String> allowedScreens) {
@@ -374,5 +402,91 @@ public class DashboardServiceImpl implements DashboardService {
         // Por enquanto, retornando lista vazia
         
         return activities;
+    }
+
+    private DashboardStatsResponse.GeneralStats buildTasksAndDeliveriesGeneralStats() {
+        // Estatísticas baseadas apenas em tarefas e entregas
+        var allTasks = taskRepository.findAll();
+        var allDeliveries = deliveryRepository.findAll();
+        
+        int totalTasks = allTasks.size();
+        int completedTasks = (int) allTasks.stream()
+                .filter(task -> "COMPLETED".equals(task.getStatus()))
+                .count();
+        
+        int totalDeliveries = allDeliveries.size();
+        int completedDeliveries = (int) allDeliveries.stream()
+                .filter(delivery -> "APPROVED".equals(delivery.getStatus()))
+                .count();
+        
+        double completionRate = totalTasks > 0 ? (double) completedTasks / totalTasks * 100.0 : 0.0;
+        
+        return DashboardStatsResponse.GeneralStats.builder()
+                .totalUsers(0) // Não mostrar usuários
+                .totalRevenue(BigDecimal.ZERO) // Não mostrar receita
+                .completedTasks(completedTasks)
+                .completionRate(Math.round(completionRate * 100.0) / 100.0)
+                .build();
+    }
+
+    private List<DashboardStatsResponse.RecentActivity> buildTasksAndDeliveriesRecentActivities() {
+        List<DashboardStatsResponse.RecentActivity> activities = new ArrayList<>();
+        
+        // Buscar tarefas recentes (últimas 5)
+        var recentTasks = taskRepository.findAll().stream()
+                .sorted((t1, t2) -> {
+                    LocalDateTime time1 = t1.getUpdatedAt() != null ? t1.getUpdatedAt() : t1.getCreatedAt();
+                    LocalDateTime time2 = t2.getUpdatedAt() != null ? t2.getUpdatedAt() : t2.getCreatedAt();
+                    return time2.compareTo(time1);
+                })
+                .limit(5)
+                .toList();
+                
+        for (var task : recentTasks) {
+            LocalDateTime activityTime = task.getUpdatedAt() != null ? task.getUpdatedAt() : task.getCreatedAt();
+            String userName = task.getUpdatedBy() != null ? task.getUpdatedBy().getUsername() : 
+                             task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema";
+            
+            activities.add(DashboardStatsResponse.RecentActivity.builder()
+                    .type("TASK")
+                    .description("Tarefa: " + task.getTitle() + " - Status: " + task.getStatus())
+                    .user(userName)
+                    .timestamp(activityTime.toString())
+                    .entityId(task.getId().toString())
+                    .build());
+        }
+        
+        // Buscar entregas recentes (últimas 5)  
+        var recentDeliveries = deliveryRepository.findAll().stream()
+                .sorted((d1, d2) -> {
+                    LocalDateTime time1 = d1.getUpdatedAt() != null ? d1.getUpdatedAt() : d1.getCreatedAt();
+                    LocalDateTime time2 = d2.getUpdatedAt() != null ? d2.getUpdatedAt() : d2.getCreatedAt();
+                    return time2.compareTo(time1);
+                })
+                .limit(5)
+                .toList();
+                
+        for (var delivery : recentDeliveries) {
+            LocalDateTime activityTime = delivery.getUpdatedAt() != null ? delivery.getUpdatedAt() : delivery.getCreatedAt();
+            String userName = delivery.getUpdatedBy() != null ? delivery.getUpdatedBy().getUsername() : 
+                             delivery.getCreatedBy() != null ? delivery.getCreatedBy().getUsername() : "Sistema";
+            
+            // Como delivery não tem campo title, vou usar o branch ou ID
+            String deliveryTitle = delivery.getBranch() != null ? delivery.getBranch() : "Entrega #" + delivery.getId();
+            
+            activities.add(DashboardStatsResponse.RecentActivity.builder()
+                    .type("DELIVERY")
+                    .description("Entrega: " + deliveryTitle + " - Status: " + delivery.getStatus())
+                    .user(userName)
+                    .timestamp(activityTime.toString())
+                    .entityId(delivery.getId().toString())
+                    .build());
+        }
+        
+        // Ordenar por timestamp decrescente e limitar a 10
+        return activities.stream()
+                .sorted((a1, a2) -> a2.getTimestamp().compareTo(a1.getTimestamp()))
+                .limit(10)
+                .toList();
     }
 }
