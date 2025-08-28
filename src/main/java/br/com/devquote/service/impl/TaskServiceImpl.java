@@ -15,6 +15,7 @@ import br.com.devquote.repository.RequesterRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.*;
+import br.com.devquote.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,6 +42,7 @@ public class TaskServiceImpl implements TaskService {
     private final QuoteBillingMonthQuoteService quoteBillingMonthQuoteService;
     private final BillingProperties billingProperties;
     private final DeliveryService deliveryService;
+    private final SecurityUtils securityUtils;
 
     @Override
     public List<TaskResponse> findAll() {
@@ -69,9 +71,21 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponse create(TaskRequest dto) {
+        validateCreatePermission();
+        
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new RuntimeException("Usuário não autenticado");
+        }
+
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
-        Task entity = taskRepository.save(TaskAdapter.toEntity(dto, requester));
+        
+        Task entity = TaskAdapter.toEntity(dto, requester);
+        entity.setCreatedBy(currentUser);
+        entity.setUpdatedBy(currentUser);
+        
+        entity = taskRepository.save(entity);
         return TaskAdapter.toResponseDTO(entity);
     }
 
@@ -79,16 +93,31 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse update(Long id, TaskRequest dto) {
         Task entity = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        validateTaskAccess(entity, "editar");
+        
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new RuntimeException("Usuário não autenticado");
+        }
+
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
 
         TaskAdapter.updateEntityFromDto(dto, entity, requester);
+        entity.setUpdatedBy(currentUser);
+        
         entity = taskRepository.save(entity);
         return TaskAdapter.toResponseDTO(entity);
     }
 
     @Override
     public void delete(Long id) {
+        Task entity = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        validateTaskAccess(entity, "excluir");
+        
         taskRepository.deleteById(id);
     }
 
@@ -104,6 +133,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskWithSubTasksResponse createWithSubTasks(TaskWithSubTasksCreateRequest dto) {
+        validateCreatePermission();
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
@@ -144,6 +174,13 @@ public class TaskServiceImpl implements TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
+        validateTaskAccess(task, "editar");
+        
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new RuntimeException("Usuário não autenticado");
+        }
+
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
 
@@ -158,6 +195,7 @@ public class TaskServiceImpl implements TaskService {
                 .notes(dto.getNotes())
                 .build(), task, requester);
 
+        task.setUpdatedBy(currentUser);
         task = taskRepository.save(task);
 
         List<SubTask> updated = upsertAndDeleteSubTasks(task, dto.getSubTasks());
@@ -167,12 +205,15 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void deleteTaskWithSubTasks(Long taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        
+        validateTaskAccess(task, "excluir");
+        
         if (quoteRepository.existsByTaskId(taskId)) {
             throw new RuntimeException("Cannot delete task. It is linked to a quote.");
         }
-        if (!taskRepository.existsById(taskId)) {
-            throw new RuntimeException("Task not found");
-        }
+        
         subTaskRepository.deleteByTaskId(taskId);
         taskRepository.deleteById(taskId);
     }
@@ -190,10 +231,14 @@ public class TaskServiceImpl implements TaskService {
                                                String updatedAt,
                                                Pageable pageable) {
 
+        // Todos os usuários podem ver todas as tarefas
         Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
                 id, requesterId, requesterName, title, description, status, code, link, createdAt, updatedAt, pageable
         );
+        return buildTaskResponsePage(page, pageable);
+    }
 
+    private Page<TaskResponse> buildTaskResponsePage(Page<Task> page, Pageable pageable) {
         List<TaskResponse> dtos = page.getContent().stream()
                 .map(TaskAdapter::toResponseDTO)
                 .collect(Collectors.toList());
@@ -217,6 +262,11 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private Task buildAndPersistTask(TaskWithSubTasksCreateRequest dto, Requester requester) {
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new RuntimeException("Usuário não autenticado");
+        }
+
         Task task = TaskAdapter.toEntity(TaskRequest.builder()
                 .requesterId(dto.getRequesterId())
                 .title(dto.getTitle())
@@ -227,6 +277,10 @@ public class TaskServiceImpl implements TaskService {
                 .meetingLink(dto.getMeetingLink())
                 .notes(dto.getNotes())
                 .build(), requester);
+        
+        task.setCreatedBy(currentUser);
+        task.setUpdatedBy(currentUser);
+        
         return taskRepository.save(task);
     }
 
@@ -307,6 +361,10 @@ public class TaskServiceImpl implements TaskService {
                 .notes(task.getNotes())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
+                .createdByUserId(task.getCreatedBy() != null ? task.getCreatedBy().getId() : null)
+                .createdByUserName(task.getCreatedBy() != null ? task.getCreatedBy().getName() : null)
+                .updatedByUserId(task.getUpdatedBy() != null ? task.getUpdatedBy().getId() : null)
+                .updatedByUserName(task.getUpdatedBy() != null ? task.getUpdatedBy().getName() : null)
                 .subTasks(SubTaskAdapter.toResponseDTOList(subTasks))
                 .build();
     }
@@ -336,5 +394,41 @@ public class TaskServiceImpl implements TaskService {
 
     private boolean isTrue(Boolean flag) {
         return Boolean.TRUE.equals(flag);
+    }
+
+    private void validateCreatePermission() {
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new RuntimeException("Usuário não autenticado");
+        }
+        
+        var profiles = currentUser.getActiveProfileCodes();
+        if (!profiles.contains("ADMIN") && !profiles.contains("MANAGER") && !profiles.contains("USER")) {
+            throw new RuntimeException("Usuário não possui permissão para criar tarefas");
+        }
+    }
+
+    private void validateTaskAccess(Task task, String action) {
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new RuntimeException("Usuário não autenticado");
+        }
+
+        var profiles = currentUser.getActiveProfileCodes();
+        
+        // ADMIN tem acesso total
+        if (profiles.contains("ADMIN")) {
+            return;
+        }
+        
+        // MANAGER e USER podem acessar apenas suas próprias tarefas
+        if (profiles.contains("MANAGER") || profiles.contains("USER")) {
+            if (task.getCreatedBy() == null || !task.getCreatedBy().getId().equals(currentUser.getId())) {
+                throw new RuntimeException(String.format("Você não possui permissão para %s esta tarefa. Apenas o usuário que criou a tarefa pode %s.", action, action));
+            }
+            return;
+        }
+        
+        throw new RuntimeException("Usuário não possui permissão para acessar tarefas");
     }
 }

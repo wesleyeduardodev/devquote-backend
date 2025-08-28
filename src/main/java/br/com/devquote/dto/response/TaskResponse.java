@@ -37,5 +37,13 @@ public class TaskResponse {
 
     private LocalDateTime updatedAt;
 
+    private Long createdByUserId;
+
+    private String createdByUserName;
+
+    private Long updatedByUserId;
+
+    private String updatedByUserName;
+
     private List<SubTaskResponse> subTasks;
 }

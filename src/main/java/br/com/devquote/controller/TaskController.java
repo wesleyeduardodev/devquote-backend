@@ -76,42 +76,42 @@ public class TaskController implements TaskControllerDoc {
 
     @Override
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<TaskResponse> create(@RequestBody @Valid TaskRequest dto) {
         return new ResponseEntity<>(taskService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<TaskResponse> update(@PathVariable Long id, @RequestBody @Valid TaskRequest dto) {
         return ResponseEntity.ok(taskService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         taskService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         taskService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/full")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasks(
             @RequestBody @Valid TaskWithSubTasksCreateRequest dto) {
         return new ResponseEntity<>(taskService.createWithSubTasks(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/full/{taskId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<TaskWithSubTasksResponse> updateWithSubTasks(
             @PathVariable Long taskId,
             @RequestBody @Valid TaskWithSubTasksUpdateRequest dto) {
@@ -119,7 +119,7 @@ public class TaskController implements TaskControllerDoc {
     }
 
     @DeleteMapping("/full/{taskId}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId) {
         taskService.deleteTaskWithSubTasks(taskId);
         return ResponseEntity.noContent().build();
