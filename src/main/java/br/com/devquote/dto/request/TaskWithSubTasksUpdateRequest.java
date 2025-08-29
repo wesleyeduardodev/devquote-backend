@@ -42,7 +42,7 @@ public class TaskWithSubTasksUpdateRequest {
     @Builder.Default
     private Boolean hasSubTasks = false;
 
-    @DecimalMin(value = "0.0", message = "Amount must be greater than or equal to 0")
+    @DecimalMin(value = "0.0", message = "Amount must be greater than or equal to 0", groups = {})
     private BigDecimal amount;
 
     @Valid
