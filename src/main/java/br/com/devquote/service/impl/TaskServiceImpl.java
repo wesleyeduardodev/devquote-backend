@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -142,6 +143,10 @@ public class TaskServiceImpl implements TaskService {
 
         List<SubTask> persistedSubTasks = persistSubTasks(task, dto.getSubTasks());
 
+        // Processa o valor da tarefa conforme nova lógica
+        processTaskAmount(task, persistedSubTasks);
+        task = taskRepository.save(task);
+
         QuoteResponse quoteResponse = ensureQuoteIfRequested(task, dto);
 
         if (isTrue(dto.getLinkQuoteToBilling()) && quoteResponse != null) {
@@ -184,6 +189,10 @@ public class TaskServiceImpl implements TaskService {
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
 
+        // Valida se pode alterar a flag hasSubTasks
+        Boolean newHasSubTasks = dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false;
+        validateCanRemoveSubTasksFlag(task, newHasSubTasks);
+
         TaskAdapter.updateEntityFromDto(TaskRequest.builder()
                 .requesterId(dto.getRequesterId())
                 .title(dto.getTitle())
@@ -193,12 +202,17 @@ public class TaskServiceImpl implements TaskService {
                 .link(dto.getLink())
                 .meetingLink(dto.getMeetingLink())
                 .notes(dto.getNotes())
+                .hasSubTasks(newHasSubTasks)
+                .amount(dto.getAmount())
                 .build(), task, requester);
 
         task.setUpdatedBy(currentUser);
-        task = taskRepository.save(task);
 
         List<SubTask> updated = upsertAndDeleteSubTasks(task, dto.getSubTasks());
+
+        // Processa o valor da tarefa conforme nova lógica
+        processTaskAmount(task, updated);
+        task = taskRepository.save(task);
 
         return buildTaskWithSubTasksResponse(task, updated);
     }
@@ -276,6 +290,8 @@ public class TaskServiceImpl implements TaskService {
                 .link(dto.getLink())
                 .meetingLink(dto.getMeetingLink())
                 .notes(dto.getNotes())
+                .hasSubTasks(dto.getHasSubTasks())
+                .amount(dto.getAmount())
                 .build(), requester);
         
         task.setCreatedBy(currentUser);
@@ -359,6 +375,8 @@ public class TaskServiceImpl implements TaskService {
                 .link(task.getLink())
                 .meetingLink(task.getMeetingLink())
                 .notes(task.getNotes())
+                .hasSubTasks(task.getHasSubTasks())
+                .amount(task.getAmount())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .createdByUserId(task.getCreatedBy() != null ? task.getCreatedBy().getId() : null)
@@ -430,5 +448,36 @@ public class TaskServiceImpl implements TaskService {
         }
         
         throw new RuntimeException("Usuário não possui permissão para acessar tarefas");
+    }
+    
+    /**
+     * Processa a tarefa conforme a nova lógica:
+     * - Se hasSubTasks = true: calcula amount como soma das subtarefas
+     * - Se hasSubTasks = false: usa amount diretamente informado
+     */
+    private void processTaskAmount(Task task, List<SubTask> subTasks) {
+        if (Boolean.TRUE.equals(task.getHasSubTasks())) {
+            // Calcula soma das subtarefas
+            BigDecimal totalAmount = subTasks.stream()
+                    .filter(Objects::nonNull)
+                    .map(SubTask::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            task.setAmount(totalAmount);
+        }
+        // Se hasSubTasks = false, mantém o amount já informado
+    }
+    
+    /**
+     * Valida se é possível desmarcar a flag hasSubTasks
+     */
+    private void validateCanRemoveSubTasksFlag(Task task, boolean newHasSubTasks) {
+        // Se estava com subtarefas e agora quer desmarcar
+        if (Boolean.TRUE.equals(task.getHasSubTasks()) && !newHasSubTasks) {
+            List<SubTask> existingSubTasks = subTaskRepository.findByTaskId(task.getId());
+            if (!existingSubTasks.isEmpty()) {
+                throw new RuntimeException("Não é possível desmarcar 'Tem Subtarefas' enquanto existirem subtarefas vinculadas. Remova todas as subtarefas primeiro.");
+            }
+        }
     }
 }

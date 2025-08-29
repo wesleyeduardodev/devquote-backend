@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -41,6 +42,13 @@ public class Task {
 
     @Column(name = "notes", length = 256)
     private String notes;
+
+    @Column(name = "has_sub_tasks", nullable = false)
+    @Builder.Default
+    private Boolean hasSubTasks = false;
+
+    @Column(name = "amount", precision = 10, scale = 2)
+    private BigDecimal amount;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

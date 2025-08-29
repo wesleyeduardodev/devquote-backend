@@ -2,6 +2,7 @@ package br.com.devquote.dto.request;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -37,6 +38,12 @@ public class TaskWithSubTasksUpdateRequest {
 
     @Builder.Default
     private Boolean linkQuoteToBilling = Boolean.FALSE;
+
+    @Builder.Default
+    private Boolean hasSubTasks = false;
+
+    @DecimalMin(value = "0.0", message = "Amount must be greater than or equal to 0")
+    private BigDecimal amount;
 
     @Valid
     private List<@Valid SubTaskUpdateRequest> subTasks;

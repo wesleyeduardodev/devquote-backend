@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,6 +45,10 @@ public class TaskResponse {
     private Long updatedByUserId;
 
     private String updatedByUserName;
+
+    private Boolean hasSubTasks;
+
+    private BigDecimal amount;
 
     private List<SubTaskResponse> subTasks;
 }

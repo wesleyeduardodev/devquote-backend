@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
@@ -38,4 +39,10 @@ public class TaskRequest {
     @Size(max = 200, message = "Link must be at most 200 characters")
     @Pattern(regexp = "^(http(s)?://.*)?$", message = "Link must be a valid URL")
     private String link;
+
+    @Builder.Default
+    private Boolean hasSubTasks = false;
+
+    @DecimalMin(value = "0.0", message = "Amount must be greater than or equal to 0")
+    private BigDecimal amount;
 }

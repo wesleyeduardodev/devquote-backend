@@ -37,8 +37,13 @@ public class TaskWithSubTasksCreateRequest {
     @Size(max = 256, message = "notes must be at most 256 characters")
     private String notes;
 
+    @Builder.Default
+    private Boolean hasSubTasks = false;
+
+    @DecimalMin(value = "0.0", message = "Amount must be greater than or equal to 0")
+    private BigDecimal amount;
+
     @Valid
-    @NotNull(message = "Subtasks are required")
     private List<@Valid SubTaskRequest> subTasks;
 
     @Builder.Default
@@ -52,14 +57,18 @@ public class TaskWithSubTasksCreateRequest {
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public BigDecimal getTotalAmount() {
-        if (subTasks == null || subTasks.isEmpty()) {
-            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        if (Boolean.TRUE.equals(hasSubTasks)) {
+            if (subTasks == null || subTasks.isEmpty()) {
+                return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            }
+            BigDecimal total = subTasks.stream()
+                    .filter(Objects::nonNull)
+                    .map(SubTaskRequest::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            return total.setScale(2, RoundingMode.HALF_UP);
+        } else {
+            return amount != null ? amount.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         }
-        BigDecimal total = subTasks.stream()
-                .filter(Objects::nonNull)
-                .map(SubTaskRequest::getAmount)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return total.setScale(2, RoundingMode.HALF_UP);
     }
 }

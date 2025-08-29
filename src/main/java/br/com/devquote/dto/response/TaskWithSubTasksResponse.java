@@ -1,5 +1,6 @@
 package br.com.devquote.dto.response;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,6 +39,10 @@ public class TaskWithSubTasksResponse {
     private Long updatedByUserId;
 
     private String updatedByUserName;
+
+    private Boolean hasSubTasks;
+
+    private BigDecimal amount;
 
     private List<SubTaskResponse> subTasks;
 }
