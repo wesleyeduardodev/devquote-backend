@@ -9,9 +9,9 @@ public class PageAdapter {
     public static <T> PagedResponse<T> toPagedResponseDTO(Page<T> page) {
         return new PagedResponse<>(
                 page.getContent(),
-                page.getNumber(),
+                page.getNumber(), // currentPage
                 page.getTotalPages(),
-                page.getSize(),
+                (int) page.getSize(), // pageSize precisa ser int
                 page.getTotalElements(),
                 page.isFirst(),
                 page.isLast()
