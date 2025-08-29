@@ -50,5 +50,13 @@ public class TaskResponse {
 
     private BigDecimal amount;
 
+    private String taskType;
+
+    private String serverOrigin;
+
+    private String systemModule;
+
+    private String priority;
+
     private List<SubTaskResponse> subTasks;
 }

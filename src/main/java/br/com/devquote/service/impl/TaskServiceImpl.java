@@ -204,6 +204,10 @@ public class TaskServiceImpl implements TaskService {
                 .notes(dto.getNotes())
                 .hasSubTasks(newHasSubTasks)
                 .amount(dto.getAmount())
+                .taskType(dto.getTaskType())
+                .serverOrigin(dto.getServerOrigin())
+                .systemModule(dto.getSystemModule())
+                .priority(dto.getPriority())
                 .build(), task, requester);
 
         task.setUpdatedBy(currentUser);
@@ -292,6 +296,10 @@ public class TaskServiceImpl implements TaskService {
                 .notes(dto.getNotes())
                 .hasSubTasks(dto.getHasSubTasks())
                 .amount(dto.getAmount())
+                .taskType(dto.getTaskType())
+                .serverOrigin(dto.getServerOrigin())
+                .systemModule(dto.getSystemModule())
+                .priority(dto.getPriority())
                 .build(), requester);
         
         task.setCreatedBy(currentUser);

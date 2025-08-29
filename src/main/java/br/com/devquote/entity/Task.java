@@ -50,6 +50,19 @@ public class Task {
     @Column(name = "amount", precision = 10, scale = 2)
     private BigDecimal amount;
 
+    @Column(name = "task_type", length = 50)
+    private String taskType; // BUG, ENHANCEMENT, NEW_FEATURE
+
+    @Column(name = "server_origin", length = 100)
+    private String serverOrigin;
+
+    @Column(name = "system_module", length = 100)
+    private String systemModule;
+
+    @Column(name = "priority", length = 20)
+    @Builder.Default
+    private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH, URGENT
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

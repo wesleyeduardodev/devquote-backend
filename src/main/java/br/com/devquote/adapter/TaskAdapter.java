@@ -26,6 +26,10 @@ public class TaskAdapter {
                 .notes(entity.getNotes())
                 .hasSubTasks(entity.getHasSubTasks())
                 .amount(entity.getAmount())
+                .taskType(entity.getTaskType())
+                .serverOrigin(entity.getServerOrigin())
+                .systemModule(entity.getSystemModule())
+                .priority(entity.getPriority())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .createdByUserId(entity.getCreatedBy() != null ? entity.getCreatedBy().getId() : null)
@@ -51,6 +55,10 @@ public class TaskAdapter {
                 .notes(dto.getNotes())
                 .hasSubTasks(dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false)
                 .amount(dto.getAmount())
+                .taskType(dto.getTaskType())
+                .serverOrigin(dto.getServerOrigin())
+                .systemModule(dto.getSystemModule())
+                .priority(dto.getPriority() != null ? dto.getPriority() : "MEDIUM")
                 .build();
     }
 
@@ -72,5 +80,9 @@ public class TaskAdapter {
         entity.setNotes(dto.getNotes());
         entity.setHasSubTasks(dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false);
         entity.setAmount(dto.getAmount());
+        entity.setTaskType(dto.getTaskType());
+        entity.setServerOrigin(dto.getServerOrigin());
+        entity.setSystemModule(dto.getSystemModule());
+        entity.setPriority(dto.getPriority() != null ? dto.getPriority() : "MEDIUM");
     }
 }

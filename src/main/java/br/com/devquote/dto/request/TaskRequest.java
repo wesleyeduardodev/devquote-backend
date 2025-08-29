@@ -45,4 +45,17 @@ public class TaskRequest {
 
     @DecimalMin(value = "0.0", message = "Amount must be greater than or equal to 0", groups = {})
     private BigDecimal amount;
+
+    @Size(max = 50, message = "Task type must be at most 50 characters")
+    private String taskType;
+
+    @Size(max = 100, message = "Server origin must be at most 100 characters")
+    private String serverOrigin;
+
+    @Size(max = 100, message = "System module must be at most 100 characters")
+    private String systemModule;
+
+    @Size(max = 20, message = "Priority must be at most 20 characters")
+    @Builder.Default
+    private String priority = "MEDIUM";
 }
