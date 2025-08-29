@@ -3,6 +3,7 @@ import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.DeliveryControllerDoc;
 import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryResponse;
+import br.com.devquote.dto.response.DeliveryGroupResponse;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.service.DeliveryService;
 import br.com.devquote.utils.SortUtils;
@@ -102,5 +103,32 @@ public class DeliveryController implements DeliveryControllerDoc {
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         deliveryService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/grouped")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<PagedResponse<DeliveryGroupResponse>> listGroupedByTask(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String taskName,
+            @RequestParam(required = false) String taskCode,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String createdAt,
+            @RequestParam(required = false) String updatedAt,
+            @RequestParam MultiValueMap<String, String> allParams
+    ) {
+        List<String> sortParams = allParams != null ? allParams.get("sort") : null;
+        Pageable pageable = PageRequest.of(page, size, SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id"));
+        Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTask(
+                taskName, taskCode, status, createdAt, updatedAt, pageable
+        );
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
+    }
+
+    @GetMapping("/group/{quoteId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<DeliveryGroupResponse> getGroupDetails(@PathVariable Long quoteId) {
+        DeliveryGroupResponse groupDetails = deliveryService.findGroupDetailsByQuoteId(quoteId);
+        return ResponseEntity.ok(groupDetails);
     }
 }

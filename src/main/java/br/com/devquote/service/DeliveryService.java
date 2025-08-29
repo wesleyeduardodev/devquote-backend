@@ -1,6 +1,7 @@
 package br.com.devquote.service;
 import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryResponse;
+import br.com.devquote.dto.response.DeliveryGroupResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
@@ -30,4 +31,13 @@ public interface DeliveryService {
                                             String createdAt,
                                             String updatedAt,
                                             Pageable pageable);
+
+    Page<DeliveryGroupResponse> findAllGroupedByTask(String taskName,
+                                                      String taskCode,
+                                                      String status,
+                                                      String createdAt,
+                                                      String updatedAt,
+                                                      Pageable pageable);
+
+    DeliveryGroupResponse findGroupDetailsByQuoteId(Long quoteId);
 }

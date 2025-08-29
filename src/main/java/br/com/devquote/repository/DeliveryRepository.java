@@ -53,4 +53,29 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             @Param("updatedAt") String updatedAt,
             Pageable pageable
     );
+
+    @EntityGraph(attributePaths = {"quote", "quote.task", "project"})
+    @Query("""
+        SELECT d
+          FROM Delivery d
+          JOIN d.quote q
+          JOIN q.task t
+         WHERE (:taskName IS NULL OR :taskName = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :taskName, '%')))
+           AND (:taskCode IS NULL OR :taskCode = '' OR LOWER(t.code) LIKE LOWER(CONCAT('%', :taskCode, '%')))
+           AND (:status IS NULL OR :status = '' OR LOWER(d.status) LIKE LOWER(CONCAT('%', :status, '%')))
+           AND (:createdAt IS NULL OR :createdAt = '' OR CAST(d.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
+           AND (:updatedAt IS NULL OR :updatedAt = '' OR CAST(d.updatedAt AS string) LIKE CONCAT('%', :updatedAt, '%'))
+         ORDER BY q.id, d.id
+        """)
+    List<Delivery> findByTaskFilters(
+            @Param("taskName") String taskName,
+            @Param("taskCode") String taskCode,
+            @Param("status") String status,
+            @Param("createdAt") String createdAt,
+            @Param("updatedAt") String updatedAt
+    );
+
+    @EntityGraph(attributePaths = {"quote", "quote.task", "project"})
+    @Query("SELECT d FROM Delivery d WHERE d.quote.id = :quoteId ORDER BY d.id")
+    List<Delivery> findByQuoteId(@Param("quoteId") Long quoteId);
 }
