@@ -37,6 +37,13 @@ jobs:
         APP_JWTSECRET: ${{ secrets.APP_JWTSECRET }}
         DEVQUOTE_CORS_ALLOWED_ORIGINS: ${{ secrets.DEVQUOTE_CORS_ALLOWED_ORIGINS }}
         PORT: ${{ secrets.PORT }}
+        # Email configuration - Required for Spring context loading
+        DEVQUOTE_EMAIL_ENABLED: ${{ secrets.DEVQUOTE_EMAIL_ENABLED }}
+        DEVQUOTE_EMAIL_FROM: ${{ secrets.DEVQUOTE_EMAIL_FROM }}
+        MAIL_HOST: ${{ secrets.MAIL_HOST }}
+        MAIL_PORT: ${{ secrets.MAIL_PORT }}
+        MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+        MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
       run: mvn clean test
     
     - name: Login to Docker Hub
