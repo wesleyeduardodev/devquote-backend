@@ -201,6 +201,92 @@ public class ExcelReportUtils {
         return outputStream.toByteArray();
     }
 
+    public byte[] generateQuotesReport(List<Map<String, Object>> data, boolean canViewAmounts) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Relatório de Orçamentos");
+
+        // Criar estilos
+        CellStyle headerStyle = createHeaderStyle(workbook);
+        CellStyle dataStyle = createDataStyle(workbook);
+        CellStyle dateStyle = createDateStyle(workbook);
+        CellStyle currencyStyle = createCurrencyStyle(workbook);
+
+        // Cabeçalhos completos (ADMIN/MANAGER)
+        String[] headers = {
+            "ID Orçamento", "Status do Orçamento", "ID Tarefa", "Código da Tarefa", "Título da Tarefa", 
+            "Valor Total da Tarefa", "Status da Tarefa", "Prioridade da Tarefa", "Solicitante", 
+            "Vinculado ao Faturamento", "Valor Total do Orçamento", "Data de Criação", "Data de Atualização"
+        };
+
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Adicionar dados (sempre versão completa)
+        int rowNum = 1;
+        for (Map<String, Object> quoteData : data) {
+            Row row = sheet.createRow(rowNum++);
+            
+            setCellValue(row, 0, quoteData.get("quote_id"), dataStyle);
+            setStatusCell(row, 1, quoteData.get("quote_status"), dataStyle);
+            setCellValue(row, 2, quoteData.get("task_id"), dataStyle);
+            setCellValue(row, 3, quoteData.get("task_code"), dataStyle);
+            setCellValue(row, 4, quoteData.get("task_title"), dataStyle);
+            setCellValue(row, 5, quoteData.get("task_amount"), currencyStyle);
+            setStatusCell(row, 6, quoteData.get("task_status"), dataStyle);
+            setPriorityCell(row, 7, quoteData.get("task_priority"), dataStyle);
+            setCellValue(row, 8, quoteData.get("requester_name"), dataStyle);
+            setCellValue(row, 9, quoteData.get("has_billing"), dataStyle);
+            setCellValue(row, 10, quoteData.get("quote_total_amount"), currencyStyle);
+            setCellValue(row, 11, quoteData.get("quote_created_at"), dateStyle);
+            setCellValue(row, 12, quoteData.get("quote_updated_at"), dateStyle);
+        }
+
+        // Ajustar largura das colunas (13 colunas)
+        setColumnWidths(sheet, new int[]{
+            3000,  // ID Orçamento
+            3500,  // Status do Orçamento
+            2500,  // ID Tarefa
+            3500,  // Código da Tarefa
+            8000,  // Título da Tarefa (maior)
+            4000,  // Valor Total da Tarefa
+            3500,  // Status da Tarefa
+            3000,  // Prioridade da Tarefa
+            6000,  // Solicitante
+            4000,  // Vinculado ao Faturamento
+            4000,  // Valor Total do Orçamento
+            6000,  // Data de Criação
+            6000   // Data de Atualização
+        });
+        
+        // Ajustar altura das linhas
+        for (int i = 1; i <= data.size(); i++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                row.setHeightInPoints(30);
+            }
+        }
+        
+        // Altura do cabeçalho
+        headerRow.setHeightInPoints(35);
+
+        // Aplicar filtros
+        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
+
+        // Congelar primeira linha (cabeçalho)
+        sheet.createFreezePane(0, 1);
+
+        // Converter para bytes
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream.toByteArray();
+    }
+
     private void setColumnWidths(Sheet sheet, int[] widths) {
         for (int i = 0; i < widths.length; i++) {
             sheet.setColumnWidth(i, widths[i]);
