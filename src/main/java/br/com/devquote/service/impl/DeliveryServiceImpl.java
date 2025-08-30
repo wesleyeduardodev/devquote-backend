@@ -295,6 +295,28 @@ public class DeliveryServiceImpl implements DeliveryService {
         return page.map(DeliveryAdapter::toResponseDTO);
     }
 
+    /**
+     * Calcula o status geral das entregas baseado nos status individuais
+     */
+    private String calculateDeliveryStatus(List<Delivery> deliveries) {
+        if (deliveries.isEmpty()) {
+            return "PENDING";
+        }
+        
+        // Considera DELIVERED e APPROVED como entregas finalizadas
+        long completedCount = deliveries.stream()
+                .filter(d -> "DELIVERED".equals(d.getStatus()) || "APPROVED".equals(d.getStatus()))
+                .count();
+        
+        if (completedCount == deliveries.size()) {
+            return "COMPLETED"; // Todas entregues/aprovadas
+        } else if (completedCount > 0) {
+            return "IN_PROGRESS"; // Algumas entregues, outras não
+        } else {
+            return "PENDING"; // Nenhuma entregue
+        }
+    }
+
     @Override
     public Page<DeliveryGroupResponse> findAllGroupedByTask(String taskName,
                                                              String taskCode,
@@ -325,11 +347,11 @@ public class DeliveryServiceImpl implements DeliveryService {
                             .collect(Collectors.toList());
 
                     long completedCount = deliveries.stream()
-                            .filter(d -> "COMPLETED".equals(d.getStatus()))
+                            .filter(d -> "DELIVERED".equals(d.getStatus()) || "APPROVED".equals(d.getStatus()))
                             .count();
 
                     long pendingCount = deliveries.stream()
-                            .filter(d -> !"COMPLETED".equals(d.getStatus()))
+                            .filter(d -> !"DELIVERED".equals(d.getStatus()) && !"APPROVED".equals(d.getStatus()))
                             .count();
 
                     return DeliveryGroupResponse.builder()
@@ -337,6 +359,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                             .taskName(quote.getTask() != null ? quote.getTask().getTitle() : "N/A")
                             .taskCode(quote.getTask() != null ? quote.getTask().getCode() : "N/A")
                             .quoteStatus(quote.getStatus())
+                            .deliveryStatus(calculateDeliveryStatus(deliveries))
                             .quoteValue(quote.getTotalAmount())
                             .createdAt(quote.getCreatedAt())
                             .updatedAt(quote.getUpdatedAt())
@@ -374,11 +397,11 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .collect(Collectors.toList());
 
         long completedCount = deliveries.stream()
-                .filter(d -> "COMPLETED".equals(d.getStatus()))
+                .filter(d -> "DELIVERED".equals(d.getStatus()) || "APPROVED".equals(d.getStatus()))
                 .count();
 
         long pendingCount = deliveries.stream()
-                .filter(d -> !"COMPLETED".equals(d.getStatus()))
+                .filter(d -> !"DELIVERED".equals(d.getStatus()) && !"APPROVED".equals(d.getStatus()))
                 .count();
 
         return DeliveryGroupResponse.builder()
@@ -386,6 +409,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .taskName(quote.getTask() != null ? quote.getTask().getTitle() : "N/A")
                 .taskCode(quote.getTask() != null ? quote.getTask().getCode() : "N/A")
                 .quoteStatus(quote.getStatus())
+                .deliveryStatus(calculateDeliveryStatus(deliveries))
                 .quoteValue(quote.getTotalAmount())
                 .createdAt(quote.getCreatedAt())
                 .updatedAt(quote.getUpdatedAt())

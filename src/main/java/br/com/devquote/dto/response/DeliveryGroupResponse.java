@@ -21,6 +21,8 @@ public class DeliveryGroupResponse {
     
     private String quoteStatus;
     
+    private String deliveryStatus; // Status calculado das entregas (COMPLETED, IN_PROGRESS, PENDING)
+    
     private BigDecimal quoteValue;
     
     private LocalDateTime createdAt;
