@@ -11,6 +11,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -40,39 +42,61 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
     
     @Override
     public List<QuoteBillingMonthResponse> findAllWithTotals() {
-        String sql = """
-            SELECT 
-                qbm.id,
-                qbm.month,
-                qbm.year,
-                qbm.payment_date,
-                qbm.status,
-                qbm.created_at,
-                qbm.updated_at,
-                COALESCE(SUM(q.total_amount), 0) as total_amount
-            FROM quote_billing_month qbm
-            LEFT JOIN quote_billing_month_quote qbmq ON qbm.id = qbmq.quote_billing_month_id
-            LEFT JOIN quote q ON qbmq.quote_id = q.id
-            GROUP BY qbm.id, qbm.month, qbm.year, qbm.payment_date, qbm.status, qbm.created_at, qbm.updated_at
-            ORDER BY qbm.id DESC
-        """;
-        
-        Query query = entityManager.createNativeQuery(sql);
-        @SuppressWarnings("unchecked")
-        List<Object[]> results = query.getResultList();
-        
-        return results.stream().map(row -> {
-            return QuoteBillingMonthResponse.builder()
-                .id(((Number) row[0]).longValue())
-                .month((Integer) row[1])
-                .year((Integer) row[2])
-                .paymentDate(row[3] != null ? ((java.sql.Date) row[3]).toLocalDate() : null)
-                .status((String) row[4])
-                .createdAt(((java.sql.Timestamp) row[5]).toLocalDateTime())
-                .updatedAt(((java.sql.Timestamp) row[6]).toLocalDateTime())
-                .totalAmount(new java.math.BigDecimal(row[7].toString()))
-                .build();
-        }).collect(Collectors.toList());
+        try {
+            log.info("Starting findAllWithTotals method");
+            
+            String sql = """
+                SELECT 
+                    qbm.id,
+                    qbm.month,
+                    qbm.year,
+                    qbm.payment_date,
+                    qbm.status,
+                    qbm.created_at,
+                    qbm.updated_at,
+                    COALESCE(SUM(q.total_amount), 0) as total_amount
+                FROM quote_billing_month qbm
+                LEFT JOIN quote_billing_month_quote qbmq ON qbm.id = qbmq.quote_billing_month_id
+                LEFT JOIN quote q ON qbmq.quote_id = q.id
+                GROUP BY qbm.id, qbm.month, qbm.year, qbm.payment_date, qbm.status, qbm.created_at, qbm.updated_at
+                ORDER BY qbm.id DESC
+            """;
+            
+            log.info("Executing SQL query: {}", sql);
+            Query query = entityManager.createNativeQuery(sql);
+            
+            @SuppressWarnings("unchecked")
+            List<Object[]> results = query.getResultList();
+            log.info("Query returned {} results", results.size());
+            
+            return results.stream().map(row -> {
+                try {
+                    log.debug("Processing row: {}", java.util.Arrays.toString(row));
+                    
+                    QuoteBillingMonthResponse response = QuoteBillingMonthResponse.builder()
+                        .id(((Number) row[0]).longValue())
+                        .month((Integer) row[1])
+                        .year((Integer) row[2])
+                        .paymentDate(row[3] != null ? ((java.sql.Date) row[3]).toLocalDate() : null)
+                        .status((String) row[4])
+                        .createdAt(row[5] != null ? ((java.sql.Timestamp) row[5]).toLocalDateTime() : null)
+                        .updatedAt(row[6] != null ? ((java.sql.Timestamp) row[6]).toLocalDateTime() : null)
+                        .totalAmount(new java.math.BigDecimal(row[7].toString()))
+                        .build();
+                    
+                    log.debug("Successfully built response for ID: {}", response.getId());
+                    return response;
+                    
+                } catch (Exception e) {
+                    log.error("Error processing row: {}", java.util.Arrays.toString(row), e);
+                    throw new RuntimeException("Error processing billing month row: " + e.getMessage(), e);
+                }
+            }).collect(Collectors.toList());
+            
+        } catch (Exception e) {
+            log.error("Error in findAllWithTotals method", e);
+            throw new RuntimeException("Failed to fetch billing months with totals: " + e.getMessage(), e);
+        }
     }
 
     @Override
