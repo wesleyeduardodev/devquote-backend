@@ -69,7 +69,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskDescription", task.getDescription() != null ? task.getDescription() : "");
         context.setVariable("taskStatus", translateStatus(task.getStatus()));
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
-        context.setVariable("taskType", task.getTaskType() != null ? task.getTaskType() : "");
+        context.setVariable("taskType", translateTaskType(task.getTaskType()));
         context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
         context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
         context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
@@ -78,10 +78,40 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
         
-        // Buscar subtarefas da tarefa
+        // Buscar subtarefas da tarefa e traduzir status
         java.util.List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
+        
+        // Criar lista com dados das subtarefas já traduzidos
+        java.util.List<java.util.Map<String, String>> subTasksTranslated = null;
+        if (subTasks != null) {
+            subTasksTranslated = subTasks.stream().map(subtask -> {
+                java.util.Map<String, String> subtaskMap = new java.util.HashMap<>();
+                subtaskMap.put("title", subtask.getTitle() != null ? subtask.getTitle() : "");
+                subtaskMap.put("description", subtask.getDescription() != null ? subtask.getDescription() : "");
+                subtaskMap.put("status", translateStatus(subtask.getStatus()));
+                return subtaskMap;
+            }).collect(java.util.stream.Collectors.toList());
+        }
+        
         context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
-        context.setVariable("subTasks", subTasks);
+        context.setVariable("subTasks", subTasksTranslated);
+        
+        // Função para traduzir status e obter classes CSS (disponível no template)
+        context.setVariable("translateStatus", new Object() {
+            public String translate(String status) {
+                return translateStatus(status);
+            }
+        });
+        context.setVariable("getStatusCssClass", new Object() {
+            public String getCssClass(String status) {
+                return getStatusCssClass(status);
+            }
+        });
+        context.setVariable("getPriorityCssClass", new Object() {
+            public String getCssClass(String priority) {
+                return getPriorityCssClass(priority);
+            }
+        });
         
         return templateEngine.process("email/task-created", context);
     }
@@ -119,14 +149,69 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String translatePriority(String priority) {
-        if (priority == null) return "N/A";
+        if (priority == null) return "";
         return switch (priority.toUpperCase()) {
             case "LOW" -> "Baixa";
             case "MEDIUM" -> "Média";
             case "HIGH" -> "Alta";
             case "URGENT" -> "Urgente";
             case "CRITICAL" -> "Crítica";
+            case "VERY_LOW" -> "Muito Baixa";
+            case "VERY_HIGH" -> "Muito Alta";
+            case "IMMEDIATE" -> "Imediata";
+            case "NORMAL" -> "Normal";
             default -> priority;
+        };
+    }
+
+    private String translateTaskType(String taskType) {
+        if (taskType == null) return "";
+        return switch (taskType.toUpperCase()) {
+            case "BUG" -> "Bug/Correção";
+            case "ENHANCEMENT" -> "Melhoria";
+            case "NEW_FEATURE" -> "Nova Funcionalidade";
+            case "FEATURE" -> "Funcionalidade";
+            case "MAINTENANCE" -> "Manutenção";
+            case "DOCUMENTATION" -> "Documentação";
+            case "REFACTOR" -> "Refatoração";
+            case "TEST" -> "Teste";
+            case "RESEARCH" -> "Pesquisa";
+            case "SUPPORT" -> "Suporte";
+            default -> taskType;
+        };
+    }
+
+    private String getStatusCssClass(String status) {
+        if (status == null) return "pending";
+        return switch (status.toUpperCase()) {
+            case "PENDING" -> "pending";
+            case "IN_PROGRESS" -> "in-progress";
+            case "COMPLETED" -> "completed";
+            case "CANCELLED" -> "cancelled";
+            case "ON_HOLD" -> "on-hold";
+            case "BLOCKED" -> "blocked";
+            case "REVIEWING" -> "reviewing";
+            case "APPROVED" -> "approved";
+            case "REJECTED" -> "rejected";
+            case "DRAFT" -> "draft";
+            case "ACTIVE" -> "active";
+            case "INACTIVE" -> "inactive";
+            case "PAUSED" -> "paused";
+            case "REOPENED" -> "reopened";
+            default -> "pending";
+        };
+    }
+
+    private String getPriorityCssClass(String priority) {
+        if (priority == null) return "media";
+        return switch (priority.toUpperCase()) {
+            case "LOW" -> "baixa";
+            case "MEDIUM" -> "media";
+            case "HIGH", "URGENT", "CRITICAL" -> "alta";
+            case "VERY_LOW" -> "baixa";
+            case "VERY_HIGH", "IMMEDIATE" -> "alta";
+            case "NORMAL" -> "media";
+            default -> "media";
         };
     }
 }

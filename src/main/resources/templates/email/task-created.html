@@ -84,15 +84,15 @@
             font-weight: 600;
             text-transform: uppercase;
         }
-        .status.pending {
+        .status.pending, .status.pendente {
             background-color: #fff3cd;
             color: #856404;
         }
-        .status.in-progress {
+        .status.in-progress, .status.em-progresso {
             background-color: #cce5ff;
             color: #004080;
         }
-        .status.completed {
+        .status.completed, .status.concluida {
             background-color: #d4edda;
             color: #155724;
         }
@@ -104,15 +104,15 @@
             font-weight: 600;
             text-transform: uppercase;
         }
-        .priority.alta, .priority.urgente, .priority.critical {
+        .priority.alta, .priority.urgente, .priority.critical, .priority.critica {
             background-color: #f8d7da;
             color: #721c24;
         }
-        .priority.media {
+        .priority.media, .priority.medium {
             background-color: #fff3cd;
             color: #856404;
         }
-        .priority.baixa {
+        .priority.baixa, .priority.low {
             background-color: #d4edda;
             color: #155724;
         }
@@ -191,16 +191,16 @@
             <h1>Nova Tarefa Criada</h1>
             <p>Uma nova tarefa foi adicionada ao sistema</p>
         </div>
-        
+
         <div class="content">
             <!-- DADOS PRINCIPAIS DA TAREFA -->
             <div class="section">
                 <h2>📋 Dados da Tarefa</h2>
-                
+
                 <div class="info-grid">
                     <div class="info-row" th:if="${!#strings.isEmpty(taskId)}">
                         <div class="info-label">ID:</div>
-                        <div class="info-value" th:text="${taskId}">#123</div>
+                        <div class="info-value" th:text="${taskId}">123</div>
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskCode)}">
                         <div class="info-label">Código:</div>
@@ -228,7 +228,7 @@
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskType)}">
                         <div class="info-label">Tipo da Tarefa:</div>
-                        <div class="info-value" th:text="${taskType}">Desenvolvimento</div>
+                        <div class="info-value" th:text="${taskType}">Nova Funcionalidade</div>
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskSystemModule)}">
                         <div class="info-label">Módulo do Sistema:</div>
@@ -241,7 +241,7 @@
                     <div class="info-row" th:if="${!#strings.isEmpty(taskLink)}">
                         <div class="info-label">Link da Tarefa:</div>
                         <div class="info-value">
-                            <a href="#" th:href="${taskLink}" th:text="${taskLink}" class="link">Link</a>
+                            <a href="#" th:href="${taskLink}" th:text="${taskLink}" class="link">Link da tarefa</a>
                         </div>
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskMeetingLink)}">
@@ -268,30 +268,30 @@
             <!-- SUBTAREFAS -->
             <div class="section" th:if="${hasSubTasks}">
                 <h2>📝 Subtarefas</h2>
-                
+
                 <div th:each="subtask : ${subTasks}" class="subtask-item">
-                    <div class="subtask-title" th:if="${subtask.title != null and !#strings.isEmpty(subtask.title)}" 
+                    <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}"
                          th:text="${subtask.title}">Título da subtarefa</div>
-                    
-                    <div class="subtask-description" th:if="${subtask.description != null and !#strings.isEmpty(subtask.description)}" 
+
+                    <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}"
                          th:text="${subtask.description}">Descrição da subtarefa</div>
-                    
-                    <div class="subtask-status" th:if="${subtask.status != null and !#strings.isEmpty(subtask.status)}">
-                        <strong>Status:</strong> 
+
+                    <div class="subtask-status" th:if="${!#strings.isEmpty(subtask.status)}">
+                        <strong>Status:</strong>
                         <span class="status pending" th:text="${subtask.status}">Pendente</span>
                     </div>
                 </div>
             </div>
-            
+
             <!-- MENSAGEM FINAL -->
             <p style="color: #666; font-size: 14px; margin-top: 30px;">
-                Esta é uma notificação automática do sistema DevQuote. 
+                Esta é uma notificação automática do sistema DevQuote.
                 Acesse o sistema para visualizar mais detalhes ou fazer alterações na tarefa.
             </p>
         </div>
-        
+
         <div class="footer">
-            <p>© 2024 DevQuote - Sistema de Gestão de Orçamentos e Projetos</p>
+            <p>© 2025 DevQuote - Sistema de Gestão de Orçamentos e Projetos</p>
             <p>Email enviado automaticamente - Não responda a esta mensagem</p>
         </div>
     </div>
