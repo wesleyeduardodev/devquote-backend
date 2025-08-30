@@ -65,14 +65,27 @@ app:
   jwtExpirationMs: ${APP_JWTEXPIRATIONMS:86400000}
   jwtRefreshExpirationMs: ${APP_JWTREFRESHEXPIRATIONMS:2592000000}
 
-# Logging
+# Logging - Otimizado para produção
 logging:
+  pattern:
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr([%X{traceId:-}]){yellow} : %m%n"
   level:
-    br.com.devquote.service.impl.DashboardServiceImpl: DEBUG
-    #org.springframework.security: ${LOG_LEVEL_SECURITY:DEBUG}
-    #br.com.devquote.configuration.security: ${LOG_LEVEL_APP_SECURITY:DEBUG}
-    #br.com.devquote: ${LOG_LEVEL_APP:DEBUG}
-    #org.springframework.web: ${LOG_LEVEL_WEB:INFO}
-    #org.hibernate.SQL: ${LOG_LEVEL_SQL:INFO}
-    #org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL_SQL_PARAMS:INFO}
-    root: INFO
+    # Aplicação principal - controlado por variável de ambiente
+    br.com.devquote: ${LOG_LEVEL_APP:INFO}
+    # Spring Framework - apenas warnings em produção
+    org.springframework: ${LOG_LEVEL_SPRING:WARN}
+    org.springframework.web: ${LOG_LEVEL_WEB:WARN}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    # Hibernate - apenas erros em produção
+    org.hibernate: ${LOG_LEVEL_HIBERNATE:WARN}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
+    # HTTP Client logs
+    org.apache.http: WARN
+    # Root level
+    root: ${LOG_LEVEL_ROOT:INFO}
+  file:
+    name: ${LOG_FILE:logs/application.log}
+  logback:
+    rollingpolicy:
+      max-file-size: ${LOG_MAX_FILE_SIZE:10MB}
+      max-history: ${LOG_MAX_HISTORY:3}

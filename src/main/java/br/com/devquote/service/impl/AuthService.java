@@ -45,11 +45,15 @@ public class AuthService {
 
     @Transactional
     public MessageResponse registerUser(RegisterRequest signUpRequest) {
+        log.info("REGISTER ATTEMPT user={}", signUpRequest.getUsername());
+        
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+            log.warn("REGISTER FAILED username already exists: {}", signUpRequest.getUsername());
             throw new RuntimeException("Error: Username is already taken!");
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+            log.warn("REGISTER FAILED email already exists: {}", signUpRequest.getEmail());
             throw new RuntimeException("Error: Email is already in use!");
         }
 
@@ -78,7 +82,8 @@ public class AuthService {
                 .build();
 
         userProfileService.assignProfileToUser(profileRequest);
-
+        
+        log.info("REGISTER SUCCESS user={} id={}", user.getUsername(), user.getId());
         return new MessageResponse("User registered successfully!");
     }
 
@@ -128,9 +133,7 @@ public class AuthService {
     }
 
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
-        log.info("=== TENTATIVA DE AUTENTICAÇÃO ===");
-        log.info("Username: {}", loginRequest.getUsername());
-        log.info("Password fornecida: {}", loginRequest.getPassword() != null ? "PRESENTE" : "AUSENTE");
+        log.info("LOGIN ATTEMPT user={}", loginRequest.getUsername());
         
         // Autenticar o usuário
         Authentication authentication;
@@ -141,9 +144,9 @@ public class AuthService {
                             loginRequest.getPassword()
                     )
             );
-            log.info("AUTENTICAÇÃO REALIZADA COM SUCESSO!");
+            log.info("LOGIN SUCCESS user={}", loginRequest.getUsername());
         } catch (Exception e) {
-            log.error("ERRO NA AUTENTICAÇÃO: {}", e.getMessage(), e);
+            log.warn("LOGIN FAILED user={} error={}", loginRequest.getUsername(), e.getMessage());
             throw e;
         }
 
@@ -193,6 +196,8 @@ public class AuthService {
     @Transactional
     public MessageResponse updateUserProfile(UpdateProfileRequest request, Authentication authentication) {
         String username = authentication.getName();
+        log.info("PROFILE UPDATE ATTEMPT user={}", username);
+        
         User currentUser = userRepository.findByUsernameWithProfiles(username)
                 .or(() -> userRepository.findByEmailWithProfiles(username))
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -200,6 +205,7 @@ public class AuthService {
         // Verificar se o novo email já está em uso por outro usuário
         if (!currentUser.getEmail().equals(request.getEmail()) && 
             userRepository.existsByEmail(request.getEmail())) {
+            log.warn("PROFILE UPDATE FAILED user={} email already exists: {}", username, request.getEmail());
             throw new RuntimeException("Email is already in use by another user!");
         }
         
@@ -210,15 +216,19 @@ public class AuthService {
         // Se uma nova senha foi fornecida, validar e atualizar
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             if (request.getPassword().length() < 6) {
+                log.warn("PROFILE UPDATE FAILED user={} password too short", username);
                 throw new RuntimeException("Password must be at least 6 characters long!");
             }
             if (!request.getPassword().equals(request.getConfirmPassword())) {
+                log.warn("PROFILE UPDATE FAILED user={} passwords don't match", username);
                 throw new RuntimeException("Passwords do not match!");
             }
             currentUser.setPassword(passwordEncoder.encode(request.getPassword()));
+            log.info("PASSWORD CHANGED user={}", username);
         }
         
         userRepository.save(currentUser);
+        log.info("PROFILE UPDATE SUCCESS user={}", username);
         
         return new MessageResponse("Profile updated successfully! Please login again.");
     }

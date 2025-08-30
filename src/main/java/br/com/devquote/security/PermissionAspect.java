@@ -39,7 +39,8 @@ public class PermissionAspect {
 
         // Verificar se é admin (se permitido)
         if (requiresPermission.allowAdmin() && permissionService.isAdmin(userId)) {
-            log.debug("Acesso liberado para admin: userId={}", userId);
+            log.debug("ACCESS GRANTED admin userId={} resource={} operation={}", 
+                userId, requiresPermission.resource(), requiresPermission.operation());
             return;
         }
 
@@ -51,15 +52,16 @@ public class PermissionAspect {
         );
 
         if (!hasPermission) {
-            log.warn("Acesso negado: userId={}, resource={}, operation={}", 
-                userId, requiresPermission.resource(), requiresPermission.operation());
+            log.warn("ACCESS DENIED userId={} resource={} operation={} method={}", 
+                userId, requiresPermission.resource(), requiresPermission.operation(), 
+                joinPoint.getSignature().getName());
             throw new AccessDeniedException(
                 String.format("Usuário não tem permissão para %s em %s", 
                     requiresPermission.operation(), requiresPermission.resource())
             );
         }
 
-        log.debug("Acesso autorizado: userId={}, resource={}, operation={}", 
+        log.debug("ACCESS GRANTED userId={} resource={} operation={}", 
             userId, requiresPermission.resource(), requiresPermission.operation());
     }
 
@@ -90,15 +92,15 @@ public class PermissionAspect {
         }
 
         if (!hasRequiredProfile) {
-            log.warn("Acesso negado por perfil: userId={}, requiredProfiles={}, requireAll={}", 
-                userId, requiredProfiles, requiresProfile.requireAll());
+            log.warn("ACCESS DENIED PROFILE userId={} requiredProfiles={} requireAll={} method={}", 
+                userId, requiredProfiles, requiresProfile.requireAll(), joinPoint.getSignature().getName());
             throw new AccessDeniedException(
                 String.format("Usuário não possui o(s) perfil(is) necessário(s): %s", 
                     String.join(", ", requiredProfiles))
             );
         }
 
-        log.debug("Acesso autorizado por perfil: userId={}, profiles={}", userId, requiredProfiles);
+        log.debug("ACCESS GRANTED PROFILE userId={} profiles={}", userId, requiredProfiles);
     }
 
     private Long getCurrentUserId(Authentication authentication) {

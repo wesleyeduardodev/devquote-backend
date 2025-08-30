@@ -151,15 +151,80 @@ public class ApiExceptionHandler {
         );
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    ProblemDetail handleConflict(DataIntegrityViolationException ex, HttpServletRequest req) {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    ProblemDetail handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest req) {
+        ProblemDetail pd = ProblemDetailsUtils.baseProblem(
+                HttpStatus.NOT_FOUND,
+                "Resource not found",
+                ex.getMessage(),
+                "https://api.devquote.com/errors/resource-not-found",
+                req.getRequestURI()
+        );
+        pd.setProperty("resourceType", ex.getResourceType());
+        pd.setProperty("resourceId", ex.getResourceId());
+        return pd;
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    ProblemDetail handleBusinessException(BusinessException ex, HttpServletRequest req) {
+        ProblemDetail pd = ProblemDetailsUtils.baseProblem(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                "Business rule violation",
+                ex.getMessage(),
+                "https://api.devquote.com/errors/business-error",
+                req.getRequestURI()
+        );
+        pd.setProperty("errorCode", ex.getErrorCode());
+        return pd;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    ProblemDetail handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest req) {
+        return ProblemDetailsUtils.baseProblem(
+                HttpStatus.BAD_REQUEST,
+                "Invalid argument",
+                ex.getMessage() != null ? ex.getMessage() : "Argumento inválido fornecido.",
+                "https://api.devquote.com/errors/invalid-argument",
+                req.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    ProblemDetail handleIllegalState(IllegalStateException ex, HttpServletRequest req) {
         return ProblemDetailsUtils.baseProblem(
                 HttpStatus.CONFLICT,
+                "Invalid state",
+                ex.getMessage() != null ? ex.getMessage() : "Operação não permitida no estado atual.",
+                "https://api.devquote.com/errors/invalid-state",
+                req.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ProblemDetail handleConflict(DataIntegrityViolationException ex, HttpServletRequest req) {
+        String message = "Operação violou restrições de integridade do banco.";
+        String rootCauseMessage = ex.getMostSpecificCause().getMessage();
+        
+        // Interpreta mensagens de erro comuns do PostgreSQL
+        if (rootCauseMessage != null) {
+            if (rootCauseMessage.contains("duplicate key")) {
+                message = "Já existe um registro com essas informações.";
+            } else if (rootCauseMessage.contains("foreign key constraint")) {
+                message = "Não é possível realizar essa operação pois o registro está sendo referenciado por outros dados.";
+            } else if (rootCauseMessage.contains("not null constraint")) {
+                message = "Campo obrigatório não foi informado.";
+            }
+        }
+        
+        ProblemDetail pd = ProblemDetailsUtils.baseProblem(
+                HttpStatus.CONFLICT,
                 "Data integrity violation",
-                "Operação violou restrições de integridade do banco.",
+                message,
                 "https://api.devquote.com/errors/conflict",
                 req.getRequestURI()
         );
+        pd.setProperty("rootCause", rootCauseMessage);
+        return pd;
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)

@@ -3,6 +3,8 @@ import br.com.devquote.adapter.QuoteAdapter;
 import br.com.devquote.adapter.QuoteBillingMonthAdapter;
 import br.com.devquote.adapter.SubTaskAdapter;
 import br.com.devquote.adapter.TaskAdapter;
+import br.com.devquote.error.BusinessException;
+import br.com.devquote.error.ResourceNotFoundException;
 import br.com.devquote.configuration.BillingProperties;
 import br.com.devquote.dto.request.*;
 import br.com.devquote.dto.response.QuoteBillingMonthResponse;
@@ -18,6 +20,7 @@ import br.com.devquote.service.*;
 import br.com.devquote.utils.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -74,7 +78,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskResponse findById(Long id) {
         Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa", id));
 
         TaskResponse response = TaskAdapter.toResponseDTO(task);
         List<SubTask> subTasks = subTaskRepository.findByTaskId(response.getId());
@@ -94,11 +98,14 @@ public class TaskServiceImpl implements TaskService {
         
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
-            throw new RuntimeException("Usuário não autenticado");
+            throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
         }
+        
+        log.info("TASK CREATE requesterId={} title={} user={}", 
+            dto.getRequesterId(), dto.getTitle(), currentUser.getUsername());
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
-                .orElseThrow(() -> new RuntimeException("Requester not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitante", dto.getRequesterId()));
         
         Task entity = TaskAdapter.toEntity(dto, requester);
         entity.setCreatedBy(currentUser);
@@ -137,6 +144,10 @@ public class TaskServiceImpl implements TaskService {
 
         validateTaskAccess(entity, "excluir");
         
+        User currentUser = securityUtils.getCurrentUser();
+        log.warn("TASK DELETE id={} title={} user={}", 
+            id, entity.getTitle(), currentUser != null ? currentUser.getUsername() : "unknown");
+        
         taskRepository.deleteById(id);
     }
 
@@ -145,6 +156,11 @@ public class TaskServiceImpl implements TaskService {
         if (ids == null || ids.isEmpty()) {
             return;
         }
+        
+        User currentUser = securityUtils.getCurrentUser();
+        log.warn("TASK BULK DELETE count={} user={}", 
+            ids.size(), currentUser != null ? currentUser.getUsername() : "unknown");
+            
         for (Long id : ids) {
             deleteTaskWithSubTasks(id);
         }
