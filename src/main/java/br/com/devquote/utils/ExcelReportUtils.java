@@ -677,8 +677,8 @@ public class ExcelReportUtils {
             // ORÇAMENTO (Lavanda) - 4 colunas
             "ID Orçamento", "Status Orçamento", "Valor Orçamento", "Orç. Criado em",
             
-            // ENTREGAS (Azul Pálido) - 8 colunas - Pull Request reorganizado
-            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Script", "Início Entrega", "Fim Entrega",
+            // ENTREGAS (Azul Pálido) - 9 colunas - Pull Request reorganizado + notas
+            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Script", "Notas", "Início Entrega", "Fim Entrega",
             
             // FATURAMENTO (Limão) - 3 colunas - No final
             "Ano Faturamento", "Mês Faturamento", "Status Faturamento"
@@ -686,7 +686,7 @@ public class ExcelReportUtils {
 
         Row headerRow = sheet.createRow(0);
         
-        // Aplicar cores nos headers por seção - Estrutura corrigida (29 colunas)
+        // Aplicar cores nos headers por seção - Estrutura corrigida (30 colunas)
         int colIndex = 0;
         
         // TAREFAS + METADADOS (0-13) - Cinza
@@ -703,15 +703,15 @@ public class ExcelReportUtils {
             cell.setCellStyle(quoteHeaderStyle);
         }
         
-        // ENTREGAS (18-25) - Azul Pálido
-        for (int i = 18; i < 26; i++) {
+        // ENTREGAS (18-26) - Azul Pálido
+        for (int i = 18; i < 27; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(deliveryHeaderStyle);
         }
         
-        // FATURAMENTO (26-28) - Limão (no final)
-        for (int i = 26; i < 29; i++) {
+        // FATURAMENTO (27-29) - Limão (no final)
+        for (int i = 27; i < 30; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(billingHeaderStyle);
@@ -746,30 +746,31 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("quote_amount"), currencyStyle);
             setCellValue(row, colIndex++, taskData.get("quote_created_at"), dateStyle);
             
-            // DADOS DE ENTREGAS (18-25) - Pull Request reorganizado
+            // DADOS DE ENTREGAS (18-26) - Pull Request reorganizado + notas
             setCellValue(row, colIndex++, taskData.get("delivery_id"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("delivery_status"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle); // Link da entrega
             setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_script"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle); // Nova coluna de notas
             setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
             
-            // DADOS DE FATURAMENTO (26-28) - No final
+            // DADOS DE FATURAMENTO (27-29) - No final
             setCellValue(row, colIndex++, taskData.get("billing_year"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("billing_month"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("billing_status"), dataStyle);
         }
 
-        // Ajustar larguras das colunas (29 colunas total) - Estrutura corrigida
+        // Ajustar larguras das colunas (30 colunas total) - Estrutura corrigida
         setColumnWidths(sheet, new int[]{
             // TAREFAS + METADADOS (14 colunas)
             2500, 3500, 10000, 12000, 3500, 3000, 4000, 6000, 6000, 6000, 4000, 4000, 4000, 4000,
             // ORÇAMENTO (4 colunas)
             3000, 4000, 4000, 6000,
-            // ENTREGAS (8 colunas) - Pull Request reorganizado
-            3000, 3500, 6000, 10000, 8000, 8000, 4000, 4000,  // Link da entrega (Pull Request) com largura maior
+            // ENTREGAS (9 colunas) - Pull Request reorganizado + notas
+            3000, 3500, 6000, 10000, 8000, 8000, 6000, 4000, 4000,  // Nova coluna de notas com 6000
             // FATURAMENTO (3 colunas) - No final
             2500, 2500, 4000
         });
@@ -818,13 +819,13 @@ public class ExcelReportUtils {
             "ID Tarefa", "Código", "Título", "Descrição", "Status", "Prioridade", "Solicitante", 
             "Data Criação", "Data Atualização", "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
             
-            // ENTREGAS (Azul Pálido) - 8 colunas
-            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Script", "Início Entrega", "Fim Entrega"
+            // ENTREGAS (Azul Pálido) - 9 colunas
+            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Script", "Notas", "Início Entrega", "Fim Entrega"
         };
 
         Row headerRow = sheet.createRow(0);
         
-        // Aplicar cores nos headers por seção - 21 colunas total
+        // Aplicar cores nos headers por seção - 22 colunas total
         int colIndex = 0;
         
         // TAREFAS (0-12) - Cinza - SEM Valor
@@ -834,8 +835,8 @@ public class ExcelReportUtils {
             cell.setCellStyle(taskHeaderStyle);
         }
         
-        // ENTREGAS (13-20) - Azul Pálido
-        for (int i = 13; i < 21; i++) {
+        // ENTREGAS (13-21) - Azul Pálido
+        for (int i = 13; i < 22; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(deliveryHeaderStyle);
@@ -863,23 +864,24 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("task_server_origin"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_system_module"), dataStyle);
             
-            // DADOS DE ENTREGAS (13-20)
+            // DADOS DE ENTREGAS (13-21)
             setCellValue(row, colIndex++, taskData.get("delivery_id"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("delivery_status"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_script"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle); // Nova coluna de notas
             setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar larguras das colunas (21 colunas total)
+        // Ajustar larguras das colunas (22 colunas total)
         setColumnWidths(sheet, new int[]{
             // TAREFAS (13 colunas) - SEM Valor
             2500, 3500, 10000, 12000, 3500, 3000, 6000, 6000, 6000, 4000, 4000, 4000, 4000,
-            // ENTREGAS (8 colunas)
-            3000, 3500, 6000, 10000, 8000, 8000, 4000, 4000
+            // ENTREGAS (9 colunas)
+            3000, 3500, 6000, 10000, 8000, 8000, 6000, 4000, 4000
         });
 
         // Ajustar altura das linhas

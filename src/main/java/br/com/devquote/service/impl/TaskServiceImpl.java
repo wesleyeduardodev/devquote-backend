@@ -702,6 +702,7 @@ public class TaskServiceImpl implements TaskService {
                 d.pull_request as delivery_pull_request,
                 d.branch as delivery_branch,
                 d.script as delivery_script,
+                d.notes as delivery_notes,
                 d.started_at as delivery_started_at,
                 d.finished_at as delivery_finished_at,
                 
@@ -753,20 +754,21 @@ public class TaskServiceImpl implements TaskService {
             map.put("quote_amount", row[16]);
             map.put("quote_created_at", row[17]);
 
-            // DADOS DE ENTREGAS (18-25) - Pull Request reorganizado
+            // DADOS DE ENTREGAS (18-26) - Pull Request reorganizado + notas
             map.put("delivery_id", row[18]);
             map.put("delivery_status", row[19]);
             map.put("project_name", row[20]);
             map.put("delivery_pull_request", row[21]); // Link da entrega
             map.put("delivery_branch", row[22]);
             map.put("delivery_script", row[23]);
-            map.put("delivery_started_at", row[24]);
-            map.put("delivery_finished_at", row[25]);
+            map.put("delivery_notes", row[24]); // Nova coluna de notas
+            map.put("delivery_started_at", row[25]);
+            map.put("delivery_finished_at", row[26]);
 
-            // DADOS DE FATURAMENTO (26-28) - No final
-            map.put("billing_year", row[26]);
-            map.put("billing_month", row[27]);
-            map.put("billing_status", row[28]);
+            // DADOS DE FATURAMENTO (27-29) - No final
+            map.put("billing_year", row[27]);
+            map.put("billing_month", row[28]);
+            map.put("billing_status", row[29]);
 
             return map;
         }).collect(Collectors.toList());
@@ -809,6 +811,7 @@ public class TaskServiceImpl implements TaskService {
                 d.pull_request as delivery_pull_request,
                 d.branch as delivery_branch,
                 d.script as delivery_script,
+                d.notes as delivery_notes,
                 d.started_at as delivery_started_at,
                 d.finished_at as delivery_finished_at
                 
@@ -846,15 +849,16 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_server_origin", row[11]);
             map.put("task_system_module", row[12]);
 
-            // DADOS DE ENTREGAS (13-20)
+            // DADOS DE ENTREGAS (13-21)
             map.put("delivery_id", row[13]);
             map.put("delivery_status", row[14]);
             map.put("project_name", row[15]);
             map.put("delivery_pull_request", row[16]);
             map.put("delivery_branch", row[17]);
             map.put("delivery_script", row[18]);
-            map.put("delivery_started_at", row[19]);
-            map.put("delivery_finished_at", row[20]);
+            map.put("delivery_notes", row[19]); // Nova coluna de notas
+            map.put("delivery_started_at", row[20]);
+            map.put("delivery_finished_at", row[21]);
 
             return map;
         }).collect(Collectors.toList());
