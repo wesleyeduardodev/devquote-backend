@@ -24,6 +24,21 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+  # Email Configuration
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: smtp.gmail.com
+
   # Servlet Configuration
   servlet:
     multipart:
@@ -57,6 +72,12 @@ devquote:
       - ${DEVQUOTE_ADMIN_EMAIL:admin@devquote.com}
     billing:
       payment-day: ${DEVQUOTE_BILLING_PAYMENT_DAY:20}
+  notification:
+    email:
+      enabled: ${DEVQUOTE_EMAIL_ENABLED:false}
+      from: ${DEVQUOTE_EMAIL_FROM:}
+      to: ${DEVQUOTE_EMAIL_TO:}
+      async: ${DEVQUOTE_EMAIL_ASYNC:true}
 
 # JWT Configuration (usa ENV em produção)
 app:

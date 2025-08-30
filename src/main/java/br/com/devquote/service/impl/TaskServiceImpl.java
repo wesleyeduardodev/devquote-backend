@@ -55,6 +55,7 @@ public class TaskServiceImpl implements TaskService {
     private final SecurityUtils securityUtils;
     private final EntityManager entityManager;
     private final ExcelReportUtils excelReportUtils;
+    private final EmailService emailService;
 
     @Override
     public List<TaskResponse> findAll() {
@@ -119,6 +120,14 @@ public class TaskServiceImpl implements TaskService {
         entity.setUpdatedBy(currentUser);
 
         entity = taskRepository.save(entity);
+        
+        // Enviar notificação por email
+        try {
+            emailService.sendTaskCreatedNotification(entity);
+        } catch (Exception e) {
+            log.warn("Failed to send email notification for task creation: {}", e.getMessage());
+        }
+        
         return TaskAdapter.toResponseDTO(entity);
     }
 
@@ -197,6 +206,13 @@ public class TaskServiceImpl implements TaskService {
         }
 
         createDeliveries(dto, quoteResponse);
+
+        // Enviar notificação por email
+        try {
+            emailService.sendTaskCreatedNotification(task);
+        } catch (Exception e) {
+            log.warn("Failed to send email notification for task creation: {}", e.getMessage());
+        }
 
         return buildTaskWithSubTasksResponse(task, persistedSubTasks);
     }
