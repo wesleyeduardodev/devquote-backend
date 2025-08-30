@@ -24,20 +24,20 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
-  # Email Configuration
+  # Email Configuration - Todas as variáveis são obrigatórias
   mail:
-    host: ${MAIL_HOST:}
-    port: ${MAIL_PORT:}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${MAIL_SMTP_AUTH:true}
           starttls:
-            enable: true
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
           ssl:
-            trust: smtp.gmail.com
+            trust: ${MAIL_SMTP_SSL_TRUST:smtp.gmail.com}
 
   # Servlet Configuration
   servlet:
@@ -74,8 +74,8 @@ devquote:
       payment-day: ${DEVQUOTE_BILLING_PAYMENT_DAY:20}
   notification:
     email:
-      enabled: ${DEVQUOTE_EMAIL_ENABLED:false}
-      from: ${DEVQUOTE_EMAIL_FROM:}
+      enabled: ${DEVQUOTE_EMAIL_ENABLED}
+      from: ${DEVQUOTE_EMAIL_FROM}
 
 # JWT Configuration (usa ENV em produção)
 app:

@@ -20,6 +20,7 @@ import org.thymeleaf.context.Context;
 
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.CompletableFuture;
+import jakarta.annotation.PostConstruct;
 
 @Slf4j
 @Service
@@ -33,6 +34,15 @@ public class EmailServiceImpl implements EmailService {
     private final SubTaskRepository subTaskRepository;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    @PostConstruct
+    public void init() {
+        log.info("========================================");
+        log.info("EmailServiceImpl ACTIVATED - Email notifications are ENABLED");
+        log.info("SMTP Configuration will be validated on first email send");
+        log.info("From address: {}", emailProperties.getFrom());
+        log.info("========================================");
+    }
 
     @Override
     @Async("emailTaskExecutor")
@@ -104,6 +114,9 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendToMultipleRecipients(Task task, String subject, String htmlContent, String action) {
+        log.info("📧 Starting TASK {} email notification process for: Task ID={}, Code={}, Title={}",
+                action.toUpperCase(), task.getId(), task.getCode(), task.getTitle());
+        
         // Lista de destinatários
         java.util.List<String> recipients = new java.util.ArrayList<>();
 
@@ -111,9 +124,12 @@ public class EmailServiceImpl implements EmailService {
         if (task.getRequester() != null && task.getRequester().getEmail() != null
             && !task.getRequester().getEmail().trim().isEmpty()) {
             recipients.add(task.getRequester().getEmail());
-            log.info("Added requester email to recipients for {} action: {}", action, task.getRequester().getEmail());
+            log.info("📧 Added requester email to recipients: {} <{}> for {} action",
+                    task.getRequester().getName(), task.getRequester().getEmail(), action);
         } else {
-            log.warn("Requester email not available for task ID: {} ({} action)", task.getId(), action);
+            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {} ({} action). Requester: {}",
+                    task.getId(), action, 
+                    task.getRequester() != null ? task.getRequester().getName() : "null");
         }
 
         // Sempre adicionar o email do remetente (você)
@@ -121,29 +137,40 @@ public class EmailServiceImpl implements EmailService {
             // Evitar duplicata caso o solicitante seja o mesmo email do remetente
             if (!recipients.contains(emailProperties.getFrom())) {
                 recipients.add(emailProperties.getFrom());
-                log.info("Added sender email to recipients for {} action: {}", action, emailProperties.getFrom());
+                log.info("📧 Added sender email to recipients: {} for {} action", emailProperties.getFrom(), action);
             }
+        } else {
+            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
         }
 
         // Verificar se há destinatários
         if (recipients.isEmpty()) {
-            log.error("No valid recipients found for task ID: {} ({} action)", task.getId(), action);
+            log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {} ({} action). Email will NOT be sent!", 
+                    task.getId(), action);
             return;
         }
 
+        log.info("📧 Sending to {} recipients: {}", recipients.size(), String.join(", ", recipients));
+
         // Enviar para todos os destinatários
+        int successCount = 0;
+        int failureCount = 0;
+        
         for (String recipient : recipients) {
             try {
                 sendEmail(recipient, subject, htmlContent);
-                log.info("Task {} notification sent successfully for task ID: {} to email: {}",
-                    action, task.getId(), recipient);
+                successCount++;
+                log.info("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {}",
+                        action.toUpperCase(), task.getId(), recipient);
             } catch (Exception e) {
-                log.error("Failed to send {} notification to {}: {}", action, recipient, e.getMessage());
+                failureCount++;
+                log.error("📧 ❌ FAILED to send {} notification to {}: {} - Error: {}",
+                        action, recipient, task.getId(), e.getMessage(), e);
             }
         }
 
-        log.info("Task {} notification process completed for task ID: {}. Sent to {} recipients.",
-            action, task.getId(), recipients.size());
+        log.info("📧 📊 TASK {} notification process COMPLETED for task ID: {}. Success: {}, Failures: {}, Total: {}",
+                action.toUpperCase(), task.getId(), successCount, failureCount, recipients.size());
     }
 
     private String buildTaskCreatedEmailContent(Task task) {
@@ -399,6 +426,16 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendToMultipleRecipientsForDelivery(Delivery delivery, String subject, String htmlContent, String action) {
+        String taskInfo = "Unknown";
+        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null) {
+            taskInfo = String.format("Task ID=%d, Code=%s", 
+                    delivery.getQuote().getTask().getId(), 
+                    delivery.getQuote().getTask().getCode());
+        }
+        
+        log.info("📧 Starting DELIVERY {} email notification process for: Delivery ID={}, Status={}, {}",
+                action.toUpperCase(), delivery.getId(), delivery.getStatus(), taskInfo);
+        
         // Lista de destinatários
         java.util.List<String> recipients = new java.util.ArrayList<>();
 
@@ -408,10 +445,18 @@ public class EmailServiceImpl implements EmailService {
             && delivery.getQuote().getTask().getRequester().getEmail() != null
             && !delivery.getQuote().getTask().getRequester().getEmail().trim().isEmpty()) {
             String requesterEmail = delivery.getQuote().getTask().getRequester().getEmail();
+            String requesterName = delivery.getQuote().getTask().getRequester().getName();
             recipients.add(requesterEmail);
-            log.info("Added requester email to recipients for delivery {} action: {}", action, requesterEmail);
+            log.info("📧 Added requester email to recipients: {} <{}> for delivery {} action",
+                    requesterName, requesterEmail, action);
         } else {
-            log.warn("Requester email not available for delivery ID: {} ({} action)", delivery.getId(), action);
+            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {} ({} action). Quote/Task chain: {}",
+                    delivery.getId(), action, 
+                    delivery.getQuote() != null ? 
+                        (delivery.getQuote().getTask() != null ? 
+                            (delivery.getQuote().getTask().getRequester() != null ? "Requester has no email" : "No requester") 
+                            : "No task") 
+                        : "No quote");
         }
 
         // Sempre adicionar o email do remetente (você)
@@ -419,29 +464,41 @@ public class EmailServiceImpl implements EmailService {
             // Evitar duplicata caso o solicitante seja o mesmo email do remetente
             if (!recipients.contains(emailProperties.getFrom())) {
                 recipients.add(emailProperties.getFrom());
-                log.info("Added sender email to recipients for delivery {} action: {}", action, emailProperties.getFrom());
+                log.info("📧 Added sender email to recipients: {} for delivery {} action", 
+                        emailProperties.getFrom(), action);
             }
+        } else {
+            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
         }
 
         // Verificar se há destinatários
         if (recipients.isEmpty()) {
-            log.error("No valid recipients found for delivery ID: {} ({} action)", delivery.getId(), action);
+            log.error("📧 ❌ NO VALID RECIPIENTS found for delivery ID: {} ({} action). Email will NOT be sent!", 
+                    delivery.getId(), action);
             return;
         }
 
+        log.info("📧 Sending to {} recipients: {}", recipients.size(), String.join(", ", recipients));
+
         // Enviar para todos os destinatários
+        int successCount = 0;
+        int failureCount = 0;
+        
         for (String recipient : recipients) {
             try {
                 sendEmail(recipient, subject, htmlContent);
-                log.info("Delivery {} notification sent successfully for delivery ID: {} to email: {}",
-                    action, delivery.getId(), recipient);
+                successCount++;
+                log.info("📧 ✅ DELIVERY {} notification sent successfully for delivery ID: {} to: {}",
+                        action.toUpperCase(), delivery.getId(), recipient);
             } catch (Exception e) {
-                log.error("Failed to send delivery {} notification to {}: {}", action, recipient, e.getMessage());
+                failureCount++;
+                log.error("📧 ❌ FAILED to send delivery {} notification to {}: {} - Error: {}",
+                        action, recipient, delivery.getId(), e.getMessage(), e);
             }
         }
 
-        log.info("Delivery {} notification process completed for delivery ID: {}. Sent to {} recipients.",
-            action, delivery.getId(), recipients.size());
+        log.info("📧 📊 DELIVERY {} notification process COMPLETED for delivery ID: {}. Success: {}, Failures: {}, Total: {}",
+                action.toUpperCase(), delivery.getId(), successCount, failureCount, recipients.size());
     }
 
     private String buildDeliveryCreatedEmailContent(Delivery delivery) {
