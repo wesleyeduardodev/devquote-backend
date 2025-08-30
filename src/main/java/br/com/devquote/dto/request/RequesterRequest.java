@@ -18,6 +18,7 @@ public class RequesterRequest {
     @Size(max = 200, message = "Name must be at most 200 characters")
     private String name;
 
+    @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     @Size(max = 200, message = "Email must be at most 200 characters")
     private String email;
