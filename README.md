@@ -1,32 +1,52 @@
 # DevQuote Backend
 
-Sistema de gestão de orçamentos, tarefas e entregas para desenvolvedores freelancers.  
-Construído com **Java 21** e **Spring Boot 3.5.4**, oferecendo uma API REST robusta com autenticação OAuth2 e controle granular de permissões.
+Sistema empresarial completo de gestão de orçamentos, projetos, tarefas e entregas para desenvolvedores freelancers.  
+Construído com **Java 21** e **Spring Boot 3.5.4**, oferecendo uma API REST robusta com autenticação OAuth2 Authorization Server integrado e controle granular de permissões.
 
 ## 🚀 Tecnologias
 
-- **Java 21** + **Spring Boot 3.5.4**
-- **Spring Security** com OAuth2 e JWT
-- **Spring Data JPA** com PostgreSQL
-- **OpenAPI/Swagger** para documentação
-- **Docker** para containerização
-- **Maven** para gerenciamento de dependências
+### Core
+- **Java 21** - Linguagem principal
+- **Spring Boot 3.5.4** - Framework base
+- **Spring Security** - Autenticação e autorização
+- **Spring Data JPA** - Persistência de dados
+- **PostgreSQL 15+** - Banco de dados relacional
 
-## 📦 Estrutura do Projeto
+### Segurança
+- **OAuth2 Authorization Server** - Servidor de autorização integrado
+- **JWT** - Tokens de autenticação stateless
+- **Spring Security** - Framework de segurança
+- **CORS** - Configuração para cross-origin
+
+### Documentação e Build
+- **OpenAPI 3.0 / Swagger** - Documentação interativa da API
+- **Maven 3.8+** - Gerenciamento de dependências e build
+- **Docker** - Containerização
+- **Lombok** - Redução de boilerplate
+
+## 📦 Arquitetura do Projeto
 
 ```
 src/main/java/br/com/devquote/
-├── adapter/          # Adaptadores para conversão de DTOs
-├── configuration/    # Configurações (Security, OpenAPI, CORS)
-├── controller/       # Controllers REST e documentação
-├── dto/             # DTOs de request/response
-├── entity/          # Entidades JPA
-├── enums/           # Enumerações
-├── error/           # Tratamento de erros
-├── repository/      # Repositórios JPA
-├── security/        # Aspectos e anotações de segurança
-├── service/         # Lógica de negócio
-└── utils/           # Utilitários
+├── adapter/              # Conversão Entity ↔ DTO
+├── configuration/        # Configurações do Spring
+│   ├── openapi/         # Configuração Swagger/OpenAPI
+│   └── security/        # OAuth2, JWT, CORS
+├── controller/          # REST Controllers
+│   └── doc/            # Interfaces de documentação OpenAPI
+├── dto/                # Data Transfer Objects
+│   ├── request/        # DTOs de entrada
+│   └── response/       # DTOs de saída  
+├── entity/             # Entidades JPA
+├── enums/              # Enumerações (ProfileType, ResourceType, etc)
+├── error/              # Tratamento global de erros
+├── repository/         # Interfaces JPA Repository
+├── security/           # Aspectos e anotações customizadas
+│   ├── @RequiresPermission  # Controle por recurso
+│   └── @RequiresProfile      # Controle por perfil
+├── service/            # Interfaces de serviço
+│   └── impl/          # Implementações da lógica de negócio
+└── utils/             # Classes utilitárias
 ```
 
 ## 🔧 Configuração do Ambiente
@@ -34,113 +54,253 @@ src/main/java/br/com/devquote/
 ### Requisitos
 - Java 21+
 - Maven 3.8+
-- PostgreSQL 15+
-- Docker (opcional)
+- PostgreSQL 17
+- Docker e Docker Compose (opcional)
 
 ### Variáveis de Ambiente
 
 ```properties
 # Banco de Dados
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/devquote
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5434/devquote
 SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=sua_senha
+SPRING_DATASOURCE_PASSWORD=root
 
-# Segurança
-APP_JWTSECRET=seu_secret_jwt_256bits
+# Segurança OAuth2/JWT
+APP_JWTSECRET=sua_chave_secreta_256bits
 SECURITY_ISSUER=http://localhost:8080
 
 # CORS
-DEVQUOTE_CORS_ALLOWED_ORIGINS=http://localhost:5173
+APP_FRONTEND_URL=http://localhost:5173
+
+# JPA
+SPRING_JPA_HIBERNATE_DDL_AUTO=update
+SPRING_JPA_SHOW_SQL=false
 
 # Servidor
 PORT=8080
 ```
 
-## 🐳 Executando com Docker
+## 🐳 Docker
 
+### Docker Compose (Desenvolvimento)
 ```bash
-# Build e execução
-docker-compose up --build
-
-# Execução em background
+# Iniciar todos os serviços
 docker-compose up -d
 
-# Parar containers
+# Rebuild e restart
+docker-compose up --build
+
+# Verificar logs
+docker-compose logs -f devquote-backend
+
+# Parar serviços
 docker-compose down
 ```
 
-## 💻 Executando Localmente
+### Docker Build (Produção)
+```bash
+# Build da imagem
+docker build -t devquote-backend .
+
+# Executar container
+docker run -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host:5432/devquote \
+  -e APP_JWTSECRET=secret \
+  devquote-backend
+```
+
+## 💻 Desenvolvimento Local
 
 ```bash
 # Instalar dependências
-mvn clean install
+./mvnw clean install
 
 # Executar aplicação
-mvn spring-boot:run
+./mvnw spring-boot:run
 
 # Executar com perfil específico
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
+# Build para produção
+./mvnw clean package -DskipTests
+
+# Executar JAR
+java -jar target/devquote-backend-0.0.1-SNAPSHOT.jar
 ```
 
-## 📚 Documentação API
+## 📚 Documentação da API
 
 Após iniciar a aplicação, acesse:
-- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+- **Swagger UI:** `http://localhost:8080/swagger-ui/index.html`
+- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
+
+### Principais Endpoints
+
+#### Autenticação
+- `POST /api/auth/login` - Login com usuário/senha
+- `POST /api/auth/register` - Cadastro de novo usuário
+- `POST /api/auth/refresh` - Renovar token JWT
+- `GET /api/auth/me` - Dados do usuário autenticado
+
+#### Recursos Principais
+- `/api/quotes` - Gestão de orçamentos
+- `/api/projects` - Gestão de projetos
+- `/api/tasks` - Gestão de tarefas
+- `/api/deliveries` - Gestão de entregas
+- `/api/requesters` - Gestão de solicitantes
+- `/api/billing-months` - Faturamento mensal
+- `/api/dashboard` - Estatísticas e métricas
+
+#### Administração
+- `/api/users` - Gestão de usuários
+- `/api/profiles` - Gestão de perfis
+- `/api/permissions` - Gestão de permissões
 
 ## 🧪 Testes
 
 ```bash
 # Executar todos os testes
-mvn test
+./mvnw test
 
-# Executar testes com coverage
-mvn test jacoco:report
+# Testes com relatório de cobertura
+./mvnw test jacoco:report
+
+# Testes de integração
+./mvnw test -Dtest=*IntegrationTest
+
+# Teste específico
+./mvnw test -Dtest=QuoteServiceTest
 ```
 
-## 🏗️ Build para Produção
+## 🔒 Sistema de Segurança
 
+### Autenticação OAuth2
+- Authorization Server integrado
+- Suporte a Client Credentials e Password Grant
+- Tokens JWT com refresh token
+- Configuração de issuer customizável
+
+### Autorização (RBAC)
+- **Perfis:** Admin, User, Custom
+- **Recursos:** Quote, Project, Task, Delivery, etc
+- **Operações:** CREATE, READ, UPDATE, DELETE
+- **Permissões de Campo:** Controle granular por campo
+
+### Anotações de Segurança
+```java
+// Requer perfil específico
+@RequiresProfile(ProfileType.ADMIN)
+
+// Requer permissão em recurso
+@RequiresPermission(resource = ResourceType.QUOTE, operation = OperationType.UPDATE)
+
+// Combinação de permissões
+@PreAuthorize("hasRole('ADMIN') or @permissionService.hasPermission(#id, 'QUOTE', 'READ')")
+```
+
+## 📊 Funcionalidades Implementadas
+
+### Módulos de Negócio
+- ✅ **Dashboard** - Estatísticas e métricas consolidadas
+- ✅ **Orçamentos** - CRUD completo com versionamento
+- ✅ **Projetos** - Gestão hierárquica com tarefas
+- ✅ **Tarefas/Subtarefas** - Organização e tracking
+- ✅ **Entregas** - Controle de entregas agrupadas
+- ✅ **Faturamento** - Controle mensal de cobranças
+- ✅ **Solicitantes** - Gestão de clientes/solicitantes
+
+### Recursos Técnicos
+- ✅ Paginação e ordenação dinâmica
+- ✅ Filtros avançados por query params
+- ✅ Soft delete em entidades críticas
+- ✅ Auditoria com created/updated timestamps
+- ✅ Correlation ID para rastreamento
+- ✅ Tratamento global de exceções
+- ✅ Validação em múltiplas camadas
+- ✅ Cache de consultas frequentes
+
+## 🏗️ Padrões de Desenvolvimento
+
+### Fluxo de Dados
+```
+Controller → Service → Repository → Database
+     ↓           ↓           ↓
+    DTO      Entity      Entity
+     ↓           ↓           ↓
+  Response   Business    Persistence
+            Logic        Layer
+```
+
+### Convenções
+- **DTOs:** Separação entre Request e Response
+- **Adapters:** Conversão centralizada Entity ↔ DTO
+- **Services:** Interface + Implementação
+- **Validação:** Bean Validation + Custom Validators
+- **Erros:** ProblemDetails (RFC 7807)
+
+## 📈 Monitoramento
+
+### Health Check
 ```bash
-# Gerar JAR
-mvn clean package -DskipTests
-
-# Executar JAR
-java -jar target/devquote-backend-*.jar
+curl http://localhost:8080/actuator/health
 ```
 
-## 📊 Monitoramento
+### Métricas
+```bash
+curl http://localhost:8080/actuator/metrics
+```
 
-Endpoints do Actuator disponíveis:
-- `GET /actuator/health` - Status da aplicação
-- `GET /actuator/info` - Informações da build
-- `GET /actuator/metrics` - Métricas da aplicação
+### Logs
+- Configuração via Logback
+- Níveis: ERROR, WARN, INFO, DEBUG, TRACE
+- Correlation ID em todas as requisições
+- Arquivo: `logs/devquote.log`
 
-## 🔒 Segurança
+## 🚀 Deploy
 
-O sistema implementa:
-- Autenticação OAuth2 com JWT
-- Controle de acesso baseado em perfis (RBAC)
-- Permissões granulares por recurso e campo
-- Proteção CORS configurável
+### Render (Produção)
+```yaml
+# render.yaml
+services:
+  - type: web
+    name: devquote-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: devquote-db
+          property: connectionString
+```
 
-## 📝 Funcionalidades Principais
-
-- **Gestão de Projetos**: Criação e acompanhamento de projetos
-- **Tarefas e Subtarefas**: Organização hierárquica de atividades
-- **Orçamentos (Quotes)**: Geração e controle de orçamentos
-- **Faturamento Mensal**: Controle de cobranças mensais
-- **Entregas**: Registro de entregas aos clientes
-- **Dashboard**: Métricas e estatísticas do sistema
-- **Gestão de Usuários**: Controle de acesso multi-tenant
+### Heroku
+```bash
+heroku create devquote-backend
+heroku addons:create heroku-postgresql:hobby-dev
+git push heroku main
+```
 
 ## 🤝 Contribuindo
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
+1. Fork o projeto
+2. Crie sua feature branch (`git checkout -b feature/NovaFuncionalidade`)
+3. Commit suas mudanças (`git commit -m 'feat: adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
 5. Abra um Pull Request
+
+### Padrão de Commits
+- `feat:` Nova funcionalidade
+- `fix:` Correção de bug
+- `docs:` Documentação
+- `style:` Formatação
+- `refactor:` Refatoração
+- `test:` Testes
+- `chore:` Manutenção
 
 ## 📄 Licença
 
-Este projeto é privado e proprietário.
+Este projeto é privado e proprietário. Todos os direitos reservados.
+
+## 👥 Equipe
+
+Desenvolvido com ❤️ para a comunidade de desenvolvedores freelancers.
