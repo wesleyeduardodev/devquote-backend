@@ -221,6 +221,24 @@
                             <span class="status pendente" th:text="${deliveryStatus}">Pendente</span>
                         </div>
                     </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(deliveryPullRequest)}">
+                        <div class="info-label">Link da entrega:</div>
+                        <div class="info-value">
+                            <a href="#" th:href="${deliveryPullRequest}" th:text="${deliveryPullRequest}" class="link">Link do Pull Request</a>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(deliveryBranch)}">
+                        <div class="info-label">Branch:</div>
+                        <div class="info-value">
+                            <code th:text="${deliveryBranch}">feature/nova-funcionalidade</code>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(deliverySourceBranch)}">
+                        <div class="info-label">Branch de Origem:</div>
+                        <div class="info-value">
+                            <code th:text="${deliverySourceBranch}">main</code>
+                        </div>
+                    </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(deliveryStartedAt)}">
                         <div class="info-label">Data de Início:</div>
                         <div class="info-value" th:text="${deliveryStartedAt}">01/01/2024</div>
@@ -258,31 +276,6 @@
                 </div>
             </div>
 
-            <!-- INFORMAÇÕES TÉCNICAS -->
-            <div class="section" th:if="${!#strings.isEmpty(deliveryBranch) or !#strings.isEmpty(deliverySourceBranch) or !#strings.isEmpty(deliveryPullRequest)}">
-                <h2>💻 Informações Técnicas</h2>
-
-                <div class="info-grid">
-                    <div class="info-row" th:if="${!#strings.isEmpty(deliveryBranch)}">
-                        <div class="info-label">Branch:</div>
-                        <div class="info-value">
-                            <code th:text="${deliveryBranch}">feature/nova-funcionalidade</code>
-                        </div>
-                    </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(deliverySourceBranch)}">
-                        <div class="info-label">Branch de Origem:</div>
-                        <div class="info-value">
-                            <code th:text="${deliverySourceBranch}">main</code>
-                        </div>
-                    </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(deliveryPullRequest)}">
-                        <div class="info-label">Pull Request:</div>
-                        <div class="info-value">
-                            <a href="#" th:href="${deliveryPullRequest}" th:text="${deliveryPullRequest}" class="link">Link do Pull Request</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- SCRIPT -->
             <div class="section" th:if="${!#strings.isEmpty(deliveryScript)}">
