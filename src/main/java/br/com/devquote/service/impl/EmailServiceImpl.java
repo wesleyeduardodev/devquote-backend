@@ -44,14 +44,34 @@ public class EmailServiceImpl implements EmailService {
         try {
             log.info("Sending task created notification for task ID: {}", task.getId());
             
+            // Verificar se o solicitante possui email
+            String recipientEmail = null;
+            if (task.getRequester() != null && task.getRequester().getEmail() != null 
+                && !task.getRequester().getEmail().trim().isEmpty()) {
+                recipientEmail = task.getRequester().getEmail();
+                log.info("Sending notification to requester email: {}", recipientEmail);
+            } else {
+                // Fallback para email configurado
+                recipientEmail = emailProperties.getTo();
+                log.warn("Requester email not available for task ID: {}. Using fallback email: {}", 
+                    task.getId(), recipientEmail);
+            }
+
+            // Verificar se há um email de destino válido
+            if (recipientEmail == null || recipientEmail.trim().isEmpty()) {
+                log.error("No valid recipient email found for task ID: {}", task.getId());
+                return;
+            }
+            
             String subject = String.format("DevQuote - Nova tarefa criada: [%s] - %s", 
                 task.getCode() != null ? task.getCode() : task.getId(), 
                 task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskCreatedEmailContent(task);
             
-            sendEmail(emailProperties.getTo(), subject, htmlContent);
+            sendEmail(recipientEmail, subject, htmlContent);
             
-            log.info("Task created notification sent successfully for task ID: {}", task.getId());
+            log.info("Task created notification sent successfully for task ID: {} to email: {}", 
+                task.getId(), recipientEmail);
             
         } catch (Exception e) {
             log.error("Failed to send task created notification for task ID: {}", task.getId(), e);
@@ -77,6 +97,11 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskNotes", task.getNotes() != null ? task.getNotes() : "");
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
+        
+        // Dados do solicitante
+        context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
+        context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
+        context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
         
         // Buscar subtarefas da tarefa e traduzir status
         java.util.List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());

@@ -265,6 +265,28 @@
                 </div>
             </div>
 
+            <!-- DADOS DO SOLICITANTE -->
+            <div class="section" th:if="${!#strings.isEmpty(requesterName) or !#strings.isEmpty(requesterEmail) or !#strings.isEmpty(requesterPhone)}">
+                <h2>👤 Solicitante</h2>
+
+                <div class="info-grid">
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterName)}">
+                        <div class="info-label">Nome:</div>
+                        <div class="info-value" th:text="${requesterName}">Nome do Solicitante</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterEmail)}">
+                        <div class="info-label">Email:</div>
+                        <div class="info-value">
+                            <a href="#" th:href="${'mailto:' + requesterEmail}" th:text="${requesterEmail}" class="link">email@exemplo.com</a>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterPhone)}">
+                        <div class="info-label">Telefone:</div>
+                        <div class="info-value" th:text="${requesterPhone}">+55 11 99999-9999</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- SUBTAREFAS -->
             <div class="section" th:if="${hasSubTasks}">
                 <h2>📝 Subtarefas</h2>
