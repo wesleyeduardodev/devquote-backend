@@ -1,7 +1,9 @@
 package br.com.devquote.service.impl;
 
 import br.com.devquote.configuration.EmailProperties;
+import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
+import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -27,6 +29,7 @@ public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     private final EmailProperties emailProperties;
+    private final SubTaskRepository subTaskRepository;
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -41,7 +44,9 @@ public class EmailServiceImpl implements EmailService {
         try {
             log.info("Sending task created notification for task ID: {}", task.getId());
             
-            String subject = String.format("DevQuote - Nova tarefa criada: %s", task.getTitle());
+            String subject = String.format("DevQuote - Nova tarefa criada: [%s] - %s", 
+                task.getCode() != null ? task.getCode() : task.getId(), 
+                task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskCreatedEmailContent(task);
             
             sendEmail(emailProperties.getTo(), subject, htmlContent);
@@ -55,17 +60,28 @@ public class EmailServiceImpl implements EmailService {
 
     private String buildTaskCreatedEmailContent(Task task) {
         Context context = new Context();
+        
+        // Dados principais da tarefa
         context.setVariable("task", task);
         context.setVariable("taskId", task.getId());
-        context.setVariable("taskCode", task.getCode());
-        context.setVariable("taskTitle", task.getTitle());
+        context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
+        context.setVariable("taskTitle", task.getTitle() != null ? task.getTitle() : "");
         context.setVariable("taskDescription", task.getDescription() != null ? task.getDescription() : "");
         context.setVariable("taskStatus", translateStatus(task.getStatus()));
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
-        context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "N/A");
+        context.setVariable("taskType", task.getTaskType() != null ? task.getTaskType() : "");
+        context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
+        context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
+        context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
+        context.setVariable("taskMeetingLink", task.getMeetingLink() != null ? task.getMeetingLink() : "");
+        context.setVariable("taskNotes", task.getNotes() != null ? task.getNotes() : "");
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
-        context.setVariable("taskAmount", task.getAmount() != null ? String.format("R$ %.2f", task.getAmount()) : "Não definido");
+        
+        // Buscar subtarefas da tarefa
+        java.util.List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
+        context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
+        context.setVariable("subTasks", subTasks);
         
         return templateEngine.process("email/task-created", context);
     }
