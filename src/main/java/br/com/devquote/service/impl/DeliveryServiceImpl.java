@@ -158,32 +158,42 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         // Enviar notificação por email antes da exclusão
         try {
+            log.info("Initiating email notification for delivery deletion with ID: {}", id);
+            
             // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
             Delivery deliveryWithRelations = deliveryRepository.findById(id)
                 .map(d -> {
+                    log.debug("Initializing lazy relationships for delivery ID: {}", d.getId());
                     // Inicializar relacionamentos lazy
                     if (d.getQuote() != null) {
+                        log.debug("Initializing Quote relationship");
                         if (d.getQuote().getTask() != null) {
                             d.getQuote().getTask().getTitle(); // Inicializa Task
+                            log.debug("Task initialized: {}", d.getQuote().getTask().getTitle());
                             if (d.getQuote().getTask().getRequester() != null) {
                                 d.getQuote().getTask().getRequester().getName(); // Inicializa Requester
                                 d.getQuote().getTask().getRequester().getEmail();
+                                log.debug("Requester initialized: {}", d.getQuote().getTask().getRequester().getName());
                             }
                         }
                     }
                     if (d.getProject() != null) {
                         d.getProject().getName(); // Inicializa Project
+                        log.debug("Project initialized: {}", d.getProject().getName());
                     }
                     if (d.getCreatedBy() != null) {
                         d.getCreatedBy().getUsername(); // Inicializa User
+                        log.debug("CreatedBy initialized: {}", d.getCreatedBy().getUsername());
                     }
                     return d;
                 })
                 .orElse(entity);
 
+            log.info("Calling emailService.sendDeliveryDeletedNotification for delivery ID: {}", id);
             emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
+            log.info("Email service call completed for delivery deletion ID: {}", id);
         } catch (Exception e) {
-            log.warn("Failed to send email notification for delivery deletion: {}", e.getMessage());
+            log.error("Failed to send email notification for delivery deletion ID: {}", id, e);
         }
 
         deliveryRepository.deleteById(id);
@@ -202,7 +212,65 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (quoteId == null) {
             return;
         }
+        
+        log.info("Starting deletion of deliveries for quote ID: {}", quoteId);
+        
+        // Buscar todas as deliveries da quote antes de deletar
+        List<Delivery> deliveriesToDelete = deliveryRepository.findByQuoteId(quoteId);
+        
+        if (deliveriesToDelete.isEmpty()) {
+            log.info("No deliveries found for quote ID: {}", quoteId);
+            return;
+        }
+        
+        log.info("Found {} deliveries to delete for quote ID: {}", deliveriesToDelete.size(), quoteId);
+        
+        // Enviar notificação por email para cada delivery antes da exclusão
+        for (Delivery delivery : deliveriesToDelete) {
+            try {
+                log.info("Sending deletion notification for delivery ID: {}", delivery.getId());
+                
+                // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
+                Delivery deliveryWithRelations = deliveryRepository.findById(delivery.getId())
+                    .map(d -> {
+                        log.debug("Initializing lazy relationships for delivery ID: {}", d.getId());
+                        // Inicializar relacionamentos lazy
+                        if (d.getQuote() != null) {
+                            log.debug("Initializing Quote relationship");
+                            if (d.getQuote().getTask() != null) {
+                                d.getQuote().getTask().getTitle(); // Inicializa Task
+                                log.debug("Task initialized: {}", d.getQuote().getTask().getTitle());
+                                if (d.getQuote().getTask().getRequester() != null) {
+                                    d.getQuote().getTask().getRequester().getName(); // Inicializa Requester
+                                    d.getQuote().getTask().getRequester().getEmail();
+                                    log.debug("Requester initialized: {}", d.getQuote().getTask().getRequester().getName());
+                                }
+                            }
+                        }
+                        if (d.getProject() != null) {
+                            d.getProject().getName(); // Inicializa Project
+                            log.debug("Project initialized: {}", d.getProject().getName());
+                        }
+                        if (d.getCreatedBy() != null) {
+                            d.getCreatedBy().getUsername(); // Inicializa User
+                            log.debug("CreatedBy initialized: {}", d.getCreatedBy().getUsername());
+                        }
+                        return d;
+                    })
+                    .orElse(delivery);
+
+                log.info("Calling emailService.sendDeliveryDeletedNotification for delivery ID: {}", delivery.getId());
+                emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
+                log.info("Email notification sent for delivery ID: {}", delivery.getId());
+                
+            } catch (Exception e) {
+                log.error("Failed to send email notification for delivery deletion ID: {}", delivery.getId(), e);
+            }
+        }
+        
+        // Deletar todas as deliveries da quote
         deliveryRepository.deleteByQuoteId(quoteId);
+        log.info("Successfully deleted {} deliveries for quote ID: {}", deliveriesToDelete.size(), quoteId);
     }
 
     @Override
