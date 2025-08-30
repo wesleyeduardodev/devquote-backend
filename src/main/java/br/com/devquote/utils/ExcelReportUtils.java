@@ -553,4 +553,102 @@ public class ExcelReportUtils {
 
         return outputStream.toByteArray();
     }
+
+    public byte[] generateBillingReport(List<Map<String, Object>> data) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Relatório de Faturamento");
+
+        // Criar estilos
+        CellStyle headerStyle = createHeaderStyle(workbook);
+        CellStyle dataStyle = createDataStyle(workbook);
+        CellStyle dateStyle = createDateStyle(workbook);
+        CellStyle currencyStyle = createCurrencyStyle(workbook);
+
+        // Cabeçalhos: Faturamento -> Tarefa -> Orçamento
+        String[] headers = {
+            "Ano", "Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa", 
+            "Título da Tarefa", "Status da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas", 
+            "Solicitante", "ID Orçamento", "Status do Orçamento", "Valor do Orçamento", 
+            "Data de Criação", "Data de Atualização"
+        };
+
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Adicionar dados
+        int rowNum = 1;
+        for (Map<String, Object> billingData : data) {
+            Row row = sheet.createRow(rowNum++);
+
+            // Dados do faturamento
+            setCellValue(row, 0, billingData.get("billing_year"), dataStyle);
+            setCellValue(row, 1, billingData.get("billing_month"), dataStyle);
+            setStatusCell(row, 2, billingData.get("billing_status"), dataStyle);
+
+            // Dados da tarefa
+            setCellValue(row, 3, billingData.get("task_id"), dataStyle);
+            setCellValue(row, 4, billingData.get("task_code"), dataStyle);
+            setCellValue(row, 5, billingData.get("task_title"), dataStyle);
+            setStatusCell(row, 6, billingData.get("task_status"), dataStyle);
+            setCellValue(row, 7, billingData.get("task_amount"), currencyStyle);
+            setCellValue(row, 8, billingData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 9, billingData.get("requester_name"), dataStyle);
+
+            // Dados do orçamento
+            setCellValue(row, 10, billingData.get("quote_id"), dataStyle);
+            setStatusCell(row, 11, billingData.get("quote_status"), dataStyle);
+            setCellValue(row, 12, billingData.get("quote_amount"), currencyStyle);
+
+            // Datas
+            setCellValue(row, 13, billingData.get("created_at"), dateStyle);
+            setCellValue(row, 14, billingData.get("updated_at"), dateStyle);
+        }
+
+        // Ajustar largura das colunas (15 colunas)
+        setColumnWidths(sheet, new int[]{
+            2500,  // Ano
+            2500,  // Mês
+            4000,  // Status do Faturamento
+            2500,  // ID Tarefa
+            3500,  // Código da Tarefa
+            8000,  // Título da Tarefa (maior)
+            3500,  // Status da Tarefa
+            4000,  // Valor da Tarefa
+            3000,  // Qtd. Subtarefas
+            6000,  // Solicitante
+            3000,  // ID Orçamento
+            4000,  // Status do Orçamento
+            4000,  // Valor do Orçamento
+            6000,  // Data de Criação
+            6000   // Data de Atualização
+        });
+
+        // Ajustar altura das linhas
+        for (int i = 1; i <= data.size(); i++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                row.setHeightInPoints(30);
+            }
+        }
+
+        // Altura do cabeçalho
+        headerRow.setHeightInPoints(35);
+
+        // Aplicar filtros
+        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
+
+        // Congelar primeira linha (cabeçalho)
+        sheet.createFreezePane(0, 1);
+
+        // Converter para bytes
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream.toByteArray();
+    }
 }
