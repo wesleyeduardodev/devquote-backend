@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -78,4 +79,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     @EntityGraph(attributePaths = {"quote", "quote.task", "project"})
     @Query("SELECT d FROM Delivery d WHERE d.quote.id = :quoteId ORDER BY d.id")
     List<Delivery> findByQuoteId(@Param("quoteId") Long quoteId);
+    
+    @Modifying
+    @Query("DELETE FROM Delivery d WHERE d.quote.id = :quoteId")
+    void deleteByQuoteId(@Param("quoteId") Long quoteId);
 }

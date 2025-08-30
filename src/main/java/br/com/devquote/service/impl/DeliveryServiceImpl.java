@@ -90,6 +90,14 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
         deliveryRepository.deleteAllById(ids);
     }
+    
+    @Override
+    public void deleteByQuoteId(Long quoteId) {
+        if (quoteId == null) {
+            return;
+        }
+        deliveryRepository.deleteByQuoteId(quoteId);
+    }
 
     @Override
     public Page<DeliveryResponse> findAllPaginated(Long id,

@@ -104,6 +104,13 @@ public class DeliveryController implements DeliveryControllerDoc {
         deliveryService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
+    
+    @DeleteMapping("/quote/{quoteId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<Void> deleteByQuoteId(@PathVariable Long quoteId) {
+        deliveryService.deleteByQuoteId(quoteId);
+        return ResponseEntity.noContent().build();
+    }
 
     @GetMapping("/grouped")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")

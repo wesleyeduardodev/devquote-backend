@@ -18,6 +18,8 @@ public interface DeliveryService {
     void delete(Long id);
 
     void deleteBulk(List<Long> ids);
+    
+    void deleteByQuoteId(Long quoteId);
 
     Page<DeliveryResponse> findAllPaginated(Long id,
                                             String taskName,
