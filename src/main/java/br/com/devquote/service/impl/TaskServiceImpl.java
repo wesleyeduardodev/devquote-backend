@@ -17,7 +17,10 @@ import br.com.devquote.repository.RequesterRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.*;
+import br.com.devquote.utils.ExcelReportUtils;
 import br.com.devquote.utils.SecurityUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -48,6 +52,8 @@ public class TaskServiceImpl implements TaskService {
     private final BillingProperties billingProperties;
     private final DeliveryService deliveryService;
     private final SecurityUtils securityUtils;
+    private final EntityManager entityManager;
+    private final ExcelReportUtils excelReportUtils;
 
     @Override
     public List<TaskResponse> findAll() {
@@ -559,5 +565,101 @@ public class TaskServiceImpl implements TaskService {
                             return quoteBillingMonthQuoteService.existsByQuoteId(quote.getId());
                         }
                 ));
+    }
+
+    @Override
+    public byte[] exportTasksToExcel() throws IOException {
+        log.info("EXCEL EXPORT STARTED");
+        
+        // Verificar perfil do usuário para controle de colunas de valor
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
+        }
+        
+        var profiles = currentUser.getActiveProfileCodes();
+        boolean canViewAmounts = profiles.contains("ADMIN") || profiles.contains("MANAGER");
+        log.info("EXCEL EXPORT user={} canViewAmounts={}", currentUser.getUsername(), canViewAmounts);
+        
+        // Consulta nativa SQL para obter todos os dados de tarefas e subtarefas
+        String sql = """
+            SELECT 
+                t.id as task_id,
+                t.code as task_code,
+                t.title as task_title,
+                t.description as task_description,
+                t.status as task_status,
+                t.task_type as task_type,
+                t.priority as task_priority,
+                r.name as requester_name,
+                cb.username as created_by_user,
+                ub.username as updated_by_user,
+                t.server_origin,
+                t.system_module,
+                t.link as task_link,
+                t.meeting_link,
+                t.notes as task_notes,
+                t.amount as task_amount,
+                t.has_sub_tasks as has_subtasks,
+                CASE WHEN q.id IS NOT NULL THEN 'Sim' ELSE 'Não' END as has_quote,
+                CASE WHEN qbmq.id IS NOT NULL THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
+                t.created_at as task_created_at,
+                t.updated_at as task_updated_at,
+                st.id as subtask_id,
+                st.title as subtask_title,
+                st.description as subtask_description,
+                st.status as subtask_status,
+                st.amount as subtask_amount
+            FROM task t
+            INNER JOIN requester r ON t.requester_id = r.id
+            LEFT JOIN users cb ON t.created_by = cb.id
+            LEFT JOIN users ub ON t.updated_by = ub.id
+            LEFT JOIN quote q ON q.task_id = t.id
+            LEFT JOIN quote_billing_month_quote qbmq ON qbmq.quote_id = q.id
+            LEFT JOIN sub_task st ON st.task_id = t.id
+            ORDER BY t.id, st.id
+            """;
+
+        Query query = entityManager.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = query.getResultList();
+        
+        // Converter resultados para Map
+        List<Map<String, Object>> data = results.stream().map(row -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("task_id", row[0]);
+            map.put("task_code", row[1]);
+            map.put("task_title", row[2]);
+            map.put("task_description", row[3]);
+            map.put("task_status", row[4]);
+            map.put("task_type", row[5]);
+            map.put("task_priority", row[6]);
+            map.put("requester_name", row[7]);
+            map.put("created_by_user", row[8]);
+            map.put("updated_by_user", row[9]);
+            map.put("server_origin", row[10]);
+            map.put("system_module", row[11]);
+            map.put("task_link", row[12]);
+            map.put("meeting_link", row[13]);
+            map.put("task_notes", row[14]);
+            map.put("task_amount", row[15]);
+            map.put("has_subtasks", Boolean.TRUE.equals(row[16]) ? "Sim" : "Não");
+            map.put("has_quote", row[17]);
+            map.put("has_quote_in_billing", row[18]);
+            map.put("task_created_at", row[19]);
+            map.put("task_updated_at", row[20]);
+            map.put("subtask_id", row[21]);
+            map.put("subtask_title", row[22]);
+            map.put("subtask_description", row[23]);
+            map.put("subtask_status", row[24]);
+            map.put("subtask_amount", row[25]);
+            return map;
+        }).collect(Collectors.toList());
+        
+        log.info("EXCEL EXPORT generating file with {} records", data.size());
+        byte[] result = excelReportUtils.generateTasksReport(data, canViewAmounts);
+        log.info("EXCEL EXPORT completed successfully");
+        
+        return result;
     }
 }

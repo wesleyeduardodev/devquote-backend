@@ -6,6 +6,7 @@ import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.io.IOException;
 import java.util.List;
 
 public interface TaskService {
@@ -39,4 +40,6 @@ public interface TaskService {
                                         String createdAt,
                                         String updatedAt,
                                         Pageable pageable);
+    
+    byte[] exportTasksToExcel() throws IOException;
 }
