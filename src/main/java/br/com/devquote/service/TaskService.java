@@ -42,4 +42,6 @@ public interface TaskService {
                                         Pageable pageable);
     
     byte[] exportTasksToExcel() throws IOException;
+    
+    byte[] exportGeneralReport() throws IOException;
 }

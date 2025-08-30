@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -659,6 +660,118 @@ public class TaskServiceImpl implements TaskService {
         log.info("EXCEL EXPORT generating file with {} records", data.size());
         byte[] result = excelReportUtils.generateTasksReport(data, canViewAmounts);
         log.info("EXCEL EXPORT completed successfully");
+
+        return result;
+    }
+
+    @Override
+    public byte[] exportGeneralReport() throws IOException {
+        log.info("GENERAL REPORT EXPORT STARTED");
+
+        // Query complexa juntando todas as tabelas do sistema - Estrutura corrigida
+        String sql = """
+            SELECT DISTINCT
+                -- DADOS DA TAREFA
+                t.id as task_id,
+                t.code as task_code,
+                t.title as task_title,
+                t.description as task_description,
+                t.status as task_status,
+                t.priority as task_priority,
+                t.amount as task_amount,
+                r.name as requester_name,
+                t.created_at as task_created_at,
+                t.updated_at as task_updated_at,
+                
+                -- METADADOS DA TAREFA
+                cb.username as created_by_name,
+                ub.username as updated_by_name,
+                t.server_origin as task_server_origin,
+                t.system_module as task_system_module,
+                
+                -- DADOS DE ORÇAMENTO
+                q.id as quote_id,
+                q.status as quote_status,
+                q.total_amount as quote_amount,
+                q.created_at as quote_created_at,
+                
+                -- DADOS DE ENTREGAS (primeira entrega apenas)
+                (SELECT d.id FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_id,
+                (SELECT d.status FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_status,
+                (SELECT p.name FROM delivery d INNER JOIN project p ON d.project_id = p.id WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as project_name,
+                (SELECT d.pull_request FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_pull_request,
+                (SELECT d.branch FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_branch,
+                (SELECT d.script FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_script,
+                (SELECT d.started_at FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_started_at,
+                (SELECT d.finished_at FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_finished_at,
+                
+                -- DADOS DE FATURAMENTO
+                qbm.year as billing_year,
+                qbm.month as billing_month,
+                qbm.status as billing_status
+                
+            FROM task t
+            INNER JOIN requester r ON t.requester_id = r.id
+            LEFT JOIN users cb ON t.created_by = cb.id
+            LEFT JOIN users ub ON t.updated_by = ub.id
+            LEFT JOIN quote q ON q.task_id = t.id
+            LEFT JOIN quote_billing_month_quote qbmq ON qbmq.quote_id = q.id
+            LEFT JOIN quote_billing_month qbm ON qbmq.quote_billing_month_id = qbm.id
+            ORDER BY t.id DESC
+        """;
+
+        Query query = entityManager.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = query.getResultList();
+
+        List<Map<String, Object>> data = results.stream().map(row -> {
+            Map<String, Object> map = new HashMap<>();
+
+            // DADOS DA TAREFA (0-9)
+            map.put("task_id", row[0]);
+            map.put("task_code", row[1]);
+            map.put("task_title", row[2]);
+            map.put("task_description", row[3]);
+            map.put("task_status", row[4]);
+            map.put("task_priority", row[5]);
+            map.put("task_amount", row[6]);
+            map.put("requester_name", row[7]);
+            map.put("task_created_at", row[8]);
+            map.put("task_updated_at", row[9]);
+
+            // METADADOS DA TAREFA (10-13)
+            map.put("created_by_name", row[10]);
+            map.put("updated_by_name", row[11]);
+            map.put("task_server_origin", row[12]);
+            map.put("task_system_module", row[13]);
+
+            // DADOS DE ORÇAMENTO (14-17)
+            map.put("quote_id", row[14]);
+            map.put("quote_status", row[15]);
+            map.put("quote_amount", row[16]);
+            map.put("quote_created_at", row[17]);
+
+            // DADOS DE ENTREGAS (18-25) - Pull Request reorganizado
+            map.put("delivery_id", row[18]);
+            map.put("delivery_status", row[19]);
+            map.put("project_name", row[20]);
+            map.put("delivery_pull_request", row[21]); // Link da entrega
+            map.put("delivery_branch", row[22]);
+            map.put("delivery_script", row[23]);
+            map.put("delivery_started_at", row[24]);
+            map.put("delivery_finished_at", row[25]);
+
+            // DADOS DE FATURAMENTO (26-28) - No final
+            map.put("billing_year", row[26]);
+            map.put("billing_month", row[27]);
+            map.put("billing_status", row[28]);
+
+            return map;
+        }).collect(Collectors.toList());
+
+        log.info("GENERAL REPORT generating file with {} records", data.size());
+        byte[] result = excelReportUtils.generateGeneralReport(data);
+        log.info("GENERAL REPORT completed successfully");
 
         return result;
     }

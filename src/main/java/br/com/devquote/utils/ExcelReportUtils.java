@@ -651,4 +651,181 @@ public class ExcelReportUtils {
 
         return outputStream.toByteArray();
     }
+
+    public byte[] generateGeneralReport(List<Map<String, Object>> data) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Relatório Geral - Visão Completa");
+
+        // Criar estilos com cores neutras e discretas para diferentes seções
+        CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.GREY_25_PERCENT.getIndex());
+        CellStyle subtaskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_TURQUOISE.getIndex());
+        CellStyle quoteHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LAVENDER.getIndex());
+        CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
+        CellStyle billingHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LEMON_CHIFFON.getIndex());
+
+        // Estilos para dados
+        CellStyle dataStyle = createDataStyle(workbook);
+        CellStyle dateStyle = createDateStyle(workbook);
+        CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
+        CellStyle currencyStyle = createCurrencyStyle(workbook);
+
+        // Headers organizados por seções com cores - Estrutura corrigida
+        String[] headers = {
+            // TAREFAS (Cinza) - 14 colunas (inclui metadados da tarefa)
+            "ID Tarefa", "Código", "Título", "Descrição", "Status", "Prioridade", "Valor", "Solicitante", 
+            "Data Criação", "Data Atualização", "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
+            
+            // ORÇAMENTO (Lavanda) - 4 colunas
+            "ID Orçamento", "Status Orçamento", "Valor Orçamento", "Orç. Criado em",
+            
+            // ENTREGAS (Azul Pálido) - 8 colunas - Pull Request reorganizado
+            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Script", "Início Entrega", "Fim Entrega",
+            
+            // FATURAMENTO (Limão) - 3 colunas - No final
+            "Ano Faturamento", "Mês Faturamento", "Status Faturamento"
+        };
+
+        Row headerRow = sheet.createRow(0);
+        
+        // Aplicar cores nos headers por seção - Estrutura corrigida (29 colunas)
+        int colIndex = 0;
+        
+        // TAREFAS + METADADOS (0-13) - Cinza (inclui Criado Por, Atualizado Por, Sistema Origem, Módulo)
+        for (int i = 0; i < 14; i++) {
+            Cell cell = headerRow.createCell(colIndex++);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(taskHeaderStyle);
+        }
+        
+        // ORÇAMENTO (14-17) - Lavanda
+        for (int i = 14; i < 18; i++) {
+            Cell cell = headerRow.createCell(colIndex++);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(quoteHeaderStyle);
+        }
+        
+        // ENTREGAS (18-25) - Azul Pálido (Pull Request reorganizado)
+        for (int i = 18; i < 26; i++) {
+            Cell cell = headerRow.createCell(colIndex++);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(deliveryHeaderStyle);
+        }
+        
+        // FATURAMENTO (26-28) - Limão (no final)
+        for (int i = 26; i < 29; i++) {
+            Cell cell = headerRow.createCell(colIndex++);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(billingHeaderStyle);
+        }
+
+        // Adicionar dados
+        int rowNum = 1;
+        for (Map<String, Object> taskData : data) {
+            Row row = sheet.createRow(rowNum++);
+
+            colIndex = 0;
+            
+            // DADOS DA TAREFA + METADADOS (0-13)
+            setCellValue(row, colIndex++, taskData.get("task_id"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_code"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_title"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_description"), dataStyle);
+            setStatusCell(row, colIndex++, taskData.get("task_status"), dataStyle);
+            setPriorityCell(row, colIndex++, taskData.get("task_priority"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_amount"), currencyStyle);
+            setCellValue(row, colIndex++, taskData.get("requester_name"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_created_at"), dateStyle);
+            setCellValue(row, colIndex++, taskData.get("task_updated_at"), dateStyle);
+            setCellValue(row, colIndex++, taskData.get("created_by_name"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("updated_by_name"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_server_origin"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_system_module"), dataStyle);
+            
+            // DADOS DE ORÇAMENTO (14-17)
+            setCellValue(row, colIndex++, taskData.get("quote_id"), dataStyle);
+            setStatusCell(row, colIndex++, taskData.get("quote_status"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("quote_amount"), currencyStyle);
+            setCellValue(row, colIndex++, taskData.get("quote_created_at"), dateStyle);
+            
+            // DADOS DE ENTREGAS (18-25) - Pull Request reorganizado
+            setCellValue(row, colIndex++, taskData.get("delivery_id"), dataStyle);
+            setStatusCell(row, colIndex++, taskData.get("delivery_status"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle); // Link da entrega
+            setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_script"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
+            
+            // DADOS DE FATURAMENTO (26-28) - No final
+            setCellValue(row, colIndex++, taskData.get("billing_year"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("billing_month"), dataStyle);
+            setStatusCell(row, colIndex++, taskData.get("billing_status"), dataStyle);
+        }
+
+        // Ajustar larguras das colunas (29 colunas total) - Estrutura corrigida
+        setColumnWidths(sheet, new int[]{
+            // TAREFAS + METADADOS (14 colunas)
+            2500, 3500, 10000, 12000, 3500, 3000, 4000, 6000, 6000, 6000, 4000, 4000, 4000, 4000,
+            // ORÇAMENTO (4 colunas)
+            3000, 4000, 4000, 6000,
+            // ENTREGAS (8 colunas) - Pull Request reorganizado
+            3000, 3500, 6000, 10000, 8000, 8000, 4000, 4000,  // Link da entrega (Pull Request) com largura maior
+            // FATURAMENTO (3 colunas) - No final
+            2500, 2500, 4000
+        });
+
+        // Ajustar altura das linhas
+        for (int i = 1; i <= data.size(); i++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                row.setHeightInPoints(40); // Altura maior para acomodar conteúdo extenso
+            }
+        }
+
+        // Altura do cabeçalho
+        headerRow.setHeightInPoints(45);
+
+        // Aplicar filtros
+        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
+
+        // Congelar primeira linha (cabeçalho)
+        sheet.createFreezePane(0, 1);
+
+        // Converter para bytes
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream.toByteArray();
+    }
+
+    private CellStyle createColoredHeaderStyle(Workbook workbook, short colorIndex) {
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setBold(true);
+        font.setColor(IndexedColors.BLACK.getIndex()); // Texto preto para melhor contraste
+        font.setFontHeightInPoints((short) 11);
+        style.setFont(font);
+        
+        // Fundo colorido suave
+        style.setFillForegroundColor(colorIndex);
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        
+        // Bordas
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setTopBorderColor(IndexedColors.GREY_40_PERCENT.getIndex());
+        style.setBottomBorderColor(IndexedColors.GREY_40_PERCENT.getIndex());
+        style.setLeftBorderColor(IndexedColors.GREY_40_PERCENT.getIndex());
+        style.setRightBorderColor(IndexedColors.GREY_40_PERCENT.getIndex());
+        
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        style.setWrapText(true);
+        
+        return style;
+    }
 }
