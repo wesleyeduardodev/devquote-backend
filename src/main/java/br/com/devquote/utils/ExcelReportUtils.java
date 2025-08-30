@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -67,9 +68,9 @@ public class ExcelReportUtils {
                 setCellValue(row, 1, taskData.get("task_code"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_title"), dataStyle);
                 setCellValue(row, 3, taskData.get("task_description"), dataStyle);
-                setCellValue(row, 4, taskData.get("task_status"), dataStyle);
+                setStatusCell(row, 4, taskData.get("task_status"), dataStyle);
                 setCellValue(row, 5, taskData.get("task_type"), dataStyle);
-                setCellValue(row, 6, taskData.get("task_priority"), dataStyle);
+                setPriorityCell(row, 6, taskData.get("task_priority"), dataStyle);
                 setCellValue(row, 7, taskData.get("requester_name"), dataStyle);
                 setCellValue(row, 8, taskData.get("created_by_user"), dataStyle);
                 setCellValue(row, 9, taskData.get("updated_by_user"), dataStyle);
@@ -87,7 +88,7 @@ public class ExcelReportUtils {
                 setCellValue(row, 21, taskData.get("subtask_id"), dataStyle);
                 setCellValue(row, 22, taskData.get("subtask_title"), dataStyle);
                 setCellValue(row, 23, taskData.get("subtask_description"), dataStyle);
-                setCellValue(row, 24, taskData.get("subtask_status"), dataStyle);
+                setStatusCell(row, 24, taskData.get("subtask_status"), dataStyle);
                 setCellValue(row, 25, taskData.get("subtask_amount"), currencyStyle);
             } else {
                 // USER: Remove colunas sensíveis
@@ -95,9 +96,9 @@ public class ExcelReportUtils {
                 setCellValue(row, 1, taskData.get("task_code"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_title"), dataStyle);
                 setCellValue(row, 3, taskData.get("task_description"), dataStyle);
-                setCellValue(row, 4, taskData.get("task_status"), dataStyle);
+                setStatusCell(row, 4, taskData.get("task_status"), dataStyle);
                 setCellValue(row, 5, taskData.get("task_type"), dataStyle);
-                setCellValue(row, 6, taskData.get("task_priority"), dataStyle);
+                setPriorityCell(row, 6, taskData.get("task_priority"), dataStyle);
                 setCellValue(row, 7, taskData.get("requester_name"), dataStyle);
                 setCellValue(row, 8, taskData.get("created_by_user"), dataStyle);
                 setCellValue(row, 9, taskData.get("updated_by_user"), dataStyle);
@@ -112,21 +113,79 @@ public class ExcelReportUtils {
                 setCellValue(row, 18, taskData.get("subtask_id"), dataStyle);
                 setCellValue(row, 19, taskData.get("subtask_title"), dataStyle);
                 setCellValue(row, 20, taskData.get("subtask_description"), dataStyle);
-                setCellValue(row, 21, taskData.get("subtask_status"), dataStyle);
+                setStatusCell(row, 21, taskData.get("subtask_status"), dataStyle);
             }
         }
 
-        // Ajustar largura das colunas automaticamente
-        for (int i = 0; i < headers.length; i++) {
-            sheet.autoSizeColumn(i);
-            // Definir largura mínima e máxima
-            int currentWidth = sheet.getColumnWidth(i);
-            if (currentWidth < 2000) {
-                sheet.setColumnWidth(i, 2000); // Mínimo
-            } else if (currentWidth > 8000) {
-                sheet.setColumnWidth(i, 8000); // Máximo
+        // Ajustar largura das colunas baseado no conteúdo
+        if (canViewAmounts) {
+            // ADMIN/MANAGER: 26 colunas
+            setColumnWidths(sheet, new int[]{
+                2500,  // ID
+                3500,  // Código
+                8000,  // Título (maior)
+                10000, // Descrição (maior)
+                3000,  // Status
+                3500,  // Tipo
+                3000,  // Prioridade
+                6000,  // Solicitante
+                4000,  // Criado Por
+                4000,  // Atualizado Por
+                4000,  // Origem do Servidor
+                4000,  // Módulo do Sistema
+                8000,  // Link (maior para URLs)
+                8000,  // Link da Reunião (maior para URLs)
+                6000,  // Observações
+                3500,  // Valor da Tarefa
+                3000,  // Tem Subtarefas
+                3000,  // Tem Orçamento
+                4000,  // Orçamento no Faturamento
+                6000,  // Data de Criação (aumentada para dd/mm/yyyy hh:mm:ss)
+                6000,  // Data de Atualização (aumentada para dd/mm/yyyy hh:mm:ss)
+                2500,  // Subtarefa ID
+                8000,  // Subtarefa Título (maior)
+                10000, // Subtarefa Descrição (maior)
+                3000,  // Subtarefa Status
+                3500   // Subtarefa Valor
+            });
+        } else {
+            // USER: 22 colunas (sem colunas de valores)
+            setColumnWidths(sheet, new int[]{
+                2500,  // ID
+                3500,  // Código
+                8000,  // Título (maior)
+                10000, // Descrição (maior)
+                3000,  // Status
+                3500,  // Tipo
+                3000,  // Prioridade
+                6000,  // Solicitante
+                4000,  // Criado Por
+                4000,  // Atualizado Por
+                4000,  // Origem do Servidor
+                4000,  // Módulo do Sistema
+                8000,  // Link (maior para URLs)
+                8000,  // Link da Reunião (maior para URLs)
+                6000,  // Observações
+                3000,  // Tem Subtarefas
+                6000,  // Data de Criação (aumentada para dd/mm/yyyy hh:mm:ss)
+                6000,  // Data de Atualização (aumentada para dd/mm/yyyy hh:mm:ss)
+                2500,  // Subtarefa ID
+                8000,  // Subtarefa Título (maior)
+                10000, // Subtarefa Descrição (maior)
+                3000   // Subtarefa Status
+            });
+        }
+        
+        // Ajustar altura das linhas para acomodar texto longo
+        for (int i = 1; i <= data.size(); i++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                row.setHeightInPoints(30); // Altura maior para linhas de dados
             }
         }
+        
+        // Altura do cabeçalho
+        headerRow.setHeightInPoints(35);
 
         // Aplicar filtros
         sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
@@ -140,6 +199,12 @@ public class ExcelReportUtils {
         workbook.close();
 
         return outputStream.toByteArray();
+    }
+
+    private void setColumnWidths(Sheet sheet, int[] widths) {
+        for (int i = 0; i < widths.length; i++) {
+            sheet.setColumnWidth(i, widths[i]);
+        }
     }
 
     private CellStyle createHeaderStyle(Workbook workbook) {
@@ -180,8 +245,8 @@ public class ExcelReportUtils {
         style.setBorderRight(BorderStyle.THIN);
         
         // Configurar alinhamento
-        style.setVerticalAlignment(VerticalAlignment.CENTER);
-        style.setWrapText(true);
+        style.setVerticalAlignment(VerticalAlignment.TOP); // Alinhamento superior para textos longos
+        style.setWrapText(true); // Quebra de linha automática
         
         return style;
     }
@@ -189,7 +254,7 @@ public class ExcelReportUtils {
     private CellStyle createDateStyle(Workbook workbook) {
         CellStyle style = createDataStyle(workbook);
         CreationHelper helper = workbook.getCreationHelper();
-        style.setDataFormat(helper.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
+        style.setDataFormat(helper.createDataFormat().getFormat("dd/mm/yyyy hh:mm:ss"));
         return style;
     }
 
@@ -212,11 +277,80 @@ public class ExcelReportUtils {
         } else if (value instanceof Number) {
             cell.setCellValue(((Number) value).doubleValue());
         } else if (value instanceof LocalDateTime) {
-            cell.setCellValue((LocalDateTime) value);
+            // Converter LocalDateTime para Date para garantir formatação correta
+            LocalDateTime dateTime = (LocalDateTime) value;
+            java.util.Date date = java.sql.Timestamp.valueOf(dateTime);
+            cell.setCellValue(date);
         } else if (value instanceof Boolean) {
             cell.setCellValue((Boolean) value ? "Sim" : "Não");
+        } else if (value instanceof java.sql.Timestamp) {
+            // Caso venha como Timestamp do banco
+            cell.setCellValue((java.sql.Timestamp) value);
         } else {
             cell.setCellValue(value.toString());
         }
+    }
+
+    private void setStatusCell(Row row, int columnIndex, Object value, CellStyle style) {
+        Cell cell = row.createCell(columnIndex);
+        cell.setCellStyle(style);
+        
+        if (value == null) {
+            cell.setCellValue("");
+        } else {
+            String status = value.toString();
+            String translatedStatus = translateStatus(status);
+            cell.setCellValue(translatedStatus);
+        }
+    }
+
+    private void setPriorityCell(Row row, int columnIndex, Object value, CellStyle style) {
+        Cell cell = row.createCell(columnIndex);
+        cell.setCellStyle(style);
+        
+        if (value == null) {
+            cell.setCellValue("");
+        } else {
+            String priority = value.toString();
+            String translatedPriority = translatePriority(priority);
+            cell.setCellValue(translatedPriority);
+        }
+    }
+
+    private String translateStatus(String status) {
+        if (status == null) return "";
+        return switch (status.toUpperCase()) {
+            case "PENDING" -> "Pendente";
+            case "IN_PROGRESS" -> "Em Progresso";
+            case "COMPLETED" -> "Concluída";
+            case "CANCELLED" -> "Cancelada";
+            case "ON_HOLD" -> "Em Espera";
+            case "BLOCKED" -> "Bloqueada";
+            case "REVIEWING" -> "Em Revisão";
+            case "APPROVED" -> "Aprovada";
+            case "REJECTED" -> "Rejeitada";
+            case "DRAFT" -> "Rascunho";
+            case "ACTIVE" -> "Ativa";
+            case "INACTIVE" -> "Inativa";
+            case "PAUSED" -> "Pausada";
+            case "REOPENED" -> "Reaberta";
+            default -> status;
+        };
+    }
+
+    private String translatePriority(String priority) {
+        if (priority == null) return "";
+        return switch (priority.toUpperCase()) {
+            case "LOW" -> "Baixa";
+            case "MEDIUM" -> "Média";
+            case "HIGH" -> "Alta";
+            case "URGENT" -> "Urgente";
+            case "CRITICAL" -> "Crítica";
+            case "VERY_LOW" -> "Muito Baixa";
+            case "VERY_HIGH" -> "Muito Alta";
+            case "IMMEDIATE" -> "Imediata";
+            case "NORMAL" -> "Normal";
+            default -> priority;
+        };
     }
 }

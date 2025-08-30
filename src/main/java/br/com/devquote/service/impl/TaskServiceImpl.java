@@ -63,7 +63,7 @@ public class TaskServiceImpl implements TaskService {
 
         if (!tasks.isEmpty()) {
             List<Long> taskIds = tasks.stream().map(TaskResponse::getId).toList();
-            
+
             // Buscar informações de Quote e Billing
             Map<Long, Boolean> taskHasQuoteMap = getTaskQuoteStatus(taskIds);
             Map<Long, Boolean> taskHasQuoteInBillingMap = getTaskQuoteInBillingStatus(taskIds);
@@ -71,7 +71,7 @@ public class TaskServiceImpl implements TaskService {
             tasks.forEach(dto -> {
                 List<SubTask> subTasks = subTaskRepository.findByTaskId(dto.getId());
                 dto.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
-                
+
                 // Adicionar informações de Quote e Billing
                 dto.setHasQuote(taskHasQuoteMap.getOrDefault(dto.getId(), false));
                 dto.setHasQuoteInBilling(taskHasQuoteInBillingMap.getOrDefault(dto.getId(), false));
@@ -89,34 +89,34 @@ public class TaskServiceImpl implements TaskService {
         TaskResponse response = TaskAdapter.toResponseDTO(task);
         List<SubTask> subTasks = subTaskRepository.findByTaskId(response.getId());
         response.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
-        
+
         // Adicionar informações de Quote e Billing para o item específico
         response.setHasQuote(quoteRepository.existsByTaskId(id));
         Quote quote = quoteRepository.findByTaskId(id).orElse(null);
         response.setHasQuoteInBilling(quote != null && quoteBillingMonthQuoteService.existsByQuoteId(quote.getId()));
-        
+
         return response;
     }
 
     @Override
     public TaskResponse create(TaskRequest dto) {
         validateCreatePermission();
-        
+
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
             throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
         }
-        
-        log.info("TASK CREATE requesterId={} title={} user={}", 
+
+        log.info("TASK CREATE requesterId={} title={} user={}",
             dto.getRequesterId(), dto.getTitle(), currentUser.getUsername());
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitante", dto.getRequesterId()));
-        
+
         Task entity = TaskAdapter.toEntity(dto, requester);
         entity.setCreatedBy(currentUser);
         entity.setUpdatedBy(currentUser);
-        
+
         entity = taskRepository.save(entity);
         return TaskAdapter.toResponseDTO(entity);
     }
@@ -127,7 +127,7 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
         validateTaskAccess(entity, "editar");
-        
+
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
             throw new RuntimeException("Usuário não autenticado");
@@ -138,7 +138,7 @@ public class TaskServiceImpl implements TaskService {
 
         TaskAdapter.updateEntityFromDto(dto, entity, requester);
         entity.setUpdatedBy(currentUser);
-        
+
         entity = taskRepository.save(entity);
         return TaskAdapter.toResponseDTO(entity);
     }
@@ -149,11 +149,11 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
         validateTaskAccess(entity, "excluir");
-        
+
         User currentUser = securityUtils.getCurrentUser();
-        log.warn("TASK DELETE id={} title={} user={}", 
+        log.warn("TASK DELETE id={} title={} user={}",
             id, entity.getTitle(), currentUser != null ? currentUser.getUsername() : "unknown");
-        
+
         taskRepository.deleteById(id);
     }
 
@@ -162,11 +162,11 @@ public class TaskServiceImpl implements TaskService {
         if (ids == null || ids.isEmpty()) {
             return;
         }
-        
+
         User currentUser = securityUtils.getCurrentUser();
-        log.warn("TASK BULK DELETE count={} user={}", 
+        log.warn("TASK BULK DELETE count={} user={}",
             ids.size(), currentUser != null ? currentUser.getUsername() : "unknown");
-            
+
         for (Long id : ids) {
             deleteTaskWithSubTasks(id);
         }
@@ -220,7 +220,7 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
         validateTaskAccess(task, "editar");
-        
+
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
             throw new RuntimeException("Usuário não autenticado");
@@ -265,13 +265,13 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTaskWithSubTasks(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-        
+
         validateTaskAccess(task, "excluir");
-        
+
         if (quoteRepository.existsByTaskId(taskId)) {
             throw new RuntimeException("Cannot delete task. It is linked to a quote.");
         }
-        
+
         subTaskRepository.deleteByTaskId(taskId);
         taskRepository.deleteById(taskId);
     }
@@ -310,7 +310,7 @@ public class TaskServiceImpl implements TaskService {
 
         Map<Long, List<SubTask>> subTasksByTaskId = allSubTasks.stream()
                 .collect(Collectors.groupingBy(st -> st.getTask().getId()));
-        
+
         // Buscar informações de Quote e Billing
         Map<Long, Boolean> taskHasQuoteMap = getTaskQuoteStatus(taskIds);
         Map<Long, Boolean> taskHasQuoteInBillingMap = getTaskQuoteInBillingStatus(taskIds);
@@ -318,7 +318,7 @@ public class TaskServiceImpl implements TaskService {
         dtos.forEach(dto -> {
             List<SubTask> list = subTasksByTaskId.getOrDefault(dto.getId(), List.of());
             dto.setSubTasks(SubTaskAdapter.toResponseDTOList(list));
-            
+
             // Adicionar informações de Quote e Billing
             dto.setHasQuote(taskHasQuoteMap.getOrDefault(dto.getId(), false));
             dto.setHasQuoteInBilling(taskHasQuoteInBillingMap.getOrDefault(dto.getId(), false));
@@ -349,10 +349,10 @@ public class TaskServiceImpl implements TaskService {
                 .systemModule(dto.getSystemModule())
                 .priority(dto.getPriority())
                 .build(), requester);
-        
+
         task.setCreatedBy(currentUser);
         task.setUpdatedBy(currentUser);
-        
+
         return taskRepository.save(task);
     }
 
@@ -475,7 +475,7 @@ public class TaskServiceImpl implements TaskService {
         if (currentUser == null) {
             throw new RuntimeException("Usuário não autenticado");
         }
-        
+
         var profiles = currentUser.getActiveProfileCodes();
         if (!profiles.contains("ADMIN") && !profiles.contains("MANAGER") && !profiles.contains("USER")) {
             throw new RuntimeException("Usuário não possui permissão para criar tarefas");
@@ -489,12 +489,12 @@ public class TaskServiceImpl implements TaskService {
         }
 
         var profiles = currentUser.getActiveProfileCodes();
-        
+
         // ADMIN tem acesso total
         if (profiles.contains("ADMIN")) {
             return;
         }
-        
+
         // MANAGER e USER podem acessar apenas suas próprias tarefas
         if (profiles.contains("MANAGER") || profiles.contains("USER")) {
             if (task.getCreatedBy() == null || !task.getCreatedBy().getId().equals(currentUser.getId())) {
@@ -502,10 +502,10 @@ public class TaskServiceImpl implements TaskService {
             }
             return;
         }
-        
+
         throw new RuntimeException("Usuário não possui permissão para acessar tarefas");
     }
-    
+
     /**
      * Processa a tarefa conforme a nova lógica:
      * - Se hasSubTasks = true: calcula amount como soma das subtarefas
@@ -523,7 +523,7 @@ public class TaskServiceImpl implements TaskService {
         }
         // Se hasSubTasks = false, mantém o amount já informado
     }
-    
+
     /**
      * Valida se é possível desmarcar a flag hasSubTasks
      */
@@ -536,7 +536,7 @@ public class TaskServiceImpl implements TaskService {
             }
         }
     }
-    
+
     /**
      * Verifica quais tarefas possuem Quote vinculado
      */
@@ -547,7 +547,7 @@ public class TaskServiceImpl implements TaskService {
                         taskId -> quoteRepository.existsByTaskId(taskId)
                 ));
     }
-    
+
     /**
      * Verifica quais tarefas possuem Quote vinculado ao faturamento
      */
@@ -570,17 +570,17 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public byte[] exportTasksToExcel() throws IOException {
         log.info("EXCEL EXPORT STARTED");
-        
+
         // Verificar perfil do usuário para controle de colunas de valor
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
             throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
         }
-        
+
         var profiles = currentUser.getActiveProfileCodes();
         boolean canViewAmounts = profiles.contains("ADMIN") || profiles.contains("MANAGER");
         log.info("EXCEL EXPORT user={} canViewAmounts={}", currentUser.getUsername(), canViewAmounts);
-        
+
         // Consulta nativa SQL para obter todos os dados de tarefas e subtarefas
         String sql = """
             SELECT 
@@ -617,13 +617,13 @@ public class TaskServiceImpl implements TaskService {
             LEFT JOIN quote q ON q.task_id = t.id
             LEFT JOIN quote_billing_month_quote qbmq ON qbmq.quote_id = q.id
             LEFT JOIN sub_task st ON st.task_id = t.id
-            ORDER BY t.id, st.id
+            ORDER BY t.id desc, st.id
             """;
 
         Query query = entityManager.createNativeQuery(sql);
         @SuppressWarnings("unchecked")
         List<Object[]> results = query.getResultList();
-        
+
         // Converter resultados para Map
         List<Map<String, Object>> data = results.stream().map(row -> {
             Map<String, Object> map = new java.util.HashMap<>();
@@ -655,11 +655,11 @@ public class TaskServiceImpl implements TaskService {
             map.put("subtask_amount", row[25]);
             return map;
         }).collect(Collectors.toList());
-        
+
         log.info("EXCEL EXPORT generating file with {} records", data.size());
         byte[] result = excelReportUtils.generateTasksReport(data, canViewAmounts);
         log.info("EXCEL EXPORT completed successfully");
-        
+
         return result;
     }
 }
