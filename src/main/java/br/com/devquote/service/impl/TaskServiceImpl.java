@@ -51,10 +51,22 @@ public class TaskServiceImpl implements TaskService {
                 .map(TaskAdapter::toResponseDTO)
                 .collect(Collectors.toList());
 
-        tasks.forEach(dto -> {
-            List<SubTask> subTasks = subTaskRepository.findByTaskId(dto.getId());
-            dto.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
-        });
+        if (!tasks.isEmpty()) {
+            List<Long> taskIds = tasks.stream().map(TaskResponse::getId).toList();
+            
+            // Buscar informações de Quote e Billing
+            Map<Long, Boolean> taskHasQuoteMap = getTaskQuoteStatus(taskIds);
+            Map<Long, Boolean> taskHasQuoteInBillingMap = getTaskQuoteInBillingStatus(taskIds);
+
+            tasks.forEach(dto -> {
+                List<SubTask> subTasks = subTaskRepository.findByTaskId(dto.getId());
+                dto.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
+                
+                // Adicionar informações de Quote e Billing
+                dto.setHasQuote(taskHasQuoteMap.getOrDefault(dto.getId(), false));
+                dto.setHasQuoteInBilling(taskHasQuoteInBillingMap.getOrDefault(dto.getId(), false));
+            });
+        }
 
         return tasks;
     }
@@ -67,6 +79,12 @@ public class TaskServiceImpl implements TaskService {
         TaskResponse response = TaskAdapter.toResponseDTO(task);
         List<SubTask> subTasks = subTaskRepository.findByTaskId(response.getId());
         response.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
+        
+        // Adicionar informações de Quote e Billing para o item específico
+        response.setHasQuote(quoteRepository.existsByTaskId(id));
+        Quote quote = quoteRepository.findByTaskId(id).orElse(null);
+        response.setHasQuoteInBilling(quote != null && quoteBillingMonthQuoteService.existsByQuoteId(quote.getId()));
+        
         return response;
     }
 
@@ -270,10 +288,18 @@ public class TaskServiceImpl implements TaskService {
 
         Map<Long, List<SubTask>> subTasksByTaskId = allSubTasks.stream()
                 .collect(Collectors.groupingBy(st -> st.getTask().getId()));
+        
+        // Buscar informações de Quote e Billing
+        Map<Long, Boolean> taskHasQuoteMap = getTaskQuoteStatus(taskIds);
+        Map<Long, Boolean> taskHasQuoteInBillingMap = getTaskQuoteInBillingStatus(taskIds);
 
         dtos.forEach(dto -> {
             List<SubTask> list = subTasksByTaskId.getOrDefault(dto.getId(), List.of());
             dto.setSubTasks(SubTaskAdapter.toResponseDTOList(list));
+            
+            // Adicionar informações de Quote e Billing
+            dto.setHasQuote(taskHasQuoteMap.getOrDefault(dto.getId(), false));
+            dto.setHasQuoteInBilling(taskHasQuoteInBillingMap.getOrDefault(dto.getId(), false));
         });
 
         return new PageImpl<>(dtos, pageable, page.getTotalElements());
@@ -487,5 +513,35 @@ public class TaskServiceImpl implements TaskService {
                 throw new RuntimeException("Não é possível desmarcar 'Tem Subtarefas' enquanto existirem subtarefas vinculadas. Remova todas as subtarefas primeiro.");
             }
         }
+    }
+    
+    /**
+     * Verifica quais tarefas possuem Quote vinculado
+     */
+    private Map<Long, Boolean> getTaskQuoteStatus(List<Long> taskIds) {
+        return taskIds.stream()
+                .collect(Collectors.toMap(
+                        taskId -> taskId,
+                        taskId -> quoteRepository.existsByTaskId(taskId)
+                ));
+    }
+    
+    /**
+     * Verifica quais tarefas possuem Quote vinculado ao faturamento
+     */
+    private Map<Long, Boolean> getTaskQuoteInBillingStatus(List<Long> taskIds) {
+        return taskIds.stream()
+                .collect(Collectors.toMap(
+                        taskId -> taskId,
+                        taskId -> {
+                            // Primeiro verifica se tem quote
+                            Quote quote = quoteRepository.findByTaskId(taskId).orElse(null);
+                            if (quote == null) {
+                                return false;
+                            }
+                            // Se tem quote, verifica se está no billing
+                            return quoteBillingMonthQuoteService.existsByQuoteId(quote.getId());
+                        }
+                ));
     }
 }

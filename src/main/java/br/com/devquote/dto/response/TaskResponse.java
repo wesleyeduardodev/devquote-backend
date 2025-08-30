@@ -59,4 +59,8 @@ public class TaskResponse {
     private String priority;
 
     private List<SubTaskResponse> subTasks;
+    
+    private Boolean hasQuote;
+    
+    private Boolean hasQuoteInBilling;
 }

@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface QuoteBillingMonthQuoteRepository extends JpaRepository<QuoteBillingMonthQuote, Long> {
 
     boolean existsByQuoteBillingMonth_IdAndQuote_Id(Long quoteBillingMonthId, Long quoteId);
+    
+    boolean existsByQuote_Id(Long quoteId);
 
     List<QuoteBillingMonthQuote> findByQuoteBillingMonth_Id(Long billingMonthId);
 

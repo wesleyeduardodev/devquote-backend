@@ -142,4 +142,9 @@ public class QuoteBillingMonthQuoteServiceImpl implements QuoteBillingMonthQuote
         }
         repository.deleteByQuoteBillingMonthIdAndQuoteIdIn(billingMonthId, quoteIds);
     }
+
+    @Override
+    public boolean existsByQuoteId(Long quoteId) {
+        return repository.existsByQuote_Id(quoteId);
+    }
 }

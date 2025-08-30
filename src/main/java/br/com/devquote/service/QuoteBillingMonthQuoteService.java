@@ -22,4 +22,7 @@ public interface QuoteBillingMonthQuoteService {
     Page<QuoteBillingMonthQuoteResponse> findByQuoteBillingMonthIdPaginated(Long billingMonthId, Pageable pageable);
     List<QuoteBillingMonthQuoteResponse> bulkCreate(List<QuoteBillingMonthQuoteRequest> requests);
     void bulkUnlinkByBillingMonthAndQuoteIds(Long billingMonthId, List<Long> quoteIds);
+    
+    // Método para verificar se um quote está vinculado ao faturamento
+    boolean existsByQuoteId(Long quoteId);
 }
