@@ -37,6 +37,43 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
                 .map(QuoteBillingMonthAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
+    
+    @Override
+    public List<QuoteBillingMonthResponse> findAllWithTotals() {
+        String sql = """
+            SELECT 
+                qbm.id,
+                qbm.month,
+                qbm.year,
+                qbm.payment_date,
+                qbm.status,
+                qbm.created_at,
+                qbm.updated_at,
+                COALESCE(SUM(q.total_amount), 0) as total_amount
+            FROM quote_billing_month qbm
+            LEFT JOIN quote_billing_month_quote qbmq ON qbm.id = qbmq.quote_billing_month_id
+            LEFT JOIN quote q ON qbmq.quote_id = q.id
+            GROUP BY qbm.id, qbm.month, qbm.year, qbm.payment_date, qbm.status, qbm.created_at, qbm.updated_at
+            ORDER BY qbm.id DESC
+        """;
+        
+        Query query = entityManager.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = query.getResultList();
+        
+        return results.stream().map(row -> {
+            return QuoteBillingMonthResponse.builder()
+                .id(((Number) row[0]).longValue())
+                .month((Integer) row[1])
+                .year((Integer) row[2])
+                .paymentDate(row[3] != null ? ((java.sql.Date) row[3]).toLocalDate() : null)
+                .status((String) row[4])
+                .createdAt(((java.sql.Timestamp) row[5]).toLocalDateTime())
+                .updatedAt(((java.sql.Timestamp) row[6]).toLocalDateTime())
+                .totalAmount(new java.math.BigDecimal(row[7].toString()))
+                .build();
+        }).collect(Collectors.toList());
+    }
 
     @Override
     public QuoteBillingMonthResponse findById(Long id) {

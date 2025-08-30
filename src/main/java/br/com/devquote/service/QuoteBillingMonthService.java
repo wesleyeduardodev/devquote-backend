@@ -11,6 +11,7 @@ import java.util.Map;
 
 public interface QuoteBillingMonthService {
     List<QuoteBillingMonthResponse> findAll();
+    List<QuoteBillingMonthResponse> findAllWithTotals(); // Novo método com totais calculados
     QuoteBillingMonthResponse findById(Long id);
     QuoteBillingMonthResponse create(QuoteBillingMonthRequest dto);
     QuoteBillingMonthResponse update(Long id, QuoteBillingMonthRequest dto);

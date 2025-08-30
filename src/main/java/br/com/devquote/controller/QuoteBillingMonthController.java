@@ -88,6 +88,12 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
             month, year, status, pageable));
     }
 
+    @GetMapping("/with-totals")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<List<QuoteBillingMonthResponse>> listWithTotals() {
+        return ResponseEntity.ok(quoteBillingMonthService.findAllWithTotals());
+    }
+
     @GetMapping("/statistics")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<?> getStatistics() {
