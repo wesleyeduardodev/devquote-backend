@@ -10,11 +10,13 @@ import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.repository.ProjectRepository;
 import br.com.devquote.repository.QuoteRepository;
 import br.com.devquote.service.DeliveryService;
+import br.com.devquote.service.EmailService;
 import br.com.devquote.utils.ExcelReportUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -35,6 +38,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final ProjectRepository projectRepository;
     private final EntityManager entityManager;
     private final ExcelReportUtils excelReportUtils;
+    private final EmailService emailService;
 
     @Override
     public List<DeliveryResponse> findAll() {
@@ -69,6 +73,37 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .orElseThrow(() -> new RuntimeException("Project not found"));
         Delivery entity = DeliveryAdapter.toEntity(dto, quote, project);
         entity = deliveryRepository.save(entity);
+
+        // Enviar notificação por email
+        try {
+            // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
+            Delivery deliveryWithRelations = deliveryRepository.findById(entity.getId())
+                .map(d -> {
+                    // Inicializar relacionamentos lazy
+                    if (d.getQuote() != null) {
+                        if (d.getQuote().getTask() != null) {
+                            d.getQuote().getTask().getTitle(); // Inicializa Task
+                            if (d.getQuote().getTask().getRequester() != null) {
+                                d.getQuote().getTask().getRequester().getName(); // Inicializa Requester
+                                d.getQuote().getTask().getRequester().getEmail();
+                            }
+                        }
+                    }
+                    if (d.getProject() != null) {
+                        d.getProject().getName(); // Inicializa Project
+                    }
+                    if (d.getCreatedBy() != null) {
+                        d.getCreatedBy().getUsername(); // Inicializa User
+                    }
+                    return d;
+                })
+                .orElse(entity);
+
+            emailService.sendDeliveryCreatedNotification(deliveryWithRelations);
+        } catch (Exception e) {
+            log.warn("Failed to send email notification for delivery creation: {}", e.getMessage());
+        }
+
         return DeliveryAdapter.toResponseDTO(entity);
     }
 
@@ -82,11 +117,75 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .orElseThrow(() -> new RuntimeException("Project not found"));
         DeliveryAdapter.updateEntityFromDto(dto, entity, quote, project);
         entity = deliveryRepository.save(entity);
+
+        // Enviar notificação por email
+        try {
+            // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
+            Delivery deliveryWithRelations = deliveryRepository.findById(entity.getId())
+                .map(d -> {
+                    // Inicializar relacionamentos lazy
+                    if (d.getQuote() != null) {
+                        if (d.getQuote().getTask() != null) {
+                            d.getQuote().getTask().getTitle(); // Inicializa Task
+                            if (d.getQuote().getTask().getRequester() != null) {
+                                d.getQuote().getTask().getRequester().getName(); // Inicializa Requester
+                                d.getQuote().getTask().getRequester().getEmail();
+                            }
+                        }
+                    }
+                    if (d.getProject() != null) {
+                        d.getProject().getName(); // Inicializa Project
+                    }
+                    if (d.getCreatedBy() != null) {
+                        d.getCreatedBy().getUsername(); // Inicializa User
+                    }
+                    return d;
+                })
+                .orElse(entity);
+
+            emailService.sendDeliveryUpdatedNotification(deliveryWithRelations);
+        } catch (Exception e) {
+            log.warn("Failed to send email notification for delivery update: {}", e.getMessage());
+        }
+
         return DeliveryAdapter.toResponseDTO(entity);
     }
 
     @Override
     public void delete(Long id) {
+        Delivery entity = deliveryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Delivery not found"));
+
+        // Enviar notificação por email antes da exclusão
+        try {
+            // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
+            Delivery deliveryWithRelations = deliveryRepository.findById(id)
+                .map(d -> {
+                    // Inicializar relacionamentos lazy
+                    if (d.getQuote() != null) {
+                        if (d.getQuote().getTask() != null) {
+                            d.getQuote().getTask().getTitle(); // Inicializa Task
+                            if (d.getQuote().getTask().getRequester() != null) {
+                                d.getQuote().getTask().getRequester().getName(); // Inicializa Requester
+                                d.getQuote().getTask().getRequester().getEmail();
+                            }
+                        }
+                    }
+                    if (d.getProject() != null) {
+                        d.getProject().getName(); // Inicializa Project
+                    }
+                    if (d.getCreatedBy() != null) {
+                        d.getCreatedBy().getUsername(); // Inicializa User
+                    }
+                    return d;
+                })
+                .orElse(entity);
+
+            emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
+        } catch (Exception e) {
+            log.warn("Failed to send email notification for delivery deletion: {}", e.getMessage());
+        }
+
         deliveryRepository.deleteById(id);
     }
 
@@ -97,7 +196,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
         deliveryRepository.deleteAllById(ids);
     }
-    
+
     @Override
     public void deleteByQuoteId(Long quoteId) {
         if (quoteId == null) {
@@ -135,16 +234,16 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                              String createdAt,
                                                              String updatedAt,
                                                              Pageable pageable) {
-        
+
         // Buscar todas as entregas com os filtros
         List<Delivery> allDeliveries = deliveryRepository.findByTaskFilters(
                 taskName, taskCode, status, createdAt, updatedAt
         );
-        
+
         // Agrupar por Quote ID (que representa uma tarefa)
         Map<Long, List<Delivery>> groupedByQuote = allDeliveries.stream()
                 .collect(Collectors.groupingBy(delivery -> delivery.getQuote().getId()));
-        
+
         // Converter para DeliveryGroupResponse
         List<DeliveryGroupResponse> groupedDeliveries = groupedByQuote.entrySet().stream()
                 .map(entry -> {
@@ -152,19 +251,19 @@ public class DeliveryServiceImpl implements DeliveryService {
                     List<Delivery> deliveries = entry.getValue();
                     Delivery firstDelivery = deliveries.get(0);
                     Quote quote = firstDelivery.getQuote();
-                    
+
                     List<DeliveryResponse> deliveryResponses = deliveries.stream()
                             .map(DeliveryAdapter::toResponseDTO)
                             .collect(Collectors.toList());
-                    
+
                     long completedCount = deliveries.stream()
                             .filter(d -> "COMPLETED".equals(d.getStatus()))
                             .count();
-                    
+
                     long pendingCount = deliveries.stream()
                             .filter(d -> !"COMPLETED".equals(d.getStatus()))
                             .count();
-                    
+
                     return DeliveryGroupResponse.builder()
                             .quoteId(quoteId)
                             .taskName(quote.getTask() != null ? quote.getTask().getTitle() : "N/A")
@@ -180,40 +279,40 @@ public class DeliveryServiceImpl implements DeliveryService {
                             .build();
                 })
                 .collect(Collectors.toList());
-        
+
         // Aplicar paginação manual
         int start = (int) pageable.getOffset();
         int end = Math.min(start + pageable.getPageSize(), groupedDeliveries.size());
-        
-        List<DeliveryGroupResponse> pageContent = start >= groupedDeliveries.size() ? 
+
+        List<DeliveryGroupResponse> pageContent = start >= groupedDeliveries.size() ?
                 List.of() : groupedDeliveries.subList(start, end);
-        
+
         return new PageImpl<>(pageContent, pageable, groupedDeliveries.size());
     }
 
     @Override
     public DeliveryGroupResponse findGroupDetailsByQuoteId(Long quoteId) {
         List<Delivery> deliveries = deliveryRepository.findByQuoteId(quoteId);
-        
+
         if (deliveries.isEmpty()) {
             throw new RuntimeException("No deliveries found for quote ID: " + quoteId);
         }
-        
+
         Delivery firstDelivery = deliveries.get(0);
         Quote quote = firstDelivery.getQuote();
-        
+
         List<DeliveryResponse> deliveryResponses = deliveries.stream()
                 .map(DeliveryAdapter::toResponseDTO)
                 .collect(Collectors.toList());
-        
+
         long completedCount = deliveries.stream()
                 .filter(d -> "COMPLETED".equals(d.getStatus()))
                 .count();
-        
+
         long pendingCount = deliveries.stream()
                 .filter(d -> !"COMPLETED".equals(d.getStatus()))
                 .count();
-        
+
         return DeliveryGroupResponse.builder()
                 .quoteId(quoteId)
                 .taskName(quote.getTask() != null ? quote.getTask().getTitle() : "N/A")

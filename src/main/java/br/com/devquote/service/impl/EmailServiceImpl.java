@@ -1,6 +1,7 @@
 package br.com.devquote.service.impl;
 
 import br.com.devquote.configuration.EmailProperties;
+import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
 import br.com.devquote.repository.SubTaskRepository;
@@ -30,7 +31,7 @@ public class EmailServiceImpl implements EmailService {
     private final TemplateEngine templateEngine;
     private final EmailProperties emailProperties;
     private final SubTaskRepository subTaskRepository;
-    
+
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Override
@@ -43,14 +44,14 @@ public class EmailServiceImpl implements EmailService {
 
         try {
             log.info("Sending task created notification for task ID: {}", task.getId());
-            
-            String subject = String.format("DevQuote - Nova tarefa criada: [%s] - %s", 
-                task.getCode() != null ? task.getCode() : task.getId(), 
+
+            String subject = String.format("DevQuote - Nova tarefa criada: [%s] - %s",
+                task.getCode() != null ? task.getCode() : task.getId(),
                 task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskCreatedEmailContent(task);
-            
+
             sendToMultipleRecipients(task, subject, htmlContent, "created");
-            
+
         } catch (Exception e) {
             log.error("Failed to send task created notification for task ID: {}", task.getId(), e);
         }
@@ -66,14 +67,14 @@ public class EmailServiceImpl implements EmailService {
 
         try {
             log.info("Sending task updated notification for task ID: {}", task.getId());
-            
-            String subject = String.format("DevQuote - Tarefa editada: [%s] - %s", 
-                task.getCode() != null ? task.getCode() : task.getId(), 
+
+            String subject = String.format("DevQuote - Tarefa editada: [%s] - %s",
+                task.getCode() != null ? task.getCode() : task.getId(),
                 task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskUpdatedEmailContent(task);
-            
+
             sendToMultipleRecipients(task, subject, htmlContent, "updated");
-            
+
         } catch (Exception e) {
             log.error("Failed to send task updated notification for task ID: {}", task.getId(), e);
         }
@@ -89,14 +90,14 @@ public class EmailServiceImpl implements EmailService {
 
         try {
             log.info("Sending task deleted notification for task ID: {}", task.getId());
-            
-            String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s", 
-                task.getCode() != null ? task.getCode() : task.getId(), 
+
+            String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s",
+                task.getCode() != null ? task.getCode() : task.getId(),
                 task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskDeletedEmailContent(task);
-            
+
             sendToMultipleRecipients(task, subject, htmlContent, "deleted");
-            
+
         } catch (Exception e) {
             log.error("Failed to send task deleted notification for task ID: {}", task.getId(), e);
         }
@@ -105,16 +106,16 @@ public class EmailServiceImpl implements EmailService {
     private void sendToMultipleRecipients(Task task, String subject, String htmlContent, String action) {
         // Lista de destinatários
         java.util.List<String> recipients = new java.util.ArrayList<>();
-        
+
         // Adicionar email do solicitante se existir
-        if (task.getRequester() != null && task.getRequester().getEmail() != null 
+        if (task.getRequester() != null && task.getRequester().getEmail() != null
             && !task.getRequester().getEmail().trim().isEmpty()) {
             recipients.add(task.getRequester().getEmail());
             log.info("Added requester email to recipients for {} action: {}", action, task.getRequester().getEmail());
         } else {
             log.warn("Requester email not available for task ID: {} ({} action)", task.getId(), action);
         }
-        
+
         // Sempre adicionar o email do remetente (você)
         if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
             // Evitar duplicata caso o solicitante seja o mesmo email do remetente
@@ -123,31 +124,31 @@ public class EmailServiceImpl implements EmailService {
                 log.info("Added sender email to recipients for {} action: {}", action, emailProperties.getFrom());
             }
         }
-        
+
         // Verificar se há destinatários
         if (recipients.isEmpty()) {
             log.error("No valid recipients found for task ID: {} ({} action)", task.getId(), action);
             return;
         }
-        
+
         // Enviar para todos os destinatários
         for (String recipient : recipients) {
             try {
                 sendEmail(recipient, subject, htmlContent);
-                log.info("Task {} notification sent successfully for task ID: {} to email: {}", 
+                log.info("Task {} notification sent successfully for task ID: {} to email: {}",
                     action, task.getId(), recipient);
             } catch (Exception e) {
                 log.error("Failed to send {} notification to {}: {}", action, recipient, e.getMessage());
             }
         }
-        
-        log.info("Task {} notification process completed for task ID: {}. Sent to {} recipients.", 
+
+        log.info("Task {} notification process completed for task ID: {}. Sent to {} recipients.",
             action, task.getId(), recipients.size());
     }
 
     private String buildTaskCreatedEmailContent(Task task) {
         Context context = new Context();
-        
+
         // Dados principais da tarefa
         context.setVariable("task", task);
         context.setVariable("taskId", task.getId());
@@ -164,15 +165,15 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskNotes", task.getNotes() != null ? task.getNotes() : "");
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
-        
+
         // Dados do solicitante
         context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
         context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
         context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
-        
+
         // Buscar subtarefas da tarefa e traduzir status
         java.util.List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
-        
+
         // Criar lista com dados das subtarefas já traduzidos
         java.util.List<java.util.Map<String, String>> subTasksTranslated = null;
         if (subTasks != null) {
@@ -184,10 +185,10 @@ public class EmailServiceImpl implements EmailService {
                 return subtaskMap;
             }).collect(java.util.stream.Collectors.toList());
         }
-        
+
         context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
         context.setVariable("subTasks", subTasksTranslated);
-        
+
         // Função para traduzir status e obter classes CSS (disponível no template)
         context.setVariable("translateStatus", new Object() {
             public String translate(String status) {
@@ -204,13 +205,13 @@ public class EmailServiceImpl implements EmailService {
                 return getPriorityCssClass(priority);
             }
         });
-        
+
         return templateEngine.process("email/task-created", context);
     }
 
     private String buildTaskUpdatedEmailContent(Task task) {
         Context context = new Context();
-        
+
         // Dados principais da tarefa
         context.setVariable("task", task);
         context.setVariable("taskId", task.getId());
@@ -227,15 +228,15 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskNotes", task.getNotes() != null ? task.getNotes() : "");
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
-        
+
         // Dados do solicitante
         context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
         context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
         context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
-        
+
         // Buscar subtarefas da tarefa e traduzir status
         java.util.List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
-        
+
         // Criar lista com dados das subtarefas já traduzidos
         java.util.List<java.util.Map<String, String>> subTasksTranslated = null;
         if (subTasks != null) {
@@ -247,10 +248,10 @@ public class EmailServiceImpl implements EmailService {
                 return subtaskMap;
             }).collect(java.util.stream.Collectors.toList());
         }
-        
+
         context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
         context.setVariable("subTasks", subTasksTranslated);
-        
+
         // Função para traduzir status e obter classes CSS (disponível no template)
         context.setVariable("translateStatus", new Object() {
             public String translate(String status) {
@@ -267,13 +268,13 @@ public class EmailServiceImpl implements EmailService {
                 return getPriorityCssClass(priority);
             }
         });
-        
+
         return templateEngine.process("email/task-updated", context);
     }
 
     private String buildTaskDeletedEmailContent(Task task) {
         Context context = new Context();
-        
+
         // Dados principais da tarefa
         context.setVariable("task", task);
         context.setVariable("taskId", task.getId());
@@ -290,15 +291,15 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskNotes", task.getNotes() != null ? task.getNotes() : "");
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
-        
+
         // Dados do solicitante
         context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
         context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
         context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
-        
+
         // Buscar subtarefas da tarefa e traduzir status
         java.util.List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
-        
+
         // Criar lista com dados das subtarefas já traduzidos
         java.util.List<java.util.Map<String, String>> subTasksTranslated = null;
         if (subTasks != null) {
@@ -310,10 +311,10 @@ public class EmailServiceImpl implements EmailService {
                 return subtaskMap;
             }).collect(java.util.stream.Collectors.toList());
         }
-        
+
         context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
         context.setVariable("subTasks", subTasksTranslated);
-        
+
         // Função para traduzir status e obter classes CSS (disponível no template)
         context.setVariable("translateStatus", new Object() {
             public String translate(String status) {
@@ -330,22 +331,224 @@ public class EmailServiceImpl implements EmailService {
                 return getPriorityCssClass(priority);
             }
         });
-        
+
         return templateEngine.process("email/task-deleted", context);
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendDeliveryCreatedNotification(Delivery delivery) {
+        if (!emailProperties.isEnabled()) {
+            log.debug("Email notifications are disabled");
+            return;
+        }
+
+        try {
+            log.info("Sending delivery created notification for delivery ID: {}", delivery.getId());
+
+            String subject = String.format("DevQuote - Nova entrega criada: #%d", delivery.getId());
+            String htmlContent = buildDeliveryCreatedEmailContent(delivery);
+
+            sendToMultipleRecipientsForDelivery(delivery, subject, htmlContent, "created");
+
+        } catch (Exception e) {
+            log.error("Failed to send delivery created notification for delivery ID: {}", delivery.getId(), e);
+        }
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendDeliveryUpdatedNotification(Delivery delivery) {
+        if (!emailProperties.isEnabled()) {
+            log.debug("Email notifications are disabled");
+            return;
+        }
+
+        try {
+            log.info("Sending delivery updated notification for delivery ID: {}", delivery.getId());
+
+            String subject = String.format("DevQuote - Entrega editada: #%d", delivery.getId());
+            String htmlContent = buildDeliveryUpdatedEmailContent(delivery);
+
+            sendToMultipleRecipientsForDelivery(delivery, subject, htmlContent, "updated");
+
+        } catch (Exception e) {
+            log.error("Failed to send delivery updated notification for delivery ID: {}", delivery.getId(), e);
+        }
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendDeliveryDeletedNotification(Delivery delivery) {
+        if (!emailProperties.isEnabled()) {
+            log.debug("Email notifications are disabled");
+            return;
+        }
+
+        try {
+            log.info("Sending delivery deleted notification for delivery ID: {}", delivery.getId());
+
+            String subject = String.format("DevQuote - Entrega excluída: #%d", delivery.getId());
+            String htmlContent = buildDeliveryDeletedEmailContent(delivery);
+
+            sendToMultipleRecipientsForDelivery(delivery, subject, htmlContent, "deleted");
+
+        } catch (Exception e) {
+            log.error("Failed to send delivery deleted notification for delivery ID: {}", delivery.getId(), e);
+        }
+    }
+
+    private void sendToMultipleRecipientsForDelivery(Delivery delivery, String subject, String htmlContent, String action) {
+        // Lista de destinatários
+        java.util.List<String> recipients = new java.util.ArrayList<>();
+
+        // Adicionar email do solicitante se existir (através do Quote)
+        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null
+            && delivery.getQuote().getTask().getRequester() != null
+            && delivery.getQuote().getTask().getRequester().getEmail() != null
+            && !delivery.getQuote().getTask().getRequester().getEmail().trim().isEmpty()) {
+            String requesterEmail = delivery.getQuote().getTask().getRequester().getEmail();
+            recipients.add(requesterEmail);
+            log.info("Added requester email to recipients for delivery {} action: {}", action, requesterEmail);
+        } else {
+            log.warn("Requester email not available for delivery ID: {} ({} action)", delivery.getId(), action);
+        }
+
+        // Sempre adicionar o email do remetente (você)
+        if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
+            // Evitar duplicata caso o solicitante seja o mesmo email do remetente
+            if (!recipients.contains(emailProperties.getFrom())) {
+                recipients.add(emailProperties.getFrom());
+                log.info("Added sender email to recipients for delivery {} action: {}", action, emailProperties.getFrom());
+            }
+        }
+
+        // Verificar se há destinatários
+        if (recipients.isEmpty()) {
+            log.error("No valid recipients found for delivery ID: {} ({} action)", delivery.getId(), action);
+            return;
+        }
+
+        // Enviar para todos os destinatários
+        for (String recipient : recipients) {
+            try {
+                sendEmail(recipient, subject, htmlContent);
+                log.info("Delivery {} notification sent successfully for delivery ID: {} to email: {}",
+                    action, delivery.getId(), recipient);
+            } catch (Exception e) {
+                log.error("Failed to send delivery {} notification to {}: {}", action, recipient, e.getMessage());
+            }
+        }
+
+        log.info("Delivery {} notification process completed for delivery ID: {}. Sent to {} recipients.",
+            action, delivery.getId(), recipients.size());
+    }
+
+    private String buildDeliveryCreatedEmailContent(Delivery delivery) {
+        Context context = new Context();
+
+        // Dados principais da entrega
+        context.setVariable("delivery", delivery);
+        context.setVariable("deliveryId", delivery.getId());
+        context.setVariable("deliveryStatus", translateDeliveryStatus(delivery.getStatus()));
+        context.setVariable("deliveryBranch", delivery.getBranch() != null ? delivery.getBranch() : "");
+        context.setVariable("deliverySourceBranch", delivery.getSourceBranch() != null ? delivery.getSourceBranch() : "");
+        context.setVariable("deliveryPullRequest", delivery.getPullRequest() != null ? delivery.getPullRequest() : "");
+        context.setVariable("deliveryScript", delivery.getScript() != null ? delivery.getScript() : "");
+        context.setVariable("deliveryNotes", delivery.getNotes() != null ? delivery.getNotes() : "");
+        context.setVariable("deliveryStartedAt", delivery.getStartedAt() != null ? delivery.getStartedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+        context.setVariable("deliveryFinishedAt", delivery.getFinishedAt() != null ? delivery.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+        context.setVariable("createdBy", delivery.getCreatedBy() != null ? delivery.getCreatedBy().getUsername() : "Sistema");
+        context.setVariable("createdAt", delivery.getCreatedAt().format(DATE_FORMATTER));
+
+        // Dados do orçamento/tarefa
+        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null) {
+            context.setVariable("quoteCode", delivery.getQuote().getTask().getCode() != null ? delivery.getQuote().getTask().getCode() : "");
+            context.setVariable("quoteName", delivery.getQuote().getTask().getTitle() != null ? delivery.getQuote().getTask().getTitle() : "");
+            context.setVariable("requesterName", delivery.getQuote().getTask().getRequester() != null ? delivery.getQuote().getTask().getRequester().getName() : "");
+            context.setVariable("requesterEmail", delivery.getQuote().getTask().getRequester() != null && delivery.getQuote().getTask().getRequester().getEmail() != null ? delivery.getQuote().getTask().getRequester().getEmail() : "");
+        } else {
+            context.setVariable("quoteCode", "");
+            context.setVariable("quoteName", "");
+            context.setVariable("requesterName", "");
+            context.setVariable("requesterEmail", "");
+        }
+
+        return templateEngine.process("email/delivery-created", context);
+    }
+
+    private String buildDeliveryUpdatedEmailContent(Delivery delivery) {
+        Context context = new Context();
+
+        // Reutilizar a mesma lógica de construção de contexto
+        buildDeliveryEmailContext(context, delivery);
+
+        return templateEngine.process("email/delivery-updated", context);
+    }
+
+    private String buildDeliveryDeletedEmailContent(Delivery delivery) {
+        Context context = new Context();
+
+        // Reutilizar a mesma lógica de construção de contexto
+        buildDeliveryEmailContext(context, delivery);
+
+        return templateEngine.process("email/delivery-deleted", context);
+    }
+
+    private void buildDeliveryEmailContext(Context context, Delivery delivery) {
+        // Dados principais da entrega
+        context.setVariable("delivery", delivery);
+        context.setVariable("deliveryId", delivery.getId());
+        context.setVariable("deliveryStatus", translateDeliveryStatus(delivery.getStatus()));
+        context.setVariable("deliveryBranch", delivery.getBranch() != null ? delivery.getBranch() : "");
+        context.setVariable("deliverySourceBranch", delivery.getSourceBranch() != null ? delivery.getSourceBranch() : "");
+        context.setVariable("deliveryPullRequest", delivery.getPullRequest() != null ? delivery.getPullRequest() : "");
+        context.setVariable("deliveryScript", delivery.getScript() != null ? delivery.getScript() : "");
+        context.setVariable("deliveryNotes", delivery.getNotes() != null ? delivery.getNotes() : "");
+        context.setVariable("deliveryStartedAt", delivery.getStartedAt() != null ? delivery.getStartedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+        context.setVariable("deliveryFinishedAt", delivery.getFinishedAt() != null ? delivery.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+        context.setVariable("createdBy", delivery.getCreatedBy() != null ? delivery.getCreatedBy().getUsername() : "Sistema");
+        context.setVariable("createdAt", delivery.getCreatedAt().format(DATE_FORMATTER));
+
+        // Dados do orçamento/tarefa
+        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null) {
+            context.setVariable("quoteCode", delivery.getQuote().getTask().getCode() != null ? delivery.getQuote().getTask().getCode() : "");
+            context.setVariable("quoteName", delivery.getQuote().getTask().getTitle() != null ? delivery.getQuote().getTask().getTitle() : "");
+            context.setVariable("requesterName", delivery.getQuote().getTask().getRequester() != null ? delivery.getQuote().getTask().getRequester().getName() : "");
+            context.setVariable("requesterEmail", delivery.getQuote().getTask().getRequester() != null && delivery.getQuote().getTask().getRequester().getEmail() != null ? delivery.getQuote().getTask().getRequester().getEmail() : "");
+        } else {
+            context.setVariable("quoteCode", "");
+            context.setVariable("quoteName", "");
+            context.setVariable("requesterName", "");
+            context.setVariable("requesterEmail", "");
+        }
+    }
+
+    private String translateDeliveryStatus(String status) {
+        if (status == null) return "N/A";
+        return switch (status.toUpperCase()) {
+            case "PENDING" -> "Pendente";
+            case "IN_PROGRESS" -> "Em Progresso";
+            case "TESTING" -> "Em Teste";
+            case "DELIVERED" -> "Entregue";
+            case "APPROVED" -> "Aprovado";
+            case "REJECTED" -> "Rejeitado";
+            default -> status;
+        };
     }
 
     private void sendEmail(String to, String subject, String htmlContent) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
+
             helper.setFrom(emailProperties.getFrom());
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
-            
+
             mailSender.send(message);
-            
+
         } catch (MessagingException e) {
             log.error("Failed to send email to: {}", to, e);
             throw new RuntimeException("Failed to send email", e);

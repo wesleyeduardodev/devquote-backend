@@ -1,5 +1,6 @@
 package br.com.devquote.service.impl;
 
+import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Task;
 import br.com.devquote.service.EmailService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,5 +25,20 @@ public class NoOpEmailService implements EmailService {
     @Override
     public void sendTaskDeletedNotification(Task task) {
         log.debug("Email notifications are disabled - skipping task deleted notification for task ID: {}", task.getId());
+    }
+
+    @Override
+    public void sendDeliveryCreatedNotification(Delivery delivery) {
+        log.debug("Email notifications are disabled - skipping delivery created notification for delivery ID: {}", delivery.getId());
+    }
+
+    @Override
+    public void sendDeliveryUpdatedNotification(Delivery delivery) {
+        log.debug("Email notifications are disabled - skipping delivery updated notification for delivery ID: {}", delivery.getId());
+    }
+
+    @Override
+    public void sendDeliveryDeletedNotification(Delivery delivery) {
+        log.debug("Email notifications are disabled - skipping delivery deleted notification for delivery ID: {}", delivery.getId());
     }
 }
