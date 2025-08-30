@@ -658,7 +658,6 @@ public class ExcelReportUtils {
 
         // Criar estilos com cores neutras e discretas para diferentes seções
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.GREY_25_PERCENT.getIndex());
-        CellStyle subtaskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_TURQUOISE.getIndex());
         CellStyle quoteHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LAVENDER.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle billingHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LEMON_CHIFFON.getIndex());
@@ -669,7 +668,7 @@ public class ExcelReportUtils {
         CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
-        // Headers organizados por seções com cores - Estrutura corrigida
+        // Headers organizados: Tarefas → Orçamentos → Entregas → Faturamento
         String[] headers = {
             // TAREFAS (Cinza) - 14 colunas (inclui metadados da tarefa)
             "ID Tarefa", "Código", "Título", "Descrição", "Status", "Prioridade", "Valor", "Solicitante", 
@@ -690,7 +689,7 @@ public class ExcelReportUtils {
         // Aplicar cores nos headers por seção - Estrutura corrigida (29 colunas)
         int colIndex = 0;
         
-        // TAREFAS + METADADOS (0-13) - Cinza (inclui Criado Por, Atualizado Por, Sistema Origem, Módulo)
+        // TAREFAS + METADADOS (0-13) - Cinza
         for (int i = 0; i < 14; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
@@ -704,7 +703,7 @@ public class ExcelReportUtils {
             cell.setCellStyle(quoteHeaderStyle);
         }
         
-        // ENTREGAS (18-25) - Azul Pálido (Pull Request reorganizado)
+        // ENTREGAS (18-25) - Azul Pálido
         for (int i = 18; i < 26; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);

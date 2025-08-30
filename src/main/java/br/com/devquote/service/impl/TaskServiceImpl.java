@@ -668,9 +668,9 @@ public class TaskServiceImpl implements TaskService {
     public byte[] exportGeneralReport() throws IOException {
         log.info("GENERAL REPORT EXPORT STARTED");
 
-        // Query complexa juntando todas as tabelas do sistema - Estrutura corrigida
+        // Query incluindo subtarefas na estrutura correta: Tarefas → Subtarefas → Orçamentos → Entregas → Faturamento
         String sql = """
-            SELECT DISTINCT
+            SELECT 
                 -- DADOS DA TAREFA
                 t.id as task_id,
                 t.code as task_code,
@@ -695,15 +695,15 @@ public class TaskServiceImpl implements TaskService {
                 q.total_amount as quote_amount,
                 q.created_at as quote_created_at,
                 
-                -- DADOS DE ENTREGAS (primeira entrega apenas)
-                (SELECT d.id FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_id,
-                (SELECT d.status FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_status,
-                (SELECT p.name FROM delivery d INNER JOIN project p ON d.project_id = p.id WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as project_name,
-                (SELECT d.pull_request FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_pull_request,
-                (SELECT d.branch FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_branch,
-                (SELECT d.script FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_script,
-                (SELECT d.started_at FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_started_at,
-                (SELECT d.finished_at FROM delivery d WHERE d.quote_id = q.id ORDER BY d.id LIMIT 1) as delivery_finished_at,
+                -- DADOS DE ENTREGAS (LEFT JOIN direto para múltiplas linhas)
+                d.id as delivery_id,
+                d.status as delivery_status,
+                p.name as project_name,
+                d.pull_request as delivery_pull_request,
+                d.branch as delivery_branch,
+                d.script as delivery_script,
+                d.started_at as delivery_started_at,
+                d.finished_at as delivery_finished_at,
                 
                 -- DADOS DE FATURAMENTO
                 qbm.year as billing_year,
@@ -715,9 +715,11 @@ public class TaskServiceImpl implements TaskService {
             LEFT JOIN users cb ON t.created_by = cb.id
             LEFT JOIN users ub ON t.updated_by = ub.id
             LEFT JOIN quote q ON q.task_id = t.id
+            LEFT JOIN delivery d ON d.quote_id = q.id
+            LEFT JOIN project p ON d.project_id = p.id
             LEFT JOIN quote_billing_month_quote qbmq ON qbmq.quote_id = q.id
             LEFT JOIN quote_billing_month qbm ON qbmq.quote_billing_month_id = qbm.id
-            ORDER BY t.id DESC
+            ORDER BY t.id DESC, d.id ASC
         """;
 
         Query query = entityManager.createNativeQuery(sql);
