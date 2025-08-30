@@ -777,4 +777,92 @@ public class TaskServiceImpl implements TaskService {
 
         return result;
     }
+
+    @Override
+    public byte[] exportGeneralReportForUser() throws IOException {
+        log.info("GENERAL REPORT FOR USER EXPORT STARTED");
+
+        // Query sem dados de orçamento, faturamento e valor da tarefa
+        String sql = """
+            SELECT 
+                -- DADOS DA TAREFA (sem valor)
+                t.id as task_id,
+                t.code as task_code,
+                t.title as task_title,
+                t.description as task_description,
+                t.status as task_status,
+                t.priority as task_priority,
+                r.name as requester_name,
+                t.created_at as task_created_at,
+                t.updated_at as task_updated_at,
+                
+                -- METADADOS DA TAREFA
+                cb.username as created_by_name,
+                ub.username as updated_by_name,
+                t.server_origin as task_server_origin,
+                t.system_module as task_system_module,
+                
+                -- DADOS DE ENTREGAS
+                d.id as delivery_id,
+                d.status as delivery_status,
+                p.name as project_name,
+                d.pull_request as delivery_pull_request,
+                d.branch as delivery_branch,
+                d.script as delivery_script,
+                d.started_at as delivery_started_at,
+                d.finished_at as delivery_finished_at
+                
+            FROM task t
+            INNER JOIN requester r ON t.requester_id = r.id
+            LEFT JOIN users cb ON t.created_by = cb.id
+            LEFT JOIN users ub ON t.updated_by = ub.id
+            LEFT JOIN quote q ON q.task_id = t.id
+            LEFT JOIN delivery d ON d.quote_id = q.id
+            LEFT JOIN project p ON d.project_id = p.id
+            ORDER BY t.id DESC, d.id ASC
+        """;
+
+        Query query = entityManager.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = query.getResultList();
+
+        List<Map<String, Object>> data = results.stream().map(row -> {
+            Map<String, Object> map = new HashMap<>();
+
+            // DADOS DA TAREFA (0-8) - sem valor
+            map.put("task_id", row[0]);
+            map.put("task_code", row[1]);
+            map.put("task_title", row[2]);
+            map.put("task_description", row[3]);
+            map.put("task_status", row[4]);
+            map.put("task_priority", row[5]);
+            map.put("requester_name", row[6]);
+            map.put("task_created_at", row[7]);
+            map.put("task_updated_at", row[8]);
+
+            // METADADOS DA TAREFA (9-12)
+            map.put("created_by_name", row[9]);
+            map.put("updated_by_name", row[10]);
+            map.put("task_server_origin", row[11]);
+            map.put("task_system_module", row[12]);
+
+            // DADOS DE ENTREGAS (13-20)
+            map.put("delivery_id", row[13]);
+            map.put("delivery_status", row[14]);
+            map.put("project_name", row[15]);
+            map.put("delivery_pull_request", row[16]);
+            map.put("delivery_branch", row[17]);
+            map.put("delivery_script", row[18]);
+            map.put("delivery_started_at", row[19]);
+            map.put("delivery_finished_at", row[20]);
+
+            return map;
+        }).collect(Collectors.toList());
+
+        log.info("GENERAL REPORT FOR USER generating file with {} records", data.size());
+        byte[] result = excelReportUtils.generateGeneralReportForUser(data);
+        log.info("GENERAL REPORT FOR USER completed successfully");
+
+        return result;
+    }
 }

@@ -44,4 +44,6 @@ public interface TaskService {
     byte[] exportTasksToExcel() throws IOException;
     
     byte[] exportGeneralReport() throws IOException;
+    
+    byte[] exportGeneralReportForUser() throws IOException;
 }

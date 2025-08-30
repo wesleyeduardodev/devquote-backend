@@ -799,6 +799,114 @@ public class ExcelReportUtils {
         return outputStream.toByteArray();
     }
 
+    public byte[] generateGeneralReportForUser(List<Map<String, Object>> data) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Relatório Geral - Visão User");
+
+        // Criar estilos com cores neutras para diferentes seções (sem dados financeiros)
+        CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.GREY_25_PERCENT.getIndex());
+        CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
+
+        // Estilos para dados
+        CellStyle dataStyle = createDataStyle(workbook);
+        CellStyle dateStyle = createDateStyle(workbook);
+        CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
+
+        // Headers organizados: Tarefas → Entregas (sem Orçamentos e Faturamento)
+        String[] headers = {
+            // TAREFAS (Cinza) - 13 colunas (SEM coluna Valor)
+            "ID Tarefa", "Código", "Título", "Descrição", "Status", "Prioridade", "Solicitante", 
+            "Data Criação", "Data Atualização", "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
+            
+            // ENTREGAS (Azul Pálido) - 8 colunas
+            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Script", "Início Entrega", "Fim Entrega"
+        };
+
+        Row headerRow = sheet.createRow(0);
+        
+        // Aplicar cores nos headers por seção - 21 colunas total
+        int colIndex = 0;
+        
+        // TAREFAS (0-12) - Cinza - SEM Valor
+        for (int i = 0; i < 13; i++) {
+            Cell cell = headerRow.createCell(colIndex++);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(taskHeaderStyle);
+        }
+        
+        // ENTREGAS (13-20) - Azul Pálido
+        for (int i = 13; i < 21; i++) {
+            Cell cell = headerRow.createCell(colIndex++);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(deliveryHeaderStyle);
+        }
+
+        // Adicionar dados
+        int rowNum = 1;
+        for (Map<String, Object> taskData : data) {
+            Row row = sheet.createRow(rowNum++);
+
+            colIndex = 0;
+            
+            // DADOS DA TAREFA (0-12) - SEM Valor
+            setCellValue(row, colIndex++, taskData.get("task_id"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_code"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_title"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_description"), dataStyle);
+            setStatusCell(row, colIndex++, taskData.get("task_status"), dataStyle);
+            setPriorityCell(row, colIndex++, taskData.get("task_priority"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("requester_name"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_created_at"), dateStyle);
+            setCellValue(row, colIndex++, taskData.get("task_updated_at"), dateStyle);
+            setCellValue(row, colIndex++, taskData.get("created_by_name"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("updated_by_name"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_server_origin"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("task_system_module"), dataStyle);
+            
+            // DADOS DE ENTREGAS (13-20)
+            setCellValue(row, colIndex++, taskData.get("delivery_id"), dataStyle);
+            setStatusCell(row, colIndex++, taskData.get("delivery_status"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_script"), dataStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
+        }
+
+        // Ajustar larguras das colunas (21 colunas total)
+        setColumnWidths(sheet, new int[]{
+            // TAREFAS (13 colunas) - SEM Valor
+            2500, 3500, 10000, 12000, 3500, 3000, 6000, 6000, 6000, 4000, 4000, 4000, 4000,
+            // ENTREGAS (8 colunas)
+            3000, 3500, 6000, 10000, 8000, 8000, 4000, 4000
+        });
+
+        // Ajustar altura das linhas
+        for (int i = 1; i <= data.size(); i++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                row.setHeightInPoints(40);
+            }
+        }
+
+        // Altura do cabeçalho
+        headerRow.setHeightInPoints(45);
+
+        // Aplicar filtros
+        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
+
+        // Congelar primeira linha (cabeçalho)
+        sheet.createFreezePane(0, 1);
+
+        // Converter para bytes
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream.toByteArray();
+    }
+
     private CellStyle createColoredHeaderStyle(Workbook workbook, short colorIndex) {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();

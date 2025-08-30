@@ -163,4 +163,21 @@ public class TaskController implements TaskControllerDoc {
         
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
+
+    @GetMapping("/export/general-report-user")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<byte[]> exportGeneralReportForUser() throws IOException {
+        byte[] excelData = taskService.exportGeneralReportForUser();
+        
+        String filename = "Relatorio_Geral_User_" + 
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + 
+            ".xlsx";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+        
+        return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
+    }
 }
