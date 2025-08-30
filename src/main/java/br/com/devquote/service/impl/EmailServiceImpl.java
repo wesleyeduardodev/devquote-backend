@@ -44,34 +44,51 @@ public class EmailServiceImpl implements EmailService {
         try {
             log.info("Sending task created notification for task ID: {}", task.getId());
             
-            // Verificar se o solicitante possui email
-            String recipientEmail = null;
-            if (task.getRequester() != null && task.getRequester().getEmail() != null 
-                && !task.getRequester().getEmail().trim().isEmpty()) {
-                recipientEmail = task.getRequester().getEmail();
-                log.info("Sending notification to requester email: {}", recipientEmail);
-            } else {
-                // Fallback para email configurado
-                recipientEmail = emailProperties.getTo();
-                log.warn("Requester email not available for task ID: {}. Using fallback email: {}", 
-                    task.getId(), recipientEmail);
-            }
-
-            // Verificar se há um email de destino válido
-            if (recipientEmail == null || recipientEmail.trim().isEmpty()) {
-                log.error("No valid recipient email found for task ID: {}", task.getId());
-                return;
-            }
-            
             String subject = String.format("DevQuote - Nova tarefa criada: [%s] - %s", 
                 task.getCode() != null ? task.getCode() : task.getId(), 
                 task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskCreatedEmailContent(task);
             
-            sendEmail(recipientEmail, subject, htmlContent);
+            // Lista de destinatários
+            java.util.List<String> recipients = new java.util.ArrayList<>();
             
-            log.info("Task created notification sent successfully for task ID: {} to email: {}", 
-                task.getId(), recipientEmail);
+            // Adicionar email do solicitante se existir
+            if (task.getRequester() != null && task.getRequester().getEmail() != null 
+                && !task.getRequester().getEmail().trim().isEmpty()) {
+                recipients.add(task.getRequester().getEmail());
+                log.info("Added requester email to recipients: {}", task.getRequester().getEmail());
+            } else {
+                log.warn("Requester email not available for task ID: {}", task.getId());
+            }
+            
+            // Sempre adicionar o email do remetente (você)
+            if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
+                // Evitar duplicata caso o solicitante seja o mesmo email do remetente
+                if (!recipients.contains(emailProperties.getFrom())) {
+                    recipients.add(emailProperties.getFrom());
+                    log.info("Added sender email to recipients: {}", emailProperties.getFrom());
+                }
+            }
+            
+            // Verificar se há destinatários
+            if (recipients.isEmpty()) {
+                log.error("No valid recipients found for task ID: {}", task.getId());
+                return;
+            }
+            
+            // Enviar para todos os destinatários
+            for (String recipient : recipients) {
+                try {
+                    sendEmail(recipient, subject, htmlContent);
+                    log.info("Task created notification sent successfully for task ID: {} to email: {}", 
+                        task.getId(), recipient);
+                } catch (Exception e) {
+                    log.error("Failed to send notification to {}: {}", recipient, e.getMessage());
+                }
+            }
+            
+            log.info("Task created notification process completed for task ID: {}. Sent to {} recipients.", 
+                task.getId(), recipients.size());
             
         } catch (Exception e) {
             log.error("Failed to send task created notification for task ID: {}", task.getId(), e);

@@ -10,6 +10,4 @@ import org.springframework.stereotype.Component;
 public class EmailProperties {
     private boolean enabled = true;
     private String from = "wesleyeduardo.dev@gmail.com";
-    private String to = "wesleyeduardo.dev@gmail.com";
-    private boolean async = true;
 }

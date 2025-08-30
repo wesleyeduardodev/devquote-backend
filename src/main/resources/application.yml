@@ -76,8 +76,6 @@ devquote:
     email:
       enabled: ${DEVQUOTE_EMAIL_ENABLED:false}
       from: ${DEVQUOTE_EMAIL_FROM:}
-      to: ${DEVQUOTE_EMAIL_TO:}
-      async: ${DEVQUOTE_EMAIL_ASYNC:true}
 
 # JWT Configuration (usa ENV em produção)
 app:
