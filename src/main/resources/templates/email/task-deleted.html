@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarefa Excluída - DevQuote</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .section h2 {
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+        }
+        .info-grid {
+            display: table;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        .info-row {
+            display: table-row;
+        }
+        .info-label {
+            display: table-cell;
+            font-weight: 600;
+            color: #555;
+            padding-right: 15px;
+            width: 150px;
+            vertical-align: top;
+        }
+        .info-value {
+            display: table-cell;
+            color: #333;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status.pending, .status.pendente {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status.in-progress, .status.em-progresso {
+            background-color: #cce5ff;
+            color: #004080;
+        }
+        .status.completed, .status.concluida {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .priority {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .priority.alta, .priority.urgente, .priority.critical, .priority.critica {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .priority.media, .priority.medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .priority.baixa, .priority.low {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .subtask-item {
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .subtask-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        .subtask-description {
+            color: #666;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .subtask-status {
+            margin-top: 8px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+            color: #666;
+            font-size: 12px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .link {
+            color: #dc3545;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .warning-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        @media (max-width: 700px) {
+            .container {
+                margin: 10px;
+                border-radius: 0;
+            }
+            .header, .content {
+                padding: 20px;
+            }
+            .info-grid {
+                display: block;
+            }
+            .info-row {
+                display: block;
+                margin-bottom: 10px;
+            }
+            .info-label, .info-value {
+                display: block;
+                width: 100%;
+                padding-right: 0;
+            }
+            .info-label {
+                margin-bottom: 5px;
+                font-weight: 700;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🗑️ DevQuote</div>
+            <h1>Tarefa Excluída</h1>
+            <p>Uma tarefa foi removida do sistema</p>
+        </div>
+
+        <div class="content">
+            <div class="warning-box">
+                <strong>⚠️ Atenção:</strong>
+                Esta tarefa foi permanentemente excluída do sistema. Os dados abaixo representam o último estado da tarefa antes da exclusão.
+            </div>
+
+            <!-- DADOS PRINCIPAIS DA TAREFA -->
+            <div class="section">
+                <h2>📋 Dados da Tarefa (Excluída)</h2>
+
+                <div class="info-grid">
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskId)}">
+                        <div class="info-label">ID:</div>
+                        <div class="info-value" th:text="${taskId}">123</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskCode)}">
+                        <div class="info-label">Código:</div>
+                        <div class="info-value" th:text="${taskCode}">TSK-001</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskTitle)}">
+                        <div class="info-label">Título:</div>
+                        <div class="info-value" th:text="${taskTitle}">Título da tarefa</div>
+                    </div>
+                    <div class="info-row" th:if="${taskDescription != null and !#strings.isEmpty(taskDescription)}">
+                        <div class="info-label">Descrição:</div>
+                        <div class="info-value" th:text="${taskDescription}">Descrição da tarefa</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskStatus)}">
+                        <div class="info-label">Status:</div>
+                        <div class="info-value">
+                            <span class="status pending" th:text="${taskStatus}">Pendente</span>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskPriority)}">
+                        <div class="info-label">Prioridade:</div>
+                        <div class="info-value">
+                            <span class="priority media" th:text="${taskPriority}">Média</span>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskType)}">
+                        <div class="info-label">Tipo da Tarefa:</div>
+                        <div class="info-value" th:text="${taskType}">Nova Funcionalidade</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskSystemModule)}">
+                        <div class="info-label">Módulo do Sistema:</div>
+                        <div class="info-value" th:text="${taskSystemModule}">Backend</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskServerOrigin)}">
+                        <div class="info-label">Servidor de Origem:</div>
+                        <div class="info-value" th:text="${taskServerOrigin}">Produção</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskLink)}">
+                        <div class="info-label">Link da Tarefa:</div>
+                        <div class="info-value">
+                            <a href="#" th:href="${taskLink}" th:text="${taskLink}" class="link">Link da tarefa</a>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskMeetingLink)}">
+                        <div class="info-label">Link da Reunião:</div>
+                        <div class="info-value">
+                            <a href="#" th:href="${taskMeetingLink}" th:text="${taskMeetingLink}" class="link">Link da reunião</a>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskNotes)}">
+                        <div class="info-label">Notas:</div>
+                        <div class="info-value" th:text="${taskNotes}">Observações adicionais</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(createdBy)}">
+                        <div class="info-label">Criado por:</div>
+                        <div class="info-value" th:text="${createdBy}">Usuário</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(createdAt)}">
+                        <div class="info-label">Data de Criação:</div>
+                        <div class="info-value" th:text="${createdAt}">01/01/2024 10:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DADOS DO SOLICITANTE -->
+            <div class="section" th:if="${!#strings.isEmpty(requesterName) or !#strings.isEmpty(requesterEmail) or !#strings.isEmpty(requesterPhone)}">
+                <h2>👤 Solicitante</h2>
+
+                <div class="info-grid">
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterName)}">
+                        <div class="info-label">Nome:</div>
+                        <div class="info-value" th:text="${requesterName}">Nome do Solicitante</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterEmail)}">
+                        <div class="info-label">Email:</div>
+                        <div class="info-value">
+                            <a href="#" th:href="${'mailto:' + requesterEmail}" th:text="${requesterEmail}" class="link">email@exemplo.com</a>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterPhone)}">
+                        <div class="info-label">Telefone:</div>
+                        <div class="info-value" th:text="${requesterPhone}">+55 11 99999-9999</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBTAREFAS -->
+            <div class="section" th:if="${hasSubTasks}">
+                <h2>📝 Subtarefas (Excluídas)</h2>
+
+                <div th:each="subtask : ${subTasks}" class="subtask-item">
+                    <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}"
+                         th:text="${subtask.title}">Título da subtarefa</div>
+
+                    <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}"
+                         th:text="${subtask.description}">Descrição da subtarefa</div>
+
+                    <div class="subtask-status" th:if="${!#strings.isEmpty(subtask.status)}">
+                        <strong>Status:</strong>
+                        <span class="status pending" th:text="${subtask.status}">Pendente</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MENSAGEM FINAL -->
+            <p style="color: #666; font-size: 14px; margin-top: 30px;">
+                Esta é uma notificação automática do sistema DevQuote.
+                A tarefa foi permanentemente excluída e não pode ser recuperada.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 DevQuote - Sistema de Gestão de Orçamentos e Projetos</p>
+            <p>Email enviado automaticamente - Não responda a esta mensagem</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -13,6 +13,16 @@ public class NoOpEmailService implements EmailService {
 
     @Override
     public void sendTaskCreatedNotification(Task task) {
-        log.debug("Email notifications are disabled - skipping notification for task ID: {}", task.getId());
+        log.debug("Email notifications are disabled - skipping task created notification for task ID: {}", task.getId());
+    }
+
+    @Override
+    public void sendTaskUpdatedNotification(Task task) {
+        log.debug("Email notifications are disabled - skipping task updated notification for task ID: {}", task.getId());
+    }
+
+    @Override
+    public void sendTaskDeletedNotification(Task task) {
+        log.debug("Email notifications are disabled - skipping task deleted notification for task ID: {}", task.getId());
     }
 }

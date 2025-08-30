@@ -150,6 +150,14 @@ public class TaskServiceImpl implements TaskService {
         entity.setUpdatedBy(currentUser);
 
         entity = taskRepository.save(entity);
+        
+        // Enviar notificação por email
+        try {
+            emailService.sendTaskUpdatedNotification(entity);
+        } catch (Exception e) {
+            log.warn("Failed to send email notification for task update: {}", e.getMessage());
+        }
+        
         return TaskAdapter.toResponseDTO(entity);
     }
 
@@ -163,6 +171,13 @@ public class TaskServiceImpl implements TaskService {
         User currentUser = securityUtils.getCurrentUser();
         log.warn("TASK DELETE id={} title={} user={}",
             id, entity.getTitle(), currentUser != null ? currentUser.getUsername() : "unknown");
+
+        // Enviar notificação por email antes da exclusão
+        try {
+            emailService.sendTaskDeletedNotification(entity);
+        } catch (Exception e) {
+            log.warn("Failed to send email notification for task deletion: {}", e.getMessage());
+        }
 
         taskRepository.deleteById(id);
     }
@@ -275,6 +290,13 @@ public class TaskServiceImpl implements TaskService {
         processTaskAmount(task, updated);
         task = taskRepository.save(task);
 
+        // Enviar notificação por email
+        try {
+            emailService.sendTaskUpdatedNotification(task);
+        } catch (Exception e) {
+            log.warn("Failed to send email notification for task update with subtasks: {}", e.getMessage());
+        }
+
         return buildTaskWithSubTasksResponse(task, updated);
     }
 
@@ -287,6 +309,13 @@ public class TaskServiceImpl implements TaskService {
 
         if (quoteRepository.existsByTaskId(taskId)) {
             throw new RuntimeException("Cannot delete task. It is linked to a quote.");
+        }
+
+        // Enviar notificação por email antes da exclusão
+        try {
+            emailService.sendTaskDeletedNotification(task);
+        } catch (Exception e) {
+            log.warn("Failed to send email notification for task with subtasks deletion: {}", e.getMessage());
         }
 
         subTaskRepository.deleteByTaskId(taskId);

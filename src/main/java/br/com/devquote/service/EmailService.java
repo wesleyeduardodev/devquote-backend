@@ -6,4 +6,8 @@ public interface EmailService {
     
     void sendTaskCreatedNotification(Task task);
     
+    void sendTaskUpdatedNotification(Task task);
+    
+    void sendTaskDeletedNotification(Task task);
+    
 }
