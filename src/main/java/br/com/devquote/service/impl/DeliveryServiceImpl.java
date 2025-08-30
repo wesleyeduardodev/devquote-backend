@@ -10,12 +10,17 @@ import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.repository.ProjectRepository;
 import br.com.devquote.repository.QuoteRepository;
 import br.com.devquote.service.DeliveryService;
+import br.com.devquote.utils.ExcelReportUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,6 +33,8 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final DeliveryRepository deliveryRepository;
     private final QuoteRepository quoteRepository;
     private final ProjectRepository projectRepository;
+    private final EntityManager entityManager;
+    private final ExcelReportUtils excelReportUtils;
 
     @Override
     public List<DeliveryResponse> findAll() {
@@ -220,5 +227,67 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .pendingDeliveries((int) pendingCount)
                 .deliveries(deliveryResponses)
                 .build();
+    }
+
+    @Override
+    public byte[] exportToExcel() throws IOException {
+        String sql = """
+            SELECT 
+                t.id as task_id,
+                t.code as task_code,
+                t.title as task_title,
+                t.status as task_status,
+                t.amount as task_amount,
+                (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
+                r.name as requester_name,
+                d.id as delivery_id,
+                d.status as delivery_status,
+                p.name as project_name,
+                d.pull_request,
+                d.branch,
+                d.script,
+                d.notes,
+                d.started_at,
+                d.finished_at,
+                d.created_at as delivery_created_at,
+                d.updated_at as delivery_updated_at
+            FROM delivery d
+            INNER JOIN project p ON d.project_id = p.id
+            INNER JOIN quote q ON d.quote_id = q.id
+            INNER JOIN task t ON q.task_id = t.id
+            INNER JOIN requester r ON t.requester_id = r.id
+            ORDER BY d.id DESC
+        """;
+
+        Query query = entityManager.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = query.getResultList();
+
+        List<Map<String, Object>> data = results.stream().map(row -> {
+            Map<String, Object> map = new HashMap<>();
+            // Dados da tarefa primeiro
+            map.put("task_id", row[0]);
+            map.put("task_code", row[1]);
+            map.put("task_title", row[2]);
+            map.put("task_status", row[3]);
+            map.put("task_amount", row[4]);
+            map.put("subtasks_count", row[5]);
+            map.put("requester_name", row[6]);
+            // Dados da entrega depois
+            map.put("delivery_id", row[7]);
+            map.put("delivery_status", row[8]);
+            map.put("project_name", row[9]);
+            map.put("pull_request", row[10]);
+            map.put("branch", row[11]);
+            map.put("script", row[12]);
+            map.put("notes", row[13]);
+            map.put("started_at", row[14]);
+            map.put("finished_at", row[15]);
+            map.put("delivery_created_at", row[16]);
+            map.put("delivery_updated_at", row[17]);
+            return map;
+        }).collect(Collectors.toList());
+
+        return excelReportUtils.generateDeliveriesReport(data);
     }
 }

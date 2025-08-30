@@ -12,12 +12,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
@@ -137,5 +142,22 @@ public class DeliveryController implements DeliveryControllerDoc {
     public ResponseEntity<DeliveryGroupResponse> getGroupDetails(@PathVariable Long quoteId) {
         DeliveryGroupResponse groupDetails = deliveryService.findGroupDetailsByQuoteId(quoteId);
         return ResponseEntity.ok(groupDetails);
+    }
+
+    @GetMapping("/export/excel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<byte[]> exportDeliveriesToExcel() throws IOException {
+        byte[] excelData = deliveryService.exportToExcel();
+        
+        String filename = "relatorio_entregas_" + 
+                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + 
+                         ".xlsx";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+        
+        return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
 }
