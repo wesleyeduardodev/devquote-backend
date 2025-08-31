@@ -358,6 +358,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                             .deliveries(deliveryResponses)
                             .build();
                 })
+                .sorted((a, b) -> Long.compare(b.getTaskId(), a.getTaskId())) // Ordenar por taskId decrescente
                 .collect(Collectors.toList());
 
         // Aplicar paginação manual

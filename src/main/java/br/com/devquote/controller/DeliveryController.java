@@ -35,7 +35,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     private final DeliveryService deliveryService;
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id", "taskName", "taskCode", "projectName",
+            "id", "taskId", "taskName", "taskCode", "projectName",
             "branch", "pullRequest", "status", "startedAt", "finishedAt", "createdAt", "updatedAt"
     );
 
