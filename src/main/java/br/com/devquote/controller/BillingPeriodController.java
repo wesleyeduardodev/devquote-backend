@@ -109,4 +109,11 @@ public class BillingPeriodController {
         
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
+
+    @DeleteMapping("/{id}/delete-with-tasks")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Void> deleteWithAllLinkedTasks(@PathVariable Long id) {
+        billingPeriodService.deleteWithAllLinkedTasks(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -226,4 +226,32 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
 
         return excelReportUtils.generateBillingReport(data);
     }
+
+    @Override
+    public void deleteWithAllLinkedTasks(Long id) {
+        log.info("BILLING_PERIOD DELETE_WITH_TASKS id={}", id);
+        
+        // Verificar se o período existe
+        BillingPeriod billingPeriod = billingPeriodRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Billing period not found with id: " + id));
+        
+        try {
+            // 1. Primeiro, remover todos os vínculos de tarefas
+            String deleteTaskLinksQuery = "DELETE FROM billing_period_task WHERE billing_period_id = :billingPeriodId";
+            Query deleteTaskLinksNativeQuery = entityManager.createNativeQuery(deleteTaskLinksQuery);
+            deleteTaskLinksNativeQuery.setParameter("billingPeriodId", id);
+            int deletedLinks = deleteTaskLinksNativeQuery.executeUpdate();
+            
+            log.info("BILLING_PERIOD DELETE_WITH_TASKS id={} deletedTaskLinks={}", id, deletedLinks);
+            
+            // 2. Depois, remover o período de faturamento
+            billingPeriodRepository.deleteById(id);
+            
+            log.info("BILLING_PERIOD DELETE_WITH_TASKS id={} - completed successfully", id);
+            
+        } catch (Exception e) {
+            log.error("BILLING_PERIOD DELETE_WITH_TASKS id={} - error: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Erro ao excluir período de faturamento com tarefas vinculadas: " + e.getMessage());
+        }
+    }
 }

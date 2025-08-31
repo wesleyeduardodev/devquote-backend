@@ -23,4 +23,6 @@ public interface BillingPeriodService {
     Map<String, Object> getStatistics();
     
     byte[] exportToExcel(Integer month, Integer year, String status) throws IOException;
+    
+    void deleteWithAllLinkedTasks(Long id);
 }
