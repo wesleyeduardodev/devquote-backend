@@ -152,7 +152,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         // Enviar notificação por email antes da exclusão
         try {
             log.info("Initiating email notification for delivery deletion with ID: {}", id);
-            
+
             // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
             Delivery deliveryWithRelations = deliveryRepository.findById(id)
                 .map(d -> {
@@ -203,24 +203,24 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (taskId == null) {
             return;
         }
-        
+
         log.info("Starting deletion of deliveries for task ID: {}", taskId);
-        
+
         // Buscar todas as deliveries da task antes de deletar
         List<Delivery> deliveriesToDelete = deliveryRepository.findByTaskId(taskId);
-        
+
         if (deliveriesToDelete.isEmpty()) {
             log.info("No deliveries found for task ID: {}", taskId);
             return;
         }
-        
+
         log.info("Found {} deliveries to delete for task ID: {}", deliveriesToDelete.size(), taskId);
-        
+
         // Enviar notificação por email para cada delivery antes da exclusão
         for (Delivery delivery : deliveriesToDelete) {
             try {
                 log.info("Sending deletion notification for delivery ID: {}", delivery.getId());
-                
+
                 // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
                 Delivery deliveryWithRelations = deliveryRepository.findById(delivery.getId())
                     .map(d -> {
@@ -251,12 +251,12 @@ public class DeliveryServiceImpl implements DeliveryService {
                 log.info("Calling emailService.sendDeliveryDeletedNotification for delivery ID: {}", delivery.getId());
                 emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
                 log.info("Email notification sent for delivery ID: {}", delivery.getId());
-                
+
             } catch (Exception e) {
                 log.error("Failed to send email notification for delivery deletion ID: {}", delivery.getId(), e);
             }
         }
-        
+
         // Deletar todas as deliveries da task
         deliveryRepository.deleteByTaskId(taskId);
         log.info("Successfully deleted {} deliveries for task ID: {}", deliveriesToDelete.size(), taskId);
@@ -291,12 +291,12 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (deliveries.isEmpty()) {
             return "PENDING";
         }
-        
+
         // Considera DELIVERED e APPROVED como entregas finalizadas
         long completedCount = deliveries.stream()
                 .filter(d -> "DELIVERED".equals(d.getStatus()) || "APPROVED".equals(d.getStatus()))
                 .count();
-        
+
         if (completedCount == deliveries.size()) {
             return "COMPLETED"; // Todas entregues/aprovadas
         } else if (completedCount > 0) {
@@ -436,7 +436,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             INNER JOIN project p ON d.project_id = p.id
             INNER JOIN task t ON d.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
-            ORDER BY d.id DESC
+            ORDER BY t.id DESC
         """;
 
         Query query = entityManager.createNativeQuery(sql);
