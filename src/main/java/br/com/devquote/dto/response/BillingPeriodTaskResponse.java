@@ -3,21 +3,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class QuoteBillingMonthResponse {
+public class BillingPeriodTaskResponse {
     private Long id;
-    private Integer month;
-    private Integer year;
-    private LocalDate paymentDate;
-    private String status;
+    private Long billingPeriodId;
+    private Long taskId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private BigDecimal totalAmount; // Total calculado dos orçamentos vinculados
 }

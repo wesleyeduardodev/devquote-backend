@@ -1,18 +1,16 @@
 package br.com.devquote.service.impl;
-import br.com.devquote.adapter.QuoteAdapter;
-import br.com.devquote.adapter.QuoteBillingMonthAdapter;
+import br.com.devquote.adapter.BillingPeriodAdapter;
 import br.com.devquote.adapter.SubTaskAdapter;
 import br.com.devquote.adapter.TaskAdapter;
 import br.com.devquote.error.BusinessException;
 import br.com.devquote.error.ResourceNotFoundException;
 import br.com.devquote.configuration.BillingProperties;
 import br.com.devquote.dto.request.*;
-import br.com.devquote.dto.response.QuoteBillingMonthResponse;
-import br.com.devquote.dto.response.QuoteResponse;
+import br.com.devquote.dto.response.BillingPeriodResponse;
+import br.com.devquote.dto.response.BillingPeriodTaskResponse;
 import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.entity.*;
-import br.com.devquote.repository.QuoteRepository;
 import br.com.devquote.repository.RequesterRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.repository.TaskRepository;
@@ -35,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,10 +45,8 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final RequesterRepository requesterRepository;
     private final SubTaskRepository subTaskRepository;
-    private final QuoteRepository quoteRepository;
-    private final QuoteService quoteService;
-    private final QuoteBillingMonthService quoteBillingMonthService;
-    private final QuoteBillingMonthQuoteService quoteBillingMonthQuoteService;
+    private final BillingPeriodService billingPeriodService;
+    private final BillingPeriodTaskService billingPeriodTaskService;
     private final BillingProperties billingProperties;
     private final DeliveryService deliveryService;
     private final SecurityUtils securityUtils;
@@ -66,17 +63,16 @@ public class TaskServiceImpl implements TaskService {
         if (!tasks.isEmpty()) {
             List<Long> taskIds = tasks.stream().map(TaskResponse::getId).toList();
 
-            // Buscar informações de Quote e Billing
-            Map<Long, Boolean> taskHasQuoteMap = getTaskQuoteStatus(taskIds);
-            Map<Long, Boolean> taskHasQuoteInBillingMap = getTaskQuoteInBillingStatus(taskIds);
+            // Buscar informações de Billing
+            Map<Long, Boolean> taskInBillingMap = getTaskInBillingStatus(taskIds);
 
             tasks.forEach(dto -> {
                 List<SubTask> subTasks = subTaskRepository.findByTaskId(dto.getId());
                 dto.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
 
-                // Adicionar informações de Quote e Billing
-                dto.setHasQuote(taskHasQuoteMap.getOrDefault(dto.getId(), false));
-                dto.setHasQuoteInBilling(taskHasQuoteInBillingMap.getOrDefault(dto.getId(), false));
+                // Adicionar informações de Billing
+                dto.setHasQuote(false); // Não há mais quotes
+                dto.setHasQuoteInBilling(taskInBillingMap.getOrDefault(dto.getId(), false));
             });
         }
 
@@ -92,10 +88,9 @@ public class TaskServiceImpl implements TaskService {
         List<SubTask> subTasks = subTaskRepository.findByTaskId(response.getId());
         response.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
 
-        // Adicionar informações de Quote e Billing para o item específico
-        response.setHasQuote(quoteRepository.existsByTaskId(id));
-        Quote quote = quoteRepository.findByTaskId(id).orElse(null);
-        response.setHasQuoteInBilling(quote != null && quoteBillingMonthQuoteService.existsByQuoteId(quote.getId()));
+        // Adicionar informações de Billing para o item específico
+        response.setHasQuote(false); // Não há mais quotes
+        response.setHasQuoteInBilling(billingPeriodTaskService.existsByTaskId(id));
 
         return response;
     }
@@ -212,15 +207,14 @@ public class TaskServiceImpl implements TaskService {
         processTaskAmount(task, persistedSubTasks);
         task = taskRepository.save(task);
 
-        QuoteResponse quoteResponse = ensureQuoteIfRequested(task, dto);
-
-        if (isTrue(dto.getLinkQuoteToBilling()) && quoteResponse != null) {
+        // Linkar task ao faturamento se solicitado
+        if (isTrue(dto.getLinkTaskToBilling())) {
             LocalDate today = LocalDate.now();
-            QuoteBillingMonth billingMonth = getOrCreateBillingMonth(today);
-            ensureQuoteLinkedToBillingMonth(quoteResponse.getId(), billingMonth.getId());
+            BillingPeriod billingMonth = getOrCreateBillingPeriod(today);
+            ensureTaskLinkedToBillingMonth(task.getId(), billingMonth.getId());
         }
 
-        createDeliveries(dto, quoteResponse);
+        createDeliveries(dto, task);
 
         // Enviar notificação por email
         try {
@@ -232,12 +226,12 @@ public class TaskServiceImpl implements TaskService {
         return buildTaskWithSubTasksResponse(task, persistedSubTasks);
     }
 
-    private void createDeliveries(TaskWithSubTasksCreateRequest dto, QuoteResponse quoteResponse) {
-        if (quoteResponse != null && dto.getCreateQuote() != null && dto.getCreateQuote() && dto.getProjectsIds() != null && !dto.getProjectsIds().isEmpty()) {
+    private void createDeliveries(TaskWithSubTasksCreateRequest dto, Task task) {
+        if (dto.getCreateDeliveries() != null && dto.getCreateDeliveries() && dto.getProjectsIds() != null && !dto.getProjectsIds().isEmpty()) {
             for (Long projectId : dto.getProjectsIds()) {
                 DeliveryRequest deliveryRequest = DeliveryRequest
                         .builder()
-                        .quoteId(quoteResponse.getId())
+                        .taskId(task.getId())
                         .projectId(projectId)
                         .status("PENDING")
                         .build();
@@ -307,9 +301,12 @@ public class TaskServiceImpl implements TaskService {
 
         validateTaskAccess(task, "excluir");
 
-        if (quoteRepository.existsByTaskId(taskId)) {
-            throw new RuntimeException("Cannot delete task. It is linked to a quote.");
+        if (billingPeriodTaskService.existsByTaskId(taskId)) {
+            throw new RuntimeException("Cannot delete task. It is linked to a billing period.");
         }
+        
+        // Deletar entregas vinculadas à task
+        deliveryService.deleteByTaskId(taskId);
 
         // Enviar notificação por email antes da exclusão
         try {
@@ -357,17 +354,16 @@ public class TaskServiceImpl implements TaskService {
         Map<Long, List<SubTask>> subTasksByTaskId = allSubTasks.stream()
                 .collect(Collectors.groupingBy(st -> st.getTask().getId()));
 
-        // Buscar informações de Quote e Billing
-        Map<Long, Boolean> taskHasQuoteMap = getTaskQuoteStatus(taskIds);
-        Map<Long, Boolean> taskHasQuoteInBillingMap = getTaskQuoteInBillingStatus(taskIds);
+        // Buscar informações de Billing
+        Map<Long, Boolean> taskInBillingMap = getTaskInBillingStatus(taskIds);
 
         dtos.forEach(dto -> {
             List<SubTask> list = subTasksByTaskId.getOrDefault(dto.getId(), List.of());
             dto.setSubTasks(SubTaskAdapter.toResponseDTOList(list));
 
-            // Adicionar informações de Quote e Billing
-            dto.setHasQuote(taskHasQuoteMap.getOrDefault(dto.getId(), false));
-            dto.setHasQuoteInBilling(taskHasQuoteInBillingMap.getOrDefault(dto.getId(), false));
+            // Adicionar informações de Billing
+            dto.setHasQuote(false); // Não há mais quotes
+            dto.setHasQuoteInBilling(taskInBillingMap.getOrDefault(dto.getId(), false));
         });
 
         return new PageImpl<>(dtos, pageable, page.getTotalElements());
@@ -413,38 +409,25 @@ public class TaskServiceImpl implements TaskService {
     }
 
 
-    private QuoteResponse ensureQuoteIfRequested(Task task, TaskWithSubTasksCreateRequest dto) {
-        if (isTrue(dto.getCreateQuote())) {
-            QuoteRequest req = QuoteRequest.builder()
-                    .taskId(task.getId())
-                    .status("PENDING")
-                    .totalAmount(dto.getTotalAmount())
-                    .build();
-            return quoteService.create(req);
-        }
 
-        Quote existing = quoteService.findByTaskId(task.getId());
-        return existing != null ? QuoteAdapter.toResponseDTO(existing) : null;
-    }
-
-    private QuoteBillingMonth getOrCreateBillingMonth(LocalDate baseDate) {
+    private BillingPeriod getOrCreateBillingPeriod(LocalDate baseDate) {
         int year = baseDate.getYear();
         int month = baseDate.getMonthValue();
 
-        QuoteBillingMonth found = quoteBillingMonthService.findByYearAndMonth(year, month);
+        BillingPeriod found = billingPeriodService.findByYearAndMonth(year, month);
         if (found != null) return found;
 
         LocalDate paymentDate = computeNextMonthPaymentDate(baseDate, billingProperties.getPaymentDay());
 
-        QuoteBillingMonthRequest createDto = QuoteBillingMonthRequest.builder()
+        BillingPeriodRequest createDto = BillingPeriodRequest.builder()
                 .year(year)
                 .month(month)
                 .paymentDate(paymentDate)
                 .status("PENDING")
                 .build();
 
-        QuoteBillingMonthResponse created = quoteBillingMonthService.create(createDto);
-        return QuoteBillingMonthAdapter.toEntity(created);
+        BillingPeriodResponse created = billingPeriodService.create(createDto);
+        return BillingPeriodAdapter.toEntity(created);
     }
 
     private LocalDate computeNextMonthPaymentDate(LocalDate base, int desiredDay) {
@@ -453,17 +436,22 @@ public class TaskServiceImpl implements TaskService {
         return nextMonthFirst.withDayOfMonth(day);
     }
 
-    private void ensureQuoteLinkedToBillingMonth(Long quoteId, Long billingMonthId) {
-        QuoteBillingMonthQuote existing =
-                quoteBillingMonthQuoteService.findByQuoteBillingMonthIdAndQuoteId(billingMonthId, quoteId);
-        if (existing != null) return;
+    private void ensureTaskLinkedToBillingMonth(Long taskId, Long billingMonthId) {
+        if (billingPeriodTaskService.existsByTaskId(taskId)) {
+            // Verificar se já está no período correto
+            Optional<BillingPeriodTaskResponse> existingLink = billingPeriodTaskService.findByTaskId(taskId);
+            if (existingLink.isPresent() && existingLink.get().getBillingPeriodId().equals(billingMonthId)) {
+                return; // Já está vinculada ao período correto
+            }
+            // Se está em outro período, não fazer nada - deixar a validação do service tratar
+        }
 
-        QuoteBillingMonthQuoteRequest linkReq = QuoteBillingMonthQuoteRequest.builder()
-                .quoteId(quoteId)
-                .quoteBillingMonthId(billingMonthId)
+        BillingPeriodTaskRequest linkReq = BillingPeriodTaskRequest.builder()
+                .taskId(taskId)
+                .billingPeriodId(billingMonthId)
                 .build();
 
-        quoteBillingMonthQuoteService.create(linkReq);
+        billingPeriodTaskService.create(linkReq);
     }
 
     private TaskWithSubTasksResponse buildTaskWithSubTasksResponse(Task task, List<SubTask> subTasks) {
@@ -584,32 +572,13 @@ public class TaskServiceImpl implements TaskService {
     }
 
     /**
-     * Verifica quais tarefas possuem Quote vinculado
+     * Verifica quais tarefas estão vinculadas ao faturamento
      */
-    private Map<Long, Boolean> getTaskQuoteStatus(List<Long> taskIds) {
+    private Map<Long, Boolean> getTaskInBillingStatus(List<Long> taskIds) {
         return taskIds.stream()
                 .collect(Collectors.toMap(
                         taskId -> taskId,
-                        taskId -> quoteRepository.existsByTaskId(taskId)
-                ));
-    }
-
-    /**
-     * Verifica quais tarefas possuem Quote vinculado ao faturamento
-     */
-    private Map<Long, Boolean> getTaskQuoteInBillingStatus(List<Long> taskIds) {
-        return taskIds.stream()
-                .collect(Collectors.toMap(
-                        taskId -> taskId,
-                        taskId -> {
-                            // Primeiro verifica se tem quote
-                            Quote quote = quoteRepository.findByTaskId(taskId).orElse(null);
-                            if (quote == null) {
-                                return false;
-                            }
-                            // Se tem quote, verifica se está no billing
-                            return quoteBillingMonthQuoteService.existsByQuoteId(quote.getId());
-                        }
+                        taskId -> billingPeriodTaskService.existsByTaskId(taskId)
                 ));
     }
 
@@ -647,8 +616,8 @@ public class TaskServiceImpl implements TaskService {
                 t.notes as task_notes,
                 t.amount as task_amount,
                 t.has_sub_tasks as has_subtasks,
-                CASE WHEN q.id IS NOT NULL THEN 'Sim' ELSE 'Não' END as has_quote,
-                CASE WHEN qbmq.id IS NOT NULL THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
+                'Não' as has_quote,
+                CASE WHEN tbmt.id IS NOT NULL THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
                 t.created_at as task_created_at,
                 t.updated_at as task_updated_at,
                 st.id as subtask_id,
@@ -660,8 +629,7 @@ public class TaskServiceImpl implements TaskService {
             INNER JOIN requester r ON t.requester_id = r.id
             LEFT JOIN users cb ON t.created_by = cb.id
             LEFT JOIN users ub ON t.updated_by = ub.id
-            LEFT JOIN quote q ON q.task_id = t.id
-            LEFT JOIN quote_billing_month_quote qbmq ON qbmq.quote_id = q.id
+            LEFT JOIN task_billing_month_task tbmt ON tbmt.task_id = t.id
             LEFT JOIN sub_task st ON st.task_id = t.id
             ORDER BY t.id desc, st.id
             """;
@@ -734,11 +702,11 @@ public class TaskServiceImpl implements TaskService {
                 t.server_origin as task_server_origin,
                 t.system_module as task_system_module,
                 
-                -- DADOS DE ORÇAMENTO
-                q.id as quote_id,
-                q.status as quote_status,
-                q.total_amount as quote_amount,
-                q.created_at as quote_created_at,
+                -- DADOS REMOVIDOS (não há mais orçamentos)
+                NULL as quote_id,
+                NULL as quote_status,
+                NULL as quote_amount,
+                NULL as quote_created_at,
                 
                 -- DADOS DE ENTREGAS (LEFT JOIN direto para múltiplas linhas)
                 d.id as delivery_id,
@@ -752,19 +720,18 @@ public class TaskServiceImpl implements TaskService {
                 d.finished_at as delivery_finished_at,
                 
                 -- DADOS DE FATURAMENTO
-                qbm.year as billing_year,
-                qbm.month as billing_month,
-                qbm.status as billing_status
+                tbm.year as billing_year,
+                tbm.month as billing_month,
+                tbm.status as billing_status
                 
             FROM task t
             INNER JOIN requester r ON t.requester_id = r.id
             LEFT JOIN users cb ON t.created_by = cb.id
             LEFT JOIN users ub ON t.updated_by = ub.id
-            LEFT JOIN quote q ON q.task_id = t.id
-            LEFT JOIN delivery d ON d.quote_id = q.id
+            LEFT JOIN delivery d ON d.task_id = t.id
             LEFT JOIN project p ON d.project_id = p.id
-            LEFT JOIN quote_billing_month_quote qbmq ON qbmq.quote_id = q.id
-            LEFT JOIN quote_billing_month qbm ON qbmq.quote_billing_month_id = qbm.id
+            LEFT JOIN task_billing_month_task tbmt ON tbmt.task_id = t.id
+            LEFT JOIN task_billing_month tbm ON tbmt.task_billing_month_id = tbm.id
             ORDER BY t.id DESC, d.id ASC
         """;
 
@@ -864,8 +831,7 @@ public class TaskServiceImpl implements TaskService {
             INNER JOIN requester r ON t.requester_id = r.id
             LEFT JOIN users cb ON t.created_by = cb.id
             LEFT JOIN users ub ON t.updated_by = ub.id
-            LEFT JOIN quote q ON q.task_id = t.id
-            LEFT JOIN delivery d ON d.quote_id = q.id
+            LEFT JOIN delivery d ON d.task_id = t.id
             LEFT JOIN project p ON d.project_id = p.id
             ORDER BY t.id DESC, d.id ASC
         """;

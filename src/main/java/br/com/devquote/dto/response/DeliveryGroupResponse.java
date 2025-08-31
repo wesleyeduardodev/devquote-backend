@@ -13,27 +13,27 @@ import java.util.List;
 @Builder
 public class DeliveryGroupResponse {
 
-    private Long quoteId;
-    
+    private Long taskId;
+
     private String taskName;
-    
+
     private String taskCode;
-    
-    private String quoteStatus;
-    
-    private String deliveryStatus; // Status calculado das entregas (COMPLETED, IN_PROGRESS, PENDING)
-    
-    private BigDecimal quoteValue;
-    
+
+    private String taskStatus;
+
+    private String deliveryStatus;
+
+    private BigDecimal taskValue;
+
     private LocalDateTime createdAt;
-    
+
     private LocalDateTime updatedAt;
-    
+
     private Integer totalDeliveries;
-    
+
     private Integer completedDeliveries;
-    
+
     private Integer pendingDeliveries;
-    
+
     private List<DeliveryResponse> deliveries;
 }

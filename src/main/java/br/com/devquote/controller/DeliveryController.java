@@ -110,10 +110,10 @@ public class DeliveryController implements DeliveryControllerDoc {
         return ResponseEntity.noContent().build();
     }
     
-    @DeleteMapping("/quote/{quoteId}")
+    @DeleteMapping("/task/{taskId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
-    public ResponseEntity<Void> deleteByQuoteId(@PathVariable Long quoteId) {
-        deliveryService.deleteByQuoteId(quoteId);
+    public ResponseEntity<Void> deleteByTaskId(@PathVariable Long taskId) {
+        deliveryService.deleteByTaskId(taskId);
         return ResponseEntity.noContent().build();
     }
 
@@ -137,10 +137,10 @@ public class DeliveryController implements DeliveryControllerDoc {
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
     }
 
-    @GetMapping("/group/{quoteId}")
+    @GetMapping("/group/{taskId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
-    public ResponseEntity<DeliveryGroupResponse> getGroupDetails(@PathVariable Long quoteId) {
-        DeliveryGroupResponse groupDetails = deliveryService.findGroupDetailsByQuoteId(quoteId);
+    public ResponseEntity<DeliveryGroupResponse> getGroupDetails(@PathVariable Long taskId) {
+        DeliveryGroupResponse groupDetails = deliveryService.findGroupDetailsByTaskId(taskId);
         return ResponseEntity.ok(groupDetails);
     }
 

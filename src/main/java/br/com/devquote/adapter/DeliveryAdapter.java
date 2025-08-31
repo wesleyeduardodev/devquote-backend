@@ -3,7 +3,7 @@ import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Project;
-import br.com.devquote.entity.Quote;
+import br.com.devquote.entity.Task;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -14,10 +14,9 @@ public final class DeliveryAdapter {
 
         return DeliveryResponse.builder()
                 .id(entity.getId())
-                .quoteId(entity.getQuote() != null && entity.getQuote().getId() != null ? entity.getQuote().getId() : null)
-                .taskId(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getId() : null)
-                .taskName(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getTitle() : null)
-                .taskCode(entity.getQuote() != null && entity.getQuote().getTask() != null ? entity.getQuote().getTask().getCode() : null)
+                .taskId(entity.getTask() != null ? entity.getTask().getId() : null)
+                .taskName(entity.getTask() != null ? entity.getTask().getTitle() : null)
+                .taskCode(entity.getTask() != null ? entity.getTask().getCode() : null)
                 .projectId(entity.getProject() != null ? entity.getProject().getId() : null)
                 .projectName(entity.getProject() != null ? entity.getProject().getName() : null)
                 .branch(entity.getBranch())
@@ -33,11 +32,11 @@ public final class DeliveryAdapter {
                 .build();
     }
 
-    public static Delivery toEntity(DeliveryRequest dto, Quote quote, Project project) {
+    public static Delivery toEntity(DeliveryRequest dto, Task task, Project project) {
         if (dto == null) return null;
 
         return Delivery.builder()
-                .quote(quote)
+                .task(task)
                 .project(project)
                 .branch(dto.getBranch())
                 .pullRequest(dto.getPullRequest())
@@ -50,10 +49,10 @@ public final class DeliveryAdapter {
                 .build();
     }
 
-    public static void updateEntityFromDto(DeliveryRequest dto, Delivery entity, Quote quote, Project project) {
+    public static void updateEntityFromDto(DeliveryRequest dto, Delivery entity, Task task, Project project) {
         if (dto == null || entity == null) return;
 
-        if (quote != null) entity.setQuote(quote);
+        if (task != null) entity.setTask(task);
         if (project != null) entity.setProject(project);
 
         entity.setBranch(dto.getBranch());

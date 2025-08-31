@@ -427,10 +427,10 @@ public class EmailServiceImpl implements EmailService {
 
     private void sendToMultipleRecipientsForDelivery(Delivery delivery, String subject, String htmlContent, String action) {
         String taskInfo = "Unknown";
-        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null) {
+        if (delivery.getTask() != null) {
             taskInfo = String.format("Task ID=%d, Code=%s", 
-                    delivery.getQuote().getTask().getId(), 
-                    delivery.getQuote().getTask().getCode());
+                    delivery.getTask().getId(), 
+                    delivery.getTask().getCode());
         }
         
         log.info("📧 Starting DELIVERY {} email notification process for: Delivery ID={}, Status={}, {}",
@@ -439,24 +439,22 @@ public class EmailServiceImpl implements EmailService {
         // Lista de destinatários
         java.util.List<String> recipients = new java.util.ArrayList<>();
 
-        // Adicionar email do solicitante se existir (através do Quote)
-        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null
-            && delivery.getQuote().getTask().getRequester() != null
-            && delivery.getQuote().getTask().getRequester().getEmail() != null
-            && !delivery.getQuote().getTask().getRequester().getEmail().trim().isEmpty()) {
-            String requesterEmail = delivery.getQuote().getTask().getRequester().getEmail();
-            String requesterName = delivery.getQuote().getTask().getRequester().getName();
+        // Adicionar email do solicitante se existir (através da Task)
+        if (delivery.getTask() != null
+            && delivery.getTask().getRequester() != null
+            && delivery.getTask().getRequester().getEmail() != null
+            && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
+            String requesterEmail = delivery.getTask().getRequester().getEmail();
+            String requesterName = delivery.getTask().getRequester().getName();
             recipients.add(requesterEmail);
             log.info("📧 Added requester email to recipients: {} <{}> for delivery {} action",
                     requesterName, requesterEmail, action);
         } else {
-            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {} ({} action). Quote/Task chain: {}",
+            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {} ({} action). Task chain: {}",
                     delivery.getId(), action, 
-                    delivery.getQuote() != null ? 
-                        (delivery.getQuote().getTask() != null ? 
-                            (delivery.getQuote().getTask().getRequester() != null ? "Requester has no email" : "No requester") 
-                            : "No task") 
-                        : "No quote");
+                    delivery.getTask() != null ? 
+                        (delivery.getTask().getRequester() != null ? "Requester has no email" : "No requester") 
+                        : "No task");
         }
 
         // Sempre adicionar o email do remetente (você)
@@ -519,11 +517,11 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("createdAt", delivery.getCreatedAt().format(DATE_FORMATTER));
 
         // Dados do orçamento/tarefa
-        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null) {
-            context.setVariable("quoteCode", delivery.getQuote().getTask().getCode() != null ? delivery.getQuote().getTask().getCode() : "");
-            context.setVariable("quoteName", delivery.getQuote().getTask().getTitle() != null ? delivery.getQuote().getTask().getTitle() : "");
-            context.setVariable("requesterName", delivery.getQuote().getTask().getRequester() != null ? delivery.getQuote().getTask().getRequester().getName() : "");
-            context.setVariable("requesterEmail", delivery.getQuote().getTask().getRequester() != null && delivery.getQuote().getTask().getRequester().getEmail() != null ? delivery.getQuote().getTask().getRequester().getEmail() : "");
+        if (delivery.getTask() != null) {
+            context.setVariable("quoteCode", delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "");
+            context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
+            context.setVariable("requesterName", delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "");
+            context.setVariable("requesterEmail", delivery.getTask().getRequester() != null && delivery.getTask().getRequester().getEmail() != null ? delivery.getTask().getRequester().getEmail() : "");
         } else {
             context.setVariable("quoteCode", "");
             context.setVariable("quoteName", "");
@@ -568,11 +566,11 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("createdAt", delivery.getCreatedAt().format(DATE_FORMATTER));
 
         // Dados do orçamento/tarefa
-        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null) {
-            context.setVariable("quoteCode", delivery.getQuote().getTask().getCode() != null ? delivery.getQuote().getTask().getCode() : "");
-            context.setVariable("quoteName", delivery.getQuote().getTask().getTitle() != null ? delivery.getQuote().getTask().getTitle() : "");
-            context.setVariable("requesterName", delivery.getQuote().getTask().getRequester() != null ? delivery.getQuote().getTask().getRequester().getName() : "");
-            context.setVariable("requesterEmail", delivery.getQuote().getTask().getRequester() != null && delivery.getQuote().getTask().getRequester().getEmail() != null ? delivery.getQuote().getTask().getRequester().getEmail() : "");
+        if (delivery.getTask() != null) {
+            context.setVariable("quoteCode", delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "");
+            context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
+            context.setVariable("requesterName", delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "");
+            context.setVariable("requesterEmail", delivery.getTask().getRequester() != null && delivery.getTask().getRequester().getEmail() != null ? delivery.getTask().getRequester().getEmail() : "");
         } else {
             context.setVariable("quoteCode", "");
             context.setVariable("quoteName", "");

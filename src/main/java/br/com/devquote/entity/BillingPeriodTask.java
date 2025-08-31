@@ -4,42 +4,42 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "quote_billing_month",
+        name = "billing_period_task",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_quote_billing_month_year_month",
-                        columnNames = {"year", "month"}
+                        name = "uk_billing_period_task",
+                        columnNames = {"billing_period_id", "task_id"}
+                ),
+                @UniqueConstraint(
+                        name = "uk_task_unique_billing",
+                        columnNames = {"task_id"}
                 )
         },
         indexes = {
-                @Index(name = "idx_qbm_year_month", columnList = "year, month")
+                @Index(name = "idx_bpt_billing_period", columnList = "billing_period_id"),
+                @Index(name = "idx_bpt_task", columnList = "task_id")
         }
 )
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuoteBillingMonth {
+public class BillingPeriodTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Integer month;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "billing_period_id", nullable = false)
+    private BillingPeriod billingPeriod;
 
-    @Column(nullable = false)
-    private Integer year;
-
-    @Column(name = "payment_date")
-    private LocalDate paymentDate;
-
-    @Column(length = 30)
-    private String status;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "task_id", nullable = false)
+    private Task task;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

@@ -207,7 +207,9 @@ public class ApiExceptionHandler {
         
         // Interpreta mensagens de erro comuns do PostgreSQL
         if (rootCauseMessage != null) {
-            if (rootCauseMessage.contains("duplicate key")) {
+            if (rootCauseMessage.contains("uk_task_unique_billing")) {
+                message = "Esta tarefa já está incluída em outro período de faturamento. Uma tarefa não pode estar em múltiplos períodos simultaneamente.";
+            } else if (rootCauseMessage.contains("duplicate key")) {
                 message = "Já existe um registro com essas informações.";
             } else if (rootCauseMessage.contains("foreign key constraint")) {
                 message = "Não é possível realizar essa operação pois o registro está sendo referenciado por outros dados.";

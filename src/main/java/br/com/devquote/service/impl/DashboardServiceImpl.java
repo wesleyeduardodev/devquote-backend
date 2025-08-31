@@ -29,7 +29,6 @@ public class DashboardServiceImpl implements DashboardService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final SubTaskRepository subTaskRepository;
-    private final QuoteRepository quoteRepository;
     private final ProjectRepository projectRepository;
     private final DeliveryRepository deliveryRepository;
     private final RequesterRepository requesterRepository;
@@ -94,11 +93,11 @@ public class DashboardServiceImpl implements DashboardService {
                 (double) completedTasks / allTasks.size() * 100.0;
         }
 
-        if (allowedScreens.contains("quotes")) {
-            // Buscar TODOS os orçamentos sem paginação
-            var allQuotes = quoteRepository.findAll();
-            totalRevenue = allQuotes.stream()
-                    .map(quote -> quote.getTotalAmount() != null ? quote.getTotalAmount() : BigDecimal.ZERO)
+        // Não há mais orçamentos - usar valor das tarefas
+        if (allowedScreens.contains("tasks")) {
+            var allTasks = taskRepository.findAll();
+            totalRevenue = allTasks.stream()
+                    .map(task -> task.getAmount() != null ? task.getAmount() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
 
@@ -158,33 +157,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .build();
     }
 
-    private DashboardStatsResponse.ModuleStats buildQuotesStats() {
-        var allQuotes = quoteRepository.findAll();
-        int total = allQuotes.size();
-        int completed = (int) allQuotes.stream()
-                .filter(quote -> "APPROVED".equals(quote.getStatus()))
-                .count();
-        int active = total - completed;
-
-        BigDecimal totalValue = allQuotes.stream()
-                .map(quote -> quote.getTotalAmount() != null ? quote.getTotalAmount() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal averageValue = total > 0 && totalValue.compareTo(BigDecimal.ZERO) > 0 ? 
-                totalValue.divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP) : 
-                BigDecimal.ZERO;
-
-        return DashboardStatsResponse.ModuleStats.builder()
-                .total(total)
-                .active(active)
-                .completed(completed)
-                .totalValue(totalValue)
-                .averageValue(averageValue)
-                .thisMonth(0) // TODO: Implementar
-                .lastMonth(0)
-                .growthPercentage(0.0)
-                .build();
-    }
 
     private DashboardStatsResponse.ModuleStats buildProjectsStats() {
         var allProjects = projectRepository.findAll();
@@ -255,21 +227,6 @@ public class DashboardServiceImpl implements DashboardService {
         return chartData;
     }
 
-    private List<DashboardStatsResponse.ChartData> buildQuotesChart() {
-        // TODO: Implementar dados de gráfico para orçamentos
-        List<DashboardStatsResponse.ChartData> chartData = new ArrayList<>();
-        
-        for (int i = 6; i >= 0; i--) {
-            LocalDateTime date = LocalDateTime.now().minusDays(i);
-            chartData.add(DashboardStatsResponse.ChartData.builder()
-                    .label(date.format(DateTimeFormatter.ofPattern("dd/MM")))
-                    .value(BigDecimal.valueOf(Math.random() * 5000))
-                    .count((int) (Math.random() * 5))
-                    .build());
-        }
-        
-        return chartData;
-    }
 
     private List<DashboardStatsResponse.StatusCount> buildMonthlyTasksStats() {
         var now = LocalDateTime.now();
@@ -322,29 +279,6 @@ public class DashboardServiceImpl implements DashboardService {
         return monthlyStats;
     }
 
-    private List<DashboardStatsResponse.StatusCount> buildQuotesByStatus() {
-        var allQuotes = quoteRepository.findAll();
-        long total = allQuotes.size();
-        
-        List<DashboardStatsResponse.StatusCount> statusCounts = new ArrayList<>();
-        
-        var statusGroups = allQuotes.stream()
-                .collect(java.util.stream.Collectors.groupingBy(
-                    quote -> quote.getStatus() != null ? quote.getStatus() : "UNKNOWN",
-                    java.util.stream.Collectors.counting()
-                ));
-
-        statusGroups.forEach((status, count) -> {
-            double percentage = total > 0 ? (double) count / total * 100.0 : 0.0;
-            statusCounts.add(DashboardStatsResponse.StatusCount.builder()
-                    .status(status)
-                    .count(count.intValue())
-                    .percentage(Math.round(percentage * 100.0) / 100.0)
-                    .build());
-        });
-
-        return statusCounts;
-    }
 
     private List<DashboardStatsResponse.StatusCount> buildMonthlyDeliveriesStats() {
         var now = LocalDateTime.now();

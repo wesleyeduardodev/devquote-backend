@@ -17,8 +17,8 @@ public class Delivery {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "quote_id", nullable = false)
-    private Quote quote;
+    @JoinColumn(name = "task_id", nullable = false)
+    private Task task;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "project_id", nullable = false)

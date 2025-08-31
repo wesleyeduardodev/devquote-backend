@@ -1,11 +1,11 @@
 package br.com.devquote.service.impl;
 
-import br.com.devquote.adapter.QuoteBillingMonthAdapter;
-import br.com.devquote.dto.request.QuoteBillingMonthRequest;
-import br.com.devquote.dto.response.QuoteBillingMonthResponse;
-import br.com.devquote.entity.QuoteBillingMonth;
-import br.com.devquote.repository.QuoteBillingMonthRepository;
-import br.com.devquote.service.QuoteBillingMonthService;
+import br.com.devquote.adapter.BillingPeriodAdapter;
+import br.com.devquote.dto.request.BillingPeriodRequest;
+import br.com.devquote.dto.response.BillingPeriodResponse;
+import br.com.devquote.entity.BillingPeriod;
+import br.com.devquote.repository.BillingPeriodRepository;
+import br.com.devquote.service.BillingPeriodService;
 import br.com.devquote.utils.ExcelReportUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -27,36 +27,36 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
+public class BillingPeriodServiceImpl implements BillingPeriodService {
 
-    private final QuoteBillingMonthRepository quoteBillingMonthRepository;
+    private final BillingPeriodRepository billingPeriodRepository;
     private final EntityManager entityManager;
     private final ExcelReportUtils excelReportUtils;
 
     @Override
-    public List<QuoteBillingMonthResponse> findAll() {
-        return quoteBillingMonthRepository.findAllOrderedById().stream()
-                .map(QuoteBillingMonthAdapter::toResponseDTO)
+    public List<BillingPeriodResponse> findAll() {
+        return billingPeriodRepository.findAllOrderedById().stream()
+                .map(BillingPeriodAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
     
     @Override
-    public List<QuoteBillingMonthResponse> findAllWithTotals() {
+    public List<BillingPeriodResponse> findAllWithTotals() {
         String sql = """
             SELECT 
-                qbm.id,
-                qbm.month,
-                qbm.year,
-                qbm.payment_date,
-                qbm.status,
-                qbm.created_at,
-                qbm.updated_at,
-                COALESCE(SUM(q.total_amount), 0) as total_amount
-            FROM quote_billing_month qbm
-            LEFT JOIN quote_billing_month_quote qbmq ON qbm.id = qbmq.quote_billing_month_id
-            LEFT JOIN quote q ON qbmq.quote_id = q.id
-            GROUP BY qbm.id, qbm.month, qbm.year, qbm.payment_date, qbm.status, qbm.created_at, qbm.updated_at
-            ORDER BY qbm.id DESC
+                bp.id,
+                bp.month,
+                bp.year,
+                bp.payment_date,
+                bp.status,
+                bp.created_at,
+                bp.updated_at,
+                COALESCE(SUM(t.amount), 0) as total_amount
+            FROM billing_period tbm
+            LEFT JOIN billing_period_task tbmt ON bp.id = tbmt.billing_period_id
+            LEFT JOIN task t ON tbmt.task_id = t.id
+            GROUP BY bp.id, bp.month, bp.year, bp.payment_date, bp.status, bp.created_at, bp.updated_at
+            ORDER BY bp.id DESC
         """;
         
         Query query = entityManager.createNativeQuery(sql);
@@ -64,7 +64,7 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
         List<Object[]> results = query.getResultList();
         
         return results.stream().map(row -> {
-            return QuoteBillingMonthResponse.builder()
+            return BillingPeriodResponse.builder()
                 .id(((Number) row[0]).longValue())
                 .month((Integer) row[1])
                 .year((Integer) row[2])
@@ -78,31 +78,31 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
     }
 
     @Override
-    public QuoteBillingMonthResponse findById(Long id) {
-        QuoteBillingMonth entity = quoteBillingMonthRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("QuoteBillingMonth not found"));
-        return QuoteBillingMonthAdapter.toResponseDTO(entity);
+    public BillingPeriodResponse findById(Long id) {
+        BillingPeriod entity = billingPeriodRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("BillingPeriod not found"));
+        return BillingPeriodAdapter.toResponseDTO(entity);
     }
 
     @Override
-    public QuoteBillingMonthResponse create(QuoteBillingMonthRequest dto) {
-        QuoteBillingMonth entity = QuoteBillingMonthAdapter.toEntity(dto);
-        entity = quoteBillingMonthRepository.save(entity);
-        return QuoteBillingMonthAdapter.toResponseDTO(entity);
+    public BillingPeriodResponse create(BillingPeriodRequest dto) {
+        BillingPeriod entity = BillingPeriodAdapter.toEntity(dto);
+        entity = billingPeriodRepository.save(entity);
+        return BillingPeriodAdapter.toResponseDTO(entity);
     }
 
     @Override
-    public QuoteBillingMonthResponse update(Long id, QuoteBillingMonthRequest dto) {
-        QuoteBillingMonth entity = quoteBillingMonthRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("QuoteBillingMonth not found"));
-        QuoteBillingMonthAdapter.updateEntityFromDto(dto, entity);
-        entity = quoteBillingMonthRepository.save(entity);
-        return QuoteBillingMonthAdapter.toResponseDTO(entity);
+    public BillingPeriodResponse update(Long id, BillingPeriodRequest dto) {
+        BillingPeriod entity = billingPeriodRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("BillingPeriod not found"));
+        BillingPeriodAdapter.updateEntityFromDto(dto, entity);
+        entity = billingPeriodRepository.save(entity);
+        return BillingPeriodAdapter.toResponseDTO(entity);
     }
 
     @Override
     public void delete(Long id) {
-        quoteBillingMonthRepository.deleteById(id);
+        billingPeriodRepository.deleteById(id);
     }
 
     @Override
@@ -110,31 +110,29 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
         if (ids == null || ids.isEmpty()) {
             return;
         }
-        quoteBillingMonthRepository.deleteAllById(ids);
+        billingPeriodRepository.deleteAllById(ids);
     }
 
     @Override
-    public QuoteBillingMonth findByYearAndMonth(Integer year, Integer month) {
-        Optional<QuoteBillingMonth> billingMonth = quoteBillingMonthRepository.findByYearAndMonth(year, month);
+    public BillingPeriod findByYearAndMonth(Integer year, Integer month) {
+        Optional<BillingPeriod> billingMonth = billingPeriodRepository.findByYearAndMonth(year, month);
         return billingMonth.orElse(null);
     }
 
     @Override
-    public Page<QuoteBillingMonthResponse> findAllPaginated(Integer month, Integer year, String status, Pageable pageable) {
-        Page<QuoteBillingMonth> page = quoteBillingMonthRepository.findByOptionalFiltersPaginated(month, year, status, pageable);
-        return page.map(QuoteBillingMonthAdapter::toResponseDTO);
+    public Page<BillingPeriodResponse> findAllPaginated(Integer month, Integer year, String status, Pageable pageable) {
+        Page<BillingPeriod> page = billingPeriodRepository.findByOptionalFiltersPaginated(month, year, status, pageable);
+        return page.map(BillingPeriodAdapter::toResponseDTO);
     }
 
     @Override
     public Map<String, Object> getStatistics() {
         Map<String, Object> statistics = new HashMap<>();
         
-        // Total de períodos
-        long totalPeriods = quoteBillingMonthRepository.count();
+        long totalPeriods = billingPeriodRepository.count();
         statistics.put("totalPeriods", totalPeriods);
         
-        // Estatísticas por status
-        List<Object[]> statusStats = quoteBillingMonthRepository.getStatusStatistics();
+        List<Object[]> statusStats = billingPeriodRepository.getStatusStatistics();
         Map<String, Long> statusCounts = new HashMap<>();
         
         for (Object[] stat : statusStats) {
@@ -145,11 +143,10 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
         
         statistics.put("byStatus", statusCounts);
         
-        // Anos únicos
-        List<Integer> years = quoteBillingMonthRepository.findAll().stream()
-            .map(QuoteBillingMonth::getYear)
+        List<Integer> years = billingPeriodRepository.findAll().stream()
+            .map(BillingPeriod::getYear)
             .distinct()
-            .sorted((a, b) -> b.compareTo(a)) // Ordem decrescente
+            .sorted((a, b) -> b.compareTo(a))
             .collect(Collectors.toList());
         
         statistics.put("availableYears", years);
@@ -162,9 +159,9 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("""
             SELECT 
-                qbm.year as billing_year,
-                qbm.month as billing_month,
-                qbm.status as billing_status,
+                bp.year as billing_year,
+                bp.month as billing_month,
+                bp.status as billing_status,
                 t.id as task_id,
                 t.code as task_code,
                 t.title as task_title,
@@ -172,36 +169,30 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
                 t.amount as task_amount,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
-                q.id as quote_id,
-                q.status as quote_status,
-                q.total_amount as quote_amount,
-                qbm.created_at,
-                qbm.updated_at
-            FROM quote_billing_month qbm
-            INNER JOIN quote_billing_month_quote qbmq ON qbmq.quote_billing_month_id = qbm.id
-            INNER JOIN quote q ON qbmq.quote_id = q.id
-            INNER JOIN task t ON q.task_id = t.id
+                bp.created_at,
+                bp.updated_at
+            FROM billing_period tbm
+            INNER JOIN billing_period_task tbmt ON tbmt.billing_period_id = bp.id
+            INNER JOIN task t ON tbmt.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
             WHERE 1=1
         """);
 
-        // Adicionar filtros dinamicamente
         if (month != null) {
-            sqlBuilder.append(" AND qbm.month = ?1");
+            sqlBuilder.append(" AND bp.month = ?1");
         }
         if (year != null) {
-            sqlBuilder.append(" AND qbm.year = ?").append(month != null ? "2" : "1");
+            sqlBuilder.append(" AND bp.year = ?").append(month != null ? "2" : "1");
         }
         if (status != null && !status.trim().isEmpty()) {
             int paramIndex = (month != null ? 1 : 0) + (year != null ? 1 : 0) + 1;
-            sqlBuilder.append(" AND qbm.status = ?").append(paramIndex);
+            sqlBuilder.append(" AND bp.status = ?").append(paramIndex);
         }
         
-        sqlBuilder.append(" ORDER BY qbm.year DESC, qbm.month DESC, t.id DESC");
+        sqlBuilder.append(" ORDER BY bp.year DESC, bp.month DESC, t.id DESC");
 
         Query query = entityManager.createNativeQuery(sqlBuilder.toString());
         
-        // Definir parâmetros em ordem
         int paramIndex = 1;
         if (month != null) {
             query.setParameter(paramIndex++, month);
@@ -218,11 +209,9 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
 
         List<Map<String, Object>> data = results.stream().map(row -> {
             Map<String, Object> map = new HashMap<>();
-            // Dados do faturamento
             map.put("billing_year", row[0]);
             map.put("billing_month", row[1]);
             map.put("billing_status", row[2]);
-            // Dados da tarefa
             map.put("task_id", row[3]);
             map.put("task_code", row[4]);
             map.put("task_title", row[5]);
@@ -230,13 +219,8 @@ public class QuoteBillingMonthServiceImpl implements QuoteBillingMonthService {
             map.put("task_amount", row[7]);
             map.put("subtasks_count", row[8]);
             map.put("requester_name", row[9]);
-            // Dados do orçamento
-            map.put("quote_id", row[10]);
-            map.put("quote_status", row[11]);
-            map.put("quote_amount", row[12]);
-            // Datas
-            map.put("created_at", row[13]);
-            map.put("updated_at", row[14]);
+            map.put("created_at", row[10]);
+            map.put("updated_at", row[11]);
             return map;
         }).collect(Collectors.toList());
 

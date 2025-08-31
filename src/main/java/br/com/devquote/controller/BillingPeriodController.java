@@ -1,8 +1,7 @@
 package br.com.devquote.controller;
-import br.com.devquote.controller.doc.QuoteBillingMonthControllerDoc;
-import br.com.devquote.dto.request.QuoteBillingMonthRequest;
-import br.com.devquote.dto.response.QuoteBillingMonthResponse;
-import br.com.devquote.service.QuoteBillingMonthService;
+import br.com.devquote.dto.request.BillingPeriodRequest;
+import br.com.devquote.dto.response.BillingPeriodResponse;
+import br.com.devquote.service.BillingPeriodService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,59 +19,54 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/quote-billing-months")
+@RequestMapping("/api/billing-periods")
 @Validated
 @RequiredArgsConstructor
-public class QuoteBillingMonthController implements QuoteBillingMonthControllerDoc {
+public class BillingPeriodController {
 
-    private final QuoteBillingMonthService quoteBillingMonthService;
+    private final BillingPeriodService billingPeriodService;
 
-    @Override
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<List<QuoteBillingMonthResponse>> list() {
-        return ResponseEntity.ok(quoteBillingMonthService.findAll());
+    public ResponseEntity<List<BillingPeriodResponse>> list() {
+        return ResponseEntity.ok(billingPeriodService.findAll());
     }
 
-    @Override
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<QuoteBillingMonthResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(quoteBillingMonthService.findById(id));
+    public ResponseEntity<BillingPeriodResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(billingPeriodService.findById(id));
     }
 
-    @Override
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<QuoteBillingMonthResponse> create(@RequestBody @Valid QuoteBillingMonthRequest dto) {
-        return new ResponseEntity<>(quoteBillingMonthService.create(dto), HttpStatus.CREATED);
+    public ResponseEntity<BillingPeriodResponse> create(@RequestBody @Valid BillingPeriodRequest dto) {
+        return new ResponseEntity<>(billingPeriodService.create(dto), HttpStatus.CREATED);
     }
 
-    @Override
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<QuoteBillingMonthResponse> update(@PathVariable Long id, @RequestBody @Valid QuoteBillingMonthRequest dto) {
-        return ResponseEntity.ok(quoteBillingMonthService.update(id, dto));
+    public ResponseEntity<BillingPeriodResponse> update(@PathVariable Long id, @RequestBody @Valid BillingPeriodRequest dto) {
+        return ResponseEntity.ok(billingPeriodService.update(id, dto));
     }
 
-    @Override
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        quoteBillingMonthService.delete(id);
+        billingPeriodService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
-        quoteBillingMonthService.deleteBulk(ids);
+        billingPeriodService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/paginated")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<Page<QuoteBillingMonthResponse>> findAllPaginated(
+    public ResponseEntity<Page<BillingPeriodResponse>> findAllPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -84,20 +78,20 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
         
-        return ResponseEntity.ok(quoteBillingMonthService.findAllPaginated(
+        return ResponseEntity.ok(billingPeriodService.findAllPaginated(
             month, year, status, pageable));
     }
 
     @GetMapping("/with-totals")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<List<QuoteBillingMonthResponse>> listWithTotals() {
-        return ResponseEntity.ok(quoteBillingMonthService.findAllWithTotals());
+    public ResponseEntity<List<BillingPeriodResponse>> listWithTotals() {
+        return ResponseEntity.ok(billingPeriodService.findAllWithTotals());
     }
 
     @GetMapping("/statistics")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<?> getStatistics() {
-        return ResponseEntity.ok(quoteBillingMonthService.getStatistics());
+        return ResponseEntity.ok(billingPeriodService.getStatistics());
     }
 
     @GetMapping("/export/excel")
@@ -107,7 +101,7 @@ public class QuoteBillingMonthController implements QuoteBillingMonthControllerD
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String status) throws IOException {
         
-        byte[] excelData = quoteBillingMonthService.exportToExcel(month, year, status);
+        byte[] excelData = billingPeriodService.exportToExcel(month, year, status);
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);

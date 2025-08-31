@@ -5,10 +5,10 @@ import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.dto.response.DeliveryGroupResponse;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Project;
-import br.com.devquote.entity.Quote;
+import br.com.devquote.entity.Task;
 import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.repository.ProjectRepository;
-import br.com.devquote.repository.QuoteRepository;
+import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.DeliveryService;
 import br.com.devquote.service.EmailService;
 import br.com.devquote.utils.ExcelReportUtils;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class DeliveryServiceImpl implements DeliveryService {
 
     private final DeliveryRepository deliveryRepository;
-    private final QuoteRepository quoteRepository;
+    private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final EntityManager entityManager;
     private final ExcelReportUtils excelReportUtils;
@@ -52,11 +52,8 @@ public class DeliveryServiceImpl implements DeliveryService {
         Delivery entity = deliveryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
 
-        if (entity.getQuote() != null) {
-            entity.getQuote().getId();
-            if (entity.getQuote().getTask() != null) {
-                entity.getQuote().getTask().getId();
-            }
+        if (entity.getTask() != null) {
+            entity.getTask().getId();
         }
         if (entity.getProject() != null) {
             entity.getProject().getId();
@@ -67,11 +64,11 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public DeliveryResponse create(DeliveryRequest dto) {
-        Quote quote = quoteRepository.findById(dto.getQuoteId())
-                .orElseThrow(() -> new RuntimeException("Quote not found"));
+        Task task = taskRepository.findById(dto.getTaskId())
+                .orElseThrow(() -> new RuntimeException("Task not found"));
         Project project = projectRepository.findById(dto.getProjectId())
                 .orElseThrow(() -> new RuntimeException("Project not found"));
-        Delivery entity = DeliveryAdapter.toEntity(dto, quote, project);
+        Delivery entity = DeliveryAdapter.toEntity(dto, task, project);
         entity = deliveryRepository.save(entity);
 
         // Enviar notificação por email
@@ -80,13 +77,11 @@ public class DeliveryServiceImpl implements DeliveryService {
             Delivery deliveryWithRelations = deliveryRepository.findById(entity.getId())
                 .map(d -> {
                     // Inicializar relacionamentos lazy
-                    if (d.getQuote() != null) {
-                        if (d.getQuote().getTask() != null) {
-                            d.getQuote().getTask().getTitle(); // Inicializa Task
-                            if (d.getQuote().getTask().getRequester() != null) {
-                                d.getQuote().getTask().getRequester().getName(); // Inicializa Requester
-                                d.getQuote().getTask().getRequester().getEmail();
-                            }
+                    if (d.getTask() != null) {
+                        d.getTask().getTitle(); // Inicializa Task
+                        if (d.getTask().getRequester() != null) {
+                            d.getTask().getRequester().getName(); // Inicializa Requester
+                            d.getTask().getRequester().getEmail();
                         }
                     }
                     if (d.getProject() != null) {
@@ -111,11 +106,11 @@ public class DeliveryServiceImpl implements DeliveryService {
     public DeliveryResponse update(Long id, DeliveryRequest dto) {
         Delivery entity = deliveryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
-        Quote quote = quoteRepository.findById(dto.getQuoteId())
-                .orElseThrow(() -> new RuntimeException("Quote not found"));
+        Task task = taskRepository.findById(dto.getTaskId())
+                .orElseThrow(() -> new RuntimeException("Task not found"));
         Project project = projectRepository.findById(dto.getProjectId())
                 .orElseThrow(() -> new RuntimeException("Project not found"));
-        DeliveryAdapter.updateEntityFromDto(dto, entity, quote, project);
+        DeliveryAdapter.updateEntityFromDto(dto, entity, task, project);
         entity = deliveryRepository.save(entity);
 
         // Enviar notificação por email
@@ -124,13 +119,11 @@ public class DeliveryServiceImpl implements DeliveryService {
             Delivery deliveryWithRelations = deliveryRepository.findById(entity.getId())
                 .map(d -> {
                     // Inicializar relacionamentos lazy
-                    if (d.getQuote() != null) {
-                        if (d.getQuote().getTask() != null) {
-                            d.getQuote().getTask().getTitle(); // Inicializa Task
-                            if (d.getQuote().getTask().getRequester() != null) {
-                                d.getQuote().getTask().getRequester().getName(); // Inicializa Requester
-                                d.getQuote().getTask().getRequester().getEmail();
-                            }
+                    if (d.getTask() != null) {
+                        d.getTask().getTitle(); // Inicializa Task
+                        if (d.getTask().getRequester() != null) {
+                            d.getTask().getRequester().getName(); // Inicializa Requester
+                            d.getTask().getRequester().getEmail();
                         }
                     }
                     if (d.getProject() != null) {
@@ -165,16 +158,14 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .map(d -> {
                     log.debug("Initializing lazy relationships for delivery ID: {}", d.getId());
                     // Inicializar relacionamentos lazy
-                    if (d.getQuote() != null) {
-                        log.debug("Initializing Quote relationship");
-                        if (d.getQuote().getTask() != null) {
-                            d.getQuote().getTask().getTitle(); // Inicializa Task
-                            log.debug("Task initialized: {}", d.getQuote().getTask().getTitle());
-                            if (d.getQuote().getTask().getRequester() != null) {
-                                d.getQuote().getTask().getRequester().getName(); // Inicializa Requester
-                                d.getQuote().getTask().getRequester().getEmail();
-                                log.debug("Requester initialized: {}", d.getQuote().getTask().getRequester().getName());
-                            }
+                    if (d.getTask() != null) {
+                        log.debug("Initializing Task relationship");
+                        d.getTask().getTitle(); // Inicializa Task
+                        log.debug("Task initialized: {}", d.getTask().getTitle());
+                        if (d.getTask().getRequester() != null) {
+                            d.getTask().getRequester().getName(); // Inicializa Requester
+                            d.getTask().getRequester().getEmail();
+                            log.debug("Requester initialized: {}", d.getTask().getRequester().getName());
                         }
                     }
                     if (d.getProject() != null) {
@@ -208,22 +199,22 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public void deleteByQuoteId(Long quoteId) {
-        if (quoteId == null) {
+    public void deleteByTaskId(Long taskId) {
+        if (taskId == null) {
             return;
         }
         
-        log.info("Starting deletion of deliveries for quote ID: {}", quoteId);
+        log.info("Starting deletion of deliveries for task ID: {}", taskId);
         
-        // Buscar todas as deliveries da quote antes de deletar
-        List<Delivery> deliveriesToDelete = deliveryRepository.findByQuoteId(quoteId);
+        // Buscar todas as deliveries da task antes de deletar
+        List<Delivery> deliveriesToDelete = deliveryRepository.findByTaskId(taskId);
         
         if (deliveriesToDelete.isEmpty()) {
-            log.info("No deliveries found for quote ID: {}", quoteId);
+            log.info("No deliveries found for task ID: {}", taskId);
             return;
         }
         
-        log.info("Found {} deliveries to delete for quote ID: {}", deliveriesToDelete.size(), quoteId);
+        log.info("Found {} deliveries to delete for task ID: {}", deliveriesToDelete.size(), taskId);
         
         // Enviar notificação por email para cada delivery antes da exclusão
         for (Delivery delivery : deliveriesToDelete) {
@@ -235,16 +226,14 @@ public class DeliveryServiceImpl implements DeliveryService {
                     .map(d -> {
                         log.debug("Initializing lazy relationships for delivery ID: {}", d.getId());
                         // Inicializar relacionamentos lazy
-                        if (d.getQuote() != null) {
-                            log.debug("Initializing Quote relationship");
-                            if (d.getQuote().getTask() != null) {
-                                d.getQuote().getTask().getTitle(); // Inicializa Task
-                                log.debug("Task initialized: {}", d.getQuote().getTask().getTitle());
-                                if (d.getQuote().getTask().getRequester() != null) {
-                                    d.getQuote().getTask().getRequester().getName(); // Inicializa Requester
-                                    d.getQuote().getTask().getRequester().getEmail();
-                                    log.debug("Requester initialized: {}", d.getQuote().getTask().getRequester().getName());
-                                }
+                        if (d.getTask() != null) {
+                            log.debug("Initializing Task relationship");
+                            d.getTask().getTitle(); // Inicializa Task
+                            log.debug("Task initialized: {}", d.getTask().getTitle());
+                            if (d.getTask().getRequester() != null) {
+                                d.getTask().getRequester().getName(); // Inicializa Requester
+                                d.getTask().getRequester().getEmail();
+                                log.debug("Requester initialized: {}", d.getTask().getRequester().getName());
                             }
                         }
                         if (d.getProject() != null) {
@@ -268,9 +257,9 @@ public class DeliveryServiceImpl implements DeliveryService {
             }
         }
         
-        // Deletar todas as deliveries da quote
-        deliveryRepository.deleteByQuoteId(quoteId);
-        log.info("Successfully deleted {} deliveries for quote ID: {}", deliveriesToDelete.size(), quoteId);
+        // Deletar todas as deliveries da task
+        deliveryRepository.deleteByTaskId(taskId);
+        log.info("Successfully deleted {} deliveries for task ID: {}", deliveriesToDelete.size(), taskId);
     }
 
     @Override
@@ -330,17 +319,17 @@ public class DeliveryServiceImpl implements DeliveryService {
                 taskName, taskCode, status, createdAt, updatedAt
         );
 
-        // Agrupar por Quote ID (que representa uma tarefa)
-        Map<Long, List<Delivery>> groupedByQuote = allDeliveries.stream()
-                .collect(Collectors.groupingBy(delivery -> delivery.getQuote().getId()));
+        // Agrupar por Task ID
+        Map<Long, List<Delivery>> groupedByTask = allDeliveries.stream()
+                .collect(Collectors.groupingBy(delivery -> delivery.getTask().getId()));
 
         // Converter para DeliveryGroupResponse
-        List<DeliveryGroupResponse> groupedDeliveries = groupedByQuote.entrySet().stream()
+        List<DeliveryGroupResponse> groupedDeliveries = groupedByTask.entrySet().stream()
                 .map(entry -> {
-                    Long quoteId = entry.getKey();
+                    Long taskId = entry.getKey();
                     List<Delivery> deliveries = entry.getValue();
                     Delivery firstDelivery = deliveries.get(0);
-                    Quote quote = firstDelivery.getQuote();
+                    Task task = firstDelivery.getTask();
 
                     List<DeliveryResponse> deliveryResponses = deliveries.stream()
                             .map(DeliveryAdapter::toResponseDTO)
@@ -355,14 +344,14 @@ public class DeliveryServiceImpl implements DeliveryService {
                             .count();
 
                     return DeliveryGroupResponse.builder()
-                            .quoteId(quoteId)
-                            .taskName(quote.getTask() != null ? quote.getTask().getTitle() : "N/A")
-                            .taskCode(quote.getTask() != null ? quote.getTask().getCode() : "N/A")
-                            .quoteStatus(quote.getStatus())
+                            .taskId(taskId)
+                            .taskName(task.getTitle())
+                            .taskCode(task.getCode())
+                            .taskStatus(task.getStatus())
                             .deliveryStatus(calculateDeliveryStatus(deliveries))
-                            .quoteValue(quote.getTotalAmount())
-                            .createdAt(quote.getCreatedAt())
-                            .updatedAt(quote.getUpdatedAt())
+                            .taskValue(task.getAmount())
+                            .createdAt(task.getCreatedAt())
+                            .updatedAt(task.getUpdatedAt())
                             .totalDeliveries(deliveries.size())
                             .completedDeliveries((int) completedCount)
                             .pendingDeliveries((int) pendingCount)
@@ -382,15 +371,15 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public DeliveryGroupResponse findGroupDetailsByQuoteId(Long quoteId) {
-        List<Delivery> deliveries = deliveryRepository.findByQuoteId(quoteId);
+    public DeliveryGroupResponse findGroupDetailsByTaskId(Long taskId) {
+        List<Delivery> deliveries = deliveryRepository.findByTaskId(taskId);
 
         if (deliveries.isEmpty()) {
-            throw new RuntimeException("No deliveries found for quote ID: " + quoteId);
+            throw new RuntimeException("No deliveries found for task ID: " + taskId);
         }
 
         Delivery firstDelivery = deliveries.get(0);
-        Quote quote = firstDelivery.getQuote();
+        Task task = firstDelivery.getTask();
 
         List<DeliveryResponse> deliveryResponses = deliveries.stream()
                 .map(DeliveryAdapter::toResponseDTO)
@@ -405,14 +394,14 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .count();
 
         return DeliveryGroupResponse.builder()
-                .quoteId(quoteId)
-                .taskName(quote.getTask() != null ? quote.getTask().getTitle() : "N/A")
-                .taskCode(quote.getTask() != null ? quote.getTask().getCode() : "N/A")
-                .quoteStatus(quote.getStatus())
+                .taskId(taskId)
+                .taskName(task.getTitle())
+                .taskCode(task.getCode())
+                .taskStatus(task.getStatus())
                 .deliveryStatus(calculateDeliveryStatus(deliveries))
-                .quoteValue(quote.getTotalAmount())
-                .createdAt(quote.getCreatedAt())
-                .updatedAt(quote.getUpdatedAt())
+                .taskValue(task.getAmount())
+                .createdAt(task.getCreatedAt())
+                .updatedAt(task.getUpdatedAt())
                 .totalDeliveries(deliveries.size())
                 .completedDeliveries((int) completedCount)
                 .pendingDeliveries((int) pendingCount)
@@ -444,8 +433,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 d.updated_at as delivery_updated_at
             FROM delivery d
             INNER JOIN project p ON d.project_id = p.id
-            INNER JOIN quote q ON d.quote_id = q.id
-            INNER JOIN task t ON q.task_id = t.id
+            INNER JOIN task t ON d.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
             ORDER BY d.id DESC
         """;

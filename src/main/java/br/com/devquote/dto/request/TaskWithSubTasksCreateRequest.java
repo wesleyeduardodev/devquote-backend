@@ -60,10 +60,10 @@ public class TaskWithSubTasksCreateRequest {
     private List<@Valid SubTaskRequest> subTasks;
 
     @Builder.Default
-    private Boolean createQuote = Boolean.FALSE;
+    private Boolean createDeliveries = Boolean.FALSE;
 
     @Builder.Default
-    private Boolean linkQuoteToBilling = Boolean.FALSE;
+    private Boolean linkTaskToBilling = Boolean.FALSE;
 
     private List<Long> projectsIds;
 

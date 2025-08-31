@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 public class DeliveryResponse {
 
     private Long id;
-    private Long quoteId;
     private Long taskId;
     private String taskName;
     private String taskCode;

@@ -12,8 +12,8 @@ import java.time.LocalDate;
 @Builder
 public class DeliveryRequest {
 
-    @NotNull(message = "Quote ID is required")
-    private Long quoteId;
+    @NotNull(message = "Task ID is required")
+    private Long taskId;
 
     @NotNull(message = "Project ID is required")
     private Long projectId;

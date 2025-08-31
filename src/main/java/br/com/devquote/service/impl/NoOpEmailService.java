@@ -57,11 +57,11 @@ public class NoOpEmailService implements EmailService {
     public void sendDeliveryCreatedNotification(Delivery delivery) {
         log.warn("📧 [EMAIL DISABLED] Would send DELIVERY CREATED notification for: Delivery ID={}, Status={}", 
                 delivery.getId(), delivery.getStatus());
-        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null && 
-            delivery.getQuote().getTask().getRequester() != null) {
+        if (delivery.getTask() != null && 
+            delivery.getTask().getRequester() != null) {
             log.warn("📧 [EMAIL DISABLED] Would send to requester: {} <{}>", 
-                    delivery.getQuote().getTask().getRequester().getName(), 
-                    delivery.getQuote().getTask().getRequester().getEmail());
+                    delivery.getTask().getRequester().getName(), 
+                    delivery.getTask().getRequester().getEmail());
         }
     }
 
@@ -69,11 +69,11 @@ public class NoOpEmailService implements EmailService {
     public void sendDeliveryUpdatedNotification(Delivery delivery) {
         log.warn("📧 [EMAIL DISABLED] Would send DELIVERY UPDATED notification for: Delivery ID={}, Status={}", 
                 delivery.getId(), delivery.getStatus());
-        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null && 
-            delivery.getQuote().getTask().getRequester() != null) {
+        if (delivery.getTask() != null && 
+            delivery.getTask().getRequester() != null) {
             log.warn("📧 [EMAIL DISABLED] Would send to requester: {} <{}>", 
-                    delivery.getQuote().getTask().getRequester().getName(), 
-                    delivery.getQuote().getTask().getRequester().getEmail());
+                    delivery.getTask().getRequester().getName(), 
+                    delivery.getTask().getRequester().getEmail());
         }
     }
 
@@ -81,11 +81,11 @@ public class NoOpEmailService implements EmailService {
     public void sendDeliveryDeletedNotification(Delivery delivery) {
         log.warn("📧 [EMAIL DISABLED] Would send DELIVERY DELETED notification for: Delivery ID={}, Status={}", 
                 delivery.getId(), delivery.getStatus());
-        if (delivery.getQuote() != null && delivery.getQuote().getTask() != null && 
-            delivery.getQuote().getTask().getRequester() != null) {
+        if (delivery.getTask() != null && 
+            delivery.getTask().getRequester() != null) {
             log.warn("📧 [EMAIL DISABLED] Would send to requester: {} <{}>", 
-                    delivery.getQuote().getTask().getRequester().getName(), 
-                    delivery.getQuote().getTask().getRequester().getEmail());
+                    delivery.getTask().getRequester().getName(), 
+                    delivery.getTask().getRequester().getEmail());
         }
     }
 }

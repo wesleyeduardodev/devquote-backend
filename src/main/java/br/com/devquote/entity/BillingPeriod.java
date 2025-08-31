@@ -4,29 +4,42 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "quote")
+@Table(
+        name = "billing_period",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_billing_period_year_month",
+                        columnNames = {"year", "month"}
+                )
+        },
+        indexes = {
+                @Index(name = "idx_bp_year_month", columnList = "year, month")
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Quote {
+public class BillingPeriod {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "task_id", nullable = false, unique = true)
-    private Task task;
+    @Column(nullable = false)
+    private Integer month;
 
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false)
+    private Integer year;
+
+    @Column(name = "payment_date")
+    private LocalDate paymentDate;
+
+    @Column(length = 30)
     private String status;
-
-    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalAmount;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

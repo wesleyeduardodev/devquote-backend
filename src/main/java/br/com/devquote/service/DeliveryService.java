@@ -20,7 +20,7 @@ public interface DeliveryService {
 
     void deleteBulk(List<Long> ids);
     
-    void deleteByQuoteId(Long quoteId);
+    void deleteByTaskId(Long taskId);
 
     Page<DeliveryResponse> findAllPaginated(Long id,
                                             String taskName,
@@ -42,7 +42,7 @@ public interface DeliveryService {
                                                       String updatedAt,
                                                       Pageable pageable);
 
-    DeliveryGroupResponse findGroupDetailsByQuoteId(Long quoteId);
+    DeliveryGroupResponse findGroupDetailsByTaskId(Long taskId);
 
     byte[] exportToExcel() throws IOException;
 }
