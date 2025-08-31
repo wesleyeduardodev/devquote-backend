@@ -63,4 +63,6 @@ public class TaskResponse {
     private Boolean hasQuote;
     
     private Boolean hasQuoteInBilling;
+    
+    private Boolean hasDelivery;
 }

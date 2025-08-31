@@ -63,16 +63,18 @@ public class TaskServiceImpl implements TaskService {
         if (!tasks.isEmpty()) {
             List<Long> taskIds = tasks.stream().map(TaskResponse::getId).toList();
 
-            // Buscar informações de Billing
+            // Buscar informações de Billing e Delivery
             Map<Long, Boolean> taskInBillingMap = getTaskInBillingStatus(taskIds);
+            Map<Long, Boolean> taskDeliveryMap = getTaskDeliveryStatus(taskIds);
 
             tasks.forEach(dto -> {
                 List<SubTask> subTasks = subTaskRepository.findByTaskId(dto.getId());
                 dto.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
 
-                // Adicionar informações de Billing
+                // Adicionar informações de Billing e Delivery
                 dto.setHasQuote(false); // Não há mais quotes
                 dto.setHasQuoteInBilling(taskInBillingMap.getOrDefault(dto.getId(), false));
+                dto.setHasDelivery(taskDeliveryMap.getOrDefault(dto.getId(), false));
             });
         }
 
@@ -88,9 +90,10 @@ public class TaskServiceImpl implements TaskService {
         List<SubTask> subTasks = subTaskRepository.findByTaskId(response.getId());
         response.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
 
-        // Adicionar informações de Billing para o item específico
+        // Adicionar informações de Billing e Delivery para o item específico
         response.setHasQuote(false); // Não há mais quotes
         response.setHasQuoteInBilling(billingPeriodTaskService.existsByTaskId(id));
+        response.setHasDelivery(deliveryService.existsByTaskId(id));
 
         return response;
     }
@@ -373,16 +376,18 @@ public class TaskServiceImpl implements TaskService {
         Map<Long, List<SubTask>> subTasksByTaskId = allSubTasks.stream()
                 .collect(Collectors.groupingBy(st -> st.getTask().getId()));
 
-        // Buscar informações de Billing
+        // Buscar informações de Billing e Delivery
         Map<Long, Boolean> taskInBillingMap = getTaskInBillingStatus(taskIds);
+        Map<Long, Boolean> taskDeliveryMap = getTaskDeliveryStatus(taskIds);
 
         dtos.forEach(dto -> {
             List<SubTask> list = subTasksByTaskId.getOrDefault(dto.getId(), List.of());
             dto.setSubTasks(SubTaskAdapter.toResponseDTOList(list));
 
-            // Adicionar informações de Billing
+            // Adicionar informações de Billing e Delivery
             dto.setHasQuote(false); // Não há mais quotes
             dto.setHasQuoteInBilling(taskInBillingMap.getOrDefault(dto.getId(), false));
+            dto.setHasDelivery(taskDeliveryMap.getOrDefault(dto.getId(), false));
         });
 
         return new PageImpl<>(dtos, pageable, page.getTotalElements());
@@ -598,6 +603,17 @@ public class TaskServiceImpl implements TaskService {
                 .collect(Collectors.toMap(
                         taskId -> taskId,
                         taskId -> billingPeriodTaskService.existsByTaskId(taskId)
+                ));
+    }
+
+    /**
+     * Verifica quais tarefas estão vinculadas a entregas
+     */
+    private Map<Long, Boolean> getTaskDeliveryStatus(List<Long> taskIds) {
+        return taskIds.stream()
+                .collect(Collectors.toMap(
+                        taskId -> taskId,
+                        taskId -> deliveryService.existsByTaskId(taskId)
                 ));
     }
 

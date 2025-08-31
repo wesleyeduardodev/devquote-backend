@@ -44,5 +44,7 @@ public interface DeliveryService {
 
     DeliveryGroupResponse findGroupDetailsByTaskId(Long taskId);
 
+    boolean existsByTaskId(Long taskId);
+
     byte[] exportToExcel() throws IOException;
 }

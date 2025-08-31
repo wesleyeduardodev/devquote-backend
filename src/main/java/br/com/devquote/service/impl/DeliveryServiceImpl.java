@@ -470,4 +470,9 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         return excelReportUtils.generateDeliveriesReport(data);
     }
+
+    @Override
+    public boolean existsByTaskId(Long taskId) {
+        return deliveryRepository.existsByTaskId(taskId);
+    }
 }

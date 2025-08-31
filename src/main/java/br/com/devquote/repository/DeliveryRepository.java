@@ -78,6 +78,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     @Query("SELECT d FROM Delivery d WHERE d.task.id = :taskId ORDER BY d.id")
     List<Delivery> findByTaskId(@Param("taskId") Long taskId);
     
+    boolean existsByTaskId(Long taskId);
+    
     @Modifying
     @Query("DELETE FROM Delivery d WHERE d.task.id = :taskId")
     void deleteByTaskId(@Param("taskId") Long taskId);
