@@ -37,7 +37,7 @@ public class ExcelReportUtils {
                 "ID", "Código", "Título", "Descrição", "Status", "Tipo",
                 "Prioridade", "Solicitante", "Criado Por", "Atualizado Por",
                 "Origem do Servidor", "Módulo do Sistema", "Link", "Link da Reunião",
-                "Observações", "Valor da Tarefa", "Tem Subtarefas", "Tem Orçamento",
+                "Observações", "Valor da Tarefa", "Tem Subtarefas", "Tem Entrega",
                 "Orçamento no Faturamento", "Data de Criação", "Data de Atualização",
                 "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição",
                 "Subtarefa Status", "Subtarefa Valor"
@@ -101,7 +101,7 @@ public class ExcelReportUtils {
                 setCellValue(row, 14, taskData.get("task_notes"), dataStyle);
                 setCellValue(row, 15, taskData.get("task_amount"), currencyStyle);
                 setCellValue(row, 16, taskData.get("has_subtasks"), dataStyle);
-                setCellValue(row, 17, taskData.get("has_quote"), dataStyle);
+                setCellValue(row, 17, taskData.get("has_delivery"), dataStyle);
                 setCellValue(row, 18, taskData.get("has_quote_in_billing"), dataStyle);
                 setCellValue(row, 19, taskData.get("task_created_at"), dateStyle);
                 setCellValue(row, 20, taskData.get("task_updated_at"), dateStyle);

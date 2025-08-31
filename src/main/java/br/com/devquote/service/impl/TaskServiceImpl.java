@@ -651,8 +651,9 @@ public class TaskServiceImpl implements TaskService {
                 t.notes as task_notes,
                 t.amount as task_amount,
                 t.has_sub_tasks as has_subtasks,
-                'Não' as has_quote,
-                'Não' as has_quote_in_billing,
+                CASE WHEN EXISTS(SELECT 1 FROM delivery d WHERE d.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_delivery,
+                CASE WHEN EXISTS(SELECT 1 FROM billing_period_task bpt 
+                                 WHERE bpt.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
                 t.created_at as task_created_at,
                 t.updated_at as task_updated_at,
                 st.id as subtask_id,
@@ -692,7 +693,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_notes", row[14]);
             map.put("task_amount", row[15]);
             map.put("has_subtasks", Boolean.TRUE.equals(row[16]) ? "Sim" : "Não");
-            map.put("has_quote", row[17]);
+            map.put("has_delivery", row[17]);
             map.put("has_quote_in_billing", row[18]);
             map.put("task_created_at", row[19]);
             map.put("task_updated_at", row[20]);
