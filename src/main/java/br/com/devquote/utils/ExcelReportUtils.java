@@ -24,6 +24,10 @@ public class ExcelReportUtils {
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
+        
+        // Estilos coloridos para cabeçalhos de tarefas e subtarefas
+        CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
+        CellStyle subtaskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
 
         // Definir cabeçalhos baseado no perfil do usuário
         String[] headers;
@@ -54,7 +58,23 @@ public class ExcelReportUtils {
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
-            cell.setCellStyle(headerStyle);
+            
+            // Aplicar cores diferentes para colunas de tarefas vs subtarefas
+            if (canViewAmounts) {
+                // ADMIN/MANAGER: colunas 0-20 são tarefas (azul), 21-25 são subtarefas (verde)
+                if (i <= 20) {
+                    cell.setCellStyle(taskHeaderStyle);
+                } else {
+                    cell.setCellStyle(subtaskHeaderStyle);
+                }
+            } else {
+                // USER: colunas 0-17 são tarefas (azul), 18-21 são subtarefas (verde)
+                if (i <= 17) {
+                    cell.setCellStyle(taskHeaderStyle);
+                } else {
+                    cell.setCellStyle(subtaskHeaderStyle);
+                }
+            }
         }
 
         // Adicionar dados baseado no perfil

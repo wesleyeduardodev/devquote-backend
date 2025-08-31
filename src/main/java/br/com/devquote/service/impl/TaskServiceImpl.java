@@ -617,7 +617,7 @@ public class TaskServiceImpl implements TaskService {
                 t.amount as task_amount,
                 t.has_sub_tasks as has_subtasks,
                 'Não' as has_quote,
-                CASE WHEN tbmt.id IS NOT NULL THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
+                'Não' as has_quote_in_billing,
                 t.created_at as task_created_at,
                 t.updated_at as task_updated_at,
                 st.id as subtask_id,
@@ -629,7 +629,6 @@ public class TaskServiceImpl implements TaskService {
             INNER JOIN requester r ON t.requester_id = r.id
             LEFT JOIN users cb ON t.created_by = cb.id
             LEFT JOIN users ub ON t.updated_by = ub.id
-            LEFT JOIN task_billing_month_task tbmt ON tbmt.task_id = t.id
             LEFT JOIN sub_task st ON st.task_id = t.id
             ORDER BY t.id desc, st.id
             """;
@@ -719,10 +718,10 @@ public class TaskServiceImpl implements TaskService {
                 d.started_at as delivery_started_at,
                 d.finished_at as delivery_finished_at,
                 
-                -- DADOS DE FATURAMENTO
-                tbm.year as billing_year,
-                tbm.month as billing_month,
-                tbm.status as billing_status
+                -- DADOS DE FATURAMENTO (removidos - não existem mais)
+                NULL as billing_year,
+                NULL as billing_month,
+                NULL as billing_status
                 
             FROM task t
             INNER JOIN requester r ON t.requester_id = r.id
@@ -730,8 +729,6 @@ public class TaskServiceImpl implements TaskService {
             LEFT JOIN users ub ON t.updated_by = ub.id
             LEFT JOIN delivery d ON d.task_id = t.id
             LEFT JOIN project p ON d.project_id = p.id
-            LEFT JOIN task_billing_month_task tbmt ON tbmt.task_id = t.id
-            LEFT JOIN task_billing_month tbm ON tbmt.task_billing_month_id = tbm.id
             ORDER BY t.id DESC, d.id ASC
         """;
 
