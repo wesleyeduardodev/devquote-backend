@@ -36,6 +36,7 @@ public class TaskAdapter {
                 .createdByUserName(entity.getCreatedBy() != null ? entity.getCreatedBy().getName() : null)
                 .updatedByUserId(entity.getUpdatedBy() != null ? entity.getUpdatedBy().getId() : null)
                 .updatedByUserName(entity.getUpdatedBy() != null ? entity.getUpdatedBy().getName() : null)
+                .financialEmailSent(entity.getFinancialEmailSent())
                 .build();
     }
 

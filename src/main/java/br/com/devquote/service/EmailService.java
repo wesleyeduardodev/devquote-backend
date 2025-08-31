@@ -17,4 +17,6 @@ public interface EmailService {
     
     void sendDeliveryDeletedNotification(Delivery delivery);
     
+    void sendFinancialNotificationAsync(Task task);
+    
 }

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificação Financeira - DevQuote</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .header .subtitle {
+            margin: 8px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .task-info {
+            background-color: #f1f5f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .task-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        
+        .label {
+            font-weight: 600;
+            color: #475569;
+            min-width: 120px;
+        }
+        
+        .value {
+            color: #1e293b;
+            text-align: right;
+            flex: 1;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-in-progress { background-color: #dbeafe; color: #1e40af; }
+        .status-completed { background-color: #d1fae5; color: #065f46; }
+        .status-cancelled { background-color: #fee2e2; color: #991b1b; }
+        
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .priority-low { background-color: #d1fae5; color: #065f46; }
+        .priority-medium { background-color: #fef3c7; color: #92400e; }
+        .priority-high { background-color: #fed7aa; color: #c2410c; }
+        .priority-urgent { background-color: #fee2e2; color: #991b1b; }
+        
+        .subtasks-section {
+            margin-top: 24px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+        
+        .subtask-item {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .subtask-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        
+        .subtask-description {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .subtask-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+        }
+        
+        .amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #059669;
+        }
+        
+        .total-amount {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .total-amount .label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            color: white;
+        }
+        
+        .total-amount .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .footer {
+            background-color: #f8fafc;
+            padding: 20px 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .footer p {
+            margin: 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+        
+        .link {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        
+        .link:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 0 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .value {
+                text-align: left;
+                margin-top: 4px;
+            }
+            
+            .subtask-footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .amount {
+                margin-top: 8px;
+            }
+            
+            .total-amount .value {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ DevQuote</h1>
+            <p class="subtitle">Notificação Financeira</p>
+        </div>
+        
+        <div class="content">
+            <div class="task-info">
+                <div class="task-title" th:text="${task.title}">Título da Tarefa</div>
+                
+                <div class="info-row">
+                    <span class="label">Código:</span>
+                    <span class="value" th:text="${task.code}">TASK-001</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="label">Solicitante:</span>
+                    <span class="value" th:text="${task.requester.name}">Nome do Solicitante</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="label">Status:</span>
+                    <span class="value">
+                        <span class="status-badge"
+                              th:class="${'status-badge status-' + #strings.toLowerCase(#strings.replace(statusTranslation, ' ', '-'))}"
+                              th:text="${statusTranslation}">
+                            Em Progresso
+                        </span>
+                    </span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="label">Prioridade:</span>
+                    <span class="value">
+                        <span class="priority-badge"
+                              th:class="${'priority-badge priority-' + #strings.toLowerCase(priorityTranslation)}"
+                              th:text="${priorityTranslation}">
+                            Média
+                        </span>
+                    </span>
+                </div>
+                
+                <div class="info-row" th:if="${task.description}">
+                    <span class="label">Descrição:</span>
+                    <span class="value" th:text="${task.description}">Descrição da tarefa</span>
+                </div>
+                
+                <div class="info-row" th:if="${task.link}">
+                    <span class="label">Link:</span>
+                    <span class="value">
+                        <a th:href="${task.link}" class="link" target="_blank" th:text="${task.link}">
+                            Link da tarefa
+                        </a>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Subtarefas -->
+            <div class="subtasks-section" th:if="${task.hasSubTasks and not #lists.isEmpty(subTasks)}">
+                <div class="section-title">Subtarefas</div>
+                
+                <div class="subtask-item" th:each="subtask : ${subTasks}">
+                    <div class="subtask-title" th:text="${subtask.title}">Título da Subtarefa</div>
+                    
+                    <div class="subtask-description" th:if="${subtask.description}" th:text="${subtask.description}">
+                        Descrição da subtarefa
+                    </div>
+                    
+                    <div class="subtask-footer">
+                        <span class="status-badge"
+                              th:class="${'status-badge status-' + #strings.toLowerCase(#strings.replace(subtask.status, ' ', '-'))}"
+                              th:text="${subtask.status}">
+                            Status
+                        </span>
+                        
+                        <span class="amount">
+                            R$ <span th:text="${#numbers.formatDecimal(subtask.amount != null ? subtask.amount : 0, 1, 2)}">0,00</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Valor Total -->
+            <div class="total-amount">
+                <div class="label">Valor Total da Tarefa</div>
+                <div class="value">
+                    R$ <span th:text="${#numbers.formatDecimal(totalAmount, 1, 2)}">0,00</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>
+                Esta é uma notificação automática do sistema DevQuote.<br>
+                <strong>Email gerado em:</strong> <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -40,6 +40,7 @@ jobs:
         # Email configuration - Required for Spring context loading
         DEVQUOTE_EMAIL_ENABLED: ${{ secrets.DEVQUOTE_EMAIL_ENABLED }}
         DEVQUOTE_EMAIL_FROM: ${{ secrets.DEVQUOTE_EMAIL_FROM }}
+        DEVQUOTE_EMAIL_FINANCE: ${{ secrets.DEVQUOTE_EMAIL_FINANCE }}
         MAIL_HOST: ${{ secrets.MAIL_HOST }}
         MAIL_PORT: ${{ secrets.MAIL_PORT }}
         MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}

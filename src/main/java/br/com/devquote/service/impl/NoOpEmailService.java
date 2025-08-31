@@ -88,4 +88,12 @@ public class NoOpEmailService implements EmailService {
                     delivery.getTask().getRequester().getEmail());
         }
     }
+
+    @Override
+    public void sendFinancialNotificationAsync(Task task) {
+        log.warn("📧 [EMAIL DISABLED] Would send FINANCIAL notification for: Task ID={}, Code={}, Title={}", 
+                task.getId(), task.getCode(), task.getTitle());
+        log.warn("📧 [EMAIL DISABLED] Would send to finance department with task amount: {}", 
+                task.getAmount() != null ? task.getAmount() : "0.00");
+    }
 }

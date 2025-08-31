@@ -931,4 +931,23 @@ public class TaskServiceImpl implements TaskService {
 
         return result;
     }
+
+    @Override
+    public void sendFinancialEmail(Long taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        // Inicializar relacionamentos lazy antes da chamada assíncrona
+        task.getRequester().getName();
+
+        try {
+            emailService.sendFinancialNotificationAsync(task);
+            // Marca como enviado
+            task.setFinancialEmailSent(true);
+            taskRepository.save(task);
+        } catch (Exception e) {
+            log.error("Failed to send financial email notification for task {}: {}", taskId, e.getMessage());
+            throw new RuntimeException("Failed to send financial email notification");
+        }
+    }
 }

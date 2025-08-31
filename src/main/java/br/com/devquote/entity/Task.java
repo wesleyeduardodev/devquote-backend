@@ -63,6 +63,10 @@ public class Task {
     @Builder.Default
     private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH, URGENT
 
+    @Column(name = "financial_email_sent")
+    @Builder.Default
+    private Boolean financialEmailSent = false;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

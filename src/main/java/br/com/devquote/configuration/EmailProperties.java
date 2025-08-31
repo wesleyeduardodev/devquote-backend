@@ -14,6 +14,7 @@ import jakarta.annotation.PostConstruct;
 public class EmailProperties {
     private boolean enabled;
     private String from;
+    private String financeEmail;
     
     @PostConstruct
     public void logConfiguration() {
@@ -21,8 +22,12 @@ public class EmailProperties {
             log.info("=== EMAIL CONFIGURATION ===");
             log.info("Email notifications: ENABLED");
             log.info("Email from address: {}", from != null ? from : "NOT CONFIGURED");
+            log.info("Finance email address: {}", financeEmail != null ? financeEmail : "NOT CONFIGURED");
             if (from == null || from.trim().isEmpty()) {
                 log.error("EMAIL FROM ADDRESS IS NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable.");
+            }
+            if (financeEmail == null || financeEmail.trim().isEmpty()) {
+                log.warn("FINANCE EMAIL ADDRESS IS NOT CONFIGURED! Set DEVQUOTE_EMAIL_FINANCE environment variable.");
             }
             log.info("==========================");
         } else {

@@ -76,6 +76,7 @@ devquote:
     email:
       enabled: ${DEVQUOTE_EMAIL_ENABLED}
       from: ${DEVQUOTE_EMAIL_FROM}
+      finance-email: ${DEVQUOTE_EMAIL_FINANCE}
 
 # JWT Configuration (usa ENV em produção)
 app:

@@ -140,6 +140,13 @@ public class TaskController implements TaskControllerDoc {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/send-financial-email")
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    public ResponseEntity<Void> sendFinancialEmail(@PathVariable Long id) {
+        taskService.sendFinancialEmail(id);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/full")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasks(
@@ -166,16 +173,16 @@ public class TaskController implements TaskControllerDoc {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<byte[]> exportTasksToExcel() throws IOException {
         byte[] excelData = taskService.exportTasksToExcel();
-        
-        String filename = "Relatorio_Tarefas_" + 
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + 
+
+        String filename = "Relatorio_Tarefas_" +
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) +
             ".xlsx";
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentDispositionFormData("attachment", filename);
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-        
+
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
 
@@ -183,16 +190,16 @@ public class TaskController implements TaskControllerDoc {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<byte[]> exportGeneralReport() throws IOException {
         byte[] excelData = taskService.exportGeneralReport();
-        
-        String filename = "Relatorio_Geral_Completo_" + 
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + 
+
+        String filename = "Relatorio_Geral_Completo_" +
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) +
             ".xlsx";
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentDispositionFormData("attachment", filename);
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-        
+
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
 
@@ -200,16 +207,16 @@ public class TaskController implements TaskControllerDoc {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<byte[]> exportGeneralReportForUser() throws IOException {
         byte[] excelData = taskService.exportGeneralReportForUser();
-        
-        String filename = "Relatorio_Geral_User_" + 
-            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + 
+
+        String filename = "Relatorio_Geral_User_" +
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) +
             ".xlsx";
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentDispositionFormData("attachment", filename);
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-        
+
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
 }

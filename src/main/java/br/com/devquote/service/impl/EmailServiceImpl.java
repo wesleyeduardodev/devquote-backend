@@ -19,6 +19,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import jakarta.annotation.PostConstruct;
 
@@ -116,7 +117,7 @@ public class EmailServiceImpl implements EmailService {
     private void sendToMultipleRecipients(Task task, String subject, String htmlContent, String action) {
         log.info("📧 Starting TASK {} email notification process for: Task ID={}, Code={}, Title={}",
                 action.toUpperCase(), task.getId(), task.getCode(), task.getTitle());
-        
+
         // Lista de destinatários
         java.util.List<String> recipients = new java.util.ArrayList<>();
 
@@ -128,7 +129,7 @@ public class EmailServiceImpl implements EmailService {
                     task.getRequester().getName(), task.getRequester().getEmail(), action);
         } else {
             log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {} ({} action). Requester: {}",
-                    task.getId(), action, 
+                    task.getId(), action,
                     task.getRequester() != null ? task.getRequester().getName() : "null");
         }
 
@@ -145,7 +146,7 @@ public class EmailServiceImpl implements EmailService {
 
         // Verificar se há destinatários
         if (recipients.isEmpty()) {
-            log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {} ({} action). Email will NOT be sent!", 
+            log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {} ({} action). Email will NOT be sent!",
                     task.getId(), action);
             return;
         }
@@ -155,7 +156,7 @@ public class EmailServiceImpl implements EmailService {
         // Enviar para todos os destinatários
         int successCount = 0;
         int failureCount = 0;
-        
+
         for (String recipient : recipients) {
             try {
                 sendEmail(recipient, subject, htmlContent);
@@ -428,14 +429,14 @@ public class EmailServiceImpl implements EmailService {
     private void sendToMultipleRecipientsForDelivery(Delivery delivery, String subject, String htmlContent, String action) {
         String taskInfo = "Unknown";
         if (delivery.getTask() != null) {
-            taskInfo = String.format("Task ID=%d, Code=%s", 
-                    delivery.getTask().getId(), 
+            taskInfo = String.format("Task ID=%d, Code=%s",
+                    delivery.getTask().getId(),
                     delivery.getTask().getCode());
         }
-        
+
         log.info("📧 Starting DELIVERY {} email notification process for: Delivery ID={}, Status={}, {}",
                 action.toUpperCase(), delivery.getId(), delivery.getStatus(), taskInfo);
-        
+
         // Lista de destinatários
         java.util.List<String> recipients = new java.util.ArrayList<>();
 
@@ -451,9 +452,9 @@ public class EmailServiceImpl implements EmailService {
                     requesterName, requesterEmail, action);
         } else {
             log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {} ({} action). Task chain: {}",
-                    delivery.getId(), action, 
-                    delivery.getTask() != null ? 
-                        (delivery.getTask().getRequester() != null ? "Requester has no email" : "No requester") 
+                    delivery.getId(), action,
+                    delivery.getTask() != null ?
+                        (delivery.getTask().getRequester() != null ? "Requester has no email" : "No requester")
                         : "No task");
         }
 
@@ -462,7 +463,7 @@ public class EmailServiceImpl implements EmailService {
             // Evitar duplicata caso o solicitante seja o mesmo email do remetente
             if (!recipients.contains(emailProperties.getFrom())) {
                 recipients.add(emailProperties.getFrom());
-                log.info("📧 Added sender email to recipients: {} for delivery {} action", 
+                log.info("📧 Added sender email to recipients: {} for delivery {} action",
                         emailProperties.getFrom(), action);
             }
         } else {
@@ -471,7 +472,7 @@ public class EmailServiceImpl implements EmailService {
 
         // Verificar se há destinatários
         if (recipients.isEmpty()) {
-            log.error("📧 ❌ NO VALID RECIPIENTS found for delivery ID: {} ({} action). Email will NOT be sent!", 
+            log.error("📧 ❌ NO VALID RECIPIENTS found for delivery ID: {} ({} action). Email will NOT be sent!",
                     delivery.getId(), action);
             return;
         }
@@ -481,7 +482,7 @@ public class EmailServiceImpl implements EmailService {
         // Enviar para todos os destinatários
         int successCount = 0;
         int failureCount = 0;
-        
+
         for (String recipient : recipients) {
             try {
                 sendEmail(recipient, subject, htmlContent);
@@ -689,5 +690,62 @@ public class EmailServiceImpl implements EmailService {
             case "NORMAL" -> "media";
             default -> "media";
         };
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendFinancialNotificationAsync(Task task) {
+        if (!emailProperties.isEnabled()) {
+            log.warn("Email notifications are disabled. Skipping financial notification for task ID: {}", task.getId());
+            return;
+        }
+
+        String financeEmail = emailProperties.getFinanceEmail();
+        if (financeEmail == null || financeEmail.trim().isEmpty()) {
+            log.error("Finance email not configured. Cannot send financial notification for task ID: {}", task.getId());
+            return;
+        }
+
+        try {
+            log.info("Sending financial notification for task ID: {} to {}", task.getId(), financeEmail);
+
+            Context context = new Context();
+            context.setVariable("task", task);
+            context.setVariable("statusTranslation", translateStatus(task.getStatus()));
+            context.setVariable("priorityTranslation", translatePriority(task.getPriority()));
+
+            // Buscar subtarefas via repository se necessário
+            if (task.getHasSubTasks()) {
+                List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
+                context.setVariable("subTasks", subTasks);
+            }
+
+            // Usar valor total da tarefa (já calculado) ou 0 se nulo
+            java.math.BigDecimal totalAmount = task.getAmount() != null ? task.getAmount() : java.math.BigDecimal.ZERO;
+            context.setVariable("totalAmount", totalAmount);
+
+            String htmlContent = templateEngine.process("email/financial-notification", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(emailProperties.getFrom());
+            helper.setTo(financeEmail);
+            helper.setSubject("💰 Notificação Financeira - Tarefa " + task.getCode());
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+            log.info("Financial notification sent successfully for task ID: {} to {}", task.getId(), financeEmail);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send financial notification for task ID: {} to {}: {}",
+                task.getId(), financeEmail, e.getMessage(), e);
+            throw new RuntimeException("Failed to send financial notification email", e);
+        } catch (Exception e) {
+            log.error("Unexpected error while sending financial notification for task ID: {} to {}: {}",
+                task.getId(), financeEmail, e.getMessage(), e);
+            throw new RuntimeException("Failed to send financial notification email", e);
+        }
     }
 }
