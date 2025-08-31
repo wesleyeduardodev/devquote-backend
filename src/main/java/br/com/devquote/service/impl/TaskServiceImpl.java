@@ -118,14 +118,14 @@ public class TaskServiceImpl implements TaskService {
         entity.setUpdatedBy(currentUser);
 
         entity = taskRepository.save(entity);
-        
+
         // Enviar notificação por email
         try {
             emailService.sendTaskCreatedNotification(entity);
         } catch (Exception e) {
             log.warn("Failed to send email notification for task creation: {}", e.getMessage());
         }
-        
+
         return TaskAdapter.toResponseDTO(entity);
     }
 
@@ -148,14 +148,14 @@ public class TaskServiceImpl implements TaskService {
         entity.setUpdatedBy(currentUser);
 
         entity = taskRepository.save(entity);
-        
+
         // Enviar notificação por email
         try {
             emailService.sendTaskUpdatedNotification(entity);
         } catch (Exception e) {
             log.warn("Failed to send email notification for task update: {}", e.getMessage());
         }
-        
+
         return TaskAdapter.toResponseDTO(entity);
     }
 
@@ -230,7 +230,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void createDeliveries(TaskWithSubTasksCreateRequest dto, Task task) {
-        if (dto.getCreateDeliveries() != null && dto.getCreateDeliveries() && dto.getProjectsIds() != null && !dto.getProjectsIds().isEmpty()) {
+        if (dto.getProjectsIds() != null && !dto.getProjectsIds().isEmpty()) {
             for (Long projectId : dto.getProjectsIds()) {
                 DeliveryRequest deliveryRequest = DeliveryRequest
                         .builder()
@@ -307,7 +307,7 @@ public class TaskServiceImpl implements TaskService {
         if (billingPeriodTaskService.existsByTaskId(taskId)) {
             throw new RuntimeException("Cannot delete task. It is linked to a billing period.");
         }
-        
+
         // Deletar entregas vinculadas à task
         deliveryService.deleteByTaskId(taskId);
 
@@ -798,7 +798,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("updated_by_name", row[11]);
             map.put("task_server_origin", row[12]);
             map.put("task_system_module", row[13]);
-            
+
             // STATUS DE ENTREGA E FATURAMENTO (14-15)
             map.put("has_delivery", row[14]);
             map.put("has_quote_in_billing", row[15]);
@@ -906,7 +906,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("updated_by_name", row[10]);
             map.put("task_server_origin", row[11]);
             map.put("task_system_module", row[12]);
-            
+
             // STATUS DE ENTREGA E FATURAMENTO (13-14)
             map.put("has_delivery", row[13]);
             map.put("has_quote_in_billing", row[14]);
