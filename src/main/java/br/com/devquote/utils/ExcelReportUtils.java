@@ -589,12 +589,11 @@ public class ExcelReportUtils {
         CellStyle dateStyle = createDateStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
-        // Cabeçalhos: Faturamento -> Tarefa -> Orçamento
+        // Cabeçalhos: Faturamento -> Tarefa (sem orçamento e sem datas)
         String[] headers = {
             "Ano", "Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa", 
             "Título da Tarefa", "Status da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas", 
-            "Solicitante", "ID Orçamento", "Status do Orçamento", "Valor do Orçamento", 
-            "Data de Criação", "Data de Atualização"
+            "Solicitante"
         };
 
         Row headerRow = sheet.createRow(0);
@@ -622,18 +621,9 @@ public class ExcelReportUtils {
             setCellValue(row, 7, billingData.get("task_amount"), currencyStyle);
             setCellValue(row, 8, billingData.get("subtasks_count"), dataStyle);
             setCellValue(row, 9, billingData.get("requester_name"), dataStyle);
-
-            // Dados do orçamento
-            setCellValue(row, 10, billingData.get("quote_id"), dataStyle);
-            setStatusCell(row, 11, billingData.get("quote_status"), dataStyle);
-            setCellValue(row, 12, billingData.get("quote_amount"), currencyStyle);
-
-            // Datas
-            setCellValue(row, 13, billingData.get("created_at"), dateStyle);
-            setCellValue(row, 14, billingData.get("updated_at"), dateStyle);
         }
 
-        // Ajustar largura das colunas (15 colunas)
+        // Ajustar largura das colunas (10 colunas)
         setColumnWidths(sheet, new int[]{
             2500,  // Ano
             2500,  // Mês
@@ -644,12 +634,7 @@ public class ExcelReportUtils {
             3500,  // Status da Tarefa
             4000,  // Valor da Tarefa
             3000,  // Qtd. Subtarefas
-            6000,  // Solicitante
-            3000,  // ID Orçamento
-            4000,  // Status do Orçamento
-            4000,  // Valor do Orçamento
-            6000,  // Data de Criação
-            6000   // Data de Atualização
+            6000   // Solicitante
         });
 
         // Ajustar altura das linhas
