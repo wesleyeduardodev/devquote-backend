@@ -716,7 +716,7 @@ public class TaskServiceImpl implements TaskService {
     public byte[] exportGeneralReport() throws IOException {
         log.info("GENERAL REPORT EXPORT STARTED");
 
-        // Query incluindo subtarefas na estrutura correta: Tarefas → Subtarefas → Orçamentos → Entregas → Faturamento
+        // Query incluindo entregas e faturamento: Tarefas → Entregas → Faturamento
         String sql = """
             SELECT 
                 -- DADOS DA TAREFA
@@ -758,10 +758,10 @@ public class TaskServiceImpl implements TaskService {
                 d.started_at as delivery_started_at,
                 d.finished_at as delivery_finished_at,
                 
-                -- DADOS DE FATURAMENTO (removidos - não existem mais)
-                NULL as billing_year,
-                NULL as billing_month,
-                NULL as billing_status
+                -- DADOS DE FATURAMENTO
+                bp.year as billing_year,
+                bp.month as billing_month,
+                bp.status as billing_status
                 
             FROM task t
             INNER JOIN requester r ON t.requester_id = r.id
@@ -769,7 +769,9 @@ public class TaskServiceImpl implements TaskService {
             LEFT JOIN users ub ON t.updated_by = ub.id
             LEFT JOIN delivery d ON d.task_id = t.id
             LEFT JOIN project p ON d.project_id = p.id
-            ORDER BY t.id DESC, d.id ASC
+            LEFT JOIN billing_period_task bpt ON bpt.task_id = t.id
+            LEFT JOIN billing_period bp ON bpt.billing_period_id = bp.id
+            ORDER BY t.id DESC, d.id ASC, bp.id ASC
         """;
 
         Query query = entityManager.createNativeQuery(sql);
