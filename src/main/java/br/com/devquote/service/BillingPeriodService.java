@@ -25,4 +25,5 @@ public interface BillingPeriodService {
     byte[] exportToExcel(Integer month, Integer year, String status) throws IOException;
     
     void deleteWithAllLinkedTasks(Long id);
+    BillingPeriodResponse updateStatus(Long id, String status);
 }

@@ -51,7 +51,8 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
                 bp.status,
                 bp.created_at,
                 bp.updated_at,
-                COALESCE(SUM(t.amount), 0) as total_amount
+                COALESCE(SUM(t.amount), 0) as total_amount,
+                COUNT(t.id) as task_count
             FROM billing_period bp
             LEFT JOIN billing_period_task bpt ON bp.id = bpt.billing_period_id
             LEFT JOIN task t ON bpt.task_id = t.id
@@ -73,6 +74,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
                 .createdAt(row[5] != null ? ((java.sql.Timestamp) row[5]).toLocalDateTime() : null)
                 .updatedAt(row[6] != null ? ((java.sql.Timestamp) row[6]).toLocalDateTime() : null)
                 .totalAmount(new java.math.BigDecimal(row[7].toString()))
+                .taskCount(((Number) row[8]).longValue())
                 .build();
         }).collect(Collectors.toList());
     }
@@ -253,5 +255,20 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             log.error("BILLING_PERIOD DELETE_WITH_TASKS id={} - error: {}", id, e.getMessage(), e);
             throw new RuntimeException("Erro ao excluir período de faturamento com tarefas vinculadas: " + e.getMessage());
         }
+    }
+
+    @Override
+    public BillingPeriodResponse updateStatus(Long id, String status) {
+        log.info("BILLING_PERIOD UPDATE_STATUS id={} status={}", id, status);
+        
+        BillingPeriod entity = billingPeriodRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("BillingPeriod not found"));
+        
+        entity.setStatus(status);
+        entity = billingPeriodRepository.save(entity);
+        
+        log.info("BILLING_PERIOD UPDATE_STATUS id={} - completed successfully", id);
+        
+        return BillingPeriodAdapter.toResponseDTO(entity);
     }
 }

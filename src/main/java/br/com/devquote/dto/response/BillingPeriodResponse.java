@@ -20,4 +20,5 @@ public class BillingPeriodResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private BigDecimal totalAmount;
+    private Long taskCount;
 }

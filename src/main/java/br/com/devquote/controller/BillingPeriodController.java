@@ -116,4 +116,12 @@ public class BillingPeriodController {
         billingPeriodService.deleteWithAllLinkedTasks(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<BillingPeriodResponse> updateStatus(
+            @PathVariable Long id, 
+            @RequestParam String status) {
+        return ResponseEntity.ok(billingPeriodService.updateStatus(id, status));
+    }
 }
