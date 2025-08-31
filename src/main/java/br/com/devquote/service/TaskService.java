@@ -40,6 +40,18 @@ public interface TaskService {
                                         String createdAt,
                                         String updatedAt,
                                         Pageable pageable);
+
+    Page<TaskResponse> findUnlinkedTasksPaginated(Long id,
+                                                 Long requesterId,
+                                                 String requesterName,
+                                                 String title,
+                                                 String description,
+                                                 String status,
+                                                 String code,
+                                                 String link,
+                                                 String createdAt,
+                                                 String updatedAt,
+                                                 Pageable pageable);
     
     byte[] exportTasksToExcel() throws IOException;
     

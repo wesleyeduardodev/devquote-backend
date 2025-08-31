@@ -339,6 +339,25 @@ public class TaskServiceImpl implements TaskService {
         return buildTaskResponsePage(page, pageable);
     }
 
+    @Override
+    public Page<TaskResponse> findUnlinkedTasksPaginated(Long id,
+                                                        Long requesterId,
+                                                        String requesterName,
+                                                        String title,
+                                                        String description,
+                                                        String status,
+                                                        String code,
+                                                        String link,
+                                                        String createdAt,
+                                                        String updatedAt,
+                                                        Pageable pageable) {
+
+        Page<Task> page = taskRepository.findUnlinkedTasksByOptionalFieldsPaginated(
+                id, requesterId, requesterName, title, description, status, code, link, createdAt, updatedAt, pageable
+        );
+        return buildTaskResponsePage(page, pageable);
+    }
+
     private Page<TaskResponse> buildTaskResponsePage(Page<Task> page, Pageable pageable) {
         List<TaskResponse> dtos = page.getContent().stream()
                 .map(TaskAdapter::toResponseDTO)

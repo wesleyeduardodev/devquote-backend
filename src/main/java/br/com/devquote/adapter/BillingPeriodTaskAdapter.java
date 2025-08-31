@@ -24,12 +24,20 @@ public class BillingPeriodTaskAdapter {
             return null;
         }
 
-        return BillingPeriodTaskResponse.builder()
+        BillingPeriodTaskResponse response = BillingPeriodTaskResponse.builder()
                 .id(entity.getId())
                 .billingPeriodId(entity.getBillingPeriod() != null ? entity.getBillingPeriod().getId() : null)
                 .taskId(entity.getTask() != null ? entity.getTask().getId() : null)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+
+        // Adicionar dados da tarefa se disponível
+        if (entity.getTask() != null) {
+            Task task = entity.getTask();
+            response.setTask(TaskAdapter.toResponseDTO(task));
+        }
+
+        return response;
     }
 }

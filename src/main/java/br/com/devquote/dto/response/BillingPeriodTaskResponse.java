@@ -13,6 +13,7 @@ public class BillingPeriodTaskResponse {
     private Long id;
     private Long billingPeriodId;
     private Long taskId;
+    private TaskResponse task;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -72,6 +72,38 @@ public class TaskController implements TaskControllerDoc {
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
     }
 
+    @GetMapping("/unlinked")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<PagedResponse<TaskResponse>> listUnlinked(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) Long requesterId,
+            @RequestParam(required = false) String requesterName,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String link,
+            @RequestParam(required = false) String createdAt,
+            @RequestParam(required = false) String updatedAt,
+            @RequestParam(required = false) MultiValueMap<String, String> params
+    ) {
+        List<String> sortParams = params != null ? params.get("sort") : null;
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
+        );
+
+        Page<TaskResponse> pageResult = taskService.findUnlinkedTasksPaginated(
+                id, requesterId, requesterName, title, description, status, code, link, createdAt, updatedAt, pageable
+        );
+
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
+    }
+
     @Override
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")

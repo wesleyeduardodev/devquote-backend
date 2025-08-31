@@ -18,9 +18,17 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
     @Query("SELECT bpt FROM BillingPeriodTask bpt ORDER BY bpt.id DESC")
     List<BillingPeriodTask> findAllOrderedById();
 
-    List<BillingPeriodTask> findByBillingPeriodId(Long billingPeriodId);
+    @Query("SELECT bpt FROM BillingPeriodTask bpt " +
+           "JOIN FETCH bpt.task t " +
+           "JOIN FETCH t.requester " +
+           "WHERE bpt.billingPeriod.id = :billingPeriodId " +
+           "ORDER BY bpt.id DESC")
+    List<BillingPeriodTask> findByBillingPeriodId(@Param("billingPeriodId") Long billingPeriodId);
 
-    @Query("SELECT bpt FROM BillingPeriodTask bpt WHERE bpt.billingPeriod.id = :billingPeriodId")
+    @Query("SELECT bpt FROM BillingPeriodTask bpt " +
+           "JOIN FETCH bpt.task t " +
+           "JOIN FETCH t.requester " +
+           "WHERE bpt.billingPeriod.id = :billingPeriodId")
     Page<BillingPeriodTask> findByBillingPeriodIdPaginated(@Param("billingPeriodId") Long billingPeriodId, Pageable pageable);
 
     @Modifying
