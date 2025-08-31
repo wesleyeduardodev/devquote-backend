@@ -34,7 +34,7 @@ public class ProjectController implements ProjectControllerDoc {
 
     @Override
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PagedResponse<ProjectResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
