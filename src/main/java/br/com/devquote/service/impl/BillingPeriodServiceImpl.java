@@ -52,9 +52,9 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
                 bp.created_at,
                 bp.updated_at,
                 COALESCE(SUM(t.amount), 0) as total_amount
-            FROM billing_period tbm
-            LEFT JOIN billing_period_task tbmt ON bp.id = tbmt.billing_period_id
-            LEFT JOIN task t ON tbmt.task_id = t.id
+            FROM billing_period bp
+            LEFT JOIN billing_period_task bpt ON bp.id = bpt.billing_period_id
+            LEFT JOIN task t ON bpt.task_id = t.id
             GROUP BY bp.id, bp.month, bp.year, bp.payment_date, bp.status, bp.created_at, bp.updated_at
             ORDER BY bp.id DESC
         """;
@@ -171,9 +171,9 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
                 r.name as requester_name,
                 bp.created_at,
                 bp.updated_at
-            FROM billing_period tbm
-            INNER JOIN billing_period_task tbmt ON tbmt.billing_period_id = bp.id
-            INNER JOIN task t ON tbmt.task_id = t.id
+            FROM billing_period bp
+            INNER JOIN billing_period_task bpt ON bpt.billing_period_id = bp.id
+            INNER JOIN task t ON bpt.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
             WHERE 1=1
         """);

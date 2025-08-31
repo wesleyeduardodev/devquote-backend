@@ -135,4 +135,27 @@ public class BillingPeriodTaskServiceImpl implements BillingPeriodTaskService {
         return billingPeriodTaskRepository.findByTaskId(taskId)
                 .map(BillingPeriodTaskAdapter::toResponseDTO);
     }
+
+    // Novos métodos para compatibilidade com o controller
+    @Override
+    public void deleteBulk(List<Long> ids) {
+        if (ids != null && !ids.isEmpty()) {
+            billingPeriodTaskRepository.deleteAllById(ids);
+        }
+    }
+
+    @Override
+    public List<BillingPeriodTaskResponse> findByBillingPeriod(Long billingPeriodId) {
+        return findTaskLinksByBillingPeriod(billingPeriodId);
+    }
+
+    @Override
+    public Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable) {
+        return findTaskLinksPaginated(billingPeriodId, pageable);
+    }
+
+    @Override
+    public List<BillingPeriodTaskResponse> bulkCreate(List<BillingPeriodTaskRequest> requests) {
+        return bulkLinkTasks(requests);
+    }
 }

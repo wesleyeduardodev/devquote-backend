@@ -14,10 +14,16 @@ public interface BillingPeriodTaskService {
     BillingPeriodTaskResponse create(BillingPeriodTaskRequest dto);
     BillingPeriodTaskResponse update(Long id, BillingPeriodTaskRequest dto);
     void delete(Long id);
+    void deleteBulk(List<Long> ids);
     
+    List<BillingPeriodTaskResponse> findByBillingPeriod(Long billingPeriodId);
+    Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable);
+    List<BillingPeriodTaskResponse> bulkCreate(List<BillingPeriodTaskRequest> requests);
+    void bulkUnlinkTasks(Long billingPeriodId, List<Long> taskIds);
+    
+    // Métodos de compatibilidade (deprecated)
     List<BillingPeriodTaskResponse> findTaskLinksByBillingPeriod(Long billingPeriodId);
     List<BillingPeriodTaskResponse> bulkLinkTasks(List<BillingPeriodTaskRequest> requests);
-    void bulkUnlinkTasks(Long billingPeriodId, List<Long> taskIds);
     Page<BillingPeriodTaskResponse> findTaskLinksPaginated(Long billingPeriodId, Pageable pageable);
     boolean existsByTaskId(Long taskId);
     Optional<BillingPeriodTaskResponse> findByTaskId(Long taskId);
