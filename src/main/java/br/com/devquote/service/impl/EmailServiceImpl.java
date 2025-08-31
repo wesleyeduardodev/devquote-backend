@@ -717,7 +717,18 @@ public class EmailServiceImpl implements EmailService {
             // Buscar subtarefas via repository se necessário
             if (task.getHasSubTasks()) {
                 List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
-                context.setVariable("subTasks", subTasks);
+                
+                // Criar lista com dados das subtarefas já traduzidos
+                List<java.util.Map<String, Object>> subTasksTranslated = subTasks.stream().map(subtask -> {
+                    java.util.Map<String, Object> subtaskMap = new java.util.HashMap<>();
+                    subtaskMap.put("title", subtask.getTitle() != null ? subtask.getTitle() : "");
+                    subtaskMap.put("description", subtask.getDescription() != null ? subtask.getDescription() : "");
+                    subtaskMap.put("status", translateStatus(subtask.getStatus()));
+                    subtaskMap.put("amount", subtask.getAmount());
+                    return subtaskMap;
+                }).collect(java.util.stream.Collectors.toList());
+                
+                context.setVariable("subTasks", subTasksTranslated);
             }
 
             // Usar valor total da tarefa (já calculado) ou 0 se nulo

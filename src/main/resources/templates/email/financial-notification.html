@@ -245,16 +245,16 @@
         
         <div class="content">
             <div class="task-info">
-                <div class="task-title" th:text="${task.title}">Título da Tarefa</div>
-                
                 <div class="info-row">
                     <span class="label">Código:</span>
                     <span class="value" th:text="${task.code}">TASK-001</span>
                 </div>
                 
-                <div class="info-row">
-                    <span class="label">Solicitante:</span>
-                    <span class="value" th:text="${task.requester.name}">Nome do Solicitante</span>
+                <div class="task-title" th:text="${task.title}">Título da Tarefa</div>
+                
+                <div class="info-row" th:if="${task.description}">
+                    <span class="label">Descrição:</span>
+                    <span class="value" th:text="${task.description}">Descrição da tarefa</span>
                 </div>
                 
                 <div class="info-row">
@@ -269,6 +269,11 @@
                 </div>
                 
                 <div class="info-row">
+                    <span class="label">Criado por:</span>
+                    <span class="value" th:text="${task.requester.name}">Nome do Solicitante</span>
+                </div>
+                
+                <div class="info-row">
                     <span class="label">Prioridade:</span>
                     <span class="value">
                         <span class="priority-badge"
@@ -277,11 +282,6 @@
                             Média
                         </span>
                     </span>
-                </div>
-                
-                <div class="info-row" th:if="${task.description}">
-                    <span class="label">Descrição:</span>
-                    <span class="value" th:text="${task.description}">Descrição da tarefa</span>
                 </div>
                 
                 <div class="info-row" th:if="${task.link}">
