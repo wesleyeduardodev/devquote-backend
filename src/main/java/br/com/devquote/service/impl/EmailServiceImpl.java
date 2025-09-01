@@ -783,7 +783,17 @@ public class EmailServiceImpl implements EmailService {
 
             Context context = new Context();
             context.setVariable("billingPeriod", billingPeriod);
-            context.setVariable("monthYear", String.format("%02d/%d", billingPeriod.getMonth(), billingPeriod.getYear()));
+            
+            // Array com nomes dos meses em português
+            String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho", 
+                                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
+            String monthName = monthNames[billingPeriod.getMonth() - 1];
+            
+            // Formato: "julho/2025"
+            context.setVariable("monthYear", String.format("%s/%d", monthName, billingPeriod.getYear()));
+            
+            // Formato: "Medição julho de 2025"
+            context.setVariable("measurementPeriod", String.format("Medição %s de %d", monthName, billingPeriod.getYear()));
             
             // Formatar data de pagamento
             if (billingPeriod.getPaymentDate() != null) {
