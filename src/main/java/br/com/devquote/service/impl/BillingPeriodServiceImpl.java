@@ -51,6 +51,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
                 bp.year,
                 bp.payment_date,
                 bp.status,
+                bp.billing_email_sent,
                 bp.created_at,
                 bp.updated_at,
                 COALESCE(SUM(t.amount), 0) as total_amount,
@@ -58,7 +59,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             FROM billing_period bp
             LEFT JOIN billing_period_task bpt ON bp.id = bpt.billing_period_id
             LEFT JOIN task t ON bpt.task_id = t.id
-            GROUP BY bp.id, bp.month, bp.year, bp.payment_date, bp.status, bp.created_at, bp.updated_at
+            GROUP BY bp.id, bp.month, bp.year, bp.payment_date, bp.status, bp.billing_email_sent, bp.created_at, bp.updated_at
             ORDER BY bp.id DESC
         """;
         
@@ -73,10 +74,11 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
                 .year((Integer) row[2])
                 .paymentDate(row[3] != null ? ((java.sql.Date) row[3]).toLocalDate() : null)
                 .status((String) row[4])
-                .createdAt(row[5] != null ? ((java.sql.Timestamp) row[5]).toLocalDateTime() : null)
-                .updatedAt(row[6] != null ? ((java.sql.Timestamp) row[6]).toLocalDateTime() : null)
-                .totalAmount(new java.math.BigDecimal(row[7].toString()))
-                .taskCount(((Number) row[8]).longValue())
+                .billingEmailSent(row[5] != null ? (Boolean) row[5] : false)
+                .createdAt(row[6] != null ? ((java.sql.Timestamp) row[6]).toLocalDateTime() : null)
+                .updatedAt(row[7] != null ? ((java.sql.Timestamp) row[7]).toLocalDateTime() : null)
+                .totalAmount(new java.math.BigDecimal(row[8].toString()))
+                .taskCount(((Number) row[9]).longValue())
                 .build();
         }).collect(Collectors.toList());
     }
