@@ -41,6 +41,10 @@ public class BillingPeriod {
     @Column(length = 30)
     private String status;
 
+    @Column(name = "billing_email_sent")
+    @Builder.Default
+    private Boolean billingEmailSent = false;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

@@ -1,9 +1,11 @@
 package br.com.devquote.service.impl;
 
 import br.com.devquote.configuration.EmailProperties;
+import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
+import br.com.devquote.repository.BillingPeriodTaskRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.service.EmailService;
 import jakarta.mail.MessagingException;
@@ -33,6 +35,7 @@ public class EmailServiceImpl implements EmailService {
     private final TemplateEngine templateEngine;
     private final EmailProperties emailProperties;
     private final SubTaskRepository subTaskRepository;
+    private final BillingPeriodTaskRepository billingPeriodTaskRepository;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -757,6 +760,77 @@ public class EmailServiceImpl implements EmailService {
             log.error("Unexpected error while sending financial notification for task ID: {} to {}: {}",
                 task.getId(), financeEmail, e.getMessage(), e);
             throw new RuntimeException("Failed to send financial notification email", e);
+        }
+    }
+
+    @Override
+    @Async
+    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod) {
+        if (!emailProperties.isEnabled()) {
+            log.warn("Email notifications are disabled. Skipping billing period notification for period ID: {}", billingPeriod.getId());
+            return;
+        }
+
+        String financeEmail = emailProperties.getFinanceEmail();
+        if (financeEmail == null || financeEmail.trim().isEmpty()) {
+            log.error("Finance email not configured. Cannot send billing period notification for period ID: {}", billingPeriod.getId());
+            return;
+        }
+
+        try {
+            log.info("Sending billing period notification for period ID: {} ({}/{}) to {}", 
+                billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear(), financeEmail);
+
+            Context context = new Context();
+            context.setVariable("billingPeriod", billingPeriod);
+            context.setVariable("monthYear", String.format("%02d/%d", billingPeriod.getMonth(), billingPeriod.getYear()));
+
+            // Buscar tarefas vinculadas ao período de faturamento
+            List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodId(billingPeriod.getId());
+            
+            // Processar tarefas e calcular totais
+            List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
+            java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
+            
+            for (Object[] taskData : billingTasks) {
+                java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
+                taskMap.put("code", taskData[1]); // task_code
+                taskMap.put("title", taskData[2]); // task_title
+                taskMap.put("description", taskData[3]); // task_description
+                taskMap.put("amount", taskData[4]); // task_amount
+                tasksData.add(taskMap);
+                
+                if (taskData[4] != null) {
+                    totalAmount = totalAmount.add((java.math.BigDecimal) taskData[4]);
+                }
+            }
+            
+            context.setVariable("tasks", tasksData);
+            context.setVariable("totalAmount", totalAmount);
+            context.setVariable("taskCount", billingTasks.size());
+
+            String htmlContent = templateEngine.process("email/billing-period-notification", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(emailProperties.getFrom());
+            helper.setTo(financeEmail);
+            helper.setSubject("📊 Faturamento Mensal - " + String.format("%02d/%d", billingPeriod.getMonth(), billingPeriod.getYear()));
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+            log.info("Billing period notification sent successfully for period ID: {} to {}", billingPeriod.getId(), financeEmail);
+
+        } catch (MessagingException e) {
+            log.error("Failed to send billing period notification for period ID: {} to {}: {}",
+                billingPeriod.getId(), financeEmail, e.getMessage(), e);
+            throw new RuntimeException("Failed to send billing period notification email", e);
+        } catch (Exception e) {
+            log.error("Unexpected error while sending billing period notification for period ID: {} to {}: {}",
+                billingPeriod.getId(), financeEmail, e.getMessage(), e);
+            throw new RuntimeException("Failed to send billing period notification email", e);
         }
     }
 }

@@ -1,5 +1,6 @@
 package br.com.devquote.service.impl;
 
+import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Task;
 import br.com.devquote.service.EmailService;
@@ -95,5 +96,12 @@ public class NoOpEmailService implements EmailService {
                 task.getId(), task.getCode(), task.getTitle());
         log.warn("📧 [EMAIL DISABLED] Would send to finance department with task amount: {}", 
                 task.getAmount() != null ? task.getAmount() : "0.00");
+    }
+
+    @Override
+    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod) {
+        log.warn("📧 [EMAIL DISABLED] Would send BILLING PERIOD notification for: Period ID={}, Month={}, Year={}", 
+                billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear());
+        log.warn("📧 [EMAIL DISABLED] Would send to finance department with billing period details");
     }
 }

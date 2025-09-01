@@ -30,6 +30,7 @@ public class BillingPeriodAdapter {
                 .year(entity.getYear())
                 .paymentDate(entity.getPaymentDate())
                 .status(entity.getStatus())
+                .billingEmailSent(entity.getBillingEmailSent())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -57,6 +58,7 @@ public class BillingPeriodAdapter {
                 .year(response.getYear())
                 .paymentDate(response.getPaymentDate())
                 .status(response.getStatus())
+                .billingEmailSent(response.getBillingEmailSent())
                 .createdAt(response.getCreatedAt())
                 .updatedAt(response.getUpdatedAt())
                 .build();

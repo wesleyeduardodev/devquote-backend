@@ -6,6 +6,7 @@ import br.com.devquote.dto.response.BillingPeriodResponse;
 import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.repository.BillingPeriodRepository;
 import br.com.devquote.service.BillingPeriodService;
+import br.com.devquote.service.EmailService;
 import br.com.devquote.utils.ExcelReportUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -32,6 +33,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     private final BillingPeriodRepository billingPeriodRepository;
     private final EntityManager entityManager;
     private final ExcelReportUtils excelReportUtils;
+    private final EmailService emailService;
 
     @Override
     public List<BillingPeriodResponse> findAll() {
@@ -270,5 +272,29 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
         log.info("BILLING_PERIOD UPDATE_STATUS id={} - completed successfully", id);
         
         return BillingPeriodAdapter.toResponseDTO(entity);
+    }
+
+    @Override
+    public void sendBillingEmail(Long billingPeriodId) {
+        log.info("BILLING_PERIOD SEND_EMAIL id={}", billingPeriodId);
+        
+        // Buscar o período de faturamento
+        BillingPeriod billingPeriod = billingPeriodRepository.findById(billingPeriodId)
+                .orElseThrow(() -> new RuntimeException("BillingPeriod not found with id: " + billingPeriodId));
+        
+        try {
+            // Enviar email com informações do período de faturamento
+            emailService.sendBillingPeriodNotificationAsync(billingPeriod);
+            
+            // Marcar como email enviado
+            billingPeriod.setBillingEmailSent(true);
+            billingPeriodRepository.save(billingPeriod);
+            
+            log.info("BILLING_PERIOD SEND_EMAIL id={} - completed successfully", billingPeriodId);
+            
+        } catch (Exception e) {
+            log.error("BILLING_PERIOD SEND_EMAIL id={} - error: {}", billingPeriodId, e.getMessage(), e);
+            throw new RuntimeException("Erro ao enviar email de faturamento: " + e.getMessage());
+        }
     }
 }

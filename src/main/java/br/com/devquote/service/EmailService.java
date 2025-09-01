@@ -1,5 +1,6 @@
 package br.com.devquote.service;
 
+import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Task;
 
@@ -18,5 +19,7 @@ public interface EmailService {
     void sendDeliveryDeletedNotification(Delivery delivery);
     
     void sendFinancialNotificationAsync(Task task);
+    
+    void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod);
     
 }

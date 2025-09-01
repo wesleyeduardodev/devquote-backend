@@ -17,6 +17,7 @@ public class BillingPeriodResponse {
     private Integer year;
     private LocalDate paymentDate;
     private String status;
+    private Boolean billingEmailSent;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private BigDecimal totalAmount;

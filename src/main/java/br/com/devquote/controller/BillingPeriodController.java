@@ -124,4 +124,11 @@ public class BillingPeriodController {
             @RequestParam String status) {
         return ResponseEntity.ok(billingPeriodService.updateStatus(id, status));
     }
+
+    @PostMapping("/{id}/send-billing-email")
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    public ResponseEntity<Void> sendBillingEmail(@PathVariable Long id) {
+        billingPeriodService.sendBillingEmail(id);
+        return ResponseEntity.ok().build();
+    }
 }

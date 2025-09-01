@@ -40,4 +40,20 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
     boolean existsByTaskId(Long taskId);
     
     Optional<BillingPeriodTask> findByTaskId(Long taskId);
+
+    @Query(value = """
+        SELECT bpt.id as billing_period_task_id,
+               t.code as task_code,
+               t.title as task_title,
+               t.description as task_description,
+               t.amount as task_amount,
+               r.name as requester_name,
+               r.email as requester_email
+        FROM billing_period_task bpt
+        JOIN task t ON bpt.task_id = t.id
+        JOIN requester r ON t.requester_id = r.id
+        WHERE bpt.billing_period_id = :billingPeriodId
+        ORDER BY t.code
+        """, nativeQuery = true)
+    List<Object[]> findTasksWithDetailsByBillingPeriodId(@Param("billingPeriodId") Long billingPeriodId);
 }
