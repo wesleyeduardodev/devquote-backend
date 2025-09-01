@@ -34,23 +34,22 @@ public class ExcelReportUtils {
         if (canViewAmounts) {
             // ADMIN/MANAGER: Todas as colunas
             headers = new String[] {
-                "ID", "Código", "Título", "Descrição", "Status", "Tipo",
+                "ID", "Código", "Título", "Descrição", "Tipo",
                 "Prioridade", "Solicitante", "Criado Por", "Atualizado Por",
                 "Origem do Servidor", "Módulo do Sistema", "Link", "Link da Reunião",
                 "Observações", "Valor da Tarefa", "Tem Subtarefas", "Tem Entrega",
                 "Orçamento no Faturamento", "Data de Criação", "Data de Atualização",
                 "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição",
-                "Subtarefa Status", "Subtarefa Valor"
+                "Subtarefa Valor"
             };
         } else {
             // USER: Remove colunas sensíveis (Valor da Tarefa, Tem Orçamento, Orçamento no Faturamento, Subtarefa Valor)
             headers = new String[] {
-                "ID", "Código", "Título", "Descrição", "Status", "Tipo",
+                "ID", "Código", "Título", "Descrição", "Tipo",
                 "Prioridade", "Solicitante", "Criado Por", "Atualizado Por",
                 "Origem do Servidor", "Módulo do Sistema", "Link", "Link da Reunião",
                 "Observações", "Tem Subtarefas", "Data de Criação", "Data de Atualização",
-                "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição",
-                "Subtarefa Status"
+                "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição"
             };
         }
 
@@ -61,15 +60,15 @@ public class ExcelReportUtils {
             
             // Aplicar cores diferentes para colunas de tarefas vs subtarefas
             if (canViewAmounts) {
-                // ADMIN/MANAGER: colunas 0-20 são tarefas (azul), 21-25 são subtarefas (verde)
-                if (i <= 20) {
+                // ADMIN/MANAGER: colunas 0-19 são tarefas (azul), 20-23 são subtarefas (verde)
+                if (i <= 19) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
                     cell.setCellStyle(subtaskHeaderStyle);
                 }
             } else {
-                // USER: colunas 0-17 são tarefas (azul), 18-21 são subtarefas (verde)
-                if (i <= 17) {
+                // USER: colunas 0-16 são tarefas (azul), 17-19 são subtarefas (verde)
+                if (i <= 16) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
                     cell.setCellStyle(subtaskHeaderStyle);
@@ -88,64 +87,59 @@ public class ExcelReportUtils {
                 setCellValue(row, 1, taskData.get("task_code"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_title"), dataStyle);
                 setCellValue(row, 3, taskData.get("task_description"), dataStyle);
-                setStatusCell(row, 4, taskData.get("task_status"), dataStyle);
-                setCellValue(row, 5, taskData.get("task_type"), dataStyle);
-                setPriorityCell(row, 6, taskData.get("task_priority"), dataStyle);
-                setCellValue(row, 7, taskData.get("requester_name"), dataStyle);
-                setCellValue(row, 8, taskData.get("created_by_user"), dataStyle);
-                setCellValue(row, 9, taskData.get("updated_by_user"), dataStyle);
-                setCellValue(row, 10, taskData.get("server_origin"), dataStyle);
-                setCellValue(row, 11, taskData.get("system_module"), dataStyle);
-                setCellValue(row, 12, taskData.get("task_link"), dataStyle);
-                setCellValue(row, 13, taskData.get("meeting_link"), dataStyle);
-                setCellValue(row, 14, taskData.get("task_notes"), dataStyle);
-                setCellValue(row, 15, taskData.get("task_amount"), currencyStyle);
-                setCellValue(row, 16, taskData.get("has_subtasks"), dataStyle);
-                setCellValue(row, 17, taskData.get("has_delivery"), dataStyle);
-                setCellValue(row, 18, taskData.get("has_quote_in_billing"), dataStyle);
-                setCellValue(row, 19, taskData.get("task_created_at"), dateStyle);
-                setCellValue(row, 20, taskData.get("task_updated_at"), dateStyle);
-                setCellValue(row, 21, taskData.get("subtask_id"), dataStyle);
-                setCellValue(row, 22, taskData.get("subtask_title"), dataStyle);
-                setCellValue(row, 23, taskData.get("subtask_description"), dataStyle);
-                setStatusCell(row, 24, taskData.get("subtask_status"), dataStyle);
-                setCellValue(row, 25, taskData.get("subtask_amount"), currencyStyle);
+                setCellValue(row, 4, taskData.get("task_type"), dataStyle);
+                setPriorityCell(row, 5, taskData.get("task_priority"), dataStyle);
+                setCellValue(row, 6, taskData.get("requester_name"), dataStyle);
+                setCellValue(row, 7, taskData.get("created_by_user"), dataStyle);
+                setCellValue(row, 8, taskData.get("updated_by_user"), dataStyle);
+                setCellValue(row, 9, taskData.get("server_origin"), dataStyle);
+                setCellValue(row, 10, taskData.get("system_module"), dataStyle);
+                setCellValue(row, 11, taskData.get("task_link"), dataStyle);
+                setCellValue(row, 12, taskData.get("meeting_link"), dataStyle);
+                setCellValue(row, 13, taskData.get("task_notes"), dataStyle);
+                setCellValue(row, 14, taskData.get("task_amount"), currencyStyle);
+                setCellValue(row, 15, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 16, taskData.get("has_delivery"), dataStyle);
+                setCellValue(row, 17, taskData.get("has_quote_in_billing"), dataStyle);
+                setCellValue(row, 18, taskData.get("task_created_at"), dateStyle);
+                setCellValue(row, 19, taskData.get("task_updated_at"), dateStyle);
+                setCellValue(row, 20, taskData.get("subtask_id"), dataStyle);
+                setCellValue(row, 21, taskData.get("subtask_title"), dataStyle);
+                setCellValue(row, 22, taskData.get("subtask_description"), dataStyle);
+                setCellValue(row, 23, taskData.get("subtask_amount"), currencyStyle);
             } else {
                 // USER: Remove colunas sensíveis
                 setCellValue(row, 0, taskData.get("task_id"), dataStyle);
                 setCellValue(row, 1, taskData.get("task_code"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_title"), dataStyle);
                 setCellValue(row, 3, taskData.get("task_description"), dataStyle);
-                setStatusCell(row, 4, taskData.get("task_status"), dataStyle);
-                setCellValue(row, 5, taskData.get("task_type"), dataStyle);
-                setPriorityCell(row, 6, taskData.get("task_priority"), dataStyle);
-                setCellValue(row, 7, taskData.get("requester_name"), dataStyle);
-                setCellValue(row, 8, taskData.get("created_by_user"), dataStyle);
-                setCellValue(row, 9, taskData.get("updated_by_user"), dataStyle);
-                setCellValue(row, 10, taskData.get("server_origin"), dataStyle);
-                setCellValue(row, 11, taskData.get("system_module"), dataStyle);
-                setCellValue(row, 12, taskData.get("task_link"), dataStyle);
-                setCellValue(row, 13, taskData.get("meeting_link"), dataStyle);
-                setCellValue(row, 14, taskData.get("task_notes"), dataStyle);
-                setCellValue(row, 15, taskData.get("has_subtasks"), dataStyle);
-                setCellValue(row, 16, taskData.get("task_created_at"), dateStyle);
-                setCellValue(row, 17, taskData.get("task_updated_at"), dateStyle);
-                setCellValue(row, 18, taskData.get("subtask_id"), dataStyle);
-                setCellValue(row, 19, taskData.get("subtask_title"), dataStyle);
-                setCellValue(row, 20, taskData.get("subtask_description"), dataStyle);
-                setStatusCell(row, 21, taskData.get("subtask_status"), dataStyle);
+                setCellValue(row, 4, taskData.get("task_type"), dataStyle);
+                setPriorityCell(row, 5, taskData.get("task_priority"), dataStyle);
+                setCellValue(row, 6, taskData.get("requester_name"), dataStyle);
+                setCellValue(row, 7, taskData.get("created_by_user"), dataStyle);
+                setCellValue(row, 8, taskData.get("updated_by_user"), dataStyle);
+                setCellValue(row, 9, taskData.get("server_origin"), dataStyle);
+                setCellValue(row, 10, taskData.get("system_module"), dataStyle);
+                setCellValue(row, 11, taskData.get("task_link"), dataStyle);
+                setCellValue(row, 12, taskData.get("meeting_link"), dataStyle);
+                setCellValue(row, 13, taskData.get("task_notes"), dataStyle);
+                setCellValue(row, 14, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 15, taskData.get("task_created_at"), dateStyle);
+                setCellValue(row, 16, taskData.get("task_updated_at"), dateStyle);
+                setCellValue(row, 17, taskData.get("subtask_id"), dataStyle);
+                setCellValue(row, 18, taskData.get("subtask_title"), dataStyle);
+                setCellValue(row, 19, taskData.get("subtask_description"), dataStyle);
             }
         }
 
         // Ajustar largura das colunas baseado no conteúdo
         if (canViewAmounts) {
-            // ADMIN/MANAGER: 26 colunas
+            // ADMIN/MANAGER: 24 colunas
             setColumnWidths(sheet, new int[]{
                 2500,  // ID
                 3500,  // Código
                 8000,  // Título (maior)
                 10000, // Descrição (maior)
-                3000,  // Status
                 3500,  // Tipo
                 3000,  // Prioridade
                 6000,  // Solicitante
@@ -158,24 +152,22 @@ public class ExcelReportUtils {
                 6000,  // Observações
                 3500,  // Valor da Tarefa
                 3000,  // Tem Subtarefas
-                3000,  // Tem Orçamento
+                3000,  // Tem Entrega
                 4000,  // Orçamento no Faturamento
                 6000,  // Data de Criação (aumentada para dd/mm/yyyy hh:mm:ss)
                 6000,  // Data de Atualização (aumentada para dd/mm/yyyy hh:mm:ss)
                 2500,  // Subtarefa ID
                 8000,  // Subtarefa Título (maior)
                 10000, // Subtarefa Descrição (maior)
-                3000,  // Subtarefa Status
                 3500   // Subtarefa Valor
             });
         } else {
-            // USER: 22 colunas (sem colunas de valores)
+            // USER: 20 colunas (sem colunas de valores)
             setColumnWidths(sheet, new int[]{
                 2500,  // ID
                 3500,  // Código
                 8000,  // Título (maior)
                 10000, // Descrição (maior)
-                3000,  // Status
                 3500,  // Tipo
                 3000,  // Prioridade
                 6000,  // Solicitante
@@ -191,8 +183,7 @@ public class ExcelReportUtils {
                 6000,  // Data de Atualização (aumentada para dd/mm/yyyy hh:mm:ss)
                 2500,  // Subtarefa ID
                 8000,  // Subtarefa Título (maior)
-                10000, // Subtarefa Descrição (maior)
-                3000   // Subtarefa Status
+                10000  // Subtarefa Descrição (maior)
             });
         }
 
@@ -234,7 +225,7 @@ public class ExcelReportUtils {
         // Cabeçalhos completos (ADMIN/MANAGER)
         String[] headers = {
             "ID Orçamento", "Status do Orçamento", "ID Tarefa", "Código da Tarefa", "Título da Tarefa",
-            "Valor Total da Tarefa", "Status da Tarefa", "Prioridade da Tarefa", "Solicitante",
+            "Valor Total da Tarefa", "Prioridade da Tarefa", "Solicitante",
             "Vinculado ao Faturamento", "Valor Total do Orçamento", "Data de Criação", "Data de Atualização"
         };
 
@@ -256,16 +247,15 @@ public class ExcelReportUtils {
             setCellValue(row, 3, quoteData.get("task_code"), dataStyle);
             setCellValue(row, 4, quoteData.get("task_title"), dataStyle);
             setCellValue(row, 5, quoteData.get("task_amount"), currencyStyle);
-            setStatusCell(row, 6, quoteData.get("task_status"), dataStyle);
-            setPriorityCell(row, 7, quoteData.get("task_priority"), dataStyle);
-            setCellValue(row, 8, quoteData.get("requester_name"), dataStyle);
-            setCellValue(row, 9, quoteData.get("has_billing"), dataStyle);
-            setCellValue(row, 10, quoteData.get("quote_total_amount"), currencyStyle);
-            setCellValue(row, 11, quoteData.get("quote_created_at"), dateStyle);
-            setCellValue(row, 12, quoteData.get("quote_updated_at"), dateStyle);
+            setPriorityCell(row, 6, quoteData.get("task_priority"), dataStyle);
+            setCellValue(row, 7, quoteData.get("requester_name"), dataStyle);
+            setCellValue(row, 8, quoteData.get("has_billing"), dataStyle);
+            setCellValue(row, 9, quoteData.get("quote_total_amount"), currencyStyle);
+            setCellValue(row, 10, quoteData.get("quote_created_at"), dateStyle);
+            setCellValue(row, 11, quoteData.get("quote_updated_at"), dateStyle);
         }
 
-        // Ajustar largura das colunas (13 colunas)
+        // Ajustar largura das colunas (12 colunas)
         setColumnWidths(sheet, new int[]{
             3000,  // ID Orçamento
             3500,  // Status do Orçamento
@@ -273,7 +263,6 @@ public class ExcelReportUtils {
             3500,  // Código da Tarefa
             8000,  // Título da Tarefa (maior)
             4000,  // Valor Total da Tarefa
-            3500,  // Status da Tarefa
             3000,  // Prioridade da Tarefa
             6000,  // Solicitante
             4000,  // Vinculado ao Faturamento
@@ -490,7 +479,7 @@ public class ExcelReportUtils {
 
         // Cabeçalhos reorganizados: Dados da Tarefa primeiro, depois Dados da Entrega (SEM ID Entrega e Qtd. Subtarefas)
         String[] headers = {
-            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Status da Tarefa", "Solicitante",
+            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Solicitante",
             "Status da Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch",
             "Script", "Observações", "Data de Início", "Data de Fim", "Data de Criação", "Data de Atualização"
         };
@@ -500,8 +489,8 @@ public class ExcelReportUtils {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
             
-            // Aplicar cores diferentes: 0-4 são tarefas (azul), 5+ são entregas (verde)
-            if (i <= 4) {
+            // Aplicar cores diferentes: 0-3 são tarefas (azul), 4+ são entregas (verde)
+            if (i <= 3) {
                 cell.setCellStyle(taskHeaderStyle);
             } else {
                 cell.setCellStyle(deliveryHeaderStyle);
@@ -517,30 +506,28 @@ public class ExcelReportUtils {
             setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
             setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
             setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
-            setStatusCell(row, 3, deliveryData.get("task_status"), dataStyle);
-            setCellValue(row, 4, deliveryData.get("requester_name"), dataStyle);
+            setCellValue(row, 3, deliveryData.get("requester_name"), dataStyle);
 
             // Dados da entrega - índices ajustados após remoção
-            setStatusCell(row, 5, deliveryData.get("delivery_status"), dataStyle);
-            setCellValue(row, 6, deliveryData.get("project_name"), dataStyle);
-            setCellValue(row, 7, deliveryData.get("pull_request"), dataStyle);
-            setCellValue(row, 8, deliveryData.get("branch"), dataStyle);
-            setCellValue(row, 9, deliveryData.get("script"), dataStyle);
-            setCellValue(row, 10, deliveryData.get("notes"), dataStyle);
+            setStatusCell(row, 4, deliveryData.get("delivery_status"), dataStyle);
+            setCellValue(row, 5, deliveryData.get("project_name"), dataStyle);
+            setCellValue(row, 6, deliveryData.get("pull_request"), dataStyle);
+            setCellValue(row, 7, deliveryData.get("branch"), dataStyle);
+            setCellValue(row, 8, deliveryData.get("script"), dataStyle);
+            setCellValue(row, 9, deliveryData.get("notes"), dataStyle);
 
             // Datas da entrega (usando dateOnlyStyle para started_at e finished_at)
-            setCellValue(row, 11, deliveryData.get("started_at"), dateOnlyStyle);
-            setCellValue(row, 12, deliveryData.get("finished_at"), dateOnlyStyle);
-            setCellValue(row, 13, deliveryData.get("delivery_created_at"), dateStyle);
-            setCellValue(row, 14, deliveryData.get("delivery_updated_at"), dateStyle);
+            setCellValue(row, 10, deliveryData.get("started_at"), dateOnlyStyle);
+            setCellValue(row, 11, deliveryData.get("finished_at"), dateOnlyStyle);
+            setCellValue(row, 12, deliveryData.get("delivery_created_at"), dateStyle);
+            setCellValue(row, 13, deliveryData.get("delivery_updated_at"), dateStyle);
         }
 
-        // Ajustar largura das colunas (15 colunas - sem ID Entrega e Qtd. Subtarefas)
+        // Ajustar largura das colunas (14 colunas - sem ID Entrega e Qtd. Subtarefas)
         setColumnWidths(sheet, new int[]{
             2500,  // ID Tarefa
             3500,  // Código da Tarefa
             8000,  // Título da Tarefa (maior)
-            3500,  // Status da Tarefa
             6000,  // Solicitante
             3500,  // Status da Entrega
             6000,  // Projeto
@@ -592,7 +579,7 @@ public class ExcelReportUtils {
         // Cabeçalhos: Faturamento -> Tarefa (sem orçamento e sem datas)
         String[] headers = {
             "Ano", "Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa", 
-            "Título da Tarefa", "Status da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas", 
+            "Título da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas", 
             "Solicitante"
         };
 
@@ -617,13 +604,12 @@ public class ExcelReportUtils {
             setCellValue(row, 3, billingData.get("task_id"), dataStyle);
             setCellValue(row, 4, billingData.get("task_code"), dataStyle);
             setCellValue(row, 5, billingData.get("task_title"), dataStyle);
-            setStatusCell(row, 6, billingData.get("task_status"), dataStyle);
-            setCellValue(row, 7, billingData.get("task_amount"), currencyStyle);
-            setCellValue(row, 8, billingData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 9, billingData.get("requester_name"), dataStyle);
+            setCellValue(row, 6, billingData.get("task_amount"), currencyStyle);
+            setCellValue(row, 7, billingData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 8, billingData.get("requester_name"), dataStyle);
         }
 
-        // Ajustar largura das colunas (10 colunas)
+        // Ajustar largura das colunas (9 colunas)
         setColumnWidths(sheet, new int[]{
             2500,  // Ano
             2500,  // Mês
@@ -631,7 +617,6 @@ public class ExcelReportUtils {
             2500,  // ID Tarefa
             3500,  // Código da Tarefa
             8000,  // Título da Tarefa (maior)
-            3500,  // Status da Tarefa
             4000,  // Valor da Tarefa
             3000,  // Qtd. Subtarefas
             6000   // Solicitante
@@ -680,8 +665,8 @@ public class ExcelReportUtils {
 
         // Headers organizados: Tarefas → Entregas → Faturamento
         String[] headers = {
-            // TAREFAS (Cinza) - 16 colunas (inclui metadados da tarefa + status de entrega e faturamento)
-            "ID Tarefa", "Código", "Título", "Descrição", "Status", "Prioridade", "Valor", "Solicitante", 
+            // TAREFAS (Cinza) - 15 colunas (inclui metadados da tarefa + status de entrega e faturamento)
+            "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Valor", "Solicitante", 
             "Data Criação", "Data Atualização", "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
             "Tem Entrega", "Faturamento",
             
@@ -694,25 +679,25 @@ public class ExcelReportUtils {
 
         Row headerRow = sheet.createRow(0);
         
-        // Aplicar cores nos headers por seção - Estrutura corrigida (28 colunas)
+        // Aplicar cores nos headers por seção - Estrutura corrigida (27 colunas)
         int colIndex = 0;
         
-        // TAREFAS + METADADOS + STATUS (0-15) - Cinza
-        for (int i = 0; i < 16; i++) {
+        // TAREFAS + METADADOS + STATUS (0-14) - Cinza
+        for (int i = 0; i < 15; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(taskHeaderStyle);
         }
         
-        // ENTREGAS (16-24) - Azul Pálido
-        for (int i = 16; i < 25; i++) {
+        // ENTREGAS (15-23) - Azul Pálido
+        for (int i = 15; i < 24; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(deliveryHeaderStyle);
         }
         
-        // FATURAMENTO (25-27) - Limão (no final)
-        for (int i = 25; i < 28; i++) {
+        // FATURAMENTO (24-26) - Limão (no final)
+        for (int i = 24; i < 27; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(billingHeaderStyle);
@@ -725,12 +710,11 @@ public class ExcelReportUtils {
 
             colIndex = 0;
             
-            // DADOS DA TAREFA + METADADOS + STATUS (0-15)
+            // DADOS DA TAREFA + METADADOS + STATUS (0-14)
             setCellValue(row, colIndex++, taskData.get("task_id"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_code"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_title"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_description"), dataStyle);
-            setStatusCell(row, colIndex++, taskData.get("task_status"), dataStyle);
             setPriorityCell(row, colIndex++, taskData.get("task_priority"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_amount"), currencyStyle);
             setCellValue(row, colIndex++, taskData.get("requester_name"), dataStyle);
@@ -743,7 +727,7 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("has_delivery"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("has_quote_in_billing"), dataStyle);
             
-            // DADOS DE ENTREGAS (16-24) - Pull Request reorganizado + notas
+            // DADOS DE ENTREGAS (15-23) - Pull Request reorganizado + notas
             setCellValue(row, colIndex++, taskData.get("delivery_id"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("delivery_status"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
@@ -754,16 +738,16 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
             
-            // DADOS DE FATURAMENTO (25-27) - No final
+            // DADOS DE FATURAMENTO (24-26) - No final
             setCellValue(row, colIndex++, taskData.get("billing_year"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("billing_month"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("billing_status"), dataStyle);
         }
 
-        // Ajustar larguras das colunas (28 colunas total) - Estrutura corrigida
+        // Ajustar larguras das colunas (27 colunas total) - Estrutura corrigida
         setColumnWidths(sheet, new int[]{
-            // TAREFAS + METADADOS + STATUS (16 colunas)
-            2500, 3500, 10000, 12000, 3500, 3000, 4000, 6000, 6000, 6000, 4000, 4000, 4000, 4000, 3000, 4000,
+            // TAREFAS + METADADOS + STATUS (15 colunas)
+            2500, 3500, 10000, 12000, 3000, 4000, 6000, 6000, 6000, 4000, 4000, 4000, 4000, 3000, 4000,
             // ENTREGAS (9 colunas) - Pull Request reorganizado + notas
             3000, 3500, 6000, 10000, 8000, 8000, 6000, 4000, 4000,
             // FATURAMENTO (3 colunas) - No final
@@ -810,8 +794,8 @@ public class ExcelReportUtils {
 
         // Headers organizados: Tarefas → Entregas (sem Orçamentos e Faturamento)
         String[] headers = {
-            // TAREFAS (Cinza) - 15 colunas (SEM coluna Valor + status de entrega e faturamento)
-            "ID Tarefa", "Código", "Título", "Descrição", "Status", "Prioridade", "Solicitante", 
+            // TAREFAS (Cinza) - 14 colunas (SEM coluna Valor + status de entrega e faturamento)
+            "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Solicitante", 
             "Data Criação", "Data Atualização", "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
             "Tem Entrega", "Faturamento",
             
@@ -821,18 +805,18 @@ public class ExcelReportUtils {
 
         Row headerRow = sheet.createRow(0);
         
-        // Aplicar cores nos headers por seção - 24 colunas total
+        // Aplicar cores nos headers por seção - 23 colunas total
         int colIndex = 0;
         
-        // TAREFAS (0-14) - Cinza - SEM Valor + Status de entrega e faturamento
-        for (int i = 0; i < 15; i++) {
+        // TAREFAS (0-13) - Cinza - SEM Valor + Status de entrega e faturamento
+        for (int i = 0; i < 14; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(taskHeaderStyle);
         }
         
-        // ENTREGAS (15-23) - Azul Pálido
-        for (int i = 15; i < 24; i++) {
+        // ENTREGAS (14-22) - Azul Pálido
+        for (int i = 14; i < 23; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(deliveryHeaderStyle);
@@ -845,12 +829,11 @@ public class ExcelReportUtils {
 
             colIndex = 0;
             
-            // DADOS DA TAREFA (0-14) - SEM Valor + Status de entrega e faturamento
+            // DADOS DA TAREFA (0-13) - SEM Valor + Status de entrega e faturamento
             setCellValue(row, colIndex++, taskData.get("task_id"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_code"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_title"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_description"), dataStyle);
-            setStatusCell(row, colIndex++, taskData.get("task_status"), dataStyle);
             setPriorityCell(row, colIndex++, taskData.get("task_priority"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("requester_name"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_created_at"), dateStyle);
@@ -862,7 +845,7 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("has_delivery"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("has_quote_in_billing"), dataStyle);
             
-            // DADOS DE ENTREGAS (15-23)
+            // DADOS DE ENTREGAS (14-22)
             setCellValue(row, colIndex++, taskData.get("delivery_id"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("delivery_status"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
@@ -874,10 +857,10 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar larguras das colunas (24 colunas total)
+        // Ajustar larguras das colunas (23 colunas total)
         setColumnWidths(sheet, new int[]{
-            // TAREFAS (15 colunas) - SEM Valor + Status de entrega e faturamento
-            2500, 3500, 10000, 12000, 3500, 3000, 6000, 6000, 6000, 4000, 4000, 4000, 4000, 3000, 4000,
+            // TAREFAS (14 colunas) - SEM Valor + Status de entrega e faturamento
+            2500, 3500, 10000, 12000, 3000, 6000, 6000, 6000, 4000, 4000, 4000, 4000, 3000, 4000,
             // ENTREGAS (9 colunas)
             3000, 3500, 6000, 10000, 8000, 8000, 6000, 4000, 4000
         });

@@ -25,7 +25,4 @@ public class SubTaskRequest {
     @Digits(integer = 8, fraction = 2, message = "Amount must be a valid monetary value with up to 8 digits and 2 decimal places")
     private BigDecimal amount;
 
-    @NotBlank(message = "Status is required")
-    @Size(max = 30, message = "Status must be at most 30 characters")
-    private String status;
 }

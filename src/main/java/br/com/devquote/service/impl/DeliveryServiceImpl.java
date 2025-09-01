@@ -347,8 +347,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                             .taskId(taskId)
                             .taskName(task.getTitle())
                             .taskCode(task.getCode())
-                            .taskStatus(task.getStatus())
-                            .deliveryStatus(calculateDeliveryStatus(deliveries))
+                                                        .deliveryStatus(calculateDeliveryStatus(deliveries))
                             .taskValue(task.getAmount())
                             .createdAt(task.getCreatedAt())
                             .updatedAt(task.getUpdatedAt())
@@ -398,8 +397,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .taskId(taskId)
                 .taskName(task.getTitle())
                 .taskCode(task.getCode())
-                .taskStatus(task.getStatus())
-                .deliveryStatus(calculateDeliveryStatus(deliveries))
+                                .deliveryStatus(calculateDeliveryStatus(deliveries))
                 .taskValue(task.getAmount())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
@@ -417,7 +415,6 @@ public class DeliveryServiceImpl implements DeliveryService {
                 t.id as task_id,
                 t.code as task_code,
                 t.title as task_title,
-                t.status as task_status,
                 t.amount as task_amount,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
@@ -449,22 +446,21 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
-            map.put("task_status", row[3]);
-            map.put("task_amount", row[4]);
-            map.put("subtasks_count", row[5]);
-            map.put("requester_name", row[6]);
+            map.put("task_amount", row[3]);
+            map.put("subtasks_count", row[4]);
+            map.put("requester_name", row[5]);
             // Dados da entrega depois
-            map.put("delivery_id", row[7]);
-            map.put("delivery_status", row[8]);
-            map.put("project_name", row[9]);
-            map.put("pull_request", row[10]);
-            map.put("branch", row[11]);
-            map.put("script", row[12]);
-            map.put("notes", row[13]);
-            map.put("started_at", row[14]);
-            map.put("finished_at", row[15]);
-            map.put("delivery_created_at", row[16]);
-            map.put("delivery_updated_at", row[17]);
+            map.put("delivery_id", row[6]);
+            map.put("delivery_status", row[7]);
+            map.put("project_name", row[8]);
+            map.put("pull_request", row[9]);
+            map.put("branch", row[10]);
+            map.put("script", row[11]);
+            map.put("notes", row[12]);
+            map.put("started_at", row[13]);
+            map.put("finished_at", row[14]);
+            map.put("delivery_created_at", row[15]);
+            map.put("delivery_updated_at", row[16]);
             return map;
         }).collect(Collectors.toList());
 

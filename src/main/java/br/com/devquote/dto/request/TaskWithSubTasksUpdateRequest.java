@@ -19,8 +19,6 @@ public class TaskWithSubTasksUpdateRequest {
 
     private String description;
 
-    @NotBlank(message = "Status is required")
-    private String status;
 
     @NotBlank(message = "Code is required")
     private String code;

@@ -36,7 +36,7 @@ public class TaskController implements TaskControllerDoc {
 
     private final TaskService taskService;
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id", "requesterId", "requesterName", "title", "description", "status", "code", "link", "createdAt", "updatedAt"
+            "id", "requesterId", "requesterName", "title", "description", "code", "link", "createdAt", "updatedAt"
     );
 
     @Override
@@ -50,7 +50,6 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String requesterName,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String description,
-            @RequestParam(required = false) String status,
             @RequestParam(required = false) String code,
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,
@@ -66,7 +65,7 @@ public class TaskController implements TaskControllerDoc {
         );
 
         Page<TaskResponse> pageResult = taskService.findAllPaginated(
-                id, requesterId, requesterName, title, description, status, code, link, createdAt, updatedAt, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
@@ -82,7 +81,6 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String requesterName,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String description,
-            @RequestParam(required = false) String status,
             @RequestParam(required = false) String code,
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,
@@ -98,7 +96,7 @@ public class TaskController implements TaskControllerDoc {
         );
 
         Page<TaskResponse> pageResult = taskService.findUnlinkedTasksPaginated(
-                id, requesterId, requesterName, title, description, status, code, link, createdAt, updatedAt, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));

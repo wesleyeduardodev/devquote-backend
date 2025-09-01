@@ -24,8 +24,6 @@ public class TaskResponse {
 
     private String description;
 
-    private String status;
-
     private String code;
 
     private String link;

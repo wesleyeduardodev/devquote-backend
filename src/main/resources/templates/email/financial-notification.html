@@ -79,19 +79,6 @@
             flex: 1;
         }
         
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-pending { background-color: #fef3c7; color: #92400e; }
-        .status-in-progress { background-color: #dbeafe; color: #1e40af; }
-        .status-completed { background-color: #d1fae5; color: #065f46; }
-        .status-cancelled { background-color: #fee2e2; color: #991b1b; }
         
         .priority-badge {
             display: inline-block;
@@ -257,16 +244,6 @@
                     <span class="value" th:text="${task.description}">Descrição da tarefa</span>
                 </div>
                 
-                <div class="info-row">
-                    <span class="label">Status:</span>
-                    <span class="value">
-                        <span class="status-badge"
-                              th:class="${'status-badge status-' + #strings.toLowerCase(#strings.replace(statusTranslation, ' ', '-'))}"
-                              th:text="${statusTranslation}">
-                            Em Progresso
-                        </span>
-                    </span>
-                </div>
                 
                 <div class="info-row">
                     <span class="label">Criado por:</span>
@@ -306,12 +283,6 @@
                     </div>
                     
                     <div class="subtask-footer">
-                        <span class="status-badge"
-                              th:class="${'status-badge status-' + #strings.toLowerCase(#strings.replace(subtask.status, ' ', '-'))}"
-                              th:text="${subtask.status}">
-                            Status
-                        </span>
-                        
                         <span class="amount">
                             R$ <span th:text="${#numbers.formatDecimal(subtask.amount != null ? subtask.amount : 0, 1, 2)}">0,00</span>
                         </span>

@@ -186,7 +186,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
         context.setVariable("taskTitle", task.getTitle() != null ? task.getTitle() : "");
         context.setVariable("taskDescription", task.getDescription() != null ? task.getDescription() : "");
-        context.setVariable("taskStatus", translateStatus(task.getStatus()));
+        // Task status removed
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
         context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
@@ -212,7 +212,7 @@ public class EmailServiceImpl implements EmailService {
                 java.util.Map<String, String> subtaskMap = new java.util.HashMap<>();
                 subtaskMap.put("title", subtask.getTitle() != null ? subtask.getTitle() : "");
                 subtaskMap.put("description", subtask.getDescription() != null ? subtask.getDescription() : "");
-                subtaskMap.put("status", translateStatus(subtask.getStatus()));
+                // Subtask status removed
                 return subtaskMap;
             }).collect(java.util.stream.Collectors.toList());
         }
@@ -249,7 +249,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
         context.setVariable("taskTitle", task.getTitle() != null ? task.getTitle() : "");
         context.setVariable("taskDescription", task.getDescription() != null ? task.getDescription() : "");
-        context.setVariable("taskStatus", translateStatus(task.getStatus()));
+        // Task status removed
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
         context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
@@ -275,7 +275,7 @@ public class EmailServiceImpl implements EmailService {
                 java.util.Map<String, String> subtaskMap = new java.util.HashMap<>();
                 subtaskMap.put("title", subtask.getTitle() != null ? subtask.getTitle() : "");
                 subtaskMap.put("description", subtask.getDescription() != null ? subtask.getDescription() : "");
-                subtaskMap.put("status", translateStatus(subtask.getStatus()));
+                // Subtask status removed
                 return subtaskMap;
             }).collect(java.util.stream.Collectors.toList());
         }
@@ -312,7 +312,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
         context.setVariable("taskTitle", task.getTitle() != null ? task.getTitle() : "");
         context.setVariable("taskDescription", task.getDescription() != null ? task.getDescription() : "");
-        context.setVariable("taskStatus", translateStatus(task.getStatus()));
+        // Task status removed
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
         context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
@@ -338,7 +338,7 @@ public class EmailServiceImpl implements EmailService {
                 java.util.Map<String, String> subtaskMap = new java.util.HashMap<>();
                 subtaskMap.put("title", subtask.getTitle() != null ? subtask.getTitle() : "");
                 subtaskMap.put("description", subtask.getDescription() != null ? subtask.getDescription() : "");
-                subtaskMap.put("status", translateStatus(subtask.getStatus()));
+                // Subtask status removed
                 return subtaskMap;
             }).collect(java.util.stream.Collectors.toList());
         }
@@ -714,7 +714,7 @@ public class EmailServiceImpl implements EmailService {
 
             Context context = new Context();
             context.setVariable("task", task);
-            context.setVariable("statusTranslation", translateStatus(task.getStatus()));
+            // Task status removed
             context.setVariable("priorityTranslation", translatePriority(task.getPriority()));
 
             // Buscar subtarefas via repository se necessário
@@ -726,7 +726,7 @@ public class EmailServiceImpl implements EmailService {
                     java.util.Map<String, Object> subtaskMap = new java.util.HashMap<>();
                     subtaskMap.put("title", subtask.getTitle() != null ? subtask.getTitle() : "");
                     subtaskMap.put("description", subtask.getDescription() != null ? subtask.getDescription() : "");
-                    subtaskMap.put("status", translateStatus(subtask.getStatus()));
+                    // Subtask status removed
                     subtaskMap.put("amount", subtask.getAmount());
                     return subtaskMap;
                 }).collect(java.util.stream.Collectors.toList());

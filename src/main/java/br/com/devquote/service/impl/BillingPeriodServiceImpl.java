@@ -171,7 +171,6 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
                 t.id as task_id,
                 t.code as task_code,
                 t.title as task_title,
-                t.status as task_status,
                 t.amount as task_amount,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
@@ -221,12 +220,11 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             map.put("task_id", row[3]);
             map.put("task_code", row[4]);
             map.put("task_title", row[5]);
-            map.put("task_status", row[6]);
-            map.put("task_amount", row[7]);
-            map.put("subtasks_count", row[8]);
-            map.put("requester_name", row[9]);
-            map.put("created_at", row[10]);
-            map.put("updated_at", row[11]);
+            map.put("task_amount", row[6]);
+            map.put("subtasks_count", row[7]);
+            map.put("requester_name", row[8]);
+            map.put("created_at", row[9]);
+            map.put("updated_at", row[10]);
             return map;
         }).collect(Collectors.toList());
 

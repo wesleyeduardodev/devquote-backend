@@ -19,7 +19,6 @@ public class TaskAdapter {
                 .requesterName(entity.getRequester() != null ? entity.getRequester().getName() : null)
                 .title(entity.getTitle())
                 .description(entity.getDescription())
-                .status(entity.getStatus())
                 .code(entity.getCode())
                 .link(entity.getLink())
                 .meetingLink(entity.getMeetingLink())
@@ -49,7 +48,6 @@ public class TaskAdapter {
                 .requester(requester)
                 .title(dto.getTitle())
                 .description(dto.getDescription())
-                .status(dto.getStatus())
                 .code(dto.getCode())
                 .link(dto.getLink())
                 .meetingLink(dto.getMeetingLink())
@@ -74,7 +72,6 @@ public class TaskAdapter {
 
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
-        entity.setStatus(dto.getStatus());
         entity.setCode(dto.getCode());
         entity.setLink(dto.getLink());
         entity.setMeetingLink(dto.getMeetingLink());

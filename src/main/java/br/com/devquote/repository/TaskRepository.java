@@ -21,7 +21,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:requesterName IS NULL OR :requesterName = '' OR LOWER(t.requester.name) LIKE LOWER(CONCAT('%', :requesterName, '%')))
               AND (:title IS NULL OR :title = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :title, '%')))
               AND (:description IS NULL OR :description = '' OR LOWER(t.description) LIKE LOWER(CONCAT('%', :description, '%')))
-              AND (:status IS NULL OR :status = '' OR LOWER(t.status) LIKE LOWER(CONCAT('%', :status, '%')))
               AND (:code IS NULL OR :code = '' OR LOWER(t.code) LIKE LOWER(CONCAT('%', :code, '%')))
               AND (:link IS NULL OR :link = '' OR LOWER(t.link) LIKE LOWER(CONCAT('%', :link, '%')))
               AND (:createdAt IS NULL OR :createdAt = '' OR CAST(t.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
@@ -33,7 +32,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("requesterName") String requesterName,
             @Param("title") String title,
             @Param("description") String description,
-            @Param("status") String status,
             @Param("code") String code,
             @Param("link") String link,
             @Param("createdAt") String createdAt,
@@ -51,7 +49,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:requesterName IS NULL OR :requesterName = '' OR LOWER(t.requester.name) LIKE LOWER(CONCAT('%', :requesterName, '%')))
               AND (:title IS NULL OR :title = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :title, '%')))
               AND (:description IS NULL OR :description = '' OR LOWER(t.description) LIKE LOWER(CONCAT('%', :description, '%')))
-              AND (:status IS NULL OR :status = '' OR LOWER(t.status) LIKE LOWER(CONCAT('%', :status, '%')))
               AND (:code IS NULL OR :code = '' OR LOWER(t.code) LIKE LOWER(CONCAT('%', :code, '%')))
               AND (:link IS NULL OR :link = '' OR LOWER(t.link) LIKE LOWER(CONCAT('%', :link, '%')))
               AND (:createdAt IS NULL OR :createdAt = '' OR CAST(t.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
@@ -63,7 +60,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("requesterName") String requesterName,
             @Param("title") String title,
             @Param("description") String description,
-            @Param("status") String status,
             @Param("code") String code,
             @Param("link") String link,
             @Param("createdAt") String createdAt,

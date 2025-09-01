@@ -22,10 +22,6 @@ public class TaskRequest {
     @Size(max = 200, message = "Description must be at most 200 characters")
     private String description;
 
-    @NotBlank(message = "Status is required")
-    @Size(max = 30, message = "Status must be at most 30 characters")
-    private String status;
-
     @NotBlank(message = "Code is required")
     @Size(max = 100, message = "Code must be at most 100 characters")
     private String code;

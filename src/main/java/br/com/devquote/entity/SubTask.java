@@ -31,9 +31,6 @@ public class SubTask {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false, length = 30)
-    private String status;
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

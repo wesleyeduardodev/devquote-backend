@@ -76,26 +76,6 @@
             vertical-align: top;
             word-wrap: break-word;
         }
-        .status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .status.pending, .status.pendente {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .status.in-progress, .status.em-progresso {
-            background-color: #cce5ff;
-            color: #004080;
-        }
-        .status.completed, .status.concluida {
-            background-color: #d4edda;
-            color: #155724;
-        }
         .priority {
             display: inline-block;
             padding: 4px 12px;
@@ -132,9 +112,6 @@
             color: #666;
             margin-bottom: 8px;
             line-height: 1.4;
-        }
-        .subtask-status {
-            margin-top: 8px;
         }
         .footer {
             background-color: #f8f9fa;
@@ -231,12 +208,6 @@
                         <div class="info-label">Descrição:</div>
                         <div class="info-value" th:text="${taskDescription}">Descrição da tarefa</div>
                     </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(taskStatus)}">
-                        <div class="info-label">Status:</div>
-                        <div class="info-value">
-                            <span class="status pending" th:text="${taskStatus}">Pendente</span>
-                        </div>
-                    </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskPriority)}">
                         <div class="info-label">Prioridade:</div>
                         <div class="info-value">
@@ -315,10 +286,6 @@
                     <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}"
                          th:text="${subtask.description}">Descrição da subtarefa</div>
 
-                    <div class="subtask-status" th:if="${!#strings.isEmpty(subtask.status)}">
-                        <strong>Status:</strong>
-                        <span class="status pending" th:text="${subtask.status}">Pendente</span>
-                    </div>
                 </div>
             </div>
 

@@ -34,14 +34,13 @@ public interface TaskControllerDoc {
     @Parameter(name = "requesterName", description = "Filter by requester Name", example = "Wesley")
     @Parameter(name = "title", description = "Filter by title (partial match)", example = "Landing page")
     @Parameter(name = "description", description = "Filter by description (partial match)", example = "Figma handoff")
-    @Parameter(name = "status", description = "Filter by status (partial match)", example = "OPEN")
     @Parameter(name = "code", description = "Filter by code (partial match)", example = "TASK-001")
     @Parameter(name = "link", description = "Filter by link (partial match)", example = "github.com")
     @Parameter(name = "createdAt", description = "Filter by creation date. Supports partial dates: '2024', '2024-01', '2024-01-15'", example = "2024-01")
     @Parameter(name = "updatedAt", description = "Filter by update date. Supports partial dates: '2024', '2024-01', '2024-01-15'", example = "2024-01-15")
     @Parameter(
             name = "sort",
-            description = "Repeatable. Format: field,(asc|desc). Allowed: id,requesterId,title,description,status,code,link,createdAt,updatedAt",
+            description = "Repeatable. Format: field,(asc|desc). Allowed: id,requesterId,title,description,code,link,createdAt,updatedAt",
             array = @ArraySchema(schema = @Schema(type = "string", example = "id,desc"))
     )
     ResponseEntity<PagedResponse<TaskResponse>> list(
@@ -52,7 +51,6 @@ public interface TaskControllerDoc {
             @RequestParam(required = false) String requesterName,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String description,
-            @RequestParam(required = false) String status,
             @RequestParam(required = false) String code,
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,

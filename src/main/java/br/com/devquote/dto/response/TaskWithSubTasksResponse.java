@@ -18,7 +18,6 @@ public class TaskWithSubTasksResponse {
 
     private String description;
 
-    private String status;
 
     private String code;
 

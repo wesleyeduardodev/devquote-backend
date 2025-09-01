@@ -3,6 +3,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -30,6 +32,8 @@ import java.util.stream.Collectors;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApiExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ProblemDetail handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpServletRequest req) {
         Map<String, Object> extra = new HashMap<>();
@@ -41,6 +45,13 @@ public class ApiExceptionHandler {
                 ))
                 .collect(Collectors.toList());
         extra.put("errors", errors);
+
+        // Log detalhado do erro de validação com stack trace
+        log.error("VALIDATION_ERROR {} {} - Campos inválidos: {}", 
+                req.getMethod(), req.getRequestURI(), 
+                errors.stream()
+                    .map(e -> e.get("field") + "=" + e.get("rejectedValue") + " (" + e.get("message") + ")")
+                    .collect(Collectors.joining(", ")), ex);
 
         ProblemDetail pd = ProblemDetailsUtils.baseProblem(
                 HttpStatus.BAD_REQUEST,
@@ -81,6 +92,13 @@ public class ApiExceptionHandler {
         List<Map<String, Object>> errors = ex.getConstraintViolations().stream()
                 .map(this::toViolationMap)
                 .collect(Collectors.toList());
+
+        // Log detalhado com violações
+        log.error("CONSTRAINT_VIOLATION {} {} - Violações: {}", 
+                req.getMethod(), req.getRequestURI(), 
+                errors.stream()
+                    .map(e -> e.get("field") + "=" + e.get("rejectedValue") + " (" + e.get("message") + ")")
+                    .collect(Collectors.joining(", ")), ex);
 
         ProblemDetail pd = ProblemDetailsUtils.baseProblem(
                 HttpStatus.BAD_REQUEST,
@@ -130,6 +148,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ProblemDetail handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
+        // Log com detalhes do erro de parsing
+        log.error("MALFORMED_REQUEST {} {} - Erro ao processar JSON/XML: {}", 
+                req.getMethod(), req.getRequestURI(), 
+                ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage(), ex);
+        
         ProblemDetail pd = ProblemDetailsUtils.baseProblem(
                 HttpStatus.BAD_REQUEST,
                 "Malformed request",
@@ -153,6 +176,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     ProblemDetail handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest req) {
+        // Log com informações do recurso não encontrado
+        log.warn("RESOURCE_NOT_FOUND {} {} - Tipo: {} - ID: {} - Mensagem: {}", 
+                req.getMethod(), req.getRequestURI(), 
+                ex.getResourceType(), ex.getResourceId(), ex.getMessage());
+        
         ProblemDetail pd = ProblemDetailsUtils.baseProblem(
                 HttpStatus.NOT_FOUND,
                 "Resource not found",
@@ -167,6 +195,10 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     ProblemDetail handleBusinessException(BusinessException ex, HttpServletRequest req) {
+        // Log com stack trace
+        log.error("BUSINESS_ERROR {} {} - Código: {} - Mensagem: {}", 
+                req.getMethod(), req.getRequestURI(), ex.getErrorCode(), ex.getMessage(), ex);
+        
         ProblemDetail pd = ProblemDetailsUtils.baseProblem(
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 "Business rule violation",
@@ -180,6 +212,10 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     ProblemDetail handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest req) {
+        // Log com stack trace
+        log.error("ILLEGAL_ARGUMENT {} {} - Mensagem: {}", 
+                req.getMethod(), req.getRequestURI(), ex.getMessage(), ex);
+        
         return ProblemDetailsUtils.baseProblem(
                 HttpStatus.BAD_REQUEST,
                 "Invalid argument",
@@ -217,6 +253,10 @@ public class ApiExceptionHandler {
                 message = "Campo obrigatório não foi informado.";
             }
         }
+        
+        // Log com stack trace completa
+        log.error("DATA_INTEGRITY_ERROR {} {} - Causa: {}", 
+                req.getMethod(), req.getRequestURI(), rootCauseMessage, ex);
         
         ProblemDetail pd = ProblemDetailsUtils.baseProblem(
                 HttpStatus.CONFLICT,
@@ -268,6 +308,12 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     ProblemDetail handleAccessDenied(AccessDeniedException ex, HttpServletRequest req) {
+        // Log de tentativa de acesso negado (importante para auditoria)
+        log.warn("ACCESS_DENIED {} {} - User: {} - Message: {}", 
+                req.getMethod(), req.getRequestURI(), 
+                req.getUserPrincipal() != null ? req.getUserPrincipal().getName() : "anonymous",
+                ex.getMessage());
+        
         ProblemDetail pd = ProblemDetailsUtils.baseProblem(
                 HttpStatus.FORBIDDEN,
                 "Access denied",
@@ -280,6 +326,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     ProblemDetail handleGeneric(Exception ex, HttpServletRequest req) {
+        // Log crítico com stack trace completa para erros não esperados
+        log.error("UNEXPECTED_ERROR {} {} - Tipo: {} - Mensagem: {}", 
+                req.getMethod(), req.getRequestURI(), 
+                ex.getClass().getSimpleName(), ex.getMessage(), ex);
+        
         return ProblemDetailsUtils.baseProblem(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Internal error",

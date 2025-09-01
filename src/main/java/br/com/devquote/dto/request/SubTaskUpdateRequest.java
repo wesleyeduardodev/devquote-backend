@@ -23,8 +23,6 @@ public class SubTaskUpdateRequest {
     @Digits(integer = 8, fraction = 2)
     private BigDecimal amount;
 
-    @NotBlank(message = "Status is required")
-    private String status;
 
     private boolean excluded;
 }

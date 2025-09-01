@@ -22,8 +22,6 @@ public class SubTaskResponse {
 
     private BigDecimal amount;
 
-    private String status;
-
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

@@ -85,9 +85,8 @@ public class DashboardServiceImpl implements DashboardService {
         if (allowedScreens.contains("tasks")) {
             // Buscar TODAS as tarefas sem paginação
             var allTasks = taskRepository.findAll();
-            completedTasks = (int) allTasks.stream()
-                    .filter(task -> "COMPLETED".equals(task.getStatus()))
-                    .count();
+            // Without status field, consider all tasks for completion rate
+            completedTasks = allTasks.size();
             
             completionRate = allTasks.isEmpty() ? 0.0 : 
                 (double) completedTasks / allTasks.size() * 100.0;
@@ -131,7 +130,7 @@ public class DashboardServiceImpl implements DashboardService {
         var allTasks = taskRepository.findAll();
         int total = allTasks.size();
         int completed = (int) allTasks.stream()
-                .filter(task -> "COMPLETED".equals(task.getStatus()))
+                // No status filter - include all tasks
                 .count();
         int active = total - completed;
 
@@ -242,7 +241,7 @@ public class DashboardServiceImpl implements DashboardService {
         
         // Tarefas concluídas no mês corrente
         long tasksCompletedThisMonth = allTasks.stream()
-                .filter(task -> "COMPLETED".equals(task.getStatus()) && 
+                .filter(task -> 
                                task.getUpdatedAt() != null &&
                                task.getUpdatedAt().isAfter(startOfMonth) && 
                                task.getUpdatedAt().isBefore(endOfMonth))
@@ -250,7 +249,7 @@ public class DashboardServiceImpl implements DashboardService {
         
         // Tarefas em progresso no mês
         long tasksInProgressThisMonth = allTasks.stream()
-                .filter(task -> "IN_PROGRESS".equals(task.getStatus()) && 
+                .filter(task -> 
                                task.getUpdatedAt() != null &&
                                task.getUpdatedAt().isAfter(startOfMonth) && 
                                task.getUpdatedAt().isBefore(endOfMonth))
@@ -345,7 +344,7 @@ public class DashboardServiceImpl implements DashboardService {
         
         int totalTasks = allTasks.size();
         int completedTasks = (int) allTasks.stream()
-                .filter(task -> "COMPLETED".equals(task.getStatus()))
+                // No status filter - include all tasks
                 .count();
         
         int totalDeliveries = allDeliveries.size();
@@ -383,7 +382,7 @@ public class DashboardServiceImpl implements DashboardService {
             
             activities.add(DashboardStatsResponse.RecentActivity.builder()
                     .type("TASK")
-                    .description("Tarefa: " + task.getTitle() + " - Status: " + task.getStatus())
+                    .description("Tarefa: " + task.getTitle())
                     .user(userName)
                     .timestamp(activityTime.toString())
                     .entityId(task.getId().toString())
