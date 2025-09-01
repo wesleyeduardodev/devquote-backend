@@ -784,6 +784,14 @@ public class EmailServiceImpl implements EmailService {
             Context context = new Context();
             context.setVariable("billingPeriod", billingPeriod);
             context.setVariable("monthYear", String.format("%02d/%d", billingPeriod.getMonth(), billingPeriod.getYear()));
+            
+            // Formatar data de pagamento
+            if (billingPeriod.getPaymentDate() != null) {
+                java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                context.setVariable("paymentDate", billingPeriod.getPaymentDate().format(formatter));
+            } else {
+                context.setVariable("paymentDate", null);
+            }
 
             // Buscar tarefas vinculadas ao período de faturamento
             List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodId(billingPeriod.getId());

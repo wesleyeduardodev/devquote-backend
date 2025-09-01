@@ -237,7 +237,10 @@
             <!-- Informações do Período -->
             <div class="period-info">
                 <div class="period-title" th:text="${monthYear}">08/2024</div>
-                <div class="period-details">
+                <div class="period-details" th:if="${paymentDate != null}">
+                    Data de Pagamento: <strong th:text="${paymentDate}">01/09/2024</strong>
+                </div>
+                <div class="period-details" style="margin-top: 10px;">
                     Relatório financeiro do período de faturamento
                 </div>
                 
