@@ -121,60 +121,57 @@ public class EmailServiceImpl implements EmailService {
         log.info("📧 Starting TASK {} email notification process for: Task ID={}, Code={}, Title={}",
                 action.toUpperCase(), task.getId(), task.getCode(), task.getTitle());
 
-        // Lista de destinatários
-        java.util.List<String> recipients = new java.util.ArrayList<>();
+        String mainRecipient = null;
+        String ccRecipient = null;
 
-        // Adicionar email do solicitante se existir
+        // Definir destinatário principal (solicitante)
         if (task.getRequester() != null && task.getRequester().getEmail() != null
             && !task.getRequester().getEmail().trim().isEmpty()) {
-            recipients.add(task.getRequester().getEmail());
-            log.info("📧 Added requester email to recipients: {} <{}> for {} action",
-                    task.getRequester().getName(), task.getRequester().getEmail(), action);
+            mainRecipient = task.getRequester().getEmail();
+            log.info("📧 Main recipient (requester): {} <{}>",
+                    task.getRequester().getName(), task.getRequester().getEmail());
         } else {
-            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {} ({} action). Requester: {}",
-                    task.getId(), action,
+            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {}. Requester: {}",
+                    task.getId(),
                     task.getRequester() != null ? task.getRequester().getName() : "null");
         }
 
-        // Sempre adicionar o email do remetente (você)
+        // Definir destinatário em cópia (você)
         if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-            // Evitar duplicata caso o solicitante seja o mesmo email do remetente
-            if (!recipients.contains(emailProperties.getFrom())) {
-                recipients.add(emailProperties.getFrom());
-                log.info("📧 Added sender email to recipients: {} for {} action", emailProperties.getFrom(), action);
+            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
+            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
+                mainRecipient = emailProperties.getFrom();
+                ccRecipient = null;
+                log.info("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
+            } else {
+                ccRecipient = emailProperties.getFrom();
+                log.info("📧 CC recipient (sender): {}", emailProperties.getFrom());
             }
         } else {
             log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
         }
 
-        // Verificar se há destinatários
-        if (recipients.isEmpty()) {
+        // Verificar se há destinatário principal
+        if (mainRecipient == null) {
             log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {} ({} action). Email will NOT be sent!",
                     task.getId(), action);
             return;
         }
 
-        log.info("📧 Sending to {} recipients: {}", recipients.size(), String.join(", ", recipients));
+        // Enviar email único com CC
+        try {
+            log.info("📧 Sending TASK {} notification - To: {}, CC: {}",
+                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
 
-        // Enviar para todos os destinatários
-        int successCount = 0;
-        int failureCount = 0;
+            sendEmailWithCC(mainRecipient, ccRecipient, subject, htmlContent);
 
-        for (String recipient : recipients) {
-            try {
-                sendEmail(recipient, subject, htmlContent);
-                successCount++;
-                log.info("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {}",
-                        action.toUpperCase(), task.getId(), recipient);
-            } catch (Exception e) {
-                failureCount++;
-                log.error("📧 ❌ FAILED to send {} notification to {}: {} - Error: {}",
-                        action, recipient, task.getId(), e.getMessage(), e);
-            }
+            log.info("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {} (cc: {})",
+                    action.toUpperCase(), task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
+        } catch (Exception e) {
+            log.error("📧 ❌ FAILED to send {} notification for task ID: {} to: {} (cc: {}) - Error: {}",
+                    action, task.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
+            throw e;
         }
-
-        log.info("📧 📊 TASK {} notification process COMPLETED for task ID: {}. Success: {}, Failures: {}, Total: {}",
-                action.toUpperCase(), task.getId(), successCount, failureCount, recipients.size());
     }
 
     private String buildTaskCreatedEmailContent(Task task) {
@@ -440,67 +437,62 @@ public class EmailServiceImpl implements EmailService {
         log.info("📧 Starting DELIVERY {} email notification process for: Delivery ID={}, Status={}, {}",
                 action.toUpperCase(), delivery.getId(), delivery.getStatus(), taskInfo);
 
-        // Lista de destinatários
-        java.util.List<String> recipients = new java.util.ArrayList<>();
+        String mainRecipient = null;
+        String ccRecipient = null;
 
-        // Adicionar email do solicitante se existir (através da Task)
+        // Definir destinatário principal (solicitante através da Task)
         if (delivery.getTask() != null
             && delivery.getTask().getRequester() != null
             && delivery.getTask().getRequester().getEmail() != null
             && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
-            String requesterEmail = delivery.getTask().getRequester().getEmail();
+            mainRecipient = delivery.getTask().getRequester().getEmail();
             String requesterName = delivery.getTask().getRequester().getName();
-            recipients.add(requesterEmail);
-            log.info("📧 Added requester email to recipients: {} <{}> for delivery {} action",
-                    requesterName, requesterEmail, action);
+            log.info("📧 Main recipient (requester): {} <{}>",
+                    requesterName, mainRecipient);
         } else {
-            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {} ({} action). Task chain: {}",
-                    delivery.getId(), action,
+            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {}. Task chain: {}",
+                    delivery.getId(),
                     delivery.getTask() != null ?
                         (delivery.getTask().getRequester() != null ? "Requester has no email" : "No requester")
                         : "No task");
         }
 
-        // Sempre adicionar o email do remetente (você)
+        // Definir destinatário em cópia (você)
         if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-            // Evitar duplicata caso o solicitante seja o mesmo email do remetente
-            if (!recipients.contains(emailProperties.getFrom())) {
-                recipients.add(emailProperties.getFrom());
-                log.info("📧 Added sender email to recipients: {} for delivery {} action",
-                        emailProperties.getFrom(), action);
+            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
+            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
+                mainRecipient = emailProperties.getFrom();
+                ccRecipient = null;
+                log.info("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
+            } else {
+                ccRecipient = emailProperties.getFrom();
+                log.info("📧 CC recipient (sender): {}", emailProperties.getFrom());
             }
         } else {
             log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
         }
 
-        // Verificar se há destinatários
-        if (recipients.isEmpty()) {
+        // Verificar se há destinatário principal
+        if (mainRecipient == null) {
             log.error("📧 ❌ NO VALID RECIPIENTS found for delivery ID: {} ({} action). Email will NOT be sent!",
                     delivery.getId(), action);
             return;
         }
 
-        log.info("📧 Sending to {} recipients: {}", recipients.size(), String.join(", ", recipients));
+        // Enviar email único com CC
+        try {
+            log.info("📧 Sending DELIVERY {} notification - To: {}, CC: {}",
+                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
 
-        // Enviar para todos os destinatários
-        int successCount = 0;
-        int failureCount = 0;
+            sendEmailWithCC(mainRecipient, ccRecipient, subject, htmlContent);
 
-        for (String recipient : recipients) {
-            try {
-                sendEmail(recipient, subject, htmlContent);
-                successCount++;
-                log.info("📧 ✅ DELIVERY {} notification sent successfully for delivery ID: {} to: {}",
-                        action.toUpperCase(), delivery.getId(), recipient);
-            } catch (Exception e) {
-                failureCount++;
-                log.error("📧 ❌ FAILED to send delivery {} notification to {}: {} - Error: {}",
-                        action, recipient, delivery.getId(), e.getMessage(), e);
-            }
+            log.info("📧 ✅ DELIVERY {} notification sent successfully for delivery ID: {} to: {} (cc: {})",
+                    action.toUpperCase(), delivery.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
+        } catch (Exception e) {
+            log.error("📧 ❌ FAILED to send delivery {} notification for delivery ID: {} to: {} (cc: {}) - Error: {}",
+                    action, delivery.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
+            throw e;
         }
-
-        log.info("📧 📊 DELIVERY {} notification process COMPLETED for delivery ID: {}. Success: {}, Failures: {}, Total: {}",
-                action.toUpperCase(), delivery.getId(), successCount, failureCount, recipients.size());
     }
 
     private String buildDeliveryCreatedEmailContent(Delivery delivery) {
@@ -597,19 +589,28 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendEmail(String to, String subject, String htmlContent) {
+        sendEmailWithCC(to, null, subject, htmlContent);
+    }
+
+    private void sendEmailWithCC(String to, String cc, String subject, String htmlContent) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(emailProperties.getFrom());
             helper.setTo(to);
+
+            if (cc != null && !cc.trim().isEmpty()) {
+                helper.setCc(cc);
+            }
+
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
 
         } catch (MessagingException e) {
-            log.error("Failed to send email to: {}", to, e);
+            log.error("Failed to send email to: {} (cc: {})", to, cc, e);
             throw new RuntimeException("Failed to send email", e);
         }
     }
@@ -720,7 +721,7 @@ public class EmailServiceImpl implements EmailService {
             // Buscar subtarefas via repository se necessário
             if (task.getHasSubTasks()) {
                 List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
-                
+
                 // Criar lista com dados das subtarefas já traduzidos
                 List<java.util.Map<String, Object>> subTasksTranslated = subTasks.stream().map(subtask -> {
                     java.util.Map<String, Object> subtaskMap = new java.util.HashMap<>();
@@ -730,7 +731,7 @@ public class EmailServiceImpl implements EmailService {
                     subtaskMap.put("amount", subtask.getAmount());
                     return subtaskMap;
                 }).collect(java.util.stream.Collectors.toList());
-                
+
                 context.setVariable("subTasks", subTasksTranslated);
             }
 
@@ -740,22 +741,19 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = templateEngine.process("email/financial-notification", context);
 
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            // Se o email financeiro for diferente do email remetente, colocar remetente em CC
+            String ccRecipient = null;
+            if (!financeEmail.equals(emailProperties.getFrom())) {
+                ccRecipient = emailProperties.getFrom();
+            }
 
-            helper.setFrom(emailProperties.getFrom());
-            helper.setTo(financeEmail);
-            helper.setSubject("💰 Notificação Financeira - Tarefa " + task.getCode());
-            helper.setText(htmlContent, true);
+            log.info("📧 Sending FINANCIAL notification - To: {}, CC: {}",
+                    financeEmail, ccRecipient != null ? ccRecipient : "none");
 
-            mailSender.send(message);
+            sendEmailWithCC(financeEmail, ccRecipient, "💰 Notificação Financeira - Tarefa " + task.getCode(), htmlContent);
 
             log.info("Financial notification sent successfully for task ID: {} to {}", task.getId(), financeEmail);
 
-        } catch (MessagingException e) {
-            log.error("Failed to send financial notification for task ID: {} to {}: {}",
-                task.getId(), financeEmail, e.getMessage(), e);
-            throw new RuntimeException("Failed to send financial notification email", e);
         } catch (Exception e) {
             log.error("Unexpected error while sending financial notification for task ID: {} to {}: {}",
                 task.getId(), financeEmail, e.getMessage(), e);
@@ -778,23 +776,23 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.info("Sending billing period notification for period ID: {} ({}/{}) to {}", 
+            log.info("Sending billing period notification for period ID: {} ({}/{}) to {}",
                 billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear(), financeEmail);
 
             Context context = new Context();
             context.setVariable("billingPeriod", billingPeriod);
-            
+
             // Array com nomes dos meses em português
-            String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho", 
+            String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
                                    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
             String monthName = monthNames[billingPeriod.getMonth() - 1];
-            
+
             // Formato: "julho/2025"
             context.setVariable("monthYear", String.format("%s/%d", monthName, billingPeriod.getYear()));
-            
+
             // Formato: "Medição julho de 2025"
             context.setVariable("measurementPeriod", String.format("Medição %s de %d", monthName, billingPeriod.getYear()));
-            
+
             // Formatar data de pagamento
             if (billingPeriod.getPaymentDate() != null) {
                 java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -805,11 +803,11 @@ public class EmailServiceImpl implements EmailService {
 
             // Buscar tarefas vinculadas ao período de faturamento
             List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodId(billingPeriod.getId());
-            
+
             // Processar tarefas e calcular totais
             List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
             java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
-            
+
             for (Object[] taskData : billingTasks) {
                 java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
                 taskMap.put("code", taskData[1]); // task_code
@@ -817,34 +815,33 @@ public class EmailServiceImpl implements EmailService {
                 taskMap.put("description", taskData[3]); // task_description
                 taskMap.put("amount", taskData[4]); // task_amount
                 tasksData.add(taskMap);
-                
+
                 if (taskData[4] != null) {
                     totalAmount = totalAmount.add((java.math.BigDecimal) taskData[4]);
                 }
             }
-            
+
             context.setVariable("tasks", tasksData);
             context.setVariable("totalAmount", totalAmount);
             context.setVariable("taskCount", billingTasks.size());
 
             String htmlContent = templateEngine.process("email/billing-period-notification", context);
 
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            // Se o email financeiro for diferente do email remetente, colocar remetente em CC
+            String ccRecipient = null;
+            if (!financeEmail.equals(emailProperties.getFrom())) {
+                ccRecipient = emailProperties.getFrom();
+            }
 
-            helper.setFrom(emailProperties.getFrom());
-            helper.setTo(financeEmail);
-            helper.setSubject("📊 Faturamento Mensal - " + String.format("%02d/%d", billingPeriod.getMonth(), billingPeriod.getYear()));
-            helper.setText(htmlContent, true);
+            String subject = "📊 Faturamento Mensal - " + String.format("%02d/%d", billingPeriod.getMonth(), billingPeriod.getYear());
 
-            mailSender.send(message);
+            log.info("📧 Sending BILLING PERIOD notification - To: {}, CC: {}",
+                    financeEmail, ccRecipient != null ? ccRecipient : "none");
+
+            sendEmailWithCC(financeEmail, ccRecipient, subject, htmlContent);
 
             log.info("Billing period notification sent successfully for period ID: {} to {}", billingPeriod.getId(), financeEmail);
 
-        } catch (MessagingException e) {
-            log.error("Failed to send billing period notification for period ID: {} to {}: {}",
-                billingPeriod.getId(), financeEmail, e.getMessage(), e);
-            throw new RuntimeException("Failed to send billing period notification email", e);
         } catch (Exception e) {
             log.error("Unexpected error while sending billing period notification for period ID: {} to {}: {}",
                 billingPeriod.getId(), financeEmail, e.getMessage(), e);
