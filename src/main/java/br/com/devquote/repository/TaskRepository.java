@@ -42,7 +42,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @Query("""
             SELECT t FROM Task t
             WHERE NOT EXISTS (
-                SELECT 1 FROM BillingPeriodTask bpt WHERE bpt.task.id = t.id
+                SELECT 1 FROM Delivery d WHERE d.task.id = t.id
             )
               AND (:id IS NULL OR t.id = :id)
               AND (:requesterId IS NULL OR t.requester.id = :requesterId)
