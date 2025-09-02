@@ -237,15 +237,15 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                 .pullRequest((String) row[6])
                 .script((String) row[7])
                 .notes((String) row[8])
-                .startedAt(row[9] != null ? ((java.sql.Timestamp) row[9]).toLocalDateTime() : null)
-                .finishedAt(row[10] != null ? ((java.sql.Timestamp) row[10]).toLocalDateTime() : null)
+                .startedAt(row[9] != null ? ((java.sql.Date) row[9]).toLocalDate() : null)
+                .finishedAt(row[10] != null ? ((java.sql.Date) row[10]).toLocalDate() : null)
                 .createdAt(row[11] != null ? ((java.sql.Timestamp) row[11]).toLocalDateTime() : null)
                 .updatedAt(row[12] != null ? ((java.sql.Timestamp) row[12]).toLocalDateTime() : null)
                 .projectName((String) row[16])
                 .taskId(((Number) row[17]).longValue())
                 .taskName((String) row[18])
                 .taskCode((String) row[19])
-                .build()).toList();
+                .build()).collect(java.util.stream.Collectors.toList());
     }
 
     @Override

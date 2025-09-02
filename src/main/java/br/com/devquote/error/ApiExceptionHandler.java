@@ -38,11 +38,13 @@ public class ApiExceptionHandler {
     ProblemDetail handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpServletRequest req) {
         Map<String, Object> extra = new HashMap<>();
         List<Map<String, Object>> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> Map.<String, Object>of(
-                        "field", fe.getField(),
-                        "message", fe.getDefaultMessage(),
-                        "rejectedValue", fe.getRejectedValue()
-                ))
+                .map(fe -> {
+                    Map<String, Object> errorMap = new HashMap<>();
+                    errorMap.put("field", fe.getField());
+                    errorMap.put("message", fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "Validation error");
+                    errorMap.put("rejectedValue", fe.getRejectedValue());
+                    return errorMap;
+                })
                 .collect(Collectors.toList());
         extra.put("errors", errors);
 

@@ -283,6 +283,8 @@ public class DashboardServiceImpl implements DashboardService {
         var now = LocalDateTime.now();
         var startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
         var endOfMonth = now.withDayOfMonth(now.toLocalDate().lengthOfMonth()).withHour(23).withMinute(59).withSecond(59);
+        var startOfMonthDate = startOfMonth.toLocalDate();
+        var endOfMonthDate = endOfMonth.toLocalDate();
         
         var allDeliveries = deliveryRepository.findAll();
         
@@ -296,8 +298,8 @@ public class DashboardServiceImpl implements DashboardService {
                 .filter(delivery -> delivery.getItems() != null && 
                                    delivery.getItems().stream()
                                            .anyMatch(item -> item.getStartedAt() != null &&
-                                                           item.getStartedAt().isAfter(startOfMonth) &&
-                                                           item.getStartedAt().isBefore(endOfMonth)))
+                                                           (item.getStartedAt().isAfter(startOfMonthDate) || item.getStartedAt().isEqual(startOfMonthDate)) &&
+                                                           (item.getStartedAt().isBefore(endOfMonthDate) || item.getStartedAt().isEqual(endOfMonthDate))))
                 .count();
         
         // Entregas finalizadas no mês (com pelo menos um item com finishedAt preenchido)
@@ -305,8 +307,8 @@ public class DashboardServiceImpl implements DashboardService {
                 .filter(delivery -> delivery.getItems() != null && 
                                    delivery.getItems().stream()
                                            .anyMatch(item -> item.getFinishedAt() != null &&
-                                                           item.getFinishedAt().isAfter(startOfMonth) &&
-                                                           item.getFinishedAt().isBefore(endOfMonth)))
+                                                           (item.getFinishedAt().isAfter(startOfMonthDate) || item.getFinishedAt().isEqual(startOfMonthDate)) &&
+                                                           (item.getFinishedAt().isBefore(endOfMonthDate) || item.getFinishedAt().isEqual(endOfMonthDate))))
                 .count();
         
         List<DashboardStatsResponse.StatusCount> monthlyStats = new ArrayList<>();

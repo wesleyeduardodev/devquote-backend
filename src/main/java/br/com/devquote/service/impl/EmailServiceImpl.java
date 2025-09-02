@@ -527,7 +527,6 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("delivery", delivery);
         context.setVariable("deliveryId", delivery.getId());
         context.setVariable("deliveryStatus", translateDeliveryStatus(delivery.getStatus()));
-        context.setVariable("createdBy", delivery.getCreatedBy() != null ? delivery.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", delivery.getCreatedAt().format(DATE_FORMATTER));
 
         // Dados dos itens da entrega (nova arquitetura)
