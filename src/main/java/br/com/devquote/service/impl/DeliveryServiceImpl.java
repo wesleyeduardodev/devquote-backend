@@ -412,7 +412,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     .totalDeliveries(1)
                     .completedDeliveries(0) // Simplificado
                     .pendingDeliveries(0)   // Simplificado
-                    .deliveries(List.of()) // Lista vazia para simplificar
+                    .deliveries(List.of(DeliveryAdapter.toResponseDTO(delivery))) // Incluir a entrega real
                     .build();
         });
     }
