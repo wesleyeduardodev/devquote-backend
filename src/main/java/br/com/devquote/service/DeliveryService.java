@@ -44,6 +44,16 @@ public interface DeliveryService {
 
     DeliveryGroupResponse findGroupDetailsByTaskId(Long taskId);
 
+    // Novos métodos otimizados para performance
+    Page<DeliveryGroupResponse> findAllGroupedByTaskOptimized(String taskName,
+                                                              String taskCode,
+                                                              String status,
+                                                              String createdAt,
+                                                              String updatedAt,
+                                                              Pageable pageable);
+
+    DeliveryGroupResponse findGroupDetailsByTaskIdOptimized(Long taskId);
+
     boolean existsByTaskId(Long taskId);
 
     byte[] exportToExcel() throws IOException;

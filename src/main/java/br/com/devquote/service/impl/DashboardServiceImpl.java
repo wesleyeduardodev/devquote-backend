@@ -180,7 +180,7 @@ public class DashboardServiceImpl implements DashboardService {
         var allDeliveries = deliveryRepository.findAll();
         int total = allDeliveries.size();
         int completed = (int) allDeliveries.stream()
-                .filter(delivery -> "APPROVED".equals(delivery.getStatus()))
+                .filter(delivery -> "APPROVED".equals(delivery.getStatus()) || "PRODUCTION".equals(delivery.getStatus()))
                 .count();
         int active = total - completed;
 
@@ -291,18 +291,22 @@ public class DashboardServiceImpl implements DashboardService {
                 .filter(delivery -> delivery.getCreatedAt().isAfter(startOfMonth) && delivery.getCreatedAt().isBefore(endOfMonth))
                 .count();
         
-        // Entregas iniciadas no mês (com startedAt preenchido)
+        // Entregas iniciadas no mês (com pelo menos um item com startedAt preenchido)
         long deliveriesStartedThisMonth = allDeliveries.stream()
-                .filter(delivery -> delivery.getStartedAt() != null && 
-                                   delivery.getStartedAt().isAfter(startOfMonth.toLocalDate()) && 
-                                   delivery.getStartedAt().isBefore(endOfMonth.toLocalDate()))
+                .filter(delivery -> delivery.getItems() != null && 
+                                   delivery.getItems().stream()
+                                           .anyMatch(item -> item.getStartedAt() != null &&
+                                                           item.getStartedAt().isAfter(startOfMonth) &&
+                                                           item.getStartedAt().isBefore(endOfMonth)))
                 .count();
         
-        // Entregas finalizadas no mês (com finishedAt preenchido)
+        // Entregas finalizadas no mês (com pelo menos um item com finishedAt preenchido)
         long deliveriesFinishedThisMonth = allDeliveries.stream()
-                .filter(delivery -> delivery.getFinishedAt() != null && 
-                                   delivery.getFinishedAt().isAfter(startOfMonth.toLocalDate()) && 
-                                   delivery.getFinishedAt().isBefore(endOfMonth.toLocalDate()))
+                .filter(delivery -> delivery.getItems() != null && 
+                                   delivery.getItems().stream()
+                                           .anyMatch(item -> item.getFinishedAt() != null &&
+                                                           item.getFinishedAt().isAfter(startOfMonth) &&
+                                                           item.getFinishedAt().isBefore(endOfMonth)))
                 .count();
         
         List<DashboardStatsResponse.StatusCount> monthlyStats = new ArrayList<>();
@@ -349,7 +353,7 @@ public class DashboardServiceImpl implements DashboardService {
         
         int totalDeliveries = allDeliveries.size();
         int completedDeliveries = (int) allDeliveries.stream()
-                .filter(delivery -> "APPROVED".equals(delivery.getStatus()))
+                .filter(delivery -> "APPROVED".equals(delivery.getStatus()) || "PRODUCTION".equals(delivery.getStatus()))
                 .count();
         
         double completionRate = totalTasks > 0 ? (double) completedTasks / totalTasks * 100.0 : 0.0;
@@ -401,11 +405,11 @@ public class DashboardServiceImpl implements DashboardService {
                 
         for (var delivery : recentDeliveries) {
             LocalDateTime activityTime = delivery.getUpdatedAt() != null ? delivery.getUpdatedAt() : delivery.getCreatedAt();
-            String userName = delivery.getUpdatedBy() != null ? delivery.getUpdatedBy().getUsername() : 
-                             delivery.getCreatedBy() != null ? delivery.getCreatedBy().getUsername() : "Sistema";
+            // Na nova arquitetura, usar "Sistema" como usuário padrão para deliveries
+            String userName = "Sistema";
             
-            // Como delivery não tem campo title, vou usar o branch ou ID
-            String deliveryTitle = delivery.getBranch() != null ? delivery.getBranch() : "Entrega #" + delivery.getId();
+            // Na nova arquitetura, usar o nome da tarefa como título
+            String deliveryTitle = delivery.getTask() != null ? delivery.getTask().getTitle() : "Entrega #" + delivery.getId();
             
             activities.add(DashboardStatsResponse.RecentActivity.builder()
                     .type("DELIVERY")

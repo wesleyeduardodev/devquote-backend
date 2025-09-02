@@ -14,21 +14,22 @@ public class DeliveryResponse {
     private Long taskId;
     private String taskName;
     private String taskCode;
-    private Long projectId;
-    private String projectName;
-    private String branch;
-    private String pullRequest;
-    private String script;
     private String status;
-    private String notes;
-    private String sourceBranch;
+    private Integer totalItems;
+    private Long pendingCount;
+    private Long developmentCount;
+    private Long deliveredCount;
+    private Long homologationCount;
+    private Long approvedCount;
+    private Long rejectedCount;
+    private Long productionCount;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate startedAt;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate finishedAt;
-
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
+
+    // Lista de itens da entrega
+    private java.util.List<DeliveryItemResponse> items;
 }

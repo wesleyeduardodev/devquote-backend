@@ -144,6 +144,34 @@ public class DeliveryController implements DeliveryControllerDoc {
         return ResponseEntity.ok(groupDetails);
     }
 
+    // Novos endpoints otimizados para performance
+    @GetMapping("/grouped/optimized")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<PagedResponse<DeliveryGroupResponse>> listGroupedByTaskOptimized(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String taskName,
+            @RequestParam(required = false) String taskCode,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String createdAt,
+            @RequestParam(required = false) String updatedAt,
+            @RequestParam MultiValueMap<String, String> allParams
+    ) {
+        List<String> sortParams = allParams != null ? allParams.get("sort") : null;
+        Pageable pageable = PageRequest.of(page, size, SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id"));
+        Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTaskOptimized(
+                taskName, taskCode, status, createdAt, updatedAt, pageable
+        );
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
+    }
+
+    @GetMapping("/group/{taskId}/optimized")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<DeliveryGroupResponse> getGroupDetailsOptimized(@PathVariable Long taskId) {
+        DeliveryGroupResponse groupDetails = deliveryService.findGroupDetailsByTaskIdOptimized(taskId);
+        return ResponseEntity.ok(groupDetails);
+    }
+
     @GetMapping("/export/excel")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<byte[]> exportDeliveriesToExcel() throws IOException {

@@ -498,32 +498,8 @@ public class EmailServiceImpl implements EmailService {
     private String buildDeliveryCreatedEmailContent(Delivery delivery) {
         Context context = new Context();
 
-        // Dados principais da entrega
-        context.setVariable("delivery", delivery);
-        context.setVariable("deliveryId", delivery.getId());
-        context.setVariable("deliveryStatus", translateDeliveryStatus(delivery.getStatus()));
-        context.setVariable("deliveryBranch", delivery.getBranch() != null ? delivery.getBranch() : "");
-        context.setVariable("deliverySourceBranch", delivery.getSourceBranch() != null ? delivery.getSourceBranch() : "");
-        context.setVariable("deliveryPullRequest", delivery.getPullRequest() != null ? delivery.getPullRequest() : "");
-        context.setVariable("deliveryScript", delivery.getScript() != null ? delivery.getScript() : "");
-        context.setVariable("deliveryNotes", delivery.getNotes() != null ? delivery.getNotes() : "");
-        context.setVariable("deliveryStartedAt", delivery.getStartedAt() != null ? delivery.getStartedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
-        context.setVariable("deliveryFinishedAt", delivery.getFinishedAt() != null ? delivery.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
-        context.setVariable("createdBy", delivery.getCreatedBy() != null ? delivery.getCreatedBy().getUsername() : "Sistema");
-        context.setVariable("createdAt", delivery.getCreatedAt().format(DATE_FORMATTER));
-
-        // Dados do orçamento/tarefa
-        if (delivery.getTask() != null) {
-            context.setVariable("quoteCode", delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "");
-            context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
-            context.setVariable("requesterName", delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "");
-            context.setVariable("requesterEmail", delivery.getTask().getRequester() != null && delivery.getTask().getRequester().getEmail() != null ? delivery.getTask().getRequester().getEmail() : "");
-        } else {
-            context.setVariable("quoteCode", "");
-            context.setVariable("quoteName", "");
-            context.setVariable("requesterName", "");
-            context.setVariable("requesterEmail", "");
-        }
+        // Reutilizar a mesma lógica de construção de contexto
+        buildDeliveryEmailContext(context, delivery);
 
         return templateEngine.process("email/delivery-created", context);
     }
@@ -551,15 +527,36 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("delivery", delivery);
         context.setVariable("deliveryId", delivery.getId());
         context.setVariable("deliveryStatus", translateDeliveryStatus(delivery.getStatus()));
-        context.setVariable("deliveryBranch", delivery.getBranch() != null ? delivery.getBranch() : "");
-        context.setVariable("deliverySourceBranch", delivery.getSourceBranch() != null ? delivery.getSourceBranch() : "");
-        context.setVariable("deliveryPullRequest", delivery.getPullRequest() != null ? delivery.getPullRequest() : "");
-        context.setVariable("deliveryScript", delivery.getScript() != null ? delivery.getScript() : "");
-        context.setVariable("deliveryNotes", delivery.getNotes() != null ? delivery.getNotes() : "");
-        context.setVariable("deliveryStartedAt", delivery.getStartedAt() != null ? delivery.getStartedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
-        context.setVariable("deliveryFinishedAt", delivery.getFinishedAt() != null ? delivery.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
         context.setVariable("createdBy", delivery.getCreatedBy() != null ? delivery.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", delivery.getCreatedAt().format(DATE_FORMATTER));
+
+        // Dados dos itens da entrega (nova arquitetura)
+        if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
+            // Para compatibilidade com templates existentes, usar dados do primeiro item
+            var firstItem = delivery.getItems().get(0);
+            context.setVariable("deliveryBranch", firstItem.getBranch() != null ? firstItem.getBranch() : "");
+            context.setVariable("deliverySourceBranch", firstItem.getSourceBranch() != null ? firstItem.getSourceBranch() : "");
+            context.setVariable("deliveryPullRequest", firstItem.getPullRequest() != null ? firstItem.getPullRequest() : "");
+            context.setVariable("deliveryScript", firstItem.getScript() != null ? firstItem.getScript() : "");
+            context.setVariable("deliveryNotes", firstItem.getNotes() != null ? firstItem.getNotes() : "");
+            context.setVariable("deliveryStartedAt", firstItem.getStartedAt() != null ? firstItem.getStartedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+            context.setVariable("deliveryFinishedAt", firstItem.getFinishedAt() != null ? firstItem.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+            
+            // Lista completa de itens para templates que queiram mostrar todos
+            context.setVariable("deliveryItems", delivery.getItems());
+            context.setVariable("hasMultipleItems", delivery.getItems().size() > 1);
+        } else {
+            // Valores padrão se não houver itens
+            context.setVariable("deliveryBranch", "");
+            context.setVariable("deliverySourceBranch", "");
+            context.setVariable("deliveryPullRequest", "");
+            context.setVariable("deliveryScript", "");
+            context.setVariable("deliveryNotes", "");
+            context.setVariable("deliveryStartedAt", "");
+            context.setVariable("deliveryFinishedAt", "");
+            context.setVariable("deliveryItems", java.util.Collections.emptyList());
+            context.setVariable("hasMultipleItems", false);
+        }
 
         // Dados do orçamento/tarefa
         if (delivery.getTask() != null) {
@@ -575,16 +572,16 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    private String translateDeliveryStatus(String status) {
+    private String translateDeliveryStatus(br.com.devquote.enums.DeliveryStatus status) {
         if (status == null) return "N/A";
-        return switch (status.toUpperCase()) {
-            case "PENDING" -> "Pendente";
-            case "IN_PROGRESS" -> "Em Progresso";
-            case "TESTING" -> "Em Teste";
-            case "DELIVERED" -> "Entregue";
-            case "APPROVED" -> "Aprovado";
-            case "REJECTED" -> "Rejeitado";
-            default -> status;
+        return switch (status) {
+            case PENDING -> "Pendente";
+            case DEVELOPMENT -> "Desenvolvimento";
+            case DELIVERED -> "Entregue";
+            case HOMOLOGATION -> "Homologação";
+            case APPROVED -> "Aprovado";
+            case REJECTED -> "Rejeitado";
+            case PRODUCTION -> "Produção";
         };
     }
 
@@ -667,6 +664,10 @@ public class EmailServiceImpl implements EmailService {
         return switch (status.toUpperCase()) {
             case "PENDING" -> "pending";
             case "IN_PROGRESS" -> "in-progress";
+            case "DEVELOPMENT" -> "in-progress";
+            case "DELIVERED" -> "delivered";
+            case "HOMOLOGATION" -> "testing";
+            case "PRODUCTION" -> "production";
             case "COMPLETED" -> "completed";
             case "CANCELLED" -> "cancelled";
             case "ON_HOLD" -> "on-hold";

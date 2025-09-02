@@ -231,14 +231,27 @@ public class TaskServiceImpl implements TaskService {
 
     private void createDeliveries(TaskWithSubTasksCreateRequest dto, Task task) {
         if (dto.getProjectsIds() != null && !dto.getProjectsIds().isEmpty()) {
+            // Na nova arquitetura: 1 Delivery por Task, N DeliveryItems (um por projeto)
+            java.util.List<br.com.devquote.dto.request.DeliveryItemRequest> items = new java.util.ArrayList<>();
+            
             for (Long projectId : dto.getProjectsIds()) {
-                DeliveryRequest deliveryRequest = DeliveryRequest
+                br.com.devquote.dto.request.DeliveryItemRequest item = br.com.devquote.dto.request.DeliveryItemRequest
                         .builder()
-                        .taskId(task.getId())
+                        .deliveryId(null) // Será definido após criar a delivery
                         .projectId(projectId)
+                        .status("PENDING")
                         .build();
-                deliveryService.create(deliveryRequest);
+                items.add(item);
             }
+            
+            // Criar uma única delivery com múltiplos itens
+            DeliveryRequest deliveryRequest = DeliveryRequest
+                    .builder()
+                    .taskId(task.getId())
+                    .status("PENDING")
+                    .items(items)
+                    .build();
+            deliveryService.create(deliveryRequest);
         }
     }
 

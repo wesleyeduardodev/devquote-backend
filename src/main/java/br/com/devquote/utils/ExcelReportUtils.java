@@ -446,6 +446,20 @@ public class ExcelReportUtils {
         };
     }
 
+    private String translateDeliveryStatus(String status) {
+        if (status == null) return "";
+        return switch (status.toUpperCase()) {
+            case "PENDING" -> "Pendente";
+            case "DEVELOPMENT" -> "Desenvolvimento";
+            case "DELIVERED" -> "Entregue";
+            case "HOMOLOGATION" -> "Homologação";
+            case "APPROVED" -> "Aprovado";
+            case "REJECTED" -> "Rejeitado";
+            case "PRODUCTION" -> "Produção";
+            default -> status;
+        };
+    }
+
     private String translatePriority(String priority) {
         if (priority == null) return "";
         return switch (priority.toUpperCase()) {

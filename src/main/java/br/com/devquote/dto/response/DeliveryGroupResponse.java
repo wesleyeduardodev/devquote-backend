@@ -27,6 +27,10 @@ public class DeliveryGroupResponse {
 
     private LocalDateTime updatedAt;
 
+    // Novos campos com contadores por status
+    private DeliveryStatusCount statusCounts;
+
+    // Campos compatíveis para backward compatibility
     private Integer totalDeliveries;
 
     private Integer completedDeliveries;
@@ -34,4 +38,17 @@ public class DeliveryGroupResponse {
     private Integer pendingDeliveries;
 
     private List<DeliveryResponse> deliveries;
+    
+    // Métodos helpers para backward compatibility
+    public Integer getTotalDeliveries() {
+        return statusCounts != null ? statusCounts.getTotal() : totalDeliveries;
+    }
+    
+    public Integer getCompletedDeliveries() {
+        return statusCounts != null ? statusCounts.getCompleted() : completedDeliveries;
+    }
+    
+    public Integer getPendingDeliveries() {
+        return statusCounts != null ? statusCounts.getPendingCount() : pendingDeliveries;
+    }
 }
