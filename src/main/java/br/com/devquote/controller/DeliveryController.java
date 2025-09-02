@@ -35,8 +35,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     private final DeliveryService deliveryService;
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id", "taskId", "taskName", "taskCode", "projectName",
-            "branch", "pullRequest", "status", "startedAt", "finishedAt", "createdAt", "updatedAt"
+            "id", "taskId", "taskName", "taskCode", "status", "createdAt", "updatedAt"
     );
 
     @Override
@@ -48,12 +47,7 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String taskCode,
-            @RequestParam(required = false) String projectName,
-            @RequestParam(required = false) String branch,
-            @RequestParam(required = false) String pullRequest,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String startedAt,
-            @RequestParam(required = false) String finishedAt,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
             @RequestParam(required = false) MultiValueMap<String, String> params
@@ -67,8 +61,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         );
 
         Page<DeliveryResponse> pageResult = deliveryService.findAllPaginated(
-                id, taskName, taskCode, projectName,
-                branch, pullRequest, status, startedAt, finishedAt, createdAt, updatedAt, pageable
+                id, taskName, taskCode, status, createdAt, updatedAt, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));

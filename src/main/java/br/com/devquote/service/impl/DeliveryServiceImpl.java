@@ -284,12 +284,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public Page<DeliveryResponse> findAllPaginated(Long id,
                                                    String taskName,
                                                    String taskCode,
-                                                   String projectName,
-                                                   String branch,
-                                                   String pullRequest,
                                                    String status,
-                                                   String startedAt,
-                                                   String finishedAt,
                                                    String createdAt,
                                                    String updatedAt,
                                                    Pageable pageable) {

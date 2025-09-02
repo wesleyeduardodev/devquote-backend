@@ -30,18 +30,12 @@ public interface DeliveryControllerDoc {
     @Parameter(name = "taskId", description = "Filter by task ID", example = "789")
     @Parameter(name = "taskName", description = "Filter by task title (partial)", example = "Landing page")
     @Parameter(name = "taskCode", description = "Filter by task code (partial)", example = "TASK-001")
-    @Parameter(name = "projectId", description = "Filter by project ID", example = "33")
-    @Parameter(name = "projectName", description = "Filter by project name (partial)", example = "DevQuote")
-    @Parameter(name = "branch", description = "Filter by branch (partial)", example = "feature/")
-    @Parameter(name = "pullRequest", description = "Filter by pull request URL (partial)", example = "github.com")
-    @Parameter(name = "status", description = "Filter by status (partial)", example = "DONE")
-    @Parameter(name = "startedAt", description = "Filter by start date (supports partial: '2025', '2025-08', '2025-08-01')", example = "2025-08")
-    @Parameter(name = "finishedAt", description = "Filter by finish date (supports partial)", example = "2025-08-19")
+    @Parameter(name = "status", description = "Filter by status (partial)", example = "DEVELOPMENT")
     @Parameter(name = "createdAt", description = "Filter by creation date (supports partial)", example = "2025-08")
     @Parameter(name = "updatedAt", description = "Filter by update date (supports partial)", example = "2025-08-19")
     @Parameter(
             name = "sort",
-            description = "Repeatable. Format: field,(asc|desc). Allowed: id,quoteId,taskId,taskName,taskCode,projectId,projectName,branch,pullRequest,status,startedAt,finishedAt,createdAt,updatedAt",
+            description = "Repeatable. Format: field,(asc|desc). Allowed: id,taskId,taskName,taskCode,status,createdAt,updatedAt",
             array = @ArraySchema(schema = @Schema(type = "string", example = "id,desc"))
     )
     ResponseEntity<PagedResponse<DeliveryResponse>> list(
@@ -50,12 +44,7 @@ public interface DeliveryControllerDoc {
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String taskCode,
-            @RequestParam(required = false) String projectName,
-            @RequestParam(required = false) String branch,
-            @RequestParam(required = false) String pullRequest,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String startedAt,
-            @RequestParam(required = false) String finishedAt,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
             @RequestParam MultiValueMap<String, String> params
