@@ -76,8 +76,41 @@ public class DeliveryServiceImpl implements DeliveryService {
             throw new RuntimeException("Delivery already exists for this task");
         }
         
-        Delivery entity = DeliveryAdapter.toEntity(dto, task);
+        // Criar delivery sem itens primeiro
+        Delivery entity = Delivery.builder()
+                .task(task)
+                .status(dto.getStatus() != null ? br.com.devquote.enums.DeliveryStatus.fromString(dto.getStatus()) : br.com.devquote.enums.DeliveryStatus.PENDING)
+                .build();
+        
+        // Salvar delivery primeiro para ter ID gerado
         entity = deliveryRepository.save(entity);
+        
+        // Adicionar itens se fornecidos, fazendo lookup do projeto
+        if (dto.getItems() != null && !dto.getItems().isEmpty()) {
+            final Delivery savedDelivery = entity;
+            dto.getItems().forEach(itemDto -> {
+                Project project = projectRepository.findById(itemDto.getProjectId())
+                        .orElseThrow(() -> new RuntimeException("Project not found with ID: " + itemDto.getProjectId()));
+                
+                var item = br.com.devquote.entity.DeliveryItem.builder()
+                        .delivery(savedDelivery)
+                        .project(project)
+                        .status(itemDto.getStatus() != null ? br.com.devquote.enums.DeliveryStatus.fromString(itemDto.getStatus()) : br.com.devquote.enums.DeliveryStatus.PENDING)
+                        .branch(itemDto.getBranch())
+                        .sourceBranch(itemDto.getSourceBranch())
+                        .pullRequest(itemDto.getPullRequest())
+                        .script(itemDto.getScript())
+                        .notes(itemDto.getNotes())
+                        .startedAt(itemDto.getStartedAt())
+                        .finishedAt(itemDto.getFinishedAt())
+                        .build();
+                
+                savedDelivery.addItem(item);
+            });
+            
+            // Salvar novamente com os itens
+            entity = deliveryRepository.save(entity);
+        }
 
         // Enviar notificação por email
         try {
