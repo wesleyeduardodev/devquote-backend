@@ -35,7 +35,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     private final DeliveryService deliveryService;
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
-            "id", "taskId", "taskName", "taskCode", "status", "createdAt", "updatedAt"
+            "id", "task.id", "task.title", "task.code", "status", "createdAt", "updatedAt"
     );
 
     @Override
@@ -113,6 +113,26 @@ public class DeliveryController implements DeliveryControllerDoc {
     @GetMapping("/grouped")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<PagedResponse<DeliveryGroupResponse>> listGroupedByTask(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String taskName,
+            @RequestParam(required = false) String taskCode,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String createdAt,
+            @RequestParam(required = false) String updatedAt,
+            @RequestParam MultiValueMap<String, String> allParams
+    ) {
+        List<String> sortParams = allParams != null ? allParams.get("sort") : null;
+        Pageable pageable = PageRequest.of(page, size, SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id"));
+        Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTask(
+                taskName, taskCode, status, createdAt, updatedAt, pageable
+        );
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
+    }
+
+    @GetMapping("/grouped-by-task")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<PagedResponse<DeliveryGroupResponse>> listGroupedByTaskAlias(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String taskName,

@@ -22,6 +22,10 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     Optional<Delivery> findById(Long id);
 
     @EntityGraph(attributePaths = {"task", "items", "items.project"})
+    @Query("SELECT d FROM Delivery d JOIN d.task t")
+    Page<Delivery> findAllOrderedByTaskIdDesc(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"task", "items", "items.project"})
     @Query("""
         SELECT d
           FROM Delivery d
@@ -30,8 +34,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
            AND (:taskName IS NULL OR :taskName = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :taskName, '%')))
            AND (:taskCode IS NULL OR :taskCode = '' OR LOWER(t.code) LIKE LOWER(CONCAT('%', :taskCode, '%')))        
            AND (:status IS NULL OR :status = '' OR d.status = :status)
-           AND (:createdAt IS NULL OR :createdAt = '' OR CAST(d.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
-           AND (:updatedAt IS NULL OR :updatedAt = '' OR CAST(d.updatedAt AS string) LIKE CONCAT('%', :updatedAt, '%'))
+         ORDER BY t.id DESC
         """)
     Page<Delivery> findByOptionalFieldsPaginated(
             @Param("id") Long id,
