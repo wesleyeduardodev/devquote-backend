@@ -499,12 +499,12 @@ public class ExcelReportUtils {
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_YELLOW.getIndex());
 
-        // Cabeçalhos reorganizados: Tarefa -> Entrega -> Item (sem IDs e valor, script no final)
+        // Cabeçalhos reorganizados: Tarefa -> Entrega -> Item (sem IDs, valor e datas da entrega, script no final)
         String[] headers = {
             // Dados da Tarefa
             "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Qtd. Subtarefas", "Solicitante",
             // Dados da Entrega
-            "Status Geral da Entrega", "Data Criação Entrega", "Data Atualização Entrega",
+            "Status Geral da Entrega",
             // Dados do Item de Entrega
             "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem", 
             "Pull Request", "Observações", "Data Início", "Data Fim", "Script"
@@ -518,8 +518,8 @@ public class ExcelReportUtils {
             // Aplicar cores diferentes por grupo
             if (i <= 4) {
                 cell.setCellStyle(taskHeaderStyle); // Azul para tarefas
-            } else if (i <= 7) {
-                cell.setCellStyle(deliveryHeaderStyle); // Verde para entregas
+            } else if (i == 5) {
+                cell.setCellStyle(deliveryHeaderStyle); // Verde para entrega
             } else {
                 cell.setCellStyle(itemHeaderStyle); // Amarelo para itens
             }
@@ -537,24 +537,22 @@ public class ExcelReportUtils {
             setCellValue(row, 3, deliveryData.get("subtasks_count"), dataStyle);
             setCellValue(row, 4, deliveryData.get("requester_name"), dataStyle);
 
-            // Dados da entrega
+            // Dados da entrega (sem datas)
             setDeliveryStatusCell(row, 5, deliveryData.get("delivery_status"), dataStyle);
-            setCellValue(row, 6, deliveryData.get("delivery_created_at"), dateStyle);
-            setCellValue(row, 7, deliveryData.get("delivery_updated_at"), dateStyle);
 
             // Dados do item
-            setCellValue(row, 8, deliveryData.get("project_name"), dataStyle);
-            setDeliveryStatusCell(row, 9, deliveryData.get("item_status"), dataStyle);
-            setCellValue(row, 10, deliveryData.get("item_branch"), dataStyle);
-            setCellValue(row, 11, deliveryData.get("item_source_branch"), dataStyle);
-            setCellValue(row, 12, deliveryData.get("item_pull_request"), dataStyle);
-            setCellValue(row, 13, deliveryData.get("item_notes"), dataStyle);
-            setCellValue(row, 14, deliveryData.get("item_started_at"), dateOnlyStyle);
-            setCellValue(row, 15, deliveryData.get("item_finished_at"), dateOnlyStyle);
-            setCellValue(row, 16, deliveryData.get("item_script"), dataStyle); // Script por último
+            setCellValue(row, 6, deliveryData.get("project_name"), dataStyle);
+            setDeliveryStatusCell(row, 7, deliveryData.get("item_status"), dataStyle);
+            setCellValue(row, 8, deliveryData.get("item_branch"), dataStyle);
+            setCellValue(row, 9, deliveryData.get("item_source_branch"), dataStyle);
+            setCellValue(row, 10, deliveryData.get("item_pull_request"), dataStyle);
+            setCellValue(row, 11, deliveryData.get("item_notes"), dataStyle);
+            setCellValue(row, 12, deliveryData.get("item_started_at"), dateOnlyStyle);
+            setCellValue(row, 13, deliveryData.get("item_finished_at"), dateOnlyStyle);
+            setCellValue(row, 14, deliveryData.get("item_script"), dataStyle); // Script por último
         }
 
-        // Ajustar largura das colunas (17 colunas no total - sem IDs e valor)
+        // Ajustar largura das colunas (15 colunas no total - sem IDs, valor e datas da entrega)
         setColumnWidths(sheet, new int[]{
             // Dados da Tarefa
             2500,  // ID Tarefa
@@ -564,8 +562,6 @@ public class ExcelReportUtils {
             6000,  // Solicitante
             // Dados da Entrega
             4000,  // Status Geral da Entrega
-            5000,  // Data Criação Entrega
-            5000,  // Data Atualização Entrega
             // Dados do Item de Entrega
             6000,  // Projeto/Repositório
             3500,  // Status do Item

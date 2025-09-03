@@ -497,7 +497,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public byte[] exportToExcel() throws IOException {
-        // Nova query adaptada para estrutura com DeliveryItem (sem IDs desnecessários e valor)
+        // Nova query adaptada para estrutura com DeliveryItem (sem IDs, valor e datas da entrega)
         String sql = """
             SELECT 
                 t.id as task_id,
@@ -506,8 +506,6 @@ public class DeliveryServiceImpl implements DeliveryService {
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
                 d.status as delivery_status,
-                d.created_at as delivery_created_at,
-                d.updated_at as delivery_updated_at,
                 p.name as project_name,
                 di.status as item_status,
                 di.branch as item_branch,
@@ -538,21 +536,19 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("subtasks_count", row[3]);
             map.put("requester_name", row[4]);
             
-            // Dados da entrega 
+            // Dados da entrega (sem datas)
             map.put("delivery_status", row[5]);
-            map.put("delivery_created_at", row[6]);
-            map.put("delivery_updated_at", row[7]);
             
             // Dados do item de entrega (podem ser múltiplos por tarefa)
-            map.put("project_name", row[8]);
-            map.put("item_status", row[9]);
-            map.put("item_branch", row[10]);
-            map.put("item_source_branch", row[11]);
-            map.put("item_pull_request", row[12]);
-            map.put("item_notes", row[13]);
-            map.put("item_started_at", row[14]);
-            map.put("item_finished_at", row[15]);
-            map.put("item_script", row[16]); // Script por último
+            map.put("project_name", row[6]);
+            map.put("item_status", row[7]);
+            map.put("item_branch", row[8]);
+            map.put("item_source_branch", row[9]);
+            map.put("item_pull_request", row[10]);
+            map.put("item_notes", row[11]);
+            map.put("item_started_at", row[12]);
+            map.put("item_finished_at", row[13]);
+            map.put("item_script", row[14]); // Script por último
             
             return map;
         }).collect(Collectors.toList());
