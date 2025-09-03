@@ -25,11 +25,16 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
            "ORDER BY bpt.id DESC")
     List<BillingPeriodTask> findByBillingPeriodId(@Param("billingPeriodId") Long billingPeriodId);
 
+    // Primeira query: buscar apenas IDs com paginação (sem JOIN FETCH)
+    @Query("SELECT bpt.id FROM BillingPeriodTask bpt WHERE bpt.billingPeriod.id = :billingPeriodId")
+    Page<Long> findIdsByBillingPeriodIdPaginated(@Param("billingPeriodId") Long billingPeriodId, Pageable pageable);
+    
+    // Segunda query: buscar dados completos pelos IDs (com JOIN FETCH)
     @Query("SELECT bpt FROM BillingPeriodTask bpt " +
            "JOIN FETCH bpt.task t " +
            "JOIN FETCH t.requester " +
-           "WHERE bpt.billingPeriod.id = :billingPeriodId")
-    Page<BillingPeriodTask> findByBillingPeriodIdPaginated(@Param("billingPeriodId") Long billingPeriodId, Pageable pageable);
+           "WHERE bpt.id IN :ids ORDER BY bpt.id DESC")
+    List<BillingPeriodTask> findByIdsWithDetails(@Param("ids") List<Long> ids);
 
     @Modifying
     @Query("DELETE FROM BillingPeriodTask bpt WHERE bpt.billingPeriod.id = :billingPeriodId AND bpt.task.id IN :taskIds")

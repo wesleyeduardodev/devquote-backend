@@ -13,6 +13,7 @@ import br.com.devquote.service.BillingPeriodTaskService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -121,8 +122,23 @@ public class BillingPeriodTaskServiceImpl implements BillingPeriodTaskService {
 
     @Override
     public Page<BillingPeriodTaskResponse> findTaskLinksPaginated(Long taskBillingMonthId, Pageable pageable) {
-        Page<BillingPeriodTask> page = billingPeriodTaskRepository.findByBillingPeriodIdPaginated(taskBillingMonthId, pageable);
-        return page.map(BillingPeriodTaskAdapter::toResponseDTO);
+        // 1. Buscar IDs com paginação (sem JOIN FETCH - eficiente)
+        Page<Long> idsPage = billingPeriodTaskRepository.findIdsByBillingPeriodIdPaginated(taskBillingMonthId, pageable);
+        
+        // 2. Se não há resultados, retorna página vazia
+        if (idsPage.getContent().isEmpty()) {
+            return Page.empty(pageable);
+        }
+        
+        // 3. Buscar dados completos pelos IDs (com JOIN FETCH)
+        List<BillingPeriodTask> tasks = billingPeriodTaskRepository.findByIdsWithDetails(idsPage.getContent());
+        
+        // 4. Converter para DTO mantendo a informação de paginação
+        List<BillingPeriodTaskResponse> content = tasks.stream()
+                .map(BillingPeriodTaskAdapter::toResponseDTO)
+                .toList();
+                
+        return new PageImpl<>(content, pageable, idsPage.getTotalElements());
     }
 
     @Override
