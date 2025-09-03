@@ -40,16 +40,27 @@ public interface TaskService {
                                         String updatedAt,
                                         Pageable pageable);
 
-    Page<TaskResponse> findUnlinkedTasksPaginated(Long id,
-                                                 Long requesterId,
-                                                 String requesterName,
-                                                 String title,
-                                                 String description,
-                                                 String code,
-                                                 String link,
-                                                 String createdAt,
-                                                 String updatedAt,
-                                                 Pageable pageable);
+    Page<TaskResponse> findUnlinkedBillingByOptionalFieldsPaginated(Long id,
+                                                                    Long requesterId,
+                                                                    String requesterName,
+                                                                    String title,
+                                                                    String description,
+                                                                    String code,
+                                                                    String link,
+                                                                    String createdAt,
+                                                                    String updatedAt,
+                                                                    Pageable pageable);
+
+    Page<TaskResponse> findUnlinkedDeliveryByOptionalFieldsPaginated(Long id,
+                                                                     Long requesterId,
+                                                                     String requesterName,
+                                                                     String title,
+                                                                     String description,
+                                                                     String code,
+                                                                     String link,
+                                                                     String createdAt,
+                                                                     String updatedAt,
+                                                                     Pageable pageable);
     
     byte[] exportTasksToExcel() throws IOException;
     

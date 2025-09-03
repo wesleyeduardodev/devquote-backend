@@ -71,9 +71,9 @@ public class TaskController implements TaskControllerDoc {
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
     }
 
-    @GetMapping("/unlinked")
+    @GetMapping("/unlinked-billing")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PagedResponse<TaskResponse>> listUnlinked(
+    public ResponseEntity<PagedResponse<TaskResponse>> findUnlinkedBillingByOptionalFieldsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
@@ -95,7 +95,38 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        Page<TaskResponse> pageResult = taskService.findUnlinkedTasksPaginated(
+        Page<TaskResponse> pageResult = taskService.findUnlinkedBillingByOptionalFieldsPaginated(
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
+        );
+
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
+    }
+
+    @GetMapping("/unlinked-delivery")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<PagedResponse<TaskResponse>> findUnlinkedDeliveryByOptionalFieldsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) Long requesterId,
+            @RequestParam(required = false) String requesterName,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String link,
+            @RequestParam(required = false) String createdAt,
+            @RequestParam(required = false) String updatedAt,
+            @RequestParam(required = false) MultiValueMap<String, String> params
+    ) {
+        List<String> sortParams = params != null ? params.get("sort") : null;
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
+        );
+
+        Page<TaskResponse> pageResult = taskService.findUnlinkedDeliveryByOptionalFieldsPaginated(
                 id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
         );
 

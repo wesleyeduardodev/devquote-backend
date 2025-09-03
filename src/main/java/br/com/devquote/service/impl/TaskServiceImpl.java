@@ -357,18 +357,36 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Page<TaskResponse> findUnlinkedTasksPaginated(Long id,
-                                                        Long requesterId,
-                                                        String requesterName,
-                                                        String title,
-                                                        String description,
-                                                        String code,
-                                                        String link,
-                                                        String createdAt,
-                                                        String updatedAt,
-                                                        Pageable pageable) {
+    public Page<TaskResponse> findUnlinkedBillingByOptionalFieldsPaginated(Long id,
+                                                                           Long requesterId,
+                                                                           String requesterName,
+                                                                           String title,
+                                                                           String description,
+                                                                           String code,
+                                                                           String link,
+                                                                           String createdAt,
+                                                                           String updatedAt,
+                                                                           Pageable pageable) {
 
-        Page<Task> page = taskRepository.findUnlinkedTasksByOptionalFieldsPaginated(
+        Page<Task> page = taskRepository.findUnlinkedBillingByOptionalFieldsPaginated(
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
+        );
+        return buildTaskResponsePage(page, pageable);
+    }
+
+    @Override
+    public Page<TaskResponse> findUnlinkedDeliveryByOptionalFieldsPaginated(Long id,
+                                                                            Long requesterId,
+                                                                            String requesterName,
+                                                                            String title,
+                                                                            String description,
+                                                                            String code,
+                                                                            String link,
+                                                                            String createdAt,
+                                                                            String updatedAt,
+                                                                            Pageable pageable) {
+
+        Page<Task> page = taskRepository.findUnlinkedDeliveryByOptionalFieldsPaginated(
                 id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
         );
         return buildTaskResponsePage(page, pageable);
