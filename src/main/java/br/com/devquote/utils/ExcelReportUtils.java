@@ -450,12 +450,12 @@ public class ExcelReportUtils {
         if (status == null) return "";
         return switch (status.toUpperCase()) {
             case "PENDING" -> "Pendente";
-            case "DEVELOPMENT" -> "Em Desenvolvimento";
+            case "DEVELOPMENT" -> "Desenvolvimento";
             case "DELIVERED" -> "Entregue";
-            case "HOMOLOGATION" -> "Em Homologação";
+            case "HOMOLOGATION" -> "Homologação";
             case "APPROVED" -> "Aprovado";
             case "REJECTED" -> "Rejeitado";
-            case "PRODUCTION" -> "Em Produção";
+            case "PRODUCTION" -> "Produção";
             default -> status;
         };
     }
