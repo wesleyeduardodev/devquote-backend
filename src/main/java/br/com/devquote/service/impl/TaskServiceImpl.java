@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -110,6 +111,11 @@ public class TaskServiceImpl implements TaskService {
         log.debug("TASK CREATE requesterId={} title={} user={}",
             dto.getRequesterId(), dto.getTitle(), currentUser.getUsername());
 
+        // Verificar se o código já existe ANTES de tentar salvar
+        if (taskRepository.existsByCode(dto.getCode())) {
+            throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
+        }
+
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitante", dto.getRequesterId()));
 
@@ -117,7 +123,15 @@ public class TaskServiceImpl implements TaskService {
         entity.setCreatedBy(currentUser);
         entity.setUpdatedBy(currentUser);
 
-        entity = taskRepository.save(entity);
+        try {
+            entity = taskRepository.save(entity);
+        } catch (DataIntegrityViolationException e) {
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && (errorMessage.contains("uk_task_code") || errorMessage.contains("code"))) {
+                throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
+            }
+            throw new BusinessException("Erro ao salvar tarefa: " + e.getMessage(), "TASK_SAVE_ERROR");
+        }
 
         // Criar entrega automaticamente para a nova tarefa
         ensureTaskHasDelivery(entity);
@@ -135,22 +149,35 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskResponse update(Long id, TaskRequest dto) {
         Task entity = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa", id));
 
         validateTaskAccess(entity, "editar");
 
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
-            throw new RuntimeException("Usuário não autenticado");
+            throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
+        }
+
+        // Verificar se o código já existe em outra tarefa ANTES de tentar salvar
+        if (taskRepository.existsByCodeAndIdNot(dto.getCode(), id)) {
+            throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
         }
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
-                .orElseThrow(() -> new RuntimeException("Requester not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitante", dto.getRequesterId()));
 
         TaskAdapter.updateEntityFromDto(dto, entity, requester);
         entity.setUpdatedBy(currentUser);
 
-        entity = taskRepository.save(entity);
+        try {
+            entity = taskRepository.save(entity);
+        } catch (DataIntegrityViolationException e) {
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && (errorMessage.contains("uk_task_code") || errorMessage.contains("code"))) {
+                throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
+            }
+            throw new BusinessException("Erro ao salvar tarefa: " + e.getMessage(), "TASK_SAVE_ERROR");
+        }
 
         // Verificar e criar entrega se não existir
         ensureTaskHasDelivery(entity);

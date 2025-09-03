@@ -13,6 +13,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT t FROM Task t ORDER BY t.id ASC")
     List<Task> findAllOrderedById();
+    
+    boolean existsByCode(String code);
+    
+    boolean existsByCodeAndIdNot(String code, Long id);
 
     @Query("""
             SELECT t FROM Task t

@@ -8,7 +8,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "task")
+@Table(name = "task", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_task_code", columnNames = "code")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,7 +30,7 @@ public class Task {
     @Column(length = 200)
     private String description;
 
-    @Column(nullable = false, length = 100, unique = true)
+    @Column(nullable = false, length = 100)
     private String code;
 
     @Column(length = 200)
