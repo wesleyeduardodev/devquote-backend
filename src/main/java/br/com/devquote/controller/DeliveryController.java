@@ -191,7 +191,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         byte[] excelData = deliveryService.exportToExcel();
         
         String filename = "relatorio_entregas_" + 
-                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + 
+                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) + 
                          ".xlsx";
         
         HttpHeaders headers = new HttpHeaders();
