@@ -87,7 +87,7 @@ public class ExcelReportUtils {
                 setCellValue(row, 1, taskData.get("task_code"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_title"), dataStyle);
                 setCellValue(row, 3, taskData.get("task_description"), dataStyle);
-                setCellValue(row, 4, taskData.get("task_type"), dataStyle);
+                setTaskTypeCell(row, 4, taskData.get("task_type"), dataStyle);
                 setPriorityCell(row, 5, taskData.get("task_priority"), dataStyle);
                 setCellValue(row, 6, taskData.get("requester_name"), dataStyle);
                 setCellValue(row, 7, taskData.get("created_by_user"), dataStyle);
@@ -113,7 +113,7 @@ public class ExcelReportUtils {
                 setCellValue(row, 1, taskData.get("task_code"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_title"), dataStyle);
                 setCellValue(row, 3, taskData.get("task_description"), dataStyle);
-                setCellValue(row, 4, taskData.get("task_type"), dataStyle);
+                setTaskTypeCell(row, 4, taskData.get("task_type"), dataStyle);
                 setPriorityCell(row, 5, taskData.get("task_priority"), dataStyle);
                 setCellValue(row, 6, taskData.get("requester_name"), dataStyle);
                 setCellValue(row, 7, taskData.get("created_by_user"), dataStyle);
@@ -425,6 +425,19 @@ public class ExcelReportUtils {
         }
     }
 
+    private void setTaskTypeCell(Row row, int columnIndex, Object value, CellStyle style) {
+        Cell cell = row.createCell(columnIndex);
+        cell.setCellStyle(style);
+
+        if (value == null) {
+            cell.setCellValue("");
+        } else {
+            String taskType = value.toString();
+            String translatedTaskType = translateTaskType(taskType);
+            cell.setCellValue(translatedTaskType);
+        }
+    }
+
     private String translateStatus(String status) {
         if (status == null) return "";
         return switch (status.toUpperCase()) {
@@ -442,6 +455,12 @@ public class ExcelReportUtils {
             case "INACTIVE" -> "Inativa";
             case "PAUSED" -> "Pausada";
             case "REOPENED" -> "Reaberta";
+            // Status de Faturamento (conforme interface)
+            case "PENDENTE" -> "Pendente";
+            case "FATURADO" -> "Faturado";
+            case "PAGO" -> "Pago";
+            case "ATRASADO" -> "Atrasado";
+            case "CANCELADO" -> "Cancelado";
             default -> status;
         };
     }
@@ -480,6 +499,23 @@ public class ExcelReportUtils {
             case "IMMEDIATE" -> "Imediata";
             case "NORMAL" -> "Normal";
             default -> priority;
+        };
+    }
+
+    private String translateTaskType(String taskType) {
+        if (taskType == null) return "";
+        return switch (taskType.toUpperCase()) {
+            case "BUG" -> "Erro";
+            case "ENHANCEMENT" -> "Melhoria";
+            case "NEW_FEATURE" -> "Nova Funcionalidade";
+            case "FEATURE" -> "Funcionalidade";
+            case "REFACTOR" -> "Refatoração";
+            case "DOCUMENTATION" -> "Documentação";
+            case "MAINTENANCE" -> "Manutenção";
+            case "HOTFIX" -> "Correção Urgente";
+            case "RESEARCH" -> "Pesquisa";
+            case "TASK" -> "Tarefa";
+            default -> taskType;
         };
     }
 

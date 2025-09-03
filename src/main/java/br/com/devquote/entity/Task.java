@@ -60,7 +60,7 @@ public class Task {
 
     @Column(name = "priority", length = 20)
     @Builder.Default
-    private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH, URGENT
+    private String priority = "MEDIUM";
 
     @Column(name = "financial_email_sent")
     @Builder.Default
