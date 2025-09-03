@@ -393,10 +393,12 @@ public class DeliveryServiceImpl implements DeliveryService {
                 task.getId(); // Inicializa Task
             }
             
-            // Calcular status baseado nos itens (ou PENDING se não tiver itens)
+            // Calcular status e contagem de itens
             String calculatedStatus = "PENDING";
+            int totalItems = 0;
+            
             if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
-                delivery.getItems().size(); // Inicializa Items
+                totalItems = delivery.getItems().size(); // Inicializa Items e conta
                 delivery.updateStatus(); // Atualiza status baseado nos itens
                 calculatedStatus = delivery.getStatus().name();
             }
@@ -406,6 +408,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                     .taskName(task != null ? task.getTitle() : null)
                     .taskCode(task != null ? task.getCode() : null)
                     .deliveryStatus(calculatedStatus)
+                    .calculatedDeliveryStatus(calculatedStatus) // Status calculado para exibição
+                    .totalItems(totalItems) // Quantidade de itens
                     .taskValue(task != null ? task.getAmount() : null)
                     .createdAt(delivery.getCreatedAt())
                     .updatedAt(delivery.getUpdatedAt())

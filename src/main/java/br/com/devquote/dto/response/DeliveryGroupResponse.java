@@ -27,6 +27,11 @@ public class DeliveryGroupResponse {
 
     private LocalDateTime updatedAt;
 
+    // Novos campos para exibição na listagem
+    private Integer totalItems;
+
+    private String calculatedDeliveryStatus;
+
     // Novos campos com contadores por status
     private DeliveryStatusCount statusCounts;
 

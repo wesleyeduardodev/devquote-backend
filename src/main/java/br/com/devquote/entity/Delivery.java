@@ -64,24 +64,33 @@ public class Delivery {
             return itemStatuses.get(0);
         }
 
-        // Se há status mistos, verificamos a prioridade (maior progresso)
-        if (itemStatuses.contains(DeliveryStatus.PRODUCTION)) {
-            return DeliveryStatus.PRODUCTION;
-        }
-        if (itemStatuses.contains(DeliveryStatus.APPROVED)) {
-            return DeliveryStatus.APPROVED;
-        }
-        if (itemStatuses.contains(DeliveryStatus.DELIVERED)) {
-            return DeliveryStatus.DELIVERED;
-        }
-        if (itemStatuses.contains(DeliveryStatus.HOMOLOGATION)) {
-            return DeliveryStatus.HOMOLOGATION;
-        }
+        // Se há status mistos, verificamos a prioridade (menor progresso prevalece)
+        // Se pelo menos um está em desenvolvimento, a entrega fica em desenvolvimento
         if (itemStatuses.contains(DeliveryStatus.DEVELOPMENT)) {
             return DeliveryStatus.DEVELOPMENT;
         }
+        // Se pelo menos um está pendente (e não há desenvolvimento), fica pendente
+        if (itemStatuses.contains(DeliveryStatus.PENDING)) {
+            return DeliveryStatus.PENDING;
+        }
+        // Se pelo menos um foi rejeitado, fica rejeitado
         if (itemStatuses.contains(DeliveryStatus.REJECTED)) {
             return DeliveryStatus.REJECTED;
+        }
+        // Se pelo menos um está em homologação, fica em homologação
+        if (itemStatuses.contains(DeliveryStatus.HOMOLOGATION)) {
+            return DeliveryStatus.HOMOLOGATION;
+        }
+        // Se pelo menos um está entregue, fica entregue
+        if (itemStatuses.contains(DeliveryStatus.DELIVERED)) {
+            return DeliveryStatus.DELIVERED;
+        }
+        // Se chegou aqui, só restam aprovados e produção
+        if (itemStatuses.contains(DeliveryStatus.APPROVED)) {
+            return DeliveryStatus.APPROVED;
+        }
+        if (itemStatuses.contains(DeliveryStatus.PRODUCTION)) {
+            return DeliveryStatus.PRODUCTION;
         }
 
         return DeliveryStatus.PENDING;
