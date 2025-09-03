@@ -733,8 +733,6 @@ public class TaskServiceImpl implements TaskService {
                 t.priority as task_priority,
                 t.amount as task_amount,
                 r.name as requester_name,
-                t.created_at as task_created_at,
-                t.updated_at as task_updated_at,
                 
                 -- METADADOS DA TAREFA
                 cb.username as created_by_name,
@@ -752,16 +750,25 @@ public class TaskServiceImpl implements TaskService {
                 NULL as quote_amount,
                 NULL as quote_created_at,
                 
-                -- DADOS DE ENTREGAS (LEFT JOIN direto para múltiplas linhas)
+                -- DADOS DE ENTREGAS (LEFT JOIN com nova arquitetura)
                 d.id as delivery_id,
-                d.status as delivery_status,
+                CASE d.status 
+                    WHEN 'PENDING' THEN 'Pendente'
+                    WHEN 'DEVELOPMENT' THEN 'Em Desenvolvimento' 
+                    WHEN 'DELIVERED' THEN 'Entregue'
+                    WHEN 'HOMOLOGATION' THEN 'Homologação'
+                    WHEN 'APPROVED' THEN 'Aprovado'
+                    WHEN 'REJECTED' THEN 'Rejeitado'
+                    WHEN 'PRODUCTION' THEN 'Produção'
+                    ELSE d.status
+                END as delivery_status,
                 p.name as project_name,
-                d.pull_request as delivery_pull_request,
-                d.branch as delivery_branch,
-                d.script as delivery_script,
-                d.notes as delivery_notes,
-                d.started_at as delivery_started_at,
-                d.finished_at as delivery_finished_at,
+                di.pull_request as delivery_pull_request,
+                di.branch as delivery_branch,
+                di.script as delivery_script,
+                di.notes as delivery_notes,
+                di.started_at as delivery_started_at,
+                di.finished_at as delivery_finished_at,
                 
                 -- DADOS DE FATURAMENTO
                 bp.year as billing_year,
@@ -773,10 +780,11 @@ public class TaskServiceImpl implements TaskService {
             LEFT JOIN users cb ON t.created_by = cb.id
             LEFT JOIN users ub ON t.updated_by = ub.id
             LEFT JOIN delivery d ON d.task_id = t.id
-            LEFT JOIN project p ON d.project_id = p.id
+            LEFT JOIN delivery_item di ON di.delivery_id = d.id
+            LEFT JOIN project p ON di.project_id = p.id
             LEFT JOIN billing_period_task bpt ON bpt.task_id = t.id
             LEFT JOIN billing_period bp ON bpt.billing_period_id = bp.id
-            ORDER BY t.id DESC, d.id ASC, bp.id ASC
+            ORDER BY t.id DESC, d.id ASC, di.id ASC, bp.id ASC
         """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -786,7 +794,7 @@ public class TaskServiceImpl implements TaskService {
         List<Map<String, Object>> data = results.stream().map(row -> {
             Map<String, Object> map = new HashMap<>();
 
-            // DADOS DA TAREFA (0-8) - status removed
+            // DADOS DA TAREFA (0-6) - datas removidas
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
@@ -794,40 +802,38 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_priority", row[4]);
             map.put("task_amount", row[5]);
             map.put("requester_name", row[6]);
-            map.put("task_created_at", row[7]);
-            map.put("task_updated_at", row[8]);
 
-            // METADADOS DA TAREFA (9-12)
-            map.put("created_by_name", row[9]);
-            map.put("updated_by_name", row[10]);
-            map.put("task_server_origin", row[11]);
-            map.put("task_system_module", row[12]);
+            // METADADOS DA TAREFA (7-10)
+            map.put("created_by_name", row[7]);
+            map.put("updated_by_name", row[8]);
+            map.put("task_server_origin", row[9]);
+            map.put("task_system_module", row[10]);
 
-            // STATUS DE ENTREGA E FATURAMENTO (13-14)
-            map.put("has_delivery", row[13]);
-            map.put("has_quote_in_billing", row[14]);
+            // STATUS DE ENTREGA E FATURAMENTO (11-12)
+            map.put("has_delivery", row[11]);
+            map.put("has_quote_in_billing", row[12]);
 
-            // DADOS REMOVIDOS - ORÇAMENTO (15-18)
-            map.put("quote_id", row[15]);
-            map.put("quote_status", row[16]);
-            map.put("quote_amount", row[17]);
-            map.put("quote_created_at", row[18]);
+            // DADOS REMOVIDOS - ORÇAMENTO (13-16)
+            map.put("quote_id", row[13]);
+            map.put("quote_status", row[14]);
+            map.put("quote_amount", row[15]);
+            map.put("quote_created_at", row[16]);
 
-            // DADOS DE ENTREGAS (19-27) - Pull Request reorganizado + notas
-            map.put("delivery_id", row[19]);
-            map.put("delivery_status", row[20]);
-            map.put("project_name", row[21]);
-            map.put("delivery_pull_request", row[22]); // Link da entrega
-            map.put("delivery_branch", row[23]);
-            map.put("delivery_script", row[24]);
-            map.put("delivery_notes", row[25]); // Nova coluna de notas
-            map.put("delivery_started_at", row[26]);
-            map.put("delivery_finished_at", row[27]);
+            // DADOS DE ENTREGAS (17-25) - Pull Request reorganizado + notas + status traduzido
+            map.put("delivery_id", row[17]);
+            map.put("delivery_status", row[18]); // Status já traduzido na query
+            map.put("project_name", row[19]);
+            map.put("delivery_pull_request", row[20]); // Link da entrega
+            map.put("delivery_branch", row[21]);
+            map.put("delivery_script", row[22]);
+            map.put("delivery_notes", row[23]); // Nova coluna de notas
+            map.put("delivery_started_at", row[24]);
+            map.put("delivery_finished_at", row[25]);
 
-            // DADOS DE FATURAMENTO (28-30) - No final
-            map.put("billing_year", row[28]);
-            map.put("billing_month", row[29]);
-            map.put("billing_status", row[30]);
+            // DADOS DE FATURAMENTO (26-28) - No final
+            map.put("billing_year", row[26]);
+            map.put("billing_month", row[27]);
+            map.put("billing_status", row[28]);
 
             return map;
         }).collect(Collectors.toList());
@@ -846,15 +852,13 @@ public class TaskServiceImpl implements TaskService {
         // Query sem dados de orçamento, faturamento e valor da tarefa
         String sql = """
             SELECT 
-                -- DADOS DA TAREFA (sem valor)
+                -- DADOS DA TAREFA (sem valor, sem datas)
                 t.id as task_id,
                 t.code as task_code,
                 t.title as task_title,
                 t.description as task_description,
                 t.priority as task_priority,
                 r.name as requester_name,
-                t.created_at as task_created_at,
-                t.updated_at as task_updated_at,
                 
                 -- METADADOS DA TAREFA
                 cb.username as created_by_name,
@@ -862,28 +866,37 @@ public class TaskServiceImpl implements TaskService {
                 t.server_origin as task_server_origin,
                 t.system_module as task_system_module,
                 
-                -- STATUS DE ENTREGA E FATURAMENTO
+                -- STATUS DE ENTREGA (sem faturamento para USER)
                 CASE WHEN EXISTS(SELECT 1 FROM delivery d2 WHERE d2.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_delivery,
-                CASE WHEN EXISTS(SELECT 1 FROM billing_period_task bpt WHERE bpt.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
                 
-                -- DADOS DE ENTREGAS
+                -- DADOS DE ENTREGAS (nova arquitetura com status traduzido)
                 d.id as delivery_id,
-                d.status as delivery_status,
+                CASE d.status 
+                    WHEN 'PENDING' THEN 'Pendente'
+                    WHEN 'DEVELOPMENT' THEN 'Em Desenvolvimento' 
+                    WHEN 'DELIVERED' THEN 'Entregue'
+                    WHEN 'HOMOLOGATION' THEN 'Homologação'
+                    WHEN 'APPROVED' THEN 'Aprovado'
+                    WHEN 'REJECTED' THEN 'Rejeitado'
+                    WHEN 'PRODUCTION' THEN 'Produção'
+                    ELSE d.status
+                END as delivery_status,
                 p.name as project_name,
-                d.pull_request as delivery_pull_request,
-                d.branch as delivery_branch,
-                d.script as delivery_script,
-                d.notes as delivery_notes,
-                d.started_at as delivery_started_at,
-                d.finished_at as delivery_finished_at
+                di.pull_request as delivery_pull_request,
+                di.branch as delivery_branch,
+                di.script as delivery_script,
+                di.notes as delivery_notes,
+                di.started_at as delivery_started_at,
+                di.finished_at as delivery_finished_at
                 
             FROM task t
             INNER JOIN requester r ON t.requester_id = r.id
             LEFT JOIN users cb ON t.created_by = cb.id
             LEFT JOIN users ub ON t.updated_by = ub.id
             LEFT JOIN delivery d ON d.task_id = t.id
-            LEFT JOIN project p ON d.project_id = p.id
-            ORDER BY t.id DESC, d.id ASC
+            LEFT JOIN delivery_item di ON di.delivery_id = d.id
+            LEFT JOIN project p ON di.project_id = p.id
+            ORDER BY t.id DESC, d.id ASC, di.id ASC
         """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -893,36 +906,33 @@ public class TaskServiceImpl implements TaskService {
         List<Map<String, Object>> data = results.stream().map(row -> {
             Map<String, Object> map = new HashMap<>();
 
-            // DADOS DA TAREFA (0-7) - sem valor e sem status
+            // DADOS DA TAREFA (0-5) - sem valor, sem datas
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
             map.put("task_description", row[3]);
             map.put("task_priority", row[4]);
             map.put("requester_name", row[5]);
-            map.put("task_created_at", row[6]);
-            map.put("task_updated_at", row[7]);
 
-            // METADADOS DA TAREFA (8-11)
-            map.put("created_by_name", row[8]);
-            map.put("updated_by_name", row[9]);
-            map.put("task_server_origin", row[10]);
-            map.put("task_system_module", row[11]);
+            // METADADOS DA TAREFA (6-9)
+            map.put("created_by_name", row[6]);
+            map.put("updated_by_name", row[7]);
+            map.put("task_server_origin", row[8]);
+            map.put("task_system_module", row[9]);
 
-            // STATUS DE ENTREGA E FATURAMENTO (12-13)
-            map.put("has_delivery", row[12]);
-            map.put("has_quote_in_billing", row[13]);
+            // STATUS DE ENTREGA (10) - sem faturamento para USER
+            map.put("has_delivery", row[10]);
 
-            // DADOS DE ENTREGAS (14-22)
-            map.put("delivery_id", row[14]);
-            map.put("delivery_status", row[15]);
-            map.put("project_name", row[16]);
-            map.put("delivery_pull_request", row[17]);
-            map.put("delivery_branch", row[18]);
-            map.put("delivery_script", row[19]);
-            map.put("delivery_notes", row[20]); // Nova coluna de notas
-            map.put("delivery_started_at", row[21]);
-            map.put("delivery_finished_at", row[22]);
+            // DADOS DE ENTREGAS (11-19) - status já traduzido
+            map.put("delivery_id", row[11]);
+            map.put("delivery_status", row[12]); // Status já traduzido na query
+            map.put("project_name", row[13]);
+            map.put("delivery_pull_request", row[14]);
+            map.put("delivery_branch", row[15]);
+            map.put("delivery_script", row[16]);
+            map.put("delivery_notes", row[17]); // Nova coluna de notas
+            map.put("delivery_started_at", row[18]);
+            map.put("delivery_finished_at", row[19]);
 
             return map;
         }).collect(Collectors.toList());
