@@ -497,30 +497,32 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public byte[] exportToExcel() throws IOException {
+        // Nova query adaptada para estrutura com DeliveryItem (sem IDs desnecessários e valor)
         String sql = """
             SELECT 
                 t.id as task_id,
                 t.code as task_code,
                 t.title as task_title,
-                t.amount as task_amount,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
-                d.id as delivery_id,
                 d.status as delivery_status,
-                p.name as project_name,
-                d.pull_request,
-                d.branch,
-                d.script,
-                d.notes,
-                d.started_at,
-                d.finished_at,
                 d.created_at as delivery_created_at,
-                d.updated_at as delivery_updated_at
+                d.updated_at as delivery_updated_at,
+                p.name as project_name,
+                di.status as item_status,
+                di.branch as item_branch,
+                di.source_branch as item_source_branch,
+                di.pull_request as item_pull_request,
+                di.notes as item_notes,
+                di.started_at as item_started_at,
+                di.finished_at as item_finished_at,
+                di.script as item_script
             FROM delivery d
-            INNER JOIN project p ON d.project_id = p.id
             INNER JOIN task t ON d.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
-            ORDER BY t.id DESC
+            LEFT JOIN delivery_item di ON di.delivery_id = d.id
+            LEFT JOIN project p ON di.project_id = p.id
+            ORDER BY t.id DESC, d.id DESC, di.id ASC
         """;
 
         Query query = entityManager.createNativeQuery(sql);
@@ -529,25 +531,29 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         List<Map<String, Object>> data = results.stream().map(row -> {
             Map<String, Object> map = new HashMap<>();
-            // Dados da tarefa primeiro
+            // Dados da tarefa primeiro (colunas básicas)
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
-            map.put("task_amount", row[3]);
-            map.put("subtasks_count", row[4]);
-            map.put("requester_name", row[5]);
-            // Dados da entrega depois
-            map.put("delivery_id", row[6]);
-            map.put("delivery_status", row[7]);
+            map.put("subtasks_count", row[3]);
+            map.put("requester_name", row[4]);
+            
+            // Dados da entrega 
+            map.put("delivery_status", row[5]);
+            map.put("delivery_created_at", row[6]);
+            map.put("delivery_updated_at", row[7]);
+            
+            // Dados do item de entrega (podem ser múltiplos por tarefa)
             map.put("project_name", row[8]);
-            map.put("pull_request", row[9]);
-            map.put("branch", row[10]);
-            map.put("script", row[11]);
-            map.put("notes", row[12]);
-            map.put("started_at", row[13]);
-            map.put("finished_at", row[14]);
-            map.put("delivery_created_at", row[15]);
-            map.put("delivery_updated_at", row[16]);
+            map.put("item_status", row[9]);
+            map.put("item_branch", row[10]);
+            map.put("item_source_branch", row[11]);
+            map.put("item_pull_request", row[12]);
+            map.put("item_notes", row[13]);
+            map.put("item_started_at", row[14]);
+            map.put("item_finished_at", row[15]);
+            map.put("item_script", row[16]); // Script por último
+            
             return map;
         }).collect(Collectors.toList());
 
