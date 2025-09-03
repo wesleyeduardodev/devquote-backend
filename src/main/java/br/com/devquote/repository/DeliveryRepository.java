@@ -84,4 +84,20 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         GROUP BY d.id, d.status, t.id, t.title, t.code, t.amount, t.created_at, t.updated_at
         """, nativeQuery = true)
     Object[] findDeliveryGroupByTaskIdOptimized(@Param("taskId") Long taskId);
+
+    /**
+     * Query para obter estatísticas globais de todas as entregas agrupadas por status da delivery (não dos itens)
+     */
+    @Query(value = """
+        SELECT 
+            SUM(CASE WHEN d.status = 'PENDING' THEN 1 ELSE 0 END) as pending_count,
+            SUM(CASE WHEN d.status = 'DEVELOPMENT' THEN 1 ELSE 0 END) as development_count,
+            SUM(CASE WHEN d.status = 'DELIVERED' THEN 1 ELSE 0 END) as delivered_count,
+            SUM(CASE WHEN d.status = 'HOMOLOGATION' THEN 1 ELSE 0 END) as homologation_count,
+            SUM(CASE WHEN d.status = 'APPROVED' THEN 1 ELSE 0 END) as approved_count,
+            SUM(CASE WHEN d.status = 'REJECTED' THEN 1 ELSE 0 END) as rejected_count,
+            SUM(CASE WHEN d.status = 'PRODUCTION' THEN 1 ELSE 0 END) as production_count
+        FROM delivery d
+        """, nativeQuery = true)
+    Object[] findGlobalDeliveryStatistics();
 }

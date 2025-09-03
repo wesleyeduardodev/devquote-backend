@@ -3,9 +3,11 @@ import br.com.devquote.adapter.DeliveryAdapter;
 import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.dto.response.DeliveryGroupResponse;
+import br.com.devquote.dto.response.DeliveryStatusCount;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Project;
 import br.com.devquote.entity.Task;
+import br.com.devquote.enums.DeliveryStatus;
 import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.repository.ProjectRepository;
 import br.com.devquote.repository.TaskRepository;
@@ -24,10 +26,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -559,6 +558,80 @@ public class DeliveryServiceImpl implements DeliveryService {
     @Override
     public boolean existsByTaskId(Long taskId) {
         return deliveryRepository.existsByTaskId(taskId);
+    }
+
+    @Override
+    public DeliveryStatusCount getGlobalStatistics() {
+        log.info("Executando query de estatísticas globais...");
+        
+        // Método de debug: contar manualmente primeiro
+        List<Delivery> allDeliveries = deliveryRepository.findAll();
+        log.info("Total de deliveries no banco: {}", allDeliveries.size());
+        
+        Map<DeliveryStatus, Integer> counts = new HashMap<>();
+        for (Delivery delivery : allDeliveries) {
+            counts.put(delivery.getStatus(), counts.getOrDefault(delivery.getStatus(), 0) + 1);
+        }
+        log.info("Contagem manual por status: {}", counts);
+        
+        // Agora executar a query original
+        Object[] result = deliveryRepository.findGlobalDeliveryStatistics();
+        log.info("Resultado da query: {}", result != null ? Arrays.toString(result) : "null");
+        
+        if (result == null || result.length < 7) {
+            log.warn("Query retornou dados insuficientes. Usando contagem manual.");
+            // Usar contagem manual como fallback
+            return DeliveryStatusCount.builder()
+                    .pending(counts.getOrDefault(DeliveryStatus.PENDING, 0))
+                    .development(counts.getOrDefault(DeliveryStatus.DEVELOPMENT, 0))
+                    .delivered(counts.getOrDefault(DeliveryStatus.DELIVERED, 0))
+                    .homologation(counts.getOrDefault(DeliveryStatus.HOMOLOGATION, 0))
+                    .approved(counts.getOrDefault(DeliveryStatus.APPROVED, 0))
+                    .rejected(counts.getOrDefault(DeliveryStatus.REJECTED, 0))
+                    .production(counts.getOrDefault(DeliveryStatus.PRODUCTION, 0))
+                    .build();
+        }
+        
+        DeliveryStatusCount stats = DeliveryStatusCount.builder()
+                .pending(result[0] != null ? ((Number) result[0]).intValue() : 0)
+                .development(result[1] != null ? ((Number) result[1]).intValue() : 0)
+                .delivered(result[2] != null ? ((Number) result[2]).intValue() : 0)
+                .homologation(result[3] != null ? ((Number) result[3]).intValue() : 0)
+                .approved(result[4] != null ? ((Number) result[4]).intValue() : 0)
+                .rejected(result[5] != null ? ((Number) result[5]).intValue() : 0)
+                .production(result[6] != null ? ((Number) result[6]).intValue() : 0)
+                .build();
+        
+        log.info("Estatísticas calculadas pela query: {}", stats);
+        log.info("Estatísticas calculadas manualmente: pending={}, development={}", 
+            counts.getOrDefault(DeliveryStatus.PENDING, 0), 
+            counts.getOrDefault(DeliveryStatus.DEVELOPMENT, 0));
+        
+        return stats;
+    }
+
+    @Override
+    @Transactional
+    public void updateAllDeliveryStatuses() {
+        log.info("Atualizando status de todas as entregas...");
+        
+        List<Delivery> deliveries = deliveryRepository.findAll();
+        int updated = 0;
+        
+        for (Delivery delivery : deliveries) {
+            DeliveryStatus oldStatus = delivery.getStatus();
+            delivery.updateStatus();
+            DeliveryStatus newStatus = delivery.getStatus();
+            
+            if (oldStatus != newStatus) {
+                deliveryRepository.save(delivery);
+                updated++;
+                log.debug("Delivery ID {} status updated: {} -> {}", 
+                    delivery.getId(), oldStatus, newStatus);
+            }
+        }
+        
+        log.info("Status de {} entregas foram atualizados", updated);
     }
 
     /**

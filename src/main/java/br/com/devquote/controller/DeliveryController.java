@@ -4,6 +4,7 @@ import br.com.devquote.controller.doc.DeliveryControllerDoc;
 import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.dto.response.DeliveryGroupResponse;
+import br.com.devquote.dto.response.DeliveryStatusCount;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.service.DeliveryService;
 import br.com.devquote.utils.SortUtils;
@@ -183,6 +184,20 @@ public class DeliveryController implements DeliveryControllerDoc {
     public ResponseEntity<DeliveryGroupResponse> getGroupDetailsOptimized(@PathVariable Long taskId) {
         DeliveryGroupResponse groupDetails = deliveryService.findGroupDetailsByTaskIdOptimized(taskId);
         return ResponseEntity.ok(groupDetails);
+    }
+
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<DeliveryStatusCount> getGlobalStatistics() {
+        DeliveryStatusCount statistics = deliveryService.getGlobalStatistics();
+        return ResponseEntity.ok(statistics);
+    }
+
+    @PostMapping("/update-all-statuses")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> updateAllDeliveryStatuses() {
+        deliveryService.updateAllDeliveryStatuses();
+        return ResponseEntity.ok("Status de todas as entregas foram atualizados");
     }
 
     @GetMapping("/export/excel")

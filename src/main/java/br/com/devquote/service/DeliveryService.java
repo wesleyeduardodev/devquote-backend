@@ -2,6 +2,7 @@ package br.com.devquote.service;
 import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.dto.response.DeliveryGroupResponse;
+import br.com.devquote.dto.response.DeliveryStatusCount;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.io.IOException;
@@ -50,6 +51,10 @@ public interface DeliveryService {
     DeliveryGroupResponse findGroupDetailsByTaskIdOptimized(Long taskId);
 
     boolean existsByTaskId(Long taskId);
+
+    DeliveryStatusCount getGlobalStatistics();
+
+    void updateAllDeliveryStatuses();
 
     byte[] exportToExcel() throws IOException;
 }
