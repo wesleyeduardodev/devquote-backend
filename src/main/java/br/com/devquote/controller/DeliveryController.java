@@ -186,6 +186,16 @@ public class DeliveryController implements DeliveryControllerDoc {
         return ResponseEntity.ok(groupDetails);
     }
 
+    @GetMapping("/by-task/{taskId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<DeliveryResponse> getByTaskId(@PathVariable Long taskId) {
+        DeliveryResponse delivery = deliveryService.findByTaskId(taskId);
+        if (delivery == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(delivery);
+    }
+
     @GetMapping("/statistics")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<DeliveryStatusCount> getGlobalStatistics() {

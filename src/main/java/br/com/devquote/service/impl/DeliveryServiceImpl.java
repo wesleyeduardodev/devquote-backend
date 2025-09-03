@@ -716,6 +716,15 @@ public class DeliveryServiceImpl implements DeliveryService {
             throw new RuntimeException("Erro ao processar dados do grupo de entregas", e);
         }
     }
+
+    @Override
+    public DeliveryResponse findByTaskId(Long taskId) {
+        log.info("Buscando entrega por task ID: {}", taskId);
+        
+        return deliveryRepository.findByTaskId(taskId)
+                .map(DeliveryAdapter::toResponseDTO)
+                .orElse(null);
+    }
     
     private Long safeGetLong(Object value) {
         if (value == null) return null;

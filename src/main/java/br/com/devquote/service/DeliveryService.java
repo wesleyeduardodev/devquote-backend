@@ -57,4 +57,6 @@ public interface DeliveryService {
     void updateAllDeliveryStatuses();
 
     byte[] exportToExcel() throws IOException;
+    
+    DeliveryResponse findByTaskId(Long taskId);
 }
