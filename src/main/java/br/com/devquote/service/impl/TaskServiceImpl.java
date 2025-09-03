@@ -48,11 +48,11 @@ public class TaskServiceImpl implements TaskService {
     private final BillingPeriodService billingPeriodService;
     private final BillingPeriodTaskService billingPeriodTaskService;
     private final BillingProperties billingProperties;
-    private final DeliveryService deliveryService;
     private final SecurityUtils securityUtils;
     private final EntityManager entityManager;
     private final ExcelReportUtils excelReportUtils;
     private final EmailService emailService;
+    private final DeliveryService deliveryService;
 
     @Override
     public List<TaskResponse> findAll() {
@@ -119,6 +119,9 @@ public class TaskServiceImpl implements TaskService {
 
         entity = taskRepository.save(entity);
 
+        // Criar entrega automaticamente para a nova tarefa
+        ensureTaskHasDelivery(entity);
+
         // Enviar notificação por email
         try {
             emailService.sendTaskCreatedNotification(entity);
@@ -148,6 +151,9 @@ public class TaskServiceImpl implements TaskService {
         entity.setUpdatedBy(currentUser);
 
         entity = taskRepository.save(entity);
+
+        // Verificar e criar entrega se não existir
+        ensureTaskHasDelivery(entity);
 
         // Enviar notificação por email
         try {
@@ -210,14 +216,8 @@ public class TaskServiceImpl implements TaskService {
         processTaskAmount(task, persistedSubTasks);
         task = taskRepository.save(task);
 
-        // Linkar task ao faturamento se solicitado
-        if (isTrue(dto.getLinkTaskToBilling())) {
-            LocalDate today = LocalDate.now();
-            BillingPeriod billingMonth = getOrCreateBillingPeriod(today);
-            ensureTaskLinkedToBillingMonth(task.getId(), billingMonth.getId());
-        }
-
-        createDeliveries(dto, task);
+        // Criar entrega automaticamente para a nova tarefa
+        ensureTaskHasDelivery(task);
 
         // Enviar notificação por email
         try {
@@ -229,31 +229,6 @@ public class TaskServiceImpl implements TaskService {
         return buildTaskWithSubTasksResponse(task, persistedSubTasks);
     }
 
-    private void createDeliveries(TaskWithSubTasksCreateRequest dto, Task task) {
-        if (dto.getProjectsIds() != null && !dto.getProjectsIds().isEmpty()) {
-            // Na nova arquitetura: 1 Delivery por Task, N DeliveryItems (um por projeto)
-            java.util.List<br.com.devquote.dto.request.DeliveryItemRequest> items = new java.util.ArrayList<>();
-            
-            for (Long projectId : dto.getProjectsIds()) {
-                br.com.devquote.dto.request.DeliveryItemRequest item = br.com.devquote.dto.request.DeliveryItemRequest
-                        .builder()
-                        .deliveryId(null) // Será definido após criar a delivery
-                        .projectId(projectId)
-                        .status("PENDING")
-                        .build();
-                items.add(item);
-            }
-            
-            // Criar uma única delivery com múltiplos itens
-            DeliveryRequest deliveryRequest = DeliveryRequest
-                    .builder()
-                    .taskId(task.getId())
-                    .status("PENDING")
-                    .items(items)
-                    .build();
-            deliveryService.create(deliveryRequest);
-        }
-    }
 
     @Override
     public TaskWithSubTasksResponse updateWithSubTasks(Long taskId, TaskWithSubTasksUpdateRequest dto) {
@@ -298,6 +273,9 @@ public class TaskServiceImpl implements TaskService {
         processTaskAmount(task, updated);
         task = taskRepository.save(task);
 
+        // Verificar e criar entrega se não existir
+        ensureTaskHasDelivery(task);
+
         // Enviar notificação por email
         try {
             emailService.sendTaskUpdatedNotification(task);
@@ -319,8 +297,7 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("Cannot delete task. It is linked to a billing period.");
         }
 
-        // Deletar entregas vinculadas à task
-        deliveryService.deleteByTaskId(taskId);
+        // Entregas não são mais criadas automaticamente
 
         // Enviar notificação por email antes da exclusão
         try {
@@ -946,6 +923,23 @@ public class TaskServiceImpl implements TaskService {
         } catch (Exception e) {
             log.error("Failed to send financial email notification for task {}: {}", taskId, e.getMessage(), e);
             throw new RuntimeException("Failed to send financial email notification");
+        }
+    }
+
+    /**
+     * Cria automaticamente uma entrega para a tarefa se ela não tiver uma
+     */
+    private void ensureTaskHasDelivery(Task task) {
+        if (!deliveryService.existsByTaskId(task.getId())) {
+            log.debug("Creating automatic delivery for task ID: {}", task.getId());
+            
+            DeliveryRequest deliveryRequest = DeliveryRequest.builder()
+                    .taskId(task.getId())
+                    .status("PENDING")
+                    .build();
+            
+            deliveryService.create(deliveryRequest);
+            log.debug("Automatic delivery created for task ID: {}", task.getId());
         }
     }
 }

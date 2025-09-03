@@ -57,13 +57,6 @@ public class TaskWithSubTasksCreateRequest {
     @Valid
     private List<@Valid SubTaskRequest> subTasks;
 
-    @Builder.Default
-    private Boolean createDeliveries = Boolean.FALSE;
-
-    @Builder.Default
-    private Boolean linkTaskToBilling = Boolean.FALSE;
-
-    private List<Long> projectsIds;
 
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
