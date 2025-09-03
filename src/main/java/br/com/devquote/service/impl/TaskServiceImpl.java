@@ -107,7 +107,7 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
         }
 
-        log.info("TASK CREATE requesterId={} title={} user={}",
+        log.debug("TASK CREATE requesterId={} title={} user={}",
             dto.getRequesterId(), dto.getTitle(), currentUser.getUsername());
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
@@ -625,7 +625,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public byte[] exportTasksToExcel() throws IOException {
-        log.info("EXCEL EXPORT STARTED");
+        log.debug("EXCEL EXPORT STARTED");
 
         // Verificar perfil do usuário para controle de colunas de valor
         User currentUser = securityUtils.getCurrentUser();
@@ -635,7 +635,7 @@ public class TaskServiceImpl implements TaskService {
 
         var profiles = currentUser.getActiveProfileCodes();
         boolean canViewAmounts = profiles.contains("ADMIN") || profiles.contains("MANAGER");
-        log.info("EXCEL EXPORT user={} canViewAmounts={}", currentUser.getUsername(), canViewAmounts);
+        log.debug("EXCEL EXPORT user={} canViewAmounts={}", currentUser.getUsername(), canViewAmounts);
 
         // Consulta nativa SQL para obter todos os dados de tarefas e subtarefas
         String sql = """
@@ -707,16 +707,16 @@ public class TaskServiceImpl implements TaskService {
             return map;
         }).collect(Collectors.toList());
 
-        log.info("EXCEL EXPORT generating file with {} records", data.size());
+        log.debug("EXCEL EXPORT generating file with {} records", data.size());
         byte[] result = excelReportUtils.generateTasksReport(data, canViewAmounts);
-        log.info("EXCEL EXPORT completed successfully");
+        log.debug("EXCEL EXPORT completed successfully");
 
         return result;
     }
 
     @Override
     public byte[] exportGeneralReport() throws IOException {
-        log.info("GENERAL REPORT EXPORT STARTED");
+        log.debug("GENERAL REPORT EXPORT STARTED");
 
         // Query incluindo entregas e faturamento: Tarefas → Entregas → Faturamento
         String sql = """
@@ -828,16 +828,16 @@ public class TaskServiceImpl implements TaskService {
             return map;
         }).collect(Collectors.toList());
 
-        log.info("GENERAL REPORT generating file with {} records", data.size());
+        log.debug("GENERAL REPORT generating file with {} records", data.size());
         byte[] result = excelReportUtils.generateGeneralReport(data);
-        log.info("GENERAL REPORT completed successfully");
+        log.debug("GENERAL REPORT completed successfully");
 
         return result;
     }
 
     @Override
     public byte[] exportGeneralReportForUser() throws IOException {
-        log.info("GENERAL REPORT FOR USER EXPORT STARTED");
+        log.debug("GENERAL REPORT FOR USER EXPORT STARTED");
 
         // Query sem dados de orçamento, faturamento e valor da tarefa
         String sql = """
@@ -923,9 +923,9 @@ public class TaskServiceImpl implements TaskService {
             return map;
         }).collect(Collectors.toList());
 
-        log.info("GENERAL REPORT FOR USER generating file with {} records", data.size());
+        log.debug("GENERAL REPORT FOR USER generating file with {} records", data.size());
         byte[] result = excelReportUtils.generateGeneralReportForUser(data);
-        log.info("GENERAL REPORT FOR USER completed successfully");
+        log.debug("GENERAL REPORT FOR USER completed successfully");
 
         return result;
     }
@@ -944,7 +944,7 @@ public class TaskServiceImpl implements TaskService {
             task.setFinancialEmailSent(true);
             taskRepository.save(task);
         } catch (Exception e) {
-            log.error("Failed to send financial email notification for task {}: {}", taskId, e.getMessage());
+            log.error("Failed to send financial email notification for task {}: {}", taskId, e.getMessage(), e);
             throw new RuntimeException("Failed to send financial email notification");
         }
     }

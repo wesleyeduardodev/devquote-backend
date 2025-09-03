@@ -196,21 +196,17 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         // Enviar notificação por email antes da exclusão
         try {
-            log.info("Initiating email notification for delivery deletion with ID: {}", id);
+            log.debug("Initiating email notification for delivery deletion with ID: {}", id);
 
             // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
             Delivery deliveryWithRelations = deliveryRepository.findById(id)
                 .map(d -> {
-                    log.debug("Initializing lazy relationships for delivery ID: {}", d.getId());
                     // Inicializar relacionamentos lazy
                     if (d.getTask() != null) {
-                        log.debug("Initializing Task relationship");
                         d.getTask().getTitle(); // Inicializa Task
-                        log.debug("Task initialized: {}", d.getTask().getTitle());
                         if (d.getTask().getRequester() != null) {
                             d.getTask().getRequester().getName(); // Inicializa Requester
                             d.getTask().getRequester().getEmail();
-                            log.debug("Requester initialized: {}", d.getTask().getRequester().getName());
                         }
                     }
                     // Na nova arquitetura, inicializar itens da delivery
@@ -219,7 +215,6 @@ public class DeliveryServiceImpl implements DeliveryService {
                         d.getItems().forEach(item -> {
                             if (item.getProject() != null) {
                                 item.getProject().getName(); // Inicializa Project dos items
-                                log.debug("Project initialized from item: {}", item.getProject().getName());
                             }
                         });
                     }
@@ -227,9 +222,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 })
                 .orElse(entity);
 
-            log.info("Calling emailService.sendDeliveryDeletedNotification for delivery ID: {}", id);
             emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
-            log.info("Email service call completed for delivery deletion ID: {}", id);
         } catch (Exception e) {
             log.error("Failed to send email notification for delivery deletion ID: {}", id, e);
         }
@@ -251,37 +244,33 @@ public class DeliveryServiceImpl implements DeliveryService {
             return;
         }
 
-        log.info("Starting deletion of deliveries for task ID: {}", taskId);
+        log.debug("Starting deletion of deliveries for task ID: {}", taskId);
 
         // Na nova arquitetura, buscar a delivery única da task antes de deletar
         Optional<Delivery> deliveryToDelete = deliveryRepository.findByTaskId(taskId);
 
         if (deliveryToDelete.isEmpty()) {
-            log.info("No delivery found for task ID: {}", taskId);
+            log.debug("No delivery found for task ID: {}", taskId);
             return;
         }
 
-        log.info("Found delivery to delete for task ID: {}", taskId);
+        log.debug("Found delivery to delete for task ID: {}", taskId);
 
         // Enviar notificação por email para a delivery antes da exclusão
         Delivery delivery = deliveryToDelete.get();
         {
             try {
-                log.info("Sending deletion notification for delivery ID: {}", delivery.getId());
+                log.debug("Sending deletion notification for delivery ID: {}", delivery.getId());
 
                 // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
                 Delivery deliveryWithRelations = deliveryRepository.findById(delivery.getId())
                     .map(d -> {
-                        log.debug("Initializing lazy relationships for delivery ID: {}", d.getId());
                         // Inicializar relacionamentos lazy
                         if (d.getTask() != null) {
-                            log.debug("Initializing Task relationship");
                             d.getTask().getTitle(); // Inicializa Task
-                            log.debug("Task initialized: {}", d.getTask().getTitle());
                             if (d.getTask().getRequester() != null) {
                                 d.getTask().getRequester().getName(); // Inicializa Requester
                                 d.getTask().getRequester().getEmail();
-                                log.debug("Requester initialized: {}", d.getTask().getRequester().getName());
                             }
                         }
                         // Na nova arquitetura, inicializar itens da delivery
@@ -290,7 +279,6 @@ public class DeliveryServiceImpl implements DeliveryService {
                             d.getItems().forEach(item -> {
                                 if (item.getProject() != null) {
                                     item.getProject().getName(); // Inicializa Project dos items
-                                    log.debug("Project initialized from item: {}", item.getProject().getName());
                                 }
                             });
                         }
@@ -298,9 +286,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     })
                     .orElse(delivery);
 
-                log.info("Calling emailService.sendDeliveryDeletedNotification for delivery ID: {}", delivery.getId());
                 emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
-                log.info("Email notification sent for delivery ID: {}", delivery.getId());
 
             } catch (Exception e) {
                 log.error("Failed to send email notification for delivery deletion ID: {}", delivery.getId(), e);
@@ -309,7 +295,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         // Deletar todas as deliveries da task
         deliveryRepository.deleteByTaskId(taskId);
-        log.info("Successfully deleted delivery for task ID: {}", taskId);
+        log.debug("Successfully deleted delivery for task ID: {}", taskId);
     }
 
     @Override
@@ -359,7 +345,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                              String updatedAt,
                                                              Pageable pageable) {
 
-        log.info("findAllGroupedByTask - taskName: {}, taskCode: {}, status: {}, pageable: {}", 
+        log.debug("findAllGroupedByTask - taskName: {}, taskCode: {}, status: {}, pageable: {}", 
                 taskName, taskCode, status, pageable);
 
         // Buscar deliveries com paginação diretamente do repository (ordenado por task.id DESC)
@@ -367,17 +353,17 @@ public class DeliveryServiceImpl implements DeliveryService {
         try {
             if (taskName != null || taskCode != null || status != null) {
                 // Se tem filtros, usa o método com filtros
-                log.info("Using filtered query");
+                log.debug("Using filtered query");
                 deliveryPage = deliveryRepository.findByOptionalFieldsPaginated(
                         null, taskName, taskCode, status, createdAt, updatedAt, pageable
                 );
             } else {
                 // Se não tem filtros, usa o método simples
-                log.info("Using simple query");
+                log.debug("Using simple query");
                 deliveryPage = deliveryRepository.findAllOrderedByTaskIdDesc(pageable);
             }
             
-            log.info("Found {} deliveries", deliveryPage.getTotalElements());
+            log.debug("Found {} deliveries", deliveryPage.getTotalElements());
         } catch (Exception e) {
             log.error("Error in findAllGroupedByTask: {}", e.getMessage(), e);
             throw e;
@@ -562,24 +548,24 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public DeliveryStatusCount getGlobalStatistics() {
-        log.info("Executando query de estatísticas globais...");
+        log.debug("Executando query de estatísticas globais...");
         
         // Método de debug: contar manualmente primeiro
         List<Delivery> allDeliveries = deliveryRepository.findAll();
-        log.info("Total de deliveries no banco: {}", allDeliveries.size());
+        log.debug("Total de deliveries no banco: {}", allDeliveries.size());
         
         Map<DeliveryStatus, Integer> counts = new HashMap<>();
         for (Delivery delivery : allDeliveries) {
             counts.put(delivery.getStatus(), counts.getOrDefault(delivery.getStatus(), 0) + 1);
         }
-        log.info("Contagem manual por status: {}", counts);
+        log.debug("Contagem manual por status: {}", counts);
         
         // Agora executar a query original
         Object[] result = deliveryRepository.findGlobalDeliveryStatistics();
-        log.info("Resultado da query: {}", result != null ? Arrays.toString(result) : "null");
+        log.debug("Resultado da query: {}", result != null ? Arrays.toString(result) : "null");
         
         if (result == null || result.length < 7) {
-            log.warn("Query retornou dados insuficientes. Usando contagem manual.");
+            log.debug("Query retornou dados insuficientes. Usando contagem manual.");
             // Usar contagem manual como fallback
             return DeliveryStatusCount.builder()
                     .pending(counts.getOrDefault(DeliveryStatus.PENDING, 0))
@@ -602,8 +588,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .production(result[6] != null ? ((Number) result[6]).intValue() : 0)
                 .build();
         
-        log.info("Estatísticas calculadas pela query: {}", stats);
-        log.info("Estatísticas calculadas manualmente: pending={}, development={}", 
+        log.debug("Estatísticas calculadas pela query: {}", stats);
+        log.debug("Estatísticas calculadas manualmente: pending={}, development={}", 
             counts.getOrDefault(DeliveryStatus.PENDING, 0), 
             counts.getOrDefault(DeliveryStatus.DEVELOPMENT, 0));
         
@@ -613,7 +599,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     @Override
     @Transactional
     public void updateAllDeliveryStatuses() {
-        log.info("Atualizando status de todas as entregas...");
+        log.debug("Atualizando status de todas as entregas...");
         
         List<Delivery> deliveries = deliveryRepository.findAll();
         int updated = 0;
@@ -631,7 +617,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             }
         }
         
-        log.info("Status de {} entregas foram atualizados", updated);
+        log.debug("Status de {} entregas foram atualizados", updated);
     }
 
     /**
@@ -719,7 +705,6 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public DeliveryResponse findByTaskId(Long taskId) {
-        log.info("Buscando entrega por task ID: {}", taskId);
         
         return deliveryRepository.findByTaskId(taskId)
                 .map(DeliveryAdapter::toResponseDTO)

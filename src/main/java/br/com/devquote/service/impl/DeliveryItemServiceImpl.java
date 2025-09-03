@@ -74,7 +74,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         delivery.updateStatus();
         deliveryRepository.save(delivery);
 
-        log.info("DeliveryItem created with id: {}", item.getId());
+        log.debug("DeliveryItem created with id: {}", item.getId());
         return DeliveryItemAdapter.toResponseDTO(item);
     }
 
@@ -108,7 +108,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         item.getDelivery().updateStatus();
         deliveryRepository.save(item.getDelivery());
 
-        log.info("DeliveryItem updated with id: {}", item.getId());
+        log.debug("DeliveryItem updated with id: {}", item.getId());
         return DeliveryItemAdapter.toResponseDTO(item);
     }
 
@@ -137,7 +137,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         delivery.updateStatus();
         deliveryRepository.save(delivery);
 
-        log.info("DeliveryItem deleted with id: {}", id);
+        log.debug("DeliveryItem deleted with id: {}", id);
     }
 
     @Override
@@ -173,7 +173,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             deliveryRepository.save(delivery);
         });
 
-        log.info("Bulk deleted {} delivery items", ids.size());
+        log.debug("Bulk deleted {} delivery items", ids.size());
     }
 
     @Override
@@ -301,7 +301,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         delivery.updateStatus();
         deliveryRepository.save(delivery);
 
-        log.info("Created {} delivery items for delivery: {}", createdItems.size(), deliveryId);
+        log.debug("Created {} delivery items for delivery: {}", createdItems.size(), deliveryId);
         return DeliveryItemAdapter.toResponseDTOList(createdItems);
     }
 
@@ -356,7 +356,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             deliveryRepository.save(delivery);
         });
 
-        log.info("Updated {} delivery items", itemIds.size());
+        log.debug("Updated {} delivery items", itemIds.size());
         return DeliveryItemAdapter.toResponseDTOList(updatedItems);
     }
 

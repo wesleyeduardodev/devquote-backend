@@ -233,7 +233,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
 
     @Override
     public void deleteWithAllLinkedTasks(Long id) {
-        log.info("BILLING_PERIOD DELETE_WITH_TASKS id={}", id);
+        log.debug("BILLING_PERIOD DELETE_WITH_TASKS id={}", id);
         
         // Verificar se o período existe
         BillingPeriod billingPeriod = billingPeriodRepository.findById(id)
@@ -246,12 +246,12 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             deleteTaskLinksNativeQuery.setParameter("billingPeriodId", id);
             int deletedLinks = deleteTaskLinksNativeQuery.executeUpdate();
             
-            log.info("BILLING_PERIOD DELETE_WITH_TASKS id={} deletedTaskLinks={}", id, deletedLinks);
+            log.debug("BILLING_PERIOD DELETE_WITH_TASKS id={} deletedTaskLinks={}", id, deletedLinks);
             
             // 2. Depois, remover o período de faturamento
             billingPeriodRepository.deleteById(id);
             
-            log.info("BILLING_PERIOD DELETE_WITH_TASKS id={} - completed successfully", id);
+            log.debug("BILLING_PERIOD DELETE_WITH_TASKS id={} - completed successfully", id);
             
         } catch (Exception e) {
             log.error("BILLING_PERIOD DELETE_WITH_TASKS id={} - error: {}", id, e.getMessage(), e);
@@ -261,7 +261,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
 
     @Override
     public BillingPeriodResponse updateStatus(Long id, String status) {
-        log.info("BILLING_PERIOD UPDATE_STATUS id={} status={}", id, status);
+        log.debug("BILLING_PERIOD UPDATE_STATUS id={} status={}", id, status);
         
         BillingPeriod entity = billingPeriodRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("BillingPeriod not found"));
@@ -269,14 +269,14 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
         entity.setStatus(status);
         entity = billingPeriodRepository.save(entity);
         
-        log.info("BILLING_PERIOD UPDATE_STATUS id={} - completed successfully", id);
+        log.debug("BILLING_PERIOD UPDATE_STATUS id={} - completed successfully", id);
         
         return BillingPeriodAdapter.toResponseDTO(entity);
     }
 
     @Override
     public void sendBillingEmail(Long billingPeriodId) {
-        log.info("BILLING_PERIOD SEND_EMAIL id={}", billingPeriodId);
+        log.debug("BILLING_PERIOD SEND_EMAIL id={}", billingPeriodId);
         
         // Buscar o período de faturamento
         BillingPeriod billingPeriod = billingPeriodRepository.findById(billingPeriodId)
@@ -290,7 +290,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             billingPeriod.setBillingEmailSent(true);
             billingPeriodRepository.save(billingPeriod);
             
-            log.info("BILLING_PERIOD SEND_EMAIL id={} - completed successfully", billingPeriodId);
+            log.debug("BILLING_PERIOD SEND_EMAIL id={} - completed successfully", billingPeriodId);
             
         } catch (Exception e) {
             log.error("BILLING_PERIOD SEND_EMAIL id={} - error: {}", billingPeriodId, e.getMessage(), e);

@@ -19,23 +19,18 @@ public class EmailProperties {
     @PostConstruct
     public void logConfiguration() {
         if (enabled) {
-            log.info("=== EMAIL CONFIGURATION ===");
-            log.info("Email notifications: ENABLED");
-            log.info("Email from address: {}", from != null ? from : "NOT CONFIGURED");
-            log.info("Finance email address: {}", financeEmail != null ? financeEmail : "NOT CONFIGURED");
+            log.debug("Email notifications: ENABLED");
+            log.debug("Email from address: {}", from != null ? from : "NOT CONFIGURED");
+            log.debug("Finance email address: {}", financeEmail != null ? financeEmail : "NOT CONFIGURED");
             if (from == null || from.trim().isEmpty()) {
                 log.error("EMAIL FROM ADDRESS IS NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable.");
             }
             if (financeEmail == null || financeEmail.trim().isEmpty()) {
                 log.warn("FINANCE EMAIL ADDRESS IS NOT CONFIGURED! Set DEVQUOTE_EMAIL_FINANCE environment variable.");
             }
-            log.info("==========================");
         } else {
-            log.warn("=== EMAIL CONFIGURATION ===");
-            log.warn("Email notifications: DISABLED");
-            log.warn("Reason: DEVQUOTE_EMAIL_ENABLED is set to false or not configured");
-            log.warn("To enable emails, set DEVQUOTE_EMAIL_ENABLED=true in environment variables");
-            log.warn("==========================");
+            log.debug("Email notifications: DISABLED");
+            log.debug("Reason: DEVQUOTE_EMAIL_ENABLED is set to false or not configured");
         }
     }
 }

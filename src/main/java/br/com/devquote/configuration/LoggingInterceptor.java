@@ -37,7 +37,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
             String userAgent = request.getHeader("User-Agent");
             String remoteAddr = getClientIpAddr(request);
             
-            log.info("REQ {} {} from {} [{}]", 
+            log.debug("REQ {} {} from {} [{}]", 
                 method, uri, remoteAddr, 
                 userAgent != null ? userAgent.substring(0, Math.min(50, userAgent.length())) : "unknown"
             );
@@ -68,7 +68,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
                     log.warn("SLOW {} {} -> {} in {}ms", method, uri, status, executionTime);
                 } else if (shouldLogRequest(method, uri)) {
                     // Log de sucesso para operações críticas
-                    log.info("OK {} {} -> {} in {}ms", method, uri, status, executionTime);
+                    log.debug("OK {} {} -> {} in {}ms", method, uri, status, executionTime);
                 }
             }
 

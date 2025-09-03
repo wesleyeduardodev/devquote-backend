@@ -41,11 +41,7 @@ public class EmailServiceImpl implements EmailService {
 
     @PostConstruct
     public void init() {
-        log.info("========================================");
-        log.info("EmailServiceImpl ACTIVATED - Email notifications are ENABLED");
-        log.info("SMTP Configuration will be validated on first email send");
-        log.info("From address: {}", emailProperties.getFrom());
-        log.info("========================================");
+        log.debug("EmailService initialized with from address: {}", emailProperties.getFrom());
     }
 
     @Override
@@ -57,7 +53,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.info("Sending task created notification for task ID: {}", task.getId());
+            log.debug("Sending task created notification for task ID: {}", task.getId());
 
             String subject = String.format("DevQuote - Nova tarefa criada: [%s] - %s",
                 task.getCode() != null ? task.getCode() : task.getId(),
@@ -80,7 +76,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.info("Sending task updated notification for task ID: {}", task.getId());
+            log.debug("Sending task updated notification for task ID: {}", task.getId());
 
             String subject = String.format("DevQuote - Tarefa editada: [%s] - %s",
                 task.getCode() != null ? task.getCode() : task.getId(),
@@ -103,7 +99,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.info("Sending task deleted notification for task ID: {}", task.getId());
+            log.debug("Sending task deleted notification for task ID: {}", task.getId());
 
             String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s",
                 task.getCode() != null ? task.getCode() : task.getId(),
@@ -118,7 +114,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendToMultipleRecipients(Task task, String subject, String htmlContent, String action) {
-        log.info("📧 Starting TASK {} email notification process for: Task ID={}, Code={}, Title={}",
+        log.debug("📧 Starting TASK {} email notification process for: Task ID={}, Code={}, Title={}",
                 action.toUpperCase(), task.getId(), task.getCode(), task.getTitle());
 
         String mainRecipient = null;
@@ -128,7 +124,7 @@ public class EmailServiceImpl implements EmailService {
         if (task.getRequester() != null && task.getRequester().getEmail() != null
             && !task.getRequester().getEmail().trim().isEmpty()) {
             mainRecipient = task.getRequester().getEmail();
-            log.info("📧 Main recipient (requester): {} <{}>",
+            log.debug("📧 Main recipient (requester): {} <{}>",
                     task.getRequester().getName(), task.getRequester().getEmail());
         } else {
             log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {}. Requester: {}",
@@ -142,10 +138,10 @@ public class EmailServiceImpl implements EmailService {
             if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
                 mainRecipient = emailProperties.getFrom();
                 ccRecipient = null;
-                log.info("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
+                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
             } else {
                 ccRecipient = emailProperties.getFrom();
-                log.info("📧 CC recipient (sender): {}", emailProperties.getFrom());
+                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
             }
         } else {
             log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
@@ -160,12 +156,12 @@ public class EmailServiceImpl implements EmailService {
 
         // Enviar email único com CC
         try {
-            log.info("📧 Sending TASK {} notification - To: {}, CC: {}",
+            log.debug("📧 Sending TASK {} notification - To: {}, CC: {}",
                     action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
 
             sendEmailWithCC(mainRecipient, ccRecipient, subject, htmlContent);
 
-            log.info("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {} (cc: {})",
+            log.debug("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {} (cc: {})",
                     action.toUpperCase(), task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
         } catch (Exception e) {
             log.error("📧 ❌ FAILED to send {} notification for task ID: {} to: {} (cc: {}) - Error: {}",
@@ -372,7 +368,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.info("Sending delivery created notification for delivery ID: {}", delivery.getId());
+            log.debug("Sending delivery created notification for delivery ID: {}", delivery.getId());
 
             String subject = String.format("DevQuote - Nova entrega criada: #%d", delivery.getId());
             String htmlContent = buildDeliveryCreatedEmailContent(delivery);
@@ -393,7 +389,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.info("Sending delivery updated notification for delivery ID: {}", delivery.getId());
+            log.debug("Sending delivery updated notification for delivery ID: {}", delivery.getId());
 
             String subject = String.format("DevQuote - Entrega editada: #%d", delivery.getId());
             String htmlContent = buildDeliveryUpdatedEmailContent(delivery);
@@ -414,7 +410,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.info("Sending delivery deleted notification for delivery ID: {}", delivery.getId());
+            log.debug("Sending delivery deleted notification for delivery ID: {}", delivery.getId());
 
             String subject = String.format("DevQuote - Entrega excluída: #%d", delivery.getId());
             String htmlContent = buildDeliveryDeletedEmailContent(delivery);
@@ -434,7 +430,7 @@ public class EmailServiceImpl implements EmailService {
                     delivery.getTask().getCode());
         }
 
-        log.info("📧 Starting DELIVERY {} email notification process for: Delivery ID={}, Status={}, {}",
+        log.debug("📧 Starting DELIVERY {} email notification process for: Delivery ID={}, Status={}, {}",
                 action.toUpperCase(), delivery.getId(), delivery.getStatus(), taskInfo);
 
         String mainRecipient = null;
@@ -447,7 +443,7 @@ public class EmailServiceImpl implements EmailService {
             && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
             mainRecipient = delivery.getTask().getRequester().getEmail();
             String requesterName = delivery.getTask().getRequester().getName();
-            log.info("📧 Main recipient (requester): {} <{}>",
+            log.debug("📧 Main recipient (requester): {} <{}>",
                     requesterName, mainRecipient);
         } else {
             log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {}. Task chain: {}",
@@ -463,10 +459,10 @@ public class EmailServiceImpl implements EmailService {
             if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
                 mainRecipient = emailProperties.getFrom();
                 ccRecipient = null;
-                log.info("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
+                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
             } else {
                 ccRecipient = emailProperties.getFrom();
-                log.info("📧 CC recipient (sender): {}", emailProperties.getFrom());
+                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
             }
         } else {
             log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
@@ -481,12 +477,12 @@ public class EmailServiceImpl implements EmailService {
 
         // Enviar email único com CC
         try {
-            log.info("📧 Sending DELIVERY {} notification - To: {}, CC: {}",
+            log.debug("📧 Sending DELIVERY {} notification - To: {}, CC: {}",
                     action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
 
             sendEmailWithCC(mainRecipient, ccRecipient, subject, htmlContent);
 
-            log.info("📧 ✅ DELIVERY {} notification sent successfully for delivery ID: {} to: {} (cc: {})",
+            log.debug("📧 ✅ DELIVERY {} notification sent successfully for delivery ID: {} to: {} (cc: {})",
                     action.toUpperCase(), delivery.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
         } catch (Exception e) {
             log.error("📧 ❌ FAILED to send delivery {} notification for delivery ID: {} to: {} (cc: {}) - Error: {}",
@@ -711,7 +707,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.info("Sending financial notification for task ID: {} to {}", task.getId(), financeEmail);
+            log.debug("Sending financial notification for task ID: {} to {}", task.getId(), financeEmail);
 
             Context context = new Context();
             context.setVariable("task", task);
@@ -747,12 +743,12 @@ public class EmailServiceImpl implements EmailService {
                 ccRecipient = emailProperties.getFrom();
             }
 
-            log.info("📧 Sending FINANCIAL notification - To: {}, CC: {}",
+            log.debug("📧 Sending FINANCIAL notification - To: {}, CC: {}",
                     financeEmail, ccRecipient != null ? ccRecipient : "none");
 
             sendEmailWithCC(financeEmail, ccRecipient, "💰 Notificação Financeira - Tarefa " + task.getCode(), htmlContent);
 
-            log.info("Financial notification sent successfully for task ID: {} to {}", task.getId(), financeEmail);
+            log.debug("Financial notification sent successfully for task ID: {} to {}", task.getId(), financeEmail);
 
         } catch (Exception e) {
             log.error("Unexpected error while sending financial notification for task ID: {} to {}: {}",
@@ -776,7 +772,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.info("Sending billing period notification for period ID: {} ({}/{}) to {}",
+            log.debug("Sending billing period notification for period ID: {} ({}/{}) to {}",
                 billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear(), financeEmail);
 
             Context context = new Context();
@@ -835,12 +831,12 @@ public class EmailServiceImpl implements EmailService {
 
             String subject = "📊 Faturamento Mensal - " + String.format("%02d/%d", billingPeriod.getMonth(), billingPeriod.getYear());
 
-            log.info("📧 Sending BILLING PERIOD notification - To: {}, CC: {}",
+            log.debug("📧 Sending BILLING PERIOD notification - To: {}, CC: {}",
                     financeEmail, ccRecipient != null ? ccRecipient : "none");
 
             sendEmailWithCC(financeEmail, ccRecipient, subject, htmlContent);
 
-            log.info("Billing period notification sent successfully for period ID: {} to {}", billingPeriod.getId(), financeEmail);
+            log.debug("Billing period notification sent successfully for period ID: {} to {}", billingPeriod.getId(), financeEmail);
 
         } catch (Exception e) {
             log.error("Unexpected error while sending billing period notification for period ID: {} to {}: {}",
