@@ -3,8 +3,9 @@ package br.com.devquote.service.impl;
 import br.com.devquote.dto.response.DashboardStatsResponse;
 import br.com.devquote.dto.response.UserPermissionResponse;
 import br.com.devquote.entity.User;
-import br.com.devquote.repository.*;
 import br.com.devquote.entity.SubTask;
+import br.com.devquote.enums.DeliveryStatus;
+import br.com.devquote.repository.*;
 import br.com.devquote.service.DashboardService;
 import br.com.devquote.service.PermissionService;
 import lombok.RequiredArgsConstructor;
@@ -179,10 +180,36 @@ public class DashboardServiceImpl implements DashboardService {
     private DashboardStatsResponse.ModuleStats buildDeliveriesStats() {
         var allDeliveries = deliveryRepository.findAll();
         int total = allDeliveries.size();
+        
+        log.debug("Total deliveries found: {}", total);
+        
+        // Listar todos os status encontrados para debug
+        allDeliveries.forEach(delivery -> 
+            log.debug("Delivery ID: {}, Status: '{}'", delivery.getId(), delivery.getStatus()));
+        
+        // Status aprovados: APPROVED e PRODUCTION
         int completed = (int) allDeliveries.stream()
-                .filter(delivery -> "APPROVED".equals(delivery.getStatus()) || "PRODUCTION".equals(delivery.getStatus()))
+                .filter(delivery -> {
+                    DeliveryStatus status = delivery.getStatus();
+                    boolean isApproved = DeliveryStatus.APPROVED.equals(status) || DeliveryStatus.PRODUCTION.equals(status);
+                    log.debug("Delivery ID: {}, Status: '{}', IsApproved: {}", delivery.getId(), status, isApproved);
+                    return isApproved;
+                })
                 .count();
-        int active = total - completed;
+        
+        // Status em andamento: PENDING, DEVELOPMENT, DELIVERED, HOMOLOGATION, REJECTED
+        int active = (int) allDeliveries.stream()
+                .filter(delivery -> {
+                    DeliveryStatus status = delivery.getStatus();
+                    return DeliveryStatus.PENDING.equals(status) || 
+                           DeliveryStatus.DEVELOPMENT.equals(status) ||
+                           DeliveryStatus.DELIVERED.equals(status) ||
+                           DeliveryStatus.HOMOLOGATION.equals(status) ||
+                           DeliveryStatus.REJECTED.equals(status);
+                })
+                .count();
+
+        log.debug("Delivery stats - Total: {}, Completed: {}, Active: {}", total, completed, active);
 
         return DashboardStatsResponse.ModuleStats.builder()
                 .total(total)
@@ -280,58 +307,40 @@ public class DashboardServiceImpl implements DashboardService {
 
 
     private List<DashboardStatsResponse.StatusCount> buildMonthlyDeliveriesStats() {
-        var now = LocalDateTime.now();
-        var startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        var endOfMonth = now.withDayOfMonth(now.toLocalDate().lengthOfMonth()).withHour(23).withMinute(59).withSecond(59);
-        var startOfMonthDate = startOfMonth.toLocalDate();
-        var endOfMonthDate = endOfMonth.toLocalDate();
-        
         var allDeliveries = deliveryRepository.findAll();
+        int totalDeliveries = allDeliveries.size();
         
-        // Entregas criadas no mês corrente
-        long deliveriesCreatedThisMonth = allDeliveries.stream()
-                .filter(delivery -> delivery.getCreatedAt().isAfter(startOfMonth) && delivery.getCreatedAt().isBefore(endOfMonth))
-                .count();
+        if (totalDeliveries == 0) {
+            return new ArrayList<>();
+        }
         
-        // Entregas iniciadas no mês (com pelo menos um item com startedAt preenchido)
-        long deliveriesStartedThisMonth = allDeliveries.stream()
-                .filter(delivery -> delivery.getItems() != null && 
-                                   delivery.getItems().stream()
-                                           .anyMatch(item -> item.getStartedAt() != null &&
-                                                           (item.getStartedAt().isAfter(startOfMonthDate) || item.getStartedAt().isEqual(startOfMonthDate)) &&
-                                                           (item.getStartedAt().isBefore(endOfMonthDate) || item.getStartedAt().isEqual(endOfMonthDate))))
-                .count();
+        List<DashboardStatsResponse.StatusCount> statusStats = new ArrayList<>();
         
-        // Entregas finalizadas no mês (com pelo menos um item com finishedAt preenchido)
-        long deliveriesFinishedThisMonth = allDeliveries.stream()
-                .filter(delivery -> delivery.getItems() != null && 
-                                   delivery.getItems().stream()
-                                           .anyMatch(item -> item.getFinishedAt() != null &&
-                                                           (item.getFinishedAt().isAfter(startOfMonthDate) || item.getFinishedAt().isEqual(startOfMonthDate)) &&
-                                                           (item.getFinishedAt().isBefore(endOfMonthDate) || item.getFinishedAt().isEqual(endOfMonthDate))))
-                .count();
+        // Contar entregas por cada status dos 7 status existentes
+        DeliveryStatus[] statuses = {DeliveryStatus.PENDING, DeliveryStatus.DEVELOPMENT, DeliveryStatus.DELIVERED, 
+                                    DeliveryStatus.HOMOLOGATION, DeliveryStatus.APPROVED, DeliveryStatus.REJECTED, DeliveryStatus.PRODUCTION};
+        String[] statusLabels = {"Pendente", "Em Desenvolvimento", "Entregue", "Homologação", "Aprovado", "Rejeitado", "Produção"};
         
-        List<DashboardStatsResponse.StatusCount> monthlyStats = new ArrayList<>();
-        
-        monthlyStats.add(DashboardStatsResponse.StatusCount.builder()
-                .status("Criadas este mês")
-                .count((int) deliveriesCreatedThisMonth)
-                .percentage(0.0) // Não aplicável para dados mensais
-                .build());
-                
-        monthlyStats.add(DashboardStatsResponse.StatusCount.builder()
-                .status("Iniciadas este mês")
-                .count((int) deliveriesStartedThisMonth)
-                .percentage(0.0)
-                .build());
-                
-        monthlyStats.add(DashboardStatsResponse.StatusCount.builder()
-                .status("Finalizadas este mês")
-                .count((int) deliveriesFinishedThisMonth)
-                .percentage(0.0)
-                .build());
+        for (int i = 0; i < statuses.length; i++) {
+            DeliveryStatus status = statuses[i];
+            String label = statusLabels[i];
+            
+            long count = allDeliveries.stream()
+                    .filter(delivery -> status.equals(delivery.getStatus()))
+                    .count();
+                    
+            double percentage = (double) count / totalDeliveries * 100.0;
+            
+            if (count > 0) { // Só adiciona se houver entregas com esse status
+                statusStats.add(DashboardStatsResponse.StatusCount.builder()
+                        .status(label)
+                        .count((int) count)
+                        .percentage(Math.round(percentage * 100.0) / 100.0)
+                        .build());
+            }
+        }
 
-        return monthlyStats;
+        return statusStats;
     }
 
     private List<DashboardStatsResponse.RecentActivity> buildRecentActivities(Set<String> allowedScreens) {
@@ -355,7 +364,7 @@ public class DashboardServiceImpl implements DashboardService {
         
         int totalDeliveries = allDeliveries.size();
         int completedDeliveries = (int) allDeliveries.stream()
-                .filter(delivery -> "APPROVED".equals(delivery.getStatus()) || "PRODUCTION".equals(delivery.getStatus()))
+                .filter(delivery -> DeliveryStatus.APPROVED.equals(delivery.getStatus()) || DeliveryStatus.PRODUCTION.equals(delivery.getStatus()))
                 .count();
         
         double completionRate = totalTasks > 0 ? (double) completedTasks / totalTasks * 100.0 : 0.0;
