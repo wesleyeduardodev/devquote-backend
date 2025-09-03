@@ -158,6 +158,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DeliveryItemResponse> findByDeliveryId(Long deliveryId) {
         log.debug("Finding delivery items by delivery id: {}", deliveryId);
         var items = deliveryItemRepository.findByDeliveryId(deliveryId);

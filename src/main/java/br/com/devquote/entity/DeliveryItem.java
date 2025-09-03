@@ -38,8 +38,7 @@ public class DeliveryItem extends BaseEntity {
     @Column(name = "pull_request", length = 500)
     private String pullRequest;
 
-    @Lob
-    @Column(name = "script")
+    @Column(name = "script", columnDefinition = "TEXT")
     private String script;
 
     @Column(name = "notes", length = 1000)
