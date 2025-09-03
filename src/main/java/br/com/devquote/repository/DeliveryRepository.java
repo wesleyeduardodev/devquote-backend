@@ -21,13 +21,18 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     @Override
     Optional<Delivery> findById(Long id);
 
-    @EntityGraph(attributePaths = {"task", "items", "items.project"})
-    @Query("SELECT d FROM Delivery d JOIN d.task t")
-    Page<Delivery> findAllOrderedByTaskIdDesc(Pageable pageable);
+    // Query para buscar apenas IDs com paginação (sem EntityGraph para evitar HHH90003004)
+    @Query("SELECT d.id FROM Delivery d JOIN d.task t ORDER BY t.id DESC")
+    Page<Long> findAllOrderedByTaskIdDescPaginated(Pageable pageable);
 
+    // Query para buscar dados completos pelos IDs (com EntityGraph)
     @EntityGraph(attributePaths = {"task", "items", "items.project"})
+    @Query("SELECT d FROM Delivery d WHERE d.id IN :ids ORDER BY d.task.id DESC")
+    List<Delivery> findByIdsWithEntityGraph(@Param("ids") List<Long> ids);
+
+    // Query para buscar apenas IDs filtrados com paginação (sem EntityGraph)
     @Query("""
-        SELECT d
+        SELECT d.id
           FROM Delivery d
           JOIN d.task t
          WHERE (:id IS NULL OR d.id = :id)
@@ -36,7 +41,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
            AND (:status IS NULL OR :status = '' OR d.status = :status)
          ORDER BY t.id DESC
         """)
-    Page<Delivery> findByOptionalFieldsPaginated(
+    Page<Long> findIdsByOptionalFieldsPaginated(
             @Param("id") Long id,
             @Param("taskName") String taskName,
             @Param("taskCode") String taskCode,

@@ -307,12 +307,24 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                    String updatedAt,
                                                    Pageable pageable) {
 
-        // Na nova arquitetura, a busca paginada tem menos parâmetros
-        Page<Delivery> page = deliveryRepository.findByOptionalFieldsPaginated(
+        // 1. Buscar apenas IDs com paginação (eficiente, sem JOIN FETCH)
+        Page<Long> idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
                 id, taskName, taskCode, status, createdAt, updatedAt, pageable
         );
 
-        return page.map(DeliveryAdapter::toResponseDTO);
+        if (idsPage.isEmpty()) {
+            return idsPage.map(deliveryId -> null);
+        }
+
+        // 2. Buscar dados completos pelos IDs (com EntityGraph)
+        List<Delivery> deliveries = deliveryRepository.findByIdsWithEntityGraph(idsPage.getContent());
+
+        // 3. Manter a ordem original e criar PageImpl
+        List<DeliveryResponse> responses = deliveries.stream()
+                .map(DeliveryAdapter::toResponseDTO)
+                .toList();
+
+        return new PageImpl<>(responses, pageable, idsPage.getTotalElements());
     }
 
     /**
@@ -348,29 +360,36 @@ public class DeliveryServiceImpl implements DeliveryService {
         log.debug("findAllGroupedByTask - taskName: {}, taskCode: {}, status: {}, pageable: {}", 
                 taskName, taskCode, status, pageable);
 
-        // Buscar deliveries com paginação diretamente do repository (ordenado por task.id DESC)
-        Page<Delivery> deliveryPage;
+        // Buscar deliveries com paginação usando estratégia de duas queries (sem EntityGraph + Pageable)
+        Page<Long> idsPage;
         try {
             if (taskName != null || taskCode != null || status != null) {
-                // Se tem filtros, usa o método com filtros
-                log.debug("Using filtered query");
-                deliveryPage = deliveryRepository.findByOptionalFieldsPaginated(
+                // Se tem filtros, usa o método com filtros (apenas IDs)
+                log.debug("Using filtered query for IDs");
+                idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
                         null, taskName, taskCode, status, createdAt, updatedAt, pageable
                 );
             } else {
-                // Se não tem filtros, usa o método simples
-                log.debug("Using simple query");
-                deliveryPage = deliveryRepository.findAllOrderedByTaskIdDesc(pageable);
+                // Se não tem filtros, usa o método simples (apenas IDs)
+                log.debug("Using simple query for IDs");
+                idsPage = deliveryRepository.findAllOrderedByTaskIdDescPaginated(pageable);
             }
             
-            log.debug("Found {} deliveries", deliveryPage.getTotalElements());
+            log.debug("Found {} delivery IDs", idsPage.getTotalElements());
         } catch (Exception e) {
             log.error("Error in findAllGroupedByTask: {}", e.getMessage(), e);
             throw e;
         }
 
+        if (idsPage.isEmpty()) {
+            return idsPage.map(id -> null);
+        }
+
+        // Buscar dados completos pelos IDs (com EntityGraph)
+        List<Delivery> deliveries = deliveryRepository.findByIdsWithEntityGraph(idsPage.getContent());
+
         // Converter para DeliveryGroupResponse de forma simples
-        return deliveryPage.map(delivery -> {
+        List<DeliveryGroupResponse> responses = deliveries.stream().map(delivery -> {
             // Inicializar relacionamentos lazy de forma segura
             Task task = null;
             if (delivery.getTask() != null) {
@@ -403,7 +422,9 @@ public class DeliveryServiceImpl implements DeliveryService {
                     .pendingDeliveries(0)   // Simplificado
                     .deliveries(List.of(DeliveryAdapter.toResponseDTO(delivery))) // Incluir a entrega real
                     .build();
-        });
+        }).toList();
+
+        return new PageImpl<>(responses, pageable, idsPage.getTotalElements());
     }
 
     @Override

@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -233,12 +234,25 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                                                        Pageable pageable) {
         log.debug("Finding delivery items paginated with filters");
         
-        Page<DeliveryItem> page = deliveryItemRepository.findByOptionalFieldsPaginated(
+        // 1. Buscar apenas IDs com paginação (eficiente, sem EntityGraph)
+        Page<Long> idsPage = deliveryItemRepository.findIdsByOptionalFieldsPaginated(
                 id, deliveryId, taskId, taskName, taskCode, projectName, branch, pullRequest,
                 status, startedAt, finishedAt, createdAt, updatedAt, pageable
         );
 
-        return page.map(DeliveryItemAdapter::toResponseDTO);
+        if (idsPage.isEmpty()) {
+            return idsPage.map(deliveryItemId -> null);
+        }
+
+        // 2. Buscar dados completos pelos IDs (com EntityGraph)
+        List<DeliveryItem> deliveryItems = deliveryItemRepository.findByIdsWithEntityGraph(idsPage.getContent());
+
+        // 3. Manter a ordem original e criar PageImpl
+        List<DeliveryItemResponse> responses = deliveryItems.stream()
+                .map(DeliveryItemAdapter::toResponseDTO)
+                .toList();
+
+        return new PageImpl<>(responses, pageable, idsPage.getTotalElements());
     }
 
     @Override
