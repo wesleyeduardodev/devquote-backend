@@ -120,9 +120,19 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         DeliveryItem item = deliveryItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("DeliveryItem not found with id: " + id));
 
+        Long deliveryId = item.getDelivery().getId();
+        
+        // Remover o item da lista da delivery antes de deletar
         Delivery delivery = item.getDelivery();
+        delivery.getItems().remove(item);
+        
+        // Deletar o item
         deliveryItemRepository.delete(item);
 
+        // Buscar a delivery novamente para garantir que está atualizada
+        delivery = deliveryRepository.findById(deliveryId)
+                .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
+        
         // Atualizar status da delivery automaticamente
         delivery.updateStatus();
         deliveryRepository.save(delivery);
@@ -140,16 +150,25 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             throw new RuntimeException("Some delivery items not found");
         }
 
-        // Coletar deliveries afetadas para atualizar status
-        var affectedDeliveries = items.stream()
-                .map(DeliveryItem::getDelivery)
+        // Coletar IDs das deliveries afetadas para atualizar status
+        var affectedDeliveryIds = items.stream()
+                .map(item -> item.getDelivery().getId())
                 .distinct()
                 .toList();
 
+        // Remover os itens das listas das deliveries antes de deletar
+        items.forEach(item -> {
+            Delivery delivery = item.getDelivery();
+            delivery.getItems().remove(item);
+        });
+
+        // Deletar todos os itens
         deliveryItemRepository.deleteAll(items);
 
-        // Atualizar status das deliveries afetadas
-        affectedDeliveries.forEach(delivery -> {
+        // Buscar as deliveries novamente e atualizar status
+        affectedDeliveryIds.forEach(deliveryId -> {
+            Delivery delivery = deliveryRepository.findById(deliveryId)
+                    .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
             delivery.updateStatus();
             deliveryRepository.save(delivery);
         });
