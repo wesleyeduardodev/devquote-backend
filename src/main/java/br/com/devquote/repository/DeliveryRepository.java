@@ -45,7 +45,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             @Param("id") Long id,
             @Param("taskName") String taskName,
             @Param("taskCode") String taskCode,
-            @Param("status") String status,
+            @Param("status") br.com.devquote.enums.DeliveryStatus status,
             @Param("createdAt") String createdAt,
             @Param("updatedAt") String updatedAt,
             Pageable pageable

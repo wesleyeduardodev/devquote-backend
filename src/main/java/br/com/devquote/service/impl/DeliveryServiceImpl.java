@@ -307,9 +307,12 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                    String updatedAt,
                                                    Pageable pageable) {
 
+        // Converter status String para enum usando método auxiliar
+        DeliveryStatus statusEnum = convertStatusStringToEnum(status);
+
         // 1. Buscar apenas IDs com paginação (eficiente, sem JOIN FETCH)
         Page<Long> idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                id, taskName, taskCode, status, createdAt, updatedAt, pageable
+                id, taskName, taskCode, statusEnum, createdAt, updatedAt, pageable
         );
 
         if (idsPage.isEmpty()) {
@@ -349,6 +352,60 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
     }
 
+    /**
+     * Converte string de status para enum, suportando busca parcial
+     * @param statusString String do status (pode ser parcial)
+     * @return DeliveryStatus correspondente ou null se não encontrar
+     */
+    private DeliveryStatus convertStatusStringToEnum(String statusString) {
+        if (statusString == null || statusString.trim().isEmpty()) {
+            return null;
+        }
+        
+        String upperStatus = statusString.toUpperCase().trim();
+        
+        // Primeiro, tenta match exato
+        try {
+            return DeliveryStatus.valueOf(upperStatus);
+        } catch (IllegalArgumentException ignored) {
+            // Não é um match exato, continua para busca parcial
+        }
+        
+        // Se não for match exato, procura por status que começa com o texto digitado
+        for (DeliveryStatus deliveryStatus : DeliveryStatus.values()) {
+            if (deliveryStatus.name().startsWith(upperStatus)) {
+                log.debug("Partial match found: '{}' matches '{}'", statusString, deliveryStatus);
+                return deliveryStatus;
+            }
+        }
+        
+        // Se ainda não encontrou, tenta match com labels em português
+        // Mapeamento de prefixos em português para enum
+        Map<String, DeliveryStatus> portugueseMapping = new HashMap<>();
+        portugueseMapping.put("PEND", DeliveryStatus.PENDING);       // PENDente
+        portugueseMapping.put("DESEN", DeliveryStatus.DEVELOPMENT);  // DESENvolvimento
+        portugueseMapping.put("DESENV", DeliveryStatus.DEVELOPMENT); // DESENVolvimento
+        portugueseMapping.put("ENT", DeliveryStatus.DELIVERED);      // ENTregue
+        portugueseMapping.put("ENTREG", DeliveryStatus.DELIVERED);   // ENTREGue
+        portugueseMapping.put("HOM", DeliveryStatus.HOMOLOGATION);   // HOMologação
+        portugueseMapping.put("HOMO", DeliveryStatus.HOMOLOGATION);  // HOMOlogação
+        portugueseMapping.put("APR", DeliveryStatus.APPROVED);       // APRovado
+        portugueseMapping.put("APRO", DeliveryStatus.APPROVED);      // APROvado
+        portugueseMapping.put("REJ", DeliveryStatus.REJECTED);       // REJeitado
+        portugueseMapping.put("PROD", DeliveryStatus.PRODUCTION);    // PRODução
+        
+        // Verifica se algum dos mapeamentos corresponde
+        for (Map.Entry<String, DeliveryStatus> entry : portugueseMapping.entrySet()) {
+            if (entry.getKey().startsWith(upperStatus) || upperStatus.startsWith(entry.getKey())) {
+                log.debug("Portuguese partial match found: '{}' matches '{}'", statusString, entry.getValue());
+                return entry.getValue();
+            }
+        }
+        
+        log.debug("No match found for status: '{}'", statusString);
+        return null;
+    }
+
     @Override
     public Page<DeliveryGroupResponse> findAllGroupedByTask(String taskName,
                                                              String taskCode,
@@ -360,14 +417,17 @@ public class DeliveryServiceImpl implements DeliveryService {
         log.debug("findAllGroupedByTask - taskName: {}, taskCode: {}, status: {}, pageable: {}", 
                 taskName, taskCode, status, pageable);
 
+        // Converter status String para enum usando método auxiliar
+        DeliveryStatus statusEnum = convertStatusStringToEnum(status);
+
         // Buscar deliveries com paginação usando estratégia de duas queries (sem EntityGraph + Pageable)
         Page<Long> idsPage;
         try {
-            if (taskName != null || taskCode != null || status != null) {
+            if (taskName != null || taskCode != null || statusEnum != null) {
                 // Se tem filtros, usa o método com filtros (apenas IDs)
                 log.debug("Using filtered query for IDs");
                 idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                        null, taskName, taskCode, status, createdAt, updatedAt, pageable
+                        null, taskName, taskCode, statusEnum, createdAt, updatedAt, pageable
                 );
             } else {
                 // Se não tem filtros, usa o método simples (apenas IDs)
