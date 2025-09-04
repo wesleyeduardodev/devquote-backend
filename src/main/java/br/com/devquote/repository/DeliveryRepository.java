@@ -35,14 +35,14 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         SELECT d.id
           FROM Delivery d
           JOIN d.task t
-         WHERE (:id IS NULL OR d.id = :id)
+         WHERE (:taskId IS NULL OR t.id = :taskId)
            AND (:taskName IS NULL OR :taskName = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :taskName, '%')))
            AND (:taskCode IS NULL OR :taskCode = '' OR LOWER(t.code) LIKE LOWER(CONCAT('%', :taskCode, '%')))        
            AND (:status IS NULL OR :status = '' OR d.status = :status)
          ORDER BY t.id DESC
         """)
     Page<Long> findIdsByOptionalFieldsPaginated(
-            @Param("id") Long id,
+            @Param("taskId") Long taskId,
             @Param("taskName") String taskName,
             @Param("taskCode") String taskCode,
             @Param("status") br.com.devquote.enums.DeliveryStatus status,

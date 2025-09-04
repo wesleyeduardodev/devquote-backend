@@ -31,7 +31,8 @@ public interface DeliveryService {
                                             String updatedAt,
                                             Pageable pageable);
 
-    Page<DeliveryGroupResponse> findAllGroupedByTask(String taskName,
+    Page<DeliveryGroupResponse> findAllGroupedByTask(Long taskId,
+                                                      String taskName,
                                                       String taskCode,
                                                       String status,
                                                       String createdAt,

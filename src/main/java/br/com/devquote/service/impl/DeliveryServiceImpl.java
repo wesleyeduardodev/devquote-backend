@@ -407,15 +407,16 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public Page<DeliveryGroupResponse> findAllGroupedByTask(String taskName,
+    public Page<DeliveryGroupResponse> findAllGroupedByTask(Long taskId,
+                                                             String taskName,
                                                              String taskCode,
                                                              String status,
                                                              String createdAt,
                                                              String updatedAt,
                                                              Pageable pageable) {
 
-        log.debug("findAllGroupedByTask - taskName: {}, taskCode: {}, status: {}, pageable: {}", 
-                taskName, taskCode, status, pageable);
+        log.debug("findAllGroupedByTask - taskId: {}, taskName: {}, taskCode: {}, status: {}, pageable: {}", 
+                taskId, taskName, taskCode, status, pageable);
 
         // Converter status String para enum usando método auxiliar
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
@@ -423,11 +424,11 @@ public class DeliveryServiceImpl implements DeliveryService {
         // Buscar deliveries com paginação usando estratégia de duas queries (sem EntityGraph + Pageable)
         Page<Long> idsPage;
         try {
-            if (taskName != null || taskCode != null || statusEnum != null) {
+            if (taskId != null || taskName != null || taskCode != null || statusEnum != null) {
                 // Se tem filtros, usa o método com filtros (apenas IDs)
                 log.debug("Using filtered query for IDs");
                 idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                        null, taskName, taskCode, statusEnum, createdAt, updatedAt, pageable
+                        taskId, taskName, taskCode, statusEnum, createdAt, updatedAt, pageable
                 );
             } else {
                 // Se não tem filtros, usa o método simples (apenas IDs)
@@ -710,7 +711,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                                      String updatedAt, Pageable pageable) {
         
         // Na nova arquitetura, usar o método não otimizado que já funciona
-        return findAllGroupedByTask(taskName, taskCode, status, createdAt, updatedAt, pageable);
+        return findAllGroupedByTask(null, taskName, taskCode, status, createdAt, updatedAt, pageable);
     }
 
     /**
