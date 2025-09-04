@@ -1,7 +1,7 @@
 # DevQuote Backend
 
-Sistema empresarial completo de gestão de orçamentos, projetos, tarefas e entregas para desenvolvedores freelancers.  
-Construído com **Java 21** e **Spring Boot 3.5.4**, oferecendo uma API REST robusta com autenticação OAuth2 Authorization Server integrado e controle granular de permissões.
+Sistema empresarial completo de gestão de tarefas e entregas para desenvolvedores freelancers.  
+Construído com **Java 21** e **Spring Boot 3.5.4**, oferecendo uma API REST robusta com autenticação OAuth2 Authorization Server integrado, controle granular de permissões e sistema de notificações por email.
 
 ## 🚀 Tecnologias
 
@@ -10,19 +10,24 @@ Construído com **Java 21** e **Spring Boot 3.5.4**, oferecendo uma API REST rob
 - **Spring Boot 3.5.4** - Framework base
 - **Spring Security** - Autenticação e autorização
 - **Spring Data JPA** - Persistência de dados
-- **PostgreSQL 15+** - Banco de dados relacional
+- **PostgreSQL 17** - Banco de dados relacional
 
 ### Segurança
 - **OAuth2 Authorization Server** - Servidor de autorização integrado
-- **JWT** - Tokens de autenticação stateless
-- **Spring Security** - Framework de segurança
+- **JWT (jjwt 0.11.5)** - Tokens de autenticação stateless com refresh tokens
+- **Spring Security** - Framework de segurança com RBAC
 - **CORS** - Configuração para cross-origin
 
 ### Documentação e Build
-- **OpenAPI 3.0 / Swagger** - Documentação interativa da API
+- **SpringDoc OpenAPI 2.8.9 / Swagger** - Documentação interativa da API
 - **Maven 3.8+** - Gerenciamento de dependências e build
 - **Docker** - Containerização
-- **Lombok** - Redução de boilerplate
+- **Lombok 1.18.36** - Redução de boilerplate
+
+### Comunicação
+- **JavaMailSender** - Sistema de notificações por email
+- **Thymeleaf** - Templates HTML para emails
+- **@Async** - Processamento assíncrono de emails
 
 ## 📦 Arquitetura do Projeto
 
@@ -72,6 +77,15 @@ SECURITY_ISSUER=http://localhost:8080
 # CORS
 APP_FRONTEND_URL=http://localhost:5173
 
+# Email (Obrigatório para notificações)
+DEVQUOTE_EMAIL_ENABLED=true
+DEVQUOTE_EMAIL_FROM=seu-email@gmail.com
+DEVQUOTE_EMAIL_FINANCE=financeiro@empresa.com
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=seu-email@gmail.com
+MAIL_PASSWORD=senha-de-app-gmail  # Não a senha da conta!
+
 # JPA
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
 SPRING_JPA_SHOW_SQL=false
@@ -79,6 +93,12 @@ SPRING_JPA_SHOW_SQL=false
 # Servidor
 PORT=8080
 ```
+
+### 🔧 Configuração do Gmail para SMTP
+
+1. **Ativar verificação em 2 etapas** na conta Google
+2. **Gerar senha de app**: [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+3. **Usar a senha de app** na variável `MAIL_PASSWORD`
 
 ## 🐳 Docker
 
@@ -143,12 +163,14 @@ Após iniciar a aplicação, acesse:
 - `GET /api/auth/me` - Dados do usuário autenticado
 
 #### Recursos Principais
-- `/api/quotes` - Gestão de orçamentos
 - `/api/projects` - Gestão de projetos
 - `/api/tasks` - Gestão de tarefas
-- `/api/deliveries` - Gestão de entregas
+- `/api/subtasks` - Gestão de subtarefas
+- `/api/deliveries` - Gestão de entregas com itens
+- `/api/delivery-items` - Gestão de itens de entrega
 - `/api/requesters` - Gestão de solicitantes
-- `/api/billing-months` - Faturamento mensal
+- `/api/billing-periods` - Faturamento mensal
+- `/api/billing-period-tasks` - Tarefas do faturamento
 - `/api/dashboard` - Estatísticas e métricas
 
 #### Administração
@@ -182,7 +204,7 @@ Após iniciar a aplicação, acesse:
 
 ### Autorização (RBAC)
 - **Perfis:** Admin, User, Custom
-- **Recursos:** Quote, Project, Task, Delivery, etc
+- **Recursos (8 tipos):** BILLING, TASKS, PROJECTS, DELIVERIES, USERS, REPORTS, SETTINGS
 - **Operações:** CREATE, READ, UPDATE, DELETE
 - **Permissões de Campo:** Controle granular por campo
 
@@ -192,7 +214,7 @@ Após iniciar a aplicação, acesse:
 @RequiresProfile(ProfileType.ADMIN)
 
 // Requer permissão em recurso
-@RequiresPermission(resource = ResourceType.QUOTE, operation = OperationType.UPDATE)
+@RequiresPermission(resource = "TASKS", operation = "UPDATE")
 
 // Combinação de permissões
 @PreAuthorize("hasRole('ADMIN') or @permissionService.hasPermission(#id, 'QUOTE', 'READ')")
@@ -202,22 +224,24 @@ Após iniciar a aplicação, acesse:
 
 ### Módulos de Negócio
 - ✅ **Dashboard** - Estatísticas e métricas consolidadas
-- ✅ **Orçamentos** - CRUD completo com versionamento
 - ✅ **Projetos** - Gestão hierárquica com tarefas
 - ✅ **Tarefas/Subtarefas** - Organização e tracking
-- ✅ **Entregas** - Controle de entregas agrupadas
-- ✅ **Faturamento** - Controle mensal de cobranças
-- ✅ **Solicitantes** - Gestão de clientes/solicitantes
+- ✅ **Entregas** - Sistema completo com itens de entrega
+- ✅ **Faturamento** - Controle mensal com notificação por email
+- ✅ **Solicitantes** - Gestão de clientes/solicitantes com email obrigatório
+- ✅ **Sistema de Email** - Notificações automáticas para tarefas, entregas e faturamento
 
 ### Recursos Técnicos
-- ✅ Paginação e ordenação dinâmica
+- ✅ Paginação e ordenação dinâmica com debounce
 - ✅ Filtros avançados por query params
 - ✅ Soft delete em entidades críticas
 - ✅ Auditoria com created/updated timestamps
 - ✅ Correlation ID para rastreamento
 - ✅ Tratamento global de exceções
-- ✅ Validação em múltiplas camadas
+- ✅ Validação em múltiplas camadas (Bean Validation)
 - ✅ Cache de consultas frequentes
+- ✅ Templates de email HTML responsivos
+- ✅ Lazy Loading otimizado para contextos assíncronos
 
 ## 🏗️ Padrões de Desenvolvimento
 
@@ -256,6 +280,22 @@ curl http://localhost:8080/actuator/metrics
 - Correlation ID em todas as requisições
 - Arquivo: `logs/devquote.log`
 
+## 📧 Sistema de Notificações Email
+
+### Templates Disponíveis
+- `task-created.html` - Nova tarefa criada
+- `task-updated.html` - Tarefa atualizada
+- `task-deleted.html` - Tarefa excluída
+- `delivery-created.html` - Nova entrega criada
+- `delivery-updated.html` - Entrega atualizada
+- `delivery-deleted.html` - Entrega excluída
+- `billing-period-notification.html` - Notificação de faturamento mensal
+
+### Fluxos de Notificação
+- **Tarefas:** Notifica solicitante em criação, edição e exclusão
+- **Entregas:** Notifica solicitante em todas as operações
+- **Faturamento:** Envia relatório consolidado para financeiro
+
 ## 🚀 Deploy
 
 ### Render (Produção)
@@ -271,6 +311,10 @@ services:
         fromDatabase:
           name: devquote-db
           property: connectionString
+      - key: DEVQUOTE_EMAIL_ENABLED
+        value: true
+      - key: DEVQUOTE_EMAIL_FROM
+        value: seu-email@gmail.com
 ```
 
 ### Heroku
