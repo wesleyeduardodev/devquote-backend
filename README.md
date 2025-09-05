@@ -345,6 +345,10 @@ git push heroku main
 
 Este projeto é privado e proprietário. Todos os direitos reservados.
 
-## 👥 Equipe
+## 👥 ngrok
 
-Desenvolvido com ❤️ para a comunidade de desenvolvedores freelancers.
+npm install -g ngrok
+
+ngrok http 8080
+
+ngrok config add-authtoken TOKEN
