@@ -85,6 +85,14 @@ app:
   jwtExpirationMs: ${APP_JWTEXPIRATIONMS:86400000}
   jwtRefreshExpirationMs: ${APP_JWTREFRESHEXPIRATIONMS:2592000000}
 
+# AWS S3 Configuration
+aws:
+  access-key-id: ${AWS_ACCESS_KEY_ID}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+  s3:
+    bucket-name: ${AWS_S3_BUCKET_NAME:devquote-storage}
+    region: ${AWS_S3_REGION:us-east-1}
+
 # Logging - Otimizado para produção
 logging:
   pattern:

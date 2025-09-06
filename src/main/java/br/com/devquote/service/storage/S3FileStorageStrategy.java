@@ -1,0 +1,158 @@
+package br.com.devquote.service.storage;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Duration;
+
+@Service
+@Slf4j
+public class S3FileStorageStrategy implements FileStorageStrategy {
+
+    private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
+
+    @Value("${aws.s3.bucket-name}")
+    private String bucketName;
+
+    @Value("${aws.s3.region}")
+    private String region;
+
+    public S3FileStorageStrategy(
+            @Value("${aws.access-key-id}") String accessKey,
+            @Value("${aws.secret-access-key}") String secretKey,
+            @Value("${aws.s3.region}") String region) {
+
+        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
+        
+        this.s3Client = S3Client.builder()
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
+                .httpClient(UrlConnectionHttpClient.builder().build())
+                .build();
+
+        this.s3Presigner = S3Presigner.builder()
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
+                .build();
+
+        log.info("S3FileStorageStrategy initialized for region: {} and bucket: {}", region, bucketName);
+    }
+
+    @Override
+    public String uploadFile(MultipartFile file, String path) throws IOException {
+        try {
+            String key = buildKey(path);
+            
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .contentType(file.getContentType())
+                    .contentLength(file.getSize())
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            
+            log.info("File uploaded successfully to S3: {}", key);
+            return key;
+            
+        } catch (Exception e) {
+            log.error("Error uploading file to S3: {}", e.getMessage(), e);
+            throw new IOException("Failed to upload file to S3", e);
+        }
+    }
+
+    @Override
+    public String getFileUrl(String filePath) {
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(filePath)
+                    .build();
+
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofHours(1)) // URL válida por 1 hora
+                    .getObjectRequest(getObjectRequest)
+                    .build();
+
+            String url = s3Presigner.presignGetObject(presignRequest).url().toString();
+            log.debug("Generated presigned URL for file: {}", filePath);
+            return url;
+            
+        } catch (Exception e) {
+            log.error("Error generating presigned URL for file: {}", filePath, e);
+            return null;
+        }
+    }
+
+    @Override
+    public InputStream getFileStream(String filePath) throws IOException {
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(filePath)
+                    .build();
+
+            return s3Client.getObject(getObjectRequest);
+            
+        } catch (Exception e) {
+            log.error("Error getting file stream from S3: {}", filePath, e);
+            throw new IOException("Failed to get file stream from S3", e);
+        }
+    }
+
+    @Override
+    public boolean deleteFile(String filePath) {
+        try {
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(filePath)
+                    .build();
+
+            s3Client.deleteObject(deleteObjectRequest);
+            log.info("File deleted successfully from S3: {}", filePath);
+            return true;
+            
+        } catch (Exception e) {
+            log.error("Error deleting file from S3: {}", filePath, e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean fileExists(String filePath) {
+        try {
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(filePath)
+                    .build();
+
+            s3Client.headObject(headObjectRequest);
+            return true;
+            
+        } catch (NoSuchKeyException e) {
+            return false;
+        } catch (Exception e) {
+            log.error("Error checking file existence in S3: {}", filePath, e);
+            return false;
+        }
+    }
+
+    private String buildKey(String path) {
+        // Remove barras duplas e garante que não comece com barra
+        return path.replaceAll("//+", "/").replaceAll("^/+", "");
+    }
+}
