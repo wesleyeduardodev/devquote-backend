@@ -73,7 +73,9 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
 
         // Atualizar status da delivery automaticamente
         delivery.updateStatus();
-        deliveryRepository.save(delivery);
+        delivery = deliveryRepository.save(delivery);
+
+        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("DeliveryItem created with id: {}", item.getId());
         return DeliveryItemAdapter.toResponseDTO(item);
@@ -107,7 +109,9 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
 
         // Atualizar status da delivery automaticamente
         item.getDelivery().updateStatus();
-        deliveryRepository.save(item.getDelivery());
+        Delivery updatedDelivery = deliveryRepository.save(item.getDelivery());
+
+        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("DeliveryItem updated with id: {}", item.getId());
         return DeliveryItemAdapter.toResponseDTO(item);
@@ -136,7 +140,9 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         
         // Atualizar status da delivery automaticamente
         delivery.updateStatus();
-        deliveryRepository.save(delivery);
+        delivery = deliveryRepository.save(delivery);
+
+        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("DeliveryItem deleted with id: {}", id);
     }
@@ -173,6 +179,8 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             delivery.updateStatus();
             deliveryRepository.save(delivery);
         });
+
+        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("Bulk deleted {} delivery items", ids.size());
     }
@@ -313,7 +321,9 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
 
         // Atualizar status da delivery automaticamente
         delivery.updateStatus();
-        deliveryRepository.save(delivery);
+        delivery = deliveryRepository.save(delivery);
+
+        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("Created {} delivery items for delivery: {}", createdItems.size(), deliveryId);
         return DeliveryItemAdapter.toResponseDTOList(createdItems);
@@ -369,6 +379,8 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             delivery.updateStatus();
             deliveryRepository.save(delivery);
         });
+
+        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("Updated {} delivery items", itemIds.size());
         return DeliveryItemAdapter.toResponseDTOList(updatedItems);

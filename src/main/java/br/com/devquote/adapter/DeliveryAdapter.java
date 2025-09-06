@@ -32,6 +32,7 @@ public final class DeliveryAdapter {
                 .productionCount(entity.getItemsByStatus(DeliveryStatus.PRODUCTION))
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .deliveryEmailSent(entity.getDeliveryEmailSent())
                 .items(entity.getItems() != null ? 
                         DeliveryItemAdapter.toResponseDTOList(entity.getItems()) : null)
                 .build();

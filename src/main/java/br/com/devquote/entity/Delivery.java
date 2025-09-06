@@ -37,6 +37,10 @@ public class Delivery {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "delivery_email_sent")
+    @Builder.Default
+    private Boolean deliveryEmailSent = false;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

@@ -527,19 +527,34 @@ public class EmailServiceImpl implements EmailService {
 
         // Dados dos itens da entrega (nova arquitetura)
         if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
-            // Para compatibilidade com templates existentes, usar dados do primeiro item
-            var firstItem = delivery.getItems().get(0);
-            context.setVariable("deliveryBranch", firstItem.getBranch() != null ? firstItem.getBranch() : "");
-            context.setVariable("deliverySourceBranch", firstItem.getSourceBranch() != null ? firstItem.getSourceBranch() : "");
-            context.setVariable("deliveryPullRequest", firstItem.getPullRequest() != null ? firstItem.getPullRequest() : "");
-            context.setVariable("deliveryScript", firstItem.getScript() != null ? firstItem.getScript() : "");
-            context.setVariable("deliveryNotes", firstItem.getNotes() != null ? firstItem.getNotes() : "");
-            context.setVariable("deliveryStartedAt", firstItem.getStartedAt() != null ? firstItem.getStartedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
-            context.setVariable("deliveryFinishedAt", firstItem.getFinishedAt() != null ? firstItem.getFinishedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "");
+            // Remover dados técnicos da seção principal - eles ficam apenas nos itens
+            context.setVariable("deliveryBranch", "");
+            context.setVariable("deliverySourceBranch", "");
+            context.setVariable("deliveryPullRequest", "");
+            context.setVariable("deliveryScript", "");
+            context.setVariable("deliveryNotes", "");
+            context.setVariable("deliveryStartedAt", "");
+            context.setVariable("deliveryFinishedAt", "");
             
-            // Lista completa de itens para templates que queiram mostrar todos
-            context.setVariable("deliveryItems", delivery.getItems());
-            context.setVariable("hasMultipleItems", delivery.getItems().size() > 1);
+            // Lista completa de itens para templates - aqui ficam todos os dados técnicos
+            var translatedItems = delivery.getItems().stream()
+                .map(item -> {
+                    var map = new java.util.HashMap<String, Object>();
+                    map.put("project", item.getProject());
+                    map.put("status", translateDeliveryStatus(item.getStatus()));
+                    map.put("branch", item.getBranch());
+                    map.put("sourceBranch", item.getSourceBranch());
+                    map.put("pullRequest", item.getPullRequest());
+                    map.put("script", item.getScript());
+                    map.put("notes", item.getNotes());
+                    map.put("startedAt", item.getStartedAt());
+                    map.put("finishedAt", item.getFinishedAt());
+                    return map;
+                })
+                .collect(java.util.stream.Collectors.toList());
+            
+            context.setVariable("deliveryItems", translatedItems);
+            context.setVariable("hasMultipleItems", delivery.getItems().size() >= 1); // Sempre mostrar itens quando houver
         } else {
             // Valores padrão se não houver itens
             context.setVariable("deliveryBranch", "");

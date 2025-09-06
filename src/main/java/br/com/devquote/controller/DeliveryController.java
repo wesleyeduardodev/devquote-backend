@@ -228,4 +228,16 @@ public class DeliveryController implements DeliveryControllerDoc {
         
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
+
+    @PostMapping("/{id}/send-delivery-email")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<String> sendDeliveryEmail(@PathVariable Long id) {
+        try {
+            deliveryService.sendDeliveryEmail(id);
+            return ResponseEntity.ok("Email de entrega enviado com sucesso!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Falha ao enviar email: " + e.getMessage());
+        }
+    }
 }

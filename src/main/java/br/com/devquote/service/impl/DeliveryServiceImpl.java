@@ -111,36 +111,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             entity = deliveryRepository.save(entity);
         }
 
-        // Enviar notificação por email
-        try {
-            // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
-            Delivery deliveryWithRelations = deliveryRepository.findById(entity.getId())
-                .map(d -> {
-                    // Inicializar relacionamentos lazy
-                    if (d.getTask() != null) {
-                        d.getTask().getTitle(); // Inicializa Task
-                        if (d.getTask().getRequester() != null) {
-                            d.getTask().getRequester().getName(); // Inicializa Requester
-                            d.getTask().getRequester().getEmail();
-                        }
-                    }
-                    // Na nova arquitetura, inicializar itens da delivery
-                    if (d.getItems() != null) {
-                        d.getItems().size(); // Inicializa items
-                        d.getItems().forEach(item -> {
-                            if (item.getProject() != null) {
-                                item.getProject().getName(); // Inicializa Project dos items
-                            }
-                        });
-                    }
-                    return d;
-                })
-                .orElse(entity);
-
-            emailService.sendDeliveryCreatedNotification(deliveryWithRelations);
-        } catch (Exception e) {
-            log.warn("Failed to send email notification for delivery creation: {}", e.getMessage());
-        }
+        // Email automático removido - agora é manual via botão na listagem
 
         return DeliveryAdapter.toResponseDTO(entity);
     }
@@ -151,40 +122,44 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
         Task task = taskRepository.findById(dto.getTaskId())
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-        // Na nova arquitetura, não há projectId direto no DeliveryRequest
-        DeliveryAdapter.updateEntityFromDto(dto, entity, task);
+        
+        // Atualizar informações básicas da delivery
+        entity.setTask(task);
+        if (dto.getStatus() != null) {
+            entity.setStatus(br.com.devquote.enums.DeliveryStatus.fromString(dto.getStatus()));
+        }
+        
+        // Limpar itens existentes
+        entity.getItems().clear();
+        
+        // Adicionar novos itens se fornecidos
+        if (dto.getItems() != null && !dto.getItems().isEmpty()) {
+            final Delivery deliveryEntity = entity;
+            dto.getItems().forEach(itemDto -> {
+                Project project = projectRepository.findById(itemDto.getProjectId())
+                        .orElseThrow(() -> new RuntimeException("Project not found with ID: " + itemDto.getProjectId()));
+                
+                var item = br.com.devquote.entity.DeliveryItem.builder()
+                        .delivery(deliveryEntity)
+                        .project(project)
+                        .status(itemDto.getStatus() != null ? br.com.devquote.enums.DeliveryStatus.fromString(itemDto.getStatus()) : br.com.devquote.enums.DeliveryStatus.PENDING)
+                        .branch(itemDto.getBranch())
+                        .sourceBranch(itemDto.getSourceBranch())
+                        .pullRequest(itemDto.getPullRequest())
+                        .script(itemDto.getScript())
+                        .notes(itemDto.getNotes())
+                        .startedAt(itemDto.getStartedAt())
+                        .finishedAt(itemDto.getFinishedAt())
+                        .build();
+                
+                deliveryEntity.addItem(item);
+            });
+        }
+        
+        // Salvar delivery com os itens atualizados
         entity = deliveryRepository.save(entity);
 
-        // Enviar notificação por email
-        try {
-            // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
-            Delivery deliveryWithRelations = deliveryRepository.findById(entity.getId())
-                .map(d -> {
-                    // Inicializar relacionamentos lazy
-                    if (d.getTask() != null) {
-                        d.getTask().getTitle(); // Inicializa Task
-                        if (d.getTask().getRequester() != null) {
-                            d.getTask().getRequester().getName(); // Inicializa Requester
-                            d.getTask().getRequester().getEmail();
-                        }
-                    }
-                    // Na nova arquitetura, inicializar itens da delivery
-                    if (d.getItems() != null) {
-                        d.getItems().size(); // Inicializa items
-                        d.getItems().forEach(item -> {
-                            if (item.getProject() != null) {
-                                item.getProject().getName(); // Inicializa Project dos items
-                            }
-                        });
-                    }
-                    return d;
-                })
-                .orElse(entity);
-
-            emailService.sendDeliveryUpdatedNotification(deliveryWithRelations);
-        } catch (Exception e) {
-            log.warn("Failed to send email notification for delivery update: {}", e.getMessage());
-        }
+        // Email automático removido - agora é manual via botão na listagem
 
         return DeliveryAdapter.toResponseDTO(entity);
     }
@@ -235,6 +210,44 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (ids == null || ids.isEmpty()) {
             return;
         }
+        
+        // Buscar todas as entregas antes de deletar para enviar notificações
+        List<Delivery> deliveriesToDelete = deliveryRepository.findAllById(ids);
+        
+        // Enviar notificação por email para cada entrega
+        for (Delivery delivery : deliveriesToDelete) {
+            try {
+                // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
+                Delivery deliveryWithRelations = deliveryRepository.findById(delivery.getId())
+                    .map(d -> {
+                        // Inicializar relacionamentos lazy
+                        if (d.getTask() != null) {
+                            d.getTask().getTitle(); // Inicializa Task
+                            if (d.getTask().getRequester() != null) {
+                                d.getTask().getRequester().getName(); // Inicializa Requester
+                                d.getTask().getRequester().getEmail();
+                            }
+                        }
+                        // Na nova arquitetura, inicializar itens da delivery
+                        if (d.getItems() != null) {
+                            d.getItems().size(); // Inicializa items
+                            d.getItems().forEach(item -> {
+                                if (item.getProject() != null) {
+                                    item.getProject().getName(); // Inicializa Project dos items
+                                }
+                            });
+                        }
+                        return d;
+                    })
+                    .orElse(delivery);
+                    
+                emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
+            } catch (Exception e) {
+                log.error("Failed to send email notification for delivery deletion ID: {}", delivery.getId(), e);
+            }
+        }
+        
+        // Deletar todas as entregas
         deliveryRepository.deleteAllById(ids);
     }
 
@@ -791,6 +804,41 @@ public class DeliveryServiceImpl implements DeliveryService {
         return deliveryRepository.findByTaskId(taskId)
                 .map(DeliveryAdapter::toResponseDTO)
                 .orElse(null);
+    }
+    
+    @Override
+    @Transactional
+    public void sendDeliveryEmail(Long id) {
+        
+        final Delivery delivery = deliveryRepository.findById(id)
+                .map(entity -> {
+                    // Inicializar relacionamentos lazy antes do envio assíncrono
+                    if (entity.getTask() != null) {
+                        entity.getTask().getTitle();
+                        entity.getTask().getCode();
+                        if (entity.getTask().getRequester() != null) {
+                            entity.getTask().getRequester().getName();
+                            entity.getTask().getRequester().getEmail();
+                        }
+                    }
+                    if (entity.getItems() != null) {
+                        entity.getItems().forEach(item -> {
+                            item.getStatus();
+                            if (item.getProject() != null) {
+                                item.getProject().getName();
+                            }
+                        });
+                    }
+                    return entity;
+                })
+                .orElseThrow(() -> new RuntimeException("Entrega não encontrada com ID: " + id));
+        
+        // Enviar email de notificação
+        emailService.sendDeliveryUpdatedNotification(delivery);
+        
+        // Marcar email como enviado
+        delivery.setDeliveryEmailSent(true);
+        deliveryRepository.save(delivery);
     }
     
     private Long safeGetLong(Object value) {

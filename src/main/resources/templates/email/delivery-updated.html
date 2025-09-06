@@ -209,36 +209,6 @@
                             <span class="status pendente" th:text="${deliveryStatus}">Pendente</span>
                         </div>
                     </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(deliveryPullRequest)}">
-                        <div class="info-label">Link da entrega:</div>
-                        <div class="info-value">
-                            <a href="#" th:href="${deliveryPullRequest}" th:text="${deliveryPullRequest}" class="link">Link do Pull Request</a>
-                        </div>
-                    </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(deliveryBranch)}">
-                        <div class="info-label">Branch:</div>
-                        <div class="info-value">
-                            <code th:text="${deliveryBranch}">feature/nova-funcionalidade</code>
-                        </div>
-                    </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(deliverySourceBranch)}">
-                        <div class="info-label">Branch de Origem:</div>
-                        <div class="info-value">
-                            <code th:text="${deliverySourceBranch}">main</code>
-                        </div>
-                    </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(deliveryStartedAt)}">
-                        <div class="info-label">Data de Início:</div>
-                        <div class="info-value" th:text="${deliveryStartedAt}">01/01/2024</div>
-                    </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(deliveryFinishedAt)}">
-                        <div class="info-label">Data de Finalização:</div>
-                        <div class="info-value" th:text="${deliveryFinishedAt}">01/01/2024</div>
-                    </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(createdBy)}">
-                        <div class="info-label">Criado por:</div>
-                        <div class="info-value" th:text="${createdBy}">Usuário</div>
-                    </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(createdAt)}">
                         <div class="info-label">Data de Criação:</div>
                         <div class="info-value" th:text="${createdAt}">01/01/2024 10:00</div>
@@ -264,6 +234,55 @@
                 </div>
             </div>
 
+            <!-- ITENS DA ENTREGA -->
+            <div class="section" th:if="${deliveryItems != null and !deliveryItems.isEmpty()}">
+                <h2>📦 Itens da Entrega</h2>
+                
+                <div style="margin-top: 15px;" th:each="item, stat : ${deliveryItems}">
+                    <div style="background-color: white; border: 1px solid #e9ecef; border-radius: 4px; padding: 15px; margin-bottom: 15px;">
+                        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">
+                            Item #<span th:text="${stat.count}">1</span>
+                            <span th:if="${item.project != null}" th:text="${' - ' + item.project.name}" style="color: #666; font-weight: normal;">Projeto</span>
+                        </h3>
+                        
+                        <div class="info-grid">
+                            <!-- 1. Status -->
+                            <div class="info-row" th:if="${item.status != null}">
+                                <div class="info-label">Status:</div>
+                                <div class="info-value">
+                                    <span class="status pendente" th:text="${item.status}">Pendente</span>
+                                </div>
+                            </div>
+                            <!-- 2. Link da Entrega (Pull Request) -->
+                            <div class="info-row" th:if="${!#strings.isEmpty(item.pullRequest)}">
+                                <div class="info-label">Link da Entrega (Pull Request):</div>
+                                <div class="info-value">
+                                    <a href="#" th:href="${item.pullRequest}" th:text="${item.pullRequest}" class="link">Link PR</a>
+                                </div>
+                            </div>
+                            <!-- 3. Branch -->
+                            <div class="info-row" th:if="${!#strings.isEmpty(item.branch)}">
+                                <div class="info-label">Branch:</div>
+                                <div class="info-value">
+                                    <code th:text="${item.branch}">feature/branch</code>
+                                </div>
+                            </div>
+                            <!-- 4. Notas -->
+                            <div class="info-row" th:if="${!#strings.isEmpty(item.notes)}">
+                                <div class="info-label">Notas:</div>
+                                <div class="info-value" th:text="${item.notes}">Notas</div>
+                            </div>
+                            <!-- 5. Script (se houver no item) -->
+                            <div class="info-row" th:if="${!#strings.isEmpty(item.script)}">
+                                <div class="info-label">Script:</div>
+                                <div class="info-value">
+                                    <div class="code-block" th:text="${item.script}">Script do item...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- SCRIPT -->
             <div class="section" th:if="${!#strings.isEmpty(deliveryScript)}">

@@ -60,4 +60,6 @@ public interface DeliveryService {
     byte[] exportToExcel() throws IOException;
     
     DeliveryResponse findByTaskId(Long taskId);
+    
+    void sendDeliveryEmail(Long id);
 }
