@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/task-attachments")
+@RequestMapping("/api/task-attachments")
 @RequiredArgsConstructor
 @Slf4j
 public class TaskAttachmentController implements TaskAttachmentControllerDoc {
