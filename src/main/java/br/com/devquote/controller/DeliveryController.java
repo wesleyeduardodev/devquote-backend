@@ -7,6 +7,7 @@ import br.com.devquote.dto.response.DeliveryGroupResponse;
 import br.com.devquote.dto.response.DeliveryStatusCount;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.service.DeliveryService;
+import br.com.devquote.service.DeliveryAttachmentService;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,6 +36,7 @@ import java.util.Set;
 public class DeliveryController implements DeliveryControllerDoc {
 
     private final DeliveryService deliveryService;
+    private final DeliveryAttachmentService deliveryAttachmentService;
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
             "id", "task.id", "task.title", "task.code", "status", "createdAt", "updatedAt"
@@ -80,6 +83,32 @@ public class DeliveryController implements DeliveryControllerDoc {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<DeliveryResponse> create(@RequestBody @Valid DeliveryRequest dto) {
         return new ResponseEntity<>(deliveryService.create(dto), HttpStatus.CREATED);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<DeliveryResponse> createWithFiles(
+            @RequestParam("dto") String dtoJson,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files) {
+        
+        try {
+            // Deserializar o JSON
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            DeliveryRequest deliveryRequest = objectMapper.readValue(dtoJson, DeliveryRequest.class);
+            
+            // Criar entrega
+            DeliveryResponse delivery = deliveryService.create(deliveryRequest);
+            
+            // Fazer upload dos arquivos se fornecidos
+            if (files != null && !files.isEmpty()) {
+                deliveryAttachmentService.uploadFiles(delivery.getId(), files);
+            }
+            
+            return new ResponseEntity<>(delivery, HttpStatus.CREATED);
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao criar entrega com anexos: " + e.getMessage(), e);
+        }
     }
 
     @Override

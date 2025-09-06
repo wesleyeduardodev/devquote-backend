@@ -12,6 +12,8 @@ import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.repository.ProjectRepository;
 import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.DeliveryService;
+import br.com.devquote.service.DeliveryAttachmentService;
+import br.com.devquote.service.DeliveryItemAttachmentService;
 import br.com.devquote.service.EmailService;
 import br.com.devquote.utils.ExcelReportUtils;
 import jakarta.persistence.EntityManager;
@@ -41,6 +43,8 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final EntityManager entityManager;
     private final ExcelReportUtils excelReportUtils;
     private final EmailService emailService;
+    private final DeliveryAttachmentService deliveryAttachmentService;
+    private final DeliveryItemAttachmentService deliveryItemAttachmentService;
 
     @Override
     public List<DeliveryResponse> findAll() {
@@ -169,6 +173,15 @@ public class DeliveryServiceImpl implements DeliveryService {
         Delivery entity = deliveryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
 
+        // Excluir todos os anexos da entrega e dos itens de entrega
+        try {
+            deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(id);
+            deliveryItemAttachmentService.deleteAllDeliveryItemAttachmentsByDeliveryId(id);
+            log.info("Successfully deleted all attachments for delivery {}", id);
+        } catch (Exception e) {
+            log.warn("Failed to delete attachments for delivery {}: {}", id, e.getMessage());
+        }
+
         // Enviar notificação por email antes da exclusão
         try {
             log.debug("Initiating email notification for delivery deletion with ID: {}", id);
@@ -213,6 +226,17 @@ public class DeliveryServiceImpl implements DeliveryService {
         
         // Buscar todas as entregas antes de deletar para enviar notificações
         List<Delivery> deliveriesToDelete = deliveryRepository.findAllById(ids);
+        
+        // Excluir anexos de todas as entregas
+        for (Long deliveryId : ids) {
+            try {
+                deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(deliveryId);
+                deliveryItemAttachmentService.deleteAllDeliveryItemAttachmentsByDeliveryId(deliveryId);
+                log.info("Successfully deleted all attachments for delivery {}", deliveryId);
+            } catch (Exception e) {
+                log.warn("Failed to delete attachments for delivery {}: {}", deliveryId, e.getMessage());
+            }
+        }
         
         // Enviar notificação por email para cada entrega
         for (Delivery delivery : deliveriesToDelete) {
@@ -269,8 +293,18 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         log.debug("Found delivery to delete for task ID: {}", taskId);
 
-        // Enviar notificação por email para a delivery antes da exclusão
+        // Excluir anexos da entrega e dos itens
         Delivery delivery = deliveryToDelete.get();
+        Long deliveryId = delivery.getId();
+        try {
+            deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(deliveryId);
+            deliveryItemAttachmentService.deleteAllDeliveryItemAttachmentsByDeliveryId(deliveryId);
+            log.info("Successfully deleted all attachments for delivery {} (task {})", deliveryId, taskId);
+        } catch (Exception e) {
+            log.warn("Failed to delete attachments for delivery {} (task {}): {}", deliveryId, taskId, e.getMessage());
+        }
+
+        // Enviar notificação por email para a delivery antes da exclusão
         {
             try {
                 log.debug("Sending deletion notification for delivery ID: {}", delivery.getId());
