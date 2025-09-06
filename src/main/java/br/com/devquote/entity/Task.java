@@ -66,6 +66,10 @@ public class Task {
     @Builder.Default
     private Boolean financialEmailSent = false;
 
+    @Column(name = "task_email_sent")
+    @Builder.Default
+    private Boolean taskEmailSent = false;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

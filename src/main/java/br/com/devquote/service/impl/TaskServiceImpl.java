@@ -136,13 +136,6 @@ public class TaskServiceImpl implements TaskService {
         // Criar entrega automaticamente para a nova tarefa
         ensureTaskHasDelivery(entity);
 
-        // Enviar notificação por email
-        try {
-            emailService.sendTaskCreatedNotification(entity);
-        } catch (Exception e) {
-            log.warn("Failed to send email notification for task creation: {}", e.getMessage());
-        }
-
         return TaskAdapter.toResponseDTO(entity);
     }
 
@@ -181,13 +174,6 @@ public class TaskServiceImpl implements TaskService {
 
         // Verificar e criar entrega se não existir
         ensureTaskHasDelivery(entity);
-
-        // Enviar notificação por email
-        try {
-            emailService.sendTaskUpdatedNotification(entity);
-        } catch (Exception e) {
-            log.warn("Failed to send email notification for task update: {}", e.getMessage());
-        }
 
         return TaskAdapter.toResponseDTO(entity);
     }
@@ -246,13 +232,6 @@ public class TaskServiceImpl implements TaskService {
         // Criar entrega automaticamente para a nova tarefa
         ensureTaskHasDelivery(task);
 
-        // Enviar notificação por email
-        try {
-            emailService.sendTaskCreatedNotification(task);
-        } catch (Exception e) {
-            log.warn("Failed to send email notification for task creation: {}", e.getMessage());
-        }
-
         return buildTaskWithSubTasksResponse(task, persistedSubTasks);
     }
 
@@ -302,13 +281,6 @@ public class TaskServiceImpl implements TaskService {
 
         // Verificar e criar entrega se não existir
         ensureTaskHasDelivery(task);
-
-        // Enviar notificação por email
-        try {
-            emailService.sendTaskUpdatedNotification(task);
-        } catch (Exception e) {
-            log.warn("Failed to send email notification for task update with subtasks: {}", e.getMessage());
-        }
 
         return buildTaskWithSubTasksResponse(task, updated);
     }
@@ -979,6 +951,29 @@ public class TaskServiceImpl implements TaskService {
             log.error("Failed to send financial email notification for task {}: {}", taskId, e.getMessage(), e);
             throw new RuntimeException("Failed to send financial email notification");
         }
+    }
+
+    @Override
+    @Transactional
+    public void sendTaskEmail(Long taskId) {
+        
+        final Task task = taskRepository.findById(taskId)
+                .map(entity -> {
+                    // Inicializar relacionamentos lazy antes do envio assíncrono
+                    if (entity.getRequester() != null) {
+                        entity.getRequester().getName();
+                        entity.getRequester().getEmail();
+                    }
+                    return entity;
+                })
+                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com ID: " + taskId));
+        
+        // Enviar email de notificação
+        emailService.sendTaskUpdatedNotification(task);
+        
+        // Marcar email como enviado
+        task.setTaskEmailSent(true);
+        taskRepository.save(task);
     }
 
     /**

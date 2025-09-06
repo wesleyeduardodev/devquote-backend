@@ -248,4 +248,16 @@ public class TaskController implements TaskControllerDoc {
 
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
+
+    @PostMapping("/{id}/send-task-email")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<String> sendTaskEmail(@PathVariable Long id) {
+        try {
+            taskService.sendTaskEmail(id);
+            return ResponseEntity.ok("Email de tarefa enviado com sucesso!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Falha ao enviar email: " + e.getMessage());
+        }
+    }
 }

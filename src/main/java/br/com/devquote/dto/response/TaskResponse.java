@@ -65,4 +65,6 @@ public class TaskResponse {
     private Boolean hasDelivery;
     
     private Boolean financialEmailSent;
+    
+    private Boolean taskEmailSent;
 }
