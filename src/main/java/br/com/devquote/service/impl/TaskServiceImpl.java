@@ -54,6 +54,7 @@ public class TaskServiceImpl implements TaskService {
     private final ExcelReportUtils excelReportUtils;
     private final EmailService emailService;
     private final DeliveryService deliveryService;
+    private final TaskAttachmentService taskAttachmentService;
 
     @Override
     public List<TaskResponse> findAll() {
@@ -189,6 +190,13 @@ public class TaskServiceImpl implements TaskService {
         log.warn("TASK DELETE id={} title={} user={}",
             id, entity.getTitle(), currentUser != null ? currentUser.getUsername() : "unknown");
 
+        // Excluir todos os anexos e pasta do storage antes da exclusão da tarefa
+        try {
+            taskAttachmentService.deleteAllTaskAttachmentsAndFolder(id);
+        } catch (Exception e) {
+            log.warn("Failed to delete task attachments for task {}: {}", id, e.getMessage());
+        }
+
         // Enviar notificação por email antes da exclusão
         try {
             emailService.sendTaskDeletedNotification(entity);
@@ -296,7 +304,12 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("Cannot delete task. It is linked to a billing period.");
         }
 
-        // Entregas não são mais criadas automaticamente
+        // Excluir todos os anexos e pasta do storage antes da exclusão da tarefa
+        try {
+            taskAttachmentService.deleteAllTaskAttachmentsAndFolder(taskId);
+        } catch (Exception e) {
+            log.warn("Failed to delete task attachments for task {}: {}", taskId, e.getMessage());
+        }
 
         // Enviar notificação por email antes da exclusão
         try {

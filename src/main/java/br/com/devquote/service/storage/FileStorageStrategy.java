@@ -37,6 +37,13 @@ public interface FileStorageStrategy {
     boolean deleteFile(String filePath);
 
     /**
+     * Exclui toda uma pasta (todos os arquivos com o prefixo especificado)
+     * @param folderPath Caminho da pasta a ser excluída (ex: "tasks/123/")
+     * @return true se excluído com sucesso
+     */
+    boolean deleteFolder(String folderPath);
+
+    /**
      * Verifica se um arquivo existe
      * @param filePath Caminho do arquivo
      * @return true se existe

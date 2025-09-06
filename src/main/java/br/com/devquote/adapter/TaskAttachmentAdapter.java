@@ -28,7 +28,6 @@ public class TaskAttachmentAdapter {
                 .fileSize(entity.getFileSize())
                 .filePath(entity.getFilePath())
                 .fileUrl(generateFileUrl(entity.getFilePath()))
-                .excluded(entity.getExcluded())
                 .uploadedAt(entity.getUploadedAt())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())

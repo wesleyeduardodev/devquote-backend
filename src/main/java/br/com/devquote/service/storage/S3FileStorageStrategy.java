@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -128,6 +129,60 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
             
         } catch (Exception e) {
             log.error("Error deleting file from S3: {}", filePath, e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteFolder(String folderPath) {
+        try {
+            // Garantir que o folderPath termina com "/"
+            if (!folderPath.endsWith("/")) {
+                folderPath += "/";
+            }
+
+            // Listar todos os objetos com o prefixo da pasta
+            ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(folderPath)
+                    .build();
+
+            ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
+            
+            if (listResponse.contents().isEmpty()) {
+                log.info("No objects found in folder: {}", folderPath);
+                return true;
+            }
+
+            // Preparar lista de objetos para exclusão em lote
+            List<ObjectIdentifier> objectsToDelete = listResponse.contents().stream()
+                    .map(s3Object -> ObjectIdentifier.builder().key(s3Object.key()).build())
+                    .collect(java.util.stream.Collectors.toList());
+
+            // Excluir todos os objetos em lote
+            Delete delete = Delete.builder()
+                    .objects(objectsToDelete)
+                    .quiet(false)
+                    .build();
+
+            DeleteObjectsRequest deleteRequest = DeleteObjectsRequest.builder()
+                    .bucket(bucketName)
+                    .delete(delete)
+                    .build();
+
+            DeleteObjectsResponse deleteResponse = s3Client.deleteObjects(deleteRequest);
+            
+            int deletedCount = deleteResponse.deleted().size();
+            log.info("Successfully deleted {} objects from folder: {}", deletedCount, folderPath);
+            
+            if (!deleteResponse.errors().isEmpty()) {
+                log.warn("Some objects failed to delete from folder {}: {}", folderPath, deleteResponse.errors());
+            }
+            
+            return deleteResponse.errors().isEmpty();
+            
+        } catch (Exception e) {
+            log.error("Error deleting folder from S3: {}", folderPath, e);
             return false;
         }
     }

@@ -48,4 +48,9 @@ public interface TaskAttachmentService {
      * Exclui todos os anexos de uma tarefa (soft delete)
      */
     void deleteAllTaskAttachments(Long taskId);
+
+    /**
+     * Exclui todos os anexos de uma tarefa e remove completamente a pasta do storage
+     */
+    void deleteAllTaskAttachmentsAndFolder(Long taskId);
 }

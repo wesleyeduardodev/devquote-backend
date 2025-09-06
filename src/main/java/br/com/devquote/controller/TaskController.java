@@ -221,15 +221,7 @@ public class TaskController implements TaskControllerDoc {
     @DeleteMapping("/full/{taskId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId) {
-        // Primeiro, excluir todos os anexos da tarefa
-        try {
-            taskAttachmentService.deleteAllTaskAttachments(taskId);
-        } catch (Exception e) {
-            // Log do erro, mas continua com a exclusão da tarefa
-            System.err.println("Erro ao excluir anexos da tarefa " + taskId + ": " + e.getMessage());
-        }
-        
-        // Depois, excluir a tarefa e subtarefas
+        // O método deleteTaskWithSubTasks já cuida da exclusão dos anexos automaticamente
         taskService.deleteTaskWithSubTasks(taskId);
         return ResponseEntity.noContent().build();
     }

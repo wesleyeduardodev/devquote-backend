@@ -75,7 +75,6 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
                     .contentType(file.getContentType())
                     .fileSize(file.getSize())
                     .filePath(uploadedFilePath)
-                    .excluded(false)
                     .uploadedAt(LocalDateTime.now())
                     .build();
 
@@ -93,7 +92,7 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
     @Override
     @Transactional(readOnly = true)
     public List<TaskAttachmentResponse> getTaskAttachments(Long taskId) {
-        List<TaskAttachment> attachments = taskAttachmentRepository.findByTaskIdAndNotExcluded(taskId);
+        List<TaskAttachment> attachments = taskAttachmentRepository.findByTaskId(taskId);
         return taskAttachmentAdapter.toResponseList(attachments);
     }
 
@@ -112,10 +111,6 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
         TaskAttachment attachment = taskAttachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new RuntimeException("Anexo não encontrado com ID: " + attachmentId));
 
-        if (attachment.getExcluded()) {
-            throw new RuntimeException("Anexo foi excluído e não pode ser baixado");
-        }
-
         try {
             return new InputStreamResource(fileStorageStrategy.getFileStream(attachment.getFilePath()));
         } catch (IOException e) {
@@ -129,11 +124,11 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
         TaskAttachment attachment = taskAttachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new RuntimeException("Anexo não encontrado com ID: " + attachmentId));
 
-        // Soft delete - marca como excluído
-        attachment.setExcluded(true);
-        taskAttachmentRepository.save(attachment);
+        // DELETE físico no banco
+        taskAttachmentRepository.delete(attachment);
+        log.info("Attachment deleted from database: {}", attachment.getOriginalFileName());
 
-        // Tentar deletar arquivo do storage (não bloqueia se falhar)
+        // Deletar arquivo do storage
         try {
             fileStorageStrategy.deleteFile(attachment.getFilePath());
             log.info("File deleted from storage: {}", attachment.getFilePath());
@@ -156,18 +151,48 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
 
     @Override
     public void deleteAllTaskAttachments(Long taskId) {
-        List<TaskAttachment> attachments = taskAttachmentRepository.findByTaskIdAndNotExcluded(taskId);
+        List<TaskAttachment> attachments = taskAttachmentRepository.findByTaskId(taskId);
         
+        // DELETE físico de todos os anexos
         for (TaskAttachment attachment : attachments) {
-            attachment.setExcluded(true);
-            taskAttachmentRepository.save(attachment);
+            taskAttachmentRepository.delete(attachment);
             
             // Tentar deletar arquivo do storage
             try {
                 fileStorageStrategy.deleteFile(attachment.getFilePath());
+                log.info("File deleted from storage: {}", attachment.getFilePath());
             } catch (Exception e) {
                 log.warn("Could not delete file from storage: {} - {}", attachment.getFilePath(), e.getMessage());
             }
+        }
+        
+        log.info("Deleted {} attachments from database for task {}", attachments.size(), taskId);
+    }
+
+    @Override
+    public void deleteAllTaskAttachmentsAndFolder(Long taskId) {
+        log.info("Physically deleting all attachments and folder for task ID: {}", taskId);
+        
+        // Buscar todos os anexos da tarefa
+        List<TaskAttachment> attachments = taskAttachmentRepository.findByTaskId(taskId);
+        
+        // Fazer DELETE físico de todos os anexos no banco
+        if (!attachments.isEmpty()) {
+            taskAttachmentRepository.deleteAll(attachments);
+            log.info("Physically deleted {} attachments from database for task {}", attachments.size(), taskId);
+        }
+        
+        // Excluir toda a pasta do storage S3
+        String folderPath = "tasks/" + taskId + "/";
+        try {
+            boolean deleted = fileStorageStrategy.deleteFolder(folderPath);
+            if (deleted) {
+                log.info("Successfully deleted folder from storage: {}", folderPath);
+            } else {
+                log.warn("Failed to delete folder from storage: {}", folderPath);
+            }
+        } catch (Exception e) {
+            log.error("Error deleting folder from storage: {} - {}", folderPath, e.getMessage());
         }
     }
 
