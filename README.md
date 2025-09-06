@@ -296,6 +296,235 @@ curl http://localhost:8080/actuator/metrics
 - **Entregas:** Notifica solicitante em todas as operações
 - **Faturamento:** Envia relatório consolidado para financeiro
 
+## 📎 Sistema de Anexos - AWS S3
+
+### **🎯 Visão Geral**
+Sistema completo de upload e armazenamento de arquivos integrado às tarefas, utilizando **AWS S3** como storage e **Strategy Pattern** para flexibilidade.
+
+### **✅ Funcionalidades**
+- ✅ Upload de arquivos durante criação de tarefas
+- ✅ Drag & drop com validação de tipos e tamanho
+- ✅ Armazenamento seguro no AWS S3
+- ✅ URLs pré-assinadas para download
+- ✅ Exclusão automática de arquivos ao deletar tarefas
+- ✅ Padrão Strategy para trocar storage futuramente
+
+### **🔧 Configuração AWS S3 - Passo a Passo**
+
+#### **1. Criar Bucket S3**
+```bash
+# 1. Acesse AWS Console > S3
+# 2. Create bucket
+# 3. Configurações recomendadas:
+#    - Bucket name: devquote-attachments
+#    - Region: us-east-1 (ou mais próxima)
+#    - Block all public access: DESABILITADO
+#    - Bucket Versioning: Disable
+#    - Default encryption: Enable (SSE-S3)
+```
+
+#### **2. Configurar CORS Policy**
+```json
+[
+    {
+        "AllowedHeaders": ["*"],
+        "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+        "AllowedOrigins": ["*"],
+        "ExposeHeaders": ["ETag"]
+    }
+]
+```
+
+#### **3. Configurar Bucket Policy**
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::devquote-attachments/*"
+        }
+    ]
+}
+```
+
+#### **4. Criar IAM User**
+```bash
+# 1. AWS Console > IAM > Users > Create user
+# 2. User name: devquote-s3-user
+# 3. Attach policies directly: AmazonS3FullAccess
+# 4. Create access key (Application running on AWS)
+# 5. Salvar Access Key ID e Secret Access Key
+```
+
+#### **5. Configurar Variáveis de Ambiente**
+```properties
+# AWS S3 Configuration
+AWS_S3_BUCKET_NAME=devquote-attachments
+AWS_S3_REGION=us-east-1
+AWS_ACCESS_KEY_ID=sua-access-key-id
+AWS_SECRET_ACCESS_KEY=sua-secret-access-key
+
+# File Upload Configuration
+SPRING_SERVLET_MULTIPART_ENABLED=true
+SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=10MB
+SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=50MB
+```
+
+#### **6. Dependências Maven**
+```xml
+<!-- AWS S3 SDK -->
+<dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>s3</artifactId>
+    <version>2.21.29</version>
+</dependency>
+<dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>url-connection-client</artifactId>
+    <version>2.21.29</version>
+</dependency>
+```
+
+### **🏗️ Arquitetura Implementada**
+
+#### **Entidades**
+```java
+@Entity
+public class TaskAttachment {
+    private Long id;
+    private Long taskId;
+    private String fileName;
+    private String originalFileName;
+    private String contentType;
+    private Long fileSize;
+    private String s3Key;
+    private String s3Url;
+    private Boolean deleted = false; // Soft delete
+}
+```
+
+#### **Strategy Pattern**
+```java
+// Interface para diferentes estratégias de storage
+public interface FileStorageStrategy {
+    String uploadFile(MultipartFile file, String folder);
+    String generateDownloadUrl(String key);
+    void deleteFile(String key);
+}
+
+// Implementação S3
+@Service
+public class S3FileStorageStrategy implements FileStorageStrategy {
+    // Implementação usando AWS S3 SDK v2
+}
+```
+
+#### **Controller Endpoints**
+```java
+// Upload de arquivos com tarefa
+POST /api/tasks/full/with-files
+- FormData com task (JSON) + files (MultipartFile[])
+
+// Gestão individual de anexos
+GET    /api/task-attachments/task/{taskId}     # Listar anexos
+POST   /api/task-attachments/{taskId}/upload  # Upload individual
+DELETE /api/task-attachments/{id}             # Excluir anexo
+GET    /api/task-attachments/{id}/download    # Download via URL pré-assinada
+```
+
+### **🚀 Solução Técnica - Padrão Adotado**
+
+#### **Frontend - Abordagem Híbrida**
+```typescript
+// Hook inteligente que decide qual rota usar
+const createTaskWithSubTasks = async (taskData: TaskCreate, files?: File[]) => {
+    if (files && files.length > 0) {
+        // Rota com upload
+        return await taskService.createWithSubTasksAndFiles(taskData, files);
+    } else {
+        // Rota padrão sem arquivos
+        return await taskService.createWithSubTasks(taskData);
+    }
+};
+
+// Service com FormData e JSON Blob
+const createWithSubTasksAndFiles = async (data: any, files: File[]) => {
+    const formData = new FormData();
+    
+    // JSON como Blob com Content-Type correto
+    formData.append('task', new Blob([JSON.stringify(data)], {
+        type: 'application/json'
+    }));
+    
+    files.forEach(file => formData.append('files', file));
+    
+    return await api.post('/tasks/full/with-files', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+```
+
+#### **Backend - Endpoint Multipart**
+```java
+@PostMapping(value = "/full/with-files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasksAndFiles(
+        @RequestPart("task") @Valid TaskWithSubTasksCreateRequest dto,
+        @RequestParam(value = "files", required = false) List<MultipartFile> files) {
+    
+    // 1. Criar tarefa primeiro
+    TaskWithSubTasksResponse createdTask = taskService.createWithSubTasks(dto);
+    
+    // 2. Upload de arquivos para S3 após criação
+    if (files != null && !files.isEmpty()) {
+        taskAttachmentService.uploadFiles(createdTask.getId(), files);
+    }
+    
+    return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
+}
+```
+
+### **💰 Custos AWS S3**
+- **Armazenamento:** $0.023/GB/mês (Standard)
+- **Requests GET:** $0.0004 por 1.000 requests
+- **Requests PUT:** $0.005 por 1.000 requests
+- **Transfer OUT:** Primeiro 1GB gratuito, depois $0.09/GB
+
+**Estimativa para uso básico (poucos uploads):**
+- 1GB armazenamento: ~$0.02/mês
+- 1.000 uploads: ~$0.005/mês
+- 10.000 downloads: ~$0.004/mês
+- **Total: ~$0.03/mês** 💰
+
+### **🔧 Configuração Local vs Produção**
+
+#### **Desenvolvimento Local**
+```properties
+# Usar credenciais IAM User
+AWS_ACCESS_KEY_ID=sua-access-key-local
+AWS_SECRET_ACCESS_KEY=sua-secret-key-local
+```
+
+#### **Produção (Render/Heroku)**
+```properties
+# Usar mesmas credenciais ou IAM Roles
+AWS_ACCESS_KEY_ID=sua-access-key-prod
+AWS_SECRET_ACCESS_KEY=sua-secret-key-prod
+
+# Configurar no painel da plataforma de deploy
+```
+
+### **🛡️ Segurança**
+- ✅ Validação de tipos de arquivo (imagens, PDFs, documentos)
+- ✅ Limite de tamanho por arquivo (10MB)
+- ✅ URLs pré-assinadas com expiração (15 minutos)
+- ✅ Soft delete para auditoria
+- ✅ Exclusão automática ao deletar tarefa
+- ✅ CORS configurado apenas para domínios necessários
+
 ## 🚀 Deploy
 
 ### Render (Produção)
