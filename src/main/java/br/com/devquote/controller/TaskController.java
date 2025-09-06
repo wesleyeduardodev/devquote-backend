@@ -8,6 +8,7 @@ import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.service.TaskService;
+import br.com.devquote.service.TaskAttachmentService;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.util.List;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -35,6 +38,7 @@ import java.util.Set;
 public class TaskController implements TaskControllerDoc {
 
     private final TaskService taskService;
+    private final TaskAttachmentService taskAttachmentService;
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
             "id", "requesterId", "requesterName", "title", "description", "code", "link", "createdAt", "updatedAt"
     );
@@ -182,6 +186,29 @@ public class TaskController implements TaskControllerDoc {
             @RequestBody @Valid TaskWithSubTasksCreateRequest dto) {
         return new ResponseEntity<>(taskService.createWithSubTasks(dto), HttpStatus.CREATED);
     }
+    
+    @PostMapping(value = "/full/with-files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasksAndFiles(
+            @RequestPart("task") @Valid TaskWithSubTasksCreateRequest dto,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files) {
+        
+        // Criar a tarefa primeiro
+        TaskWithSubTasksResponse createdTask = taskService.createWithSubTasks(dto);
+        
+        // Se há arquivos, fazer upload após criar a tarefa
+        if (files != null && !files.isEmpty() && createdTask.getId() != null) {
+            try {
+                taskAttachmentService.uploadFiles(createdTask.getId(), files);
+            } catch (Exception e) {
+                // Log do erro, mas não falha a criação da tarefa
+                // A tarefa foi criada com sucesso, apenas o upload falhou
+                System.err.println("Erro ao fazer upload dos arquivos para tarefa " + createdTask.getId() + ": " + e.getMessage());
+            }
+        }
+        
+        return new ResponseEntity<>(createdTask, HttpStatus.CREATED);
+    }
 
     @PutMapping("/full/{taskId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
@@ -194,6 +221,15 @@ public class TaskController implements TaskControllerDoc {
     @DeleteMapping("/full/{taskId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId) {
+        // Primeiro, excluir todos os anexos da tarefa
+        try {
+            taskAttachmentService.deleteAllTaskAttachments(taskId);
+        } catch (Exception e) {
+            // Log do erro, mas continua com a exclusão da tarefa
+            System.err.println("Erro ao excluir anexos da tarefa " + taskId + ": " + e.getMessage());
+        }
+        
+        // Depois, excluir a tarefa e subtarefas
         taskService.deleteTaskWithSubTasks(taskId);
         return ResponseEntity.noContent().build();
     }
