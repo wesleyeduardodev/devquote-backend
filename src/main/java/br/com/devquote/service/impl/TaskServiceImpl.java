@@ -190,18 +190,18 @@ public class TaskServiceImpl implements TaskService {
         log.warn("TASK DELETE id={} title={} user={}",
             id, entity.getTitle(), currentUser != null ? currentUser.getUsername() : "unknown");
 
-        // Excluir todos os anexos e pasta do storage antes da exclusão da tarefa
-        try {
-            taskAttachmentService.deleteAllTaskAttachmentsAndFolder(id);
-        } catch (Exception e) {
-            log.warn("Failed to delete task attachments for task {}: {}", id, e.getMessage());
-        }
-
-        // Enviar notificação por email antes da exclusão
+        // Enviar notificação por email ANTES de excluir os anexos
         try {
             emailService.sendTaskDeletedNotification(entity);
         } catch (Exception e) {
             log.warn("Failed to send email notification for task deletion: {}", e.getMessage());
+        }
+
+        // Excluir todos os anexos e pasta do storage após envio do email
+        try {
+            taskAttachmentService.deleteAllTaskAttachmentsAndFolder(id);
+        } catch (Exception e) {
+            log.warn("Failed to delete task attachments for task {}: {}", id, e.getMessage());
         }
 
         taskRepository.deleteById(id);
@@ -304,18 +304,18 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("Cannot delete task. It is linked to a billing period.");
         }
 
-        // Excluir todos os anexos e pasta do storage antes da exclusão da tarefa
-        try {
-            taskAttachmentService.deleteAllTaskAttachmentsAndFolder(taskId);
-        } catch (Exception e) {
-            log.warn("Failed to delete task attachments for task {}: {}", taskId, e.getMessage());
-        }
-
-        // Enviar notificação por email antes da exclusão
+        // Enviar notificação por email ANTES de excluir os anexos
         try {
             emailService.sendTaskDeletedNotification(task);
         } catch (Exception e) {
             log.warn("Failed to send email notification for task with subtasks deletion: {}", e.getMessage());
+        }
+
+        // Excluir todos os anexos e pasta do storage após envio do email
+        try {
+            taskAttachmentService.deleteAllTaskAttachmentsAndFolder(taskId);
+        } catch (Exception e) {
+            log.warn("Failed to delete task attachments for task {}: {}", taskId, e.getMessage());
         }
 
         subTaskRepository.deleteByTaskId(taskId);
