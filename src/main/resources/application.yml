@@ -90,8 +90,8 @@ aws:
   access-key-id: ${AWS_ACCESS_KEY_ID}
   secret-access-key: ${AWS_SECRET_ACCESS_KEY}
   s3:
-    bucket-name: ${AWS_S3_BUCKET_NAME:devquote-storage}
-    region: ${AWS_S3_REGION:us-east-1}
+    bucket-name: ${AWS_S3_BUCKET_NAME}
+    region: ${AWS_S3_REGION}
 
 # Logging - Otimizado para produção
 logging:
