@@ -203,28 +203,15 @@ public class TaskServiceImpl implements TaskService {
 
         validateTaskAccess(entity, "excluir");
 
-        User currentUser = securityUtils.getCurrentUser();
-        log.warn("🗑️ TASK DELETE STARTED - id={} title={} user={}",
-            id, entity.getTitle(), currentUser != null ? currentUser.getUsername() : "unknown");
-        
-        // Debug lazy loading initialization
-        log.debug("🔍 LAZY LOADING DEBUG - Requester: {}, CreatedBy: {}, UpdatedBy: {}", 
-            entity.getRequester() != null ? entity.getRequester().getName() : "null",
-            entity.getCreatedBy() != null ? entity.getCreatedBy().getUsername() : "null", 
-            entity.getUpdatedBy() != null ? entity.getUpdatedBy().getUsername() : "null");
-
         // ESTRATÉGIA ROBUSTA: Tentar baixar anexos, se conseguir incluir no email, se não conseguir enviar só os dados da tarefa
-        log.info("📎 STEP 1/3 - Attempting to download attachments from S3 for deletion email - task ID: {}", id);
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
         boolean hasAttachments = false;
         
         try {
             List<TaskAttachment> attachments = taskAttachmentService.getTaskAttachmentsEntities(id);
             if (attachments != null && !attachments.isEmpty()) {
-                log.info("📎 Found {} attachments in database - attempting to download from S3", attachments.size());
                 hasAttachments = true;
                 
-                int downloadedCount = 0;
                 for (TaskAttachment attachment : attachments) {
                     try {
                         // Tentar baixar do S3
@@ -234,53 +221,39 @@ public class TaskServiceImpl implements TaskService {
                             inputStream.transferTo(baos);
                             byte[] data = baos.toByteArray();
                             attachmentDataMap.put(attachment.getOriginalFileName(), data);
-                            downloadedCount++;
-                            
-                            log.debug("📎 ✅ Downloaded {} bytes for: {}", data.length, attachment.getOriginalFileName());
                         }
                     } catch (Exception e) {
-                        log.warn("📎 ❌ Failed to download attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
+                        log.error("Failed to download attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
                         // Continua tentando outros anexos
                     }
                 }
-                
-                log.info("📎 Downloaded {}/{} attachments successfully to memory", downloadedCount, attachments.size());
-            } else {
-                log.info("📎 No attachments found in database for task ID: {}", id);
             }
         } catch (Exception e) {
-            log.error("📎 Error accessing attachments from database: {}", e.getMessage());
+            log.error("Error accessing attachments from database: {}", e.getMessage());
         }
 
         // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
-        log.info("📧 STEP 2/3 - Sending deletion email - task ID: {} - {} attachments downloaded", id, attachmentDataMap.size());
         try {
             if (attachmentDataMap.isEmpty() && hasAttachments) {
                 // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
-                log.warn("📧 Had attachments but failed to download - sending email without attachments");
                 emailService.sendTaskDeletedNotification(entity);
             } else if (!attachmentDataMap.isEmpty()) {
                 // Conseguiu baixar anexos - enviar email com anexos
-                log.info("📧 Sending email WITH {} attachments", attachmentDataMap.size());
                 emailService.sendTaskDeletedNotificationWithAttachmentData(entity, attachmentDataMap);
             } else {
                 // Não tinha anexos - enviar email simples
-                log.info("📧 No attachments - sending simple deletion email");
                 emailService.sendTaskDeletedNotification(entity);
             }
-            log.info("📧 ✅ Deletion email sent successfully for task ID: {}", id);
         } catch (Exception e) {
-            log.error("📧 ❌ FAILED to send deletion email for task ID: {} - Error: {}", id, e.getMessage());
+            log.error("FAILED to send deletion email for task ID: {} - Error: {}", id, e.getMessage());
             // Não impede a exclusão da tarefa
         }
 
         // STEP 3/3 - DELETAR TAREFA E ANEXOS (sempre acontece, mesmo se email falhou)
-        log.info("🗑️ STEP 3/3 - Proceeding with task and attachments deletion - task ID: {}", id);
         try {
             taskAttachmentService.deleteAllTaskAttachmentsAndFolder(id);
-            log.info("🗑️ ✅ Successfully deleted attachments and folder for task ID: {}", id);
         } catch (Exception e) {
-            log.warn("🗑️ Failed to delete attachments folder for task {}: {}", id, e.getMessage());
+            log.error("Failed to delete attachments folder for task {}: {}", id, e.getMessage());
         }
 
         taskRepository.deleteById(id);
@@ -399,26 +372,15 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("Cannot delete task. It is linked to a billing period.");
         }
 
-        log.warn("🗑️ TASK WITH SUBTASKS DELETE STARTED - id={} title={}", taskId, task.getTitle());
-        
-        // Debug lazy loading initialization
-        log.debug("🔍 LAZY LOADING DEBUG (WITH SUBTASKS) - Requester: {}, CreatedBy: {}, UpdatedBy: {}", 
-            task.getRequester() != null ? task.getRequester().getName() : "null",
-            task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "null", 
-            task.getUpdatedBy() != null ? task.getUpdatedBy().getUsername() : "null");
-
         // ESTRATÉGIA ROBUSTA: Tentar baixar anexos, se conseguir incluir no email, se não conseguir enviar só os dados da tarefa
-        log.info("📎 STEP 1/3 - Attempting to download attachments from S3 for deletion email - task ID: {}", taskId);
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
         boolean hasAttachments = false;
         
         try {
             List<TaskAttachment> attachments = taskAttachmentService.getTaskAttachmentsEntities(taskId);
             if (attachments != null && !attachments.isEmpty()) {
-                log.info("📎 Found {} attachments in database - attempting to download from S3", attachments.size());
                 hasAttachments = true;
                 
-                int downloadedCount = 0;
                 for (TaskAttachment attachment : attachments) {
                     try {
                         // Tentar baixar do S3
@@ -428,53 +390,39 @@ public class TaskServiceImpl implements TaskService {
                             inputStream.transferTo(baos);
                             byte[] data = baos.toByteArray();
                             attachmentDataMap.put(attachment.getOriginalFileName(), data);
-                            downloadedCount++;
-                            
-                            log.debug("📎 ✅ Downloaded {} bytes for: {}", data.length, attachment.getOriginalFileName());
                         }
                     } catch (Exception e) {
-                        log.warn("📎 ❌ Failed to download attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
+                        log.error("Failed to download attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
                         // Continua tentando outros anexos
                     }
                 }
-                
-                log.info("📎 Downloaded {}/{} attachments successfully to memory", downloadedCount, attachments.size());
-            } else {
-                log.info("📎 No attachments found in database for task ID: {}", taskId);
             }
         } catch (Exception e) {
-            log.error("📎 Error accessing attachments from database: {}", e.getMessage());
+            log.error("Error accessing attachments from database: {}", e.getMessage());
         }
 
         // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
-        log.info("📧 STEP 2/3 - Sending deletion email - task ID: {} - {} attachments downloaded", taskId, attachmentDataMap.size());
         try {
             if (attachmentDataMap.isEmpty() && hasAttachments) {
                 // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
-                log.warn("📧 Had attachments but failed to download - sending email without attachments");
                 emailService.sendTaskDeletedNotification(task);
             } else if (!attachmentDataMap.isEmpty()) {
                 // Conseguiu baixar anexos - enviar email com anexos
-                log.info("📧 Sending email WITH {} attachments", attachmentDataMap.size());
                 emailService.sendTaskDeletedNotificationWithAttachmentData(task, attachmentDataMap);
             } else {
                 // Não tinha anexos - enviar email simples
-                log.info("📧 No attachments - sending simple deletion email");
                 emailService.sendTaskDeletedNotification(task);
             }
-            log.info("📧 ✅ Deletion email sent successfully for task ID: {}", taskId);
         } catch (Exception e) {
-            log.error("📧 ❌ FAILED to send deletion email for task ID: {} - Error: {}", taskId, e.getMessage());
+            log.error("FAILED to send deletion email for task ID: {} - Error: {}", taskId, e.getMessage());
             // Não impede a exclusão da tarefa
         }
 
         // STEP 3/3 - DELETAR TAREFA E ANEXOS (sempre acontece, mesmo se email falhou)
-        log.info("🗑️ STEP 3/3 - Proceeding with task and attachments deletion - task ID: {}", taskId);
         try {
             taskAttachmentService.deleteAllTaskAttachmentsAndFolder(taskId);
-            log.info("🗑️ ✅ Successfully deleted attachments and folder for task ID: {}", taskId);
         } catch (Exception e) {
-            log.warn("🗑️ Failed to delete attachments folder for task {}: {}", taskId, e.getMessage());
+            log.error("Failed to delete attachments folder for task {}: {}", taskId, e.getMessage());
         }
 
         subTaskRepository.deleteByTaskId(taskId);
