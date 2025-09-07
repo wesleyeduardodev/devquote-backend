@@ -165,8 +165,7 @@
     <div class="container">
         <div class="header">
             <div class="logo">✏️ DevQuote</div>
-            <h1>Tarefa Editada</h1>
-            <p>Uma tarefa foi atualizada no sistema</p>
+            <h1>Dados da Tarefa</h1>
         </div>
 
         <div class="content">
@@ -236,6 +235,20 @@
                 </div>
             </div>
 
+            <!-- SUBTAREFAS -->
+            <div class="section" th:if="${hasSubTasks}">
+                <h2>📝 Subtarefas</h2>
+
+                <div th:each="subtask : ${subTasks}" class="subtask-item">
+                    <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}"
+                         th:text="${subtask.title}">Título da subtarefa</div>
+
+                    <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}"
+                         th:text="${subtask.description}">Descrição da subtarefa</div>
+
+                </div>
+            </div>
+
             <!-- DADOS DO SOLICITANTE -->
             <div class="section" th:if="${!#strings.isEmpty(requesterName) or !#strings.isEmpty(requesterEmail) or !#strings.isEmpty(requesterPhone)}">
                 <h2>👤 Solicitante</h2>
@@ -255,20 +268,6 @@
                         <div class="info-label">Telefone:</div>
                         <div class="info-value" th:text="${requesterPhone}">+55 11 99999-9999</div>
                     </div>
-                </div>
-            </div>
-
-            <!-- SUBTAREFAS -->
-            <div class="section" th:if="${hasSubTasks}">
-                <h2>📝 Subtarefas</h2>
-
-                <div th:each="subtask : ${subTasks}" class="subtask-item">
-                    <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}"
-                         th:text="${subtask.title}">Título da subtarefa</div>
-
-                    <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}"
-                         th:text="${subtask.description}">Descrição da subtarefa</div>
-
                 </div>
             </div>
 
