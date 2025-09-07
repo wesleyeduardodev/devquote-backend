@@ -15,6 +15,7 @@ import br.com.devquote.service.DeliveryService;
 import br.com.devquote.service.DeliveryAttachmentService;
 import br.com.devquote.service.DeliveryItemAttachmentService;
 import br.com.devquote.service.EmailService;
+import br.com.devquote.service.storage.FileStorageStrategy;
 import br.com.devquote.utils.ExcelReportUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -45,6 +46,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final EmailService emailService;
     private final DeliveryAttachmentService deliveryAttachmentService;
     private final DeliveryItemAttachmentService deliveryItemAttachmentService;
+    private final FileStorageStrategy fileStorageStrategy;
 
     @Override
     public List<DeliveryResponse> findAll() {
@@ -171,23 +173,6 @@ public class DeliveryServiceImpl implements DeliveryService {
     @Override
     public void delete(Long id) {
         Delivery entity = deliveryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Delivery not found"));
-
-        // Excluir todos os anexos da entrega e dos itens de entrega
-        try {
-            deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(id);
-            deliveryItemAttachmentService.deleteAllDeliveryItemAttachmentsByDeliveryId(id);
-            log.info("Successfully deleted all attachments for delivery {}", id);
-        } catch (Exception e) {
-            log.warn("Failed to delete attachments for delivery {}: {}", id, e.getMessage());
-        }
-
-        // Enviar notificação por email antes da exclusão
-        try {
-            log.debug("Initiating email notification for delivery deletion with ID: {}", id);
-
-            // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
-            Delivery deliveryWithRelations = deliveryRepository.findById(id)
                 .map(d -> {
                     // Inicializar relacionamentos lazy
                     if (d.getTask() != null) {
@@ -208,11 +193,77 @@ public class DeliveryServiceImpl implements DeliveryService {
                     }
                     return d;
                 })
-                .orElse(entity);
+                .orElseThrow(() -> new RuntimeException("Delivery not found"));
 
-            emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
+        // ESTRATÉGIA ROBUSTA: Tentar baixar anexos da entrega e dos itens para memória
+        Map<String, byte[]> attachmentDataMap = new HashMap<>();
+        boolean hasAttachments = false;
+        
+        try {
+            // Buscar anexos da entrega
+            List<br.com.devquote.entity.DeliveryAttachment> deliveryAttachments = deliveryAttachmentService.getDeliveryAttachmentsEntities(id);
+            if (deliveryAttachments != null && !deliveryAttachments.isEmpty()) {
+                hasAttachments = true;
+                for (br.com.devquote.entity.DeliveryAttachment attachment : deliveryAttachments) {
+                    try {
+                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
+                             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                            
+                            inputStream.transferTo(baos);
+                            byte[] data = baos.toByteArray();
+                            attachmentDataMap.put("delivery_" + attachment.getOriginalFileName(), data);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to download delivery attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
+                    }
+                }
+            }
+            
+            // Buscar anexos dos itens de entrega
+            List<br.com.devquote.entity.DeliveryItemAttachment> itemAttachments = deliveryItemAttachmentService.getDeliveryItemAttachmentsEntitiesByDeliveryId(id);
+            if (itemAttachments != null && !itemAttachments.isEmpty()) {
+                hasAttachments = true;
+                for (br.com.devquote.entity.DeliveryItemAttachment attachment : itemAttachments) {
+                    try {
+                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
+                             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                            
+                            inputStream.transferTo(baos);
+                            byte[] data = baos.toByteArray();
+                            attachmentDataMap.put("item_" + attachment.getOriginalFileName(), data);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to download item attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
+                    }
+                }
+            }
         } catch (Exception e) {
-            log.error("Failed to send email notification for delivery deletion ID: {}", id, e);
+            log.error("Error accessing attachments from database: {}", e.getMessage());
+        }
+        
+        // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
+        try {
+            if (attachmentDataMap.isEmpty() && hasAttachments) {
+                // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
+                emailService.sendDeliveryDeletedNotification(entity);
+            } else if (!attachmentDataMap.isEmpty()) {
+                // Conseguiu baixar anexos - enviar email com anexos
+                emailService.sendDeliveryDeletedNotificationWithAttachmentData(entity, attachmentDataMap);
+            } else {
+                // Não tinha anexos - enviar email simples
+                emailService.sendDeliveryDeletedNotification(entity);
+            }
+        } catch (Exception e) {
+            log.error("FAILED to send deletion email for delivery ID: {} - Error: {}", id, e.getMessage());
+            // Não impede a exclusão da entrega
+        }
+        
+        // STEP 3/3 - DELETAR ENTREGA E ANEXOS (sempre acontece, mesmo se email falhou)
+        try {
+            deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(id);
+            deliveryItemAttachmentService.deleteAllDeliveryItemAttachmentsByDeliveryId(id);
+        } catch (Exception e) {
+            log.error("Failed to delete attachments for delivery {}: {}", id, e.getMessage());
         }
 
         deliveryRepository.deleteById(id);
@@ -867,8 +918,65 @@ public class DeliveryServiceImpl implements DeliveryService {
                 })
                 .orElseThrow(() -> new RuntimeException("Entrega não encontrada com ID: " + id));
         
-        // Enviar email de notificação
-        emailService.sendDeliveryUpdatedNotification(delivery);
+        // ESTRATÉGIA ROBUSTA: Tentar baixar anexos da entrega e dos itens, se conseguir incluir no email
+        Map<String, byte[]> attachmentDataMap = new HashMap<>();
+        boolean hasAttachments = false;
+        
+        try {
+            // Buscar anexos da entrega
+            List<br.com.devquote.entity.DeliveryAttachment> deliveryAttachments = deliveryAttachmentService.getDeliveryAttachmentsEntities(id);
+            if (deliveryAttachments != null && !deliveryAttachments.isEmpty()) {
+                hasAttachments = true;
+                for (br.com.devquote.entity.DeliveryAttachment attachment : deliveryAttachments) {
+                    try {
+                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
+                             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                            
+                            inputStream.transferTo(baos);
+                            byte[] data = baos.toByteArray();
+                            attachmentDataMap.put("delivery_" + attachment.getOriginalFileName(), data);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to download delivery attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
+                    }
+                }
+            }
+            
+            // Buscar anexos dos itens de entrega
+            List<br.com.devquote.entity.DeliveryItemAttachment> itemAttachments = deliveryItemAttachmentService.getDeliveryItemAttachmentsEntitiesByDeliveryId(id);
+            if (itemAttachments != null && !itemAttachments.isEmpty()) {
+                hasAttachments = true;
+                for (br.com.devquote.entity.DeliveryItemAttachment attachment : itemAttachments) {
+                    try {
+                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
+                             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                            
+                            inputStream.transferTo(baos);
+                            byte[] data = baos.toByteArray();
+                            attachmentDataMap.put("item_" + attachment.getOriginalFileName(), data);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to download item attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error accessing attachments from database: {}", e.getMessage());
+        }
+        
+        // Enviar email de notificação (com anexos se conseguiu baixar, sem anexos se não conseguiu)
+        try {
+            if (!attachmentDataMap.isEmpty()) {
+                // Conseguiu baixar anexos - enviar email com anexos
+                emailService.sendDeliveryUpdatedNotificationWithAttachmentData(delivery, attachmentDataMap);
+            } else {
+                // Não conseguiu baixar anexos ou não tinha anexos - enviar email simples
+                emailService.sendDeliveryUpdatedNotification(delivery);
+            }
+        } catch (Exception e) {
+            log.error("FAILED to send delivery email for delivery ID: {} - Error: {}", id, e.getMessage());
+            // Não impede a marcação como enviado
+        }
         
         // Marcar email como enviado
         delivery.setDeliveryEmailSent(true);

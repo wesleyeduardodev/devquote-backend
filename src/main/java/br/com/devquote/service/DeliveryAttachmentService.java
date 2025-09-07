@@ -52,4 +52,9 @@ public interface DeliveryAttachmentService {
      * Exclui todos os anexos de uma entrega e remove completamente a pasta do storage
      */
     void deleteAllDeliveryAttachmentsAndFolder(Long deliveryId);
+    
+    /**
+     * Busca anexos como entidades (para uso interno com emails)
+     */
+    List<br.com.devquote.entity.DeliveryAttachment> getDeliveryAttachmentsEntities(Long deliveryId);
 }

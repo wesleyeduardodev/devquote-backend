@@ -255,4 +255,10 @@ public class DeliveryItemAttachmentServiceImpl implements DeliveryItemAttachment
     private String buildFilePath(Long deliveryId, Long deliveryItemId, String fileName) {
         return String.format("deliveries/%d/items/%d/attachments/%s", deliveryId, deliveryItemId, fileName);
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<br.com.devquote.entity.DeliveryItemAttachment> getDeliveryItemAttachmentsEntitiesByDeliveryId(Long deliveryId) {
+        return deliveryItemAttachmentRepository.findByDeliveryId(deliveryId);
+    }
 }

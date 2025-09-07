@@ -724,7 +724,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             log.debug("Sending delivery updated notification for delivery ID: {}", delivery.getId());
 
-            String subject = String.format("DevQuote - Entrega editada: #%d", delivery.getId());
+            String subject = String.format("DevQuote - Dados da Entrega: #%d", delivery.getId());
             String htmlContent = buildDeliveryUpdatedEmailContent(delivery);
 
             sendToMultipleRecipientsForDelivery(delivery, subject, htmlContent, "updated");
@@ -1294,6 +1294,120 @@ public class EmailServiceImpl implements EmailService {
             log.error("Unexpected error while sending billing period notification for period ID: {} to {}: {}",
                 billingPeriod.getId(), financeEmail, e.getMessage(), e);
             throw new RuntimeException("Failed to send billing period notification email", e);
+        }
+    }
+    
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendDeliveryDeletedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap) {
+        if (delivery == null) {
+            log.warn("Cannot send delivery deleted notification with attachments: delivery is null");
+            return;
+        }
+
+        try {
+            String subject = String.format("🗑️ Dados da Entrega Excluída - %s",
+                    delivery.getTask() != null && delivery.getTask().getCode() != null ? 
+                            delivery.getTask().getCode() : "Código não disponível");
+
+            String htmlContent = buildDeliveryDeletedEmailContent(delivery);
+
+            sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(delivery, subject, htmlContent, "deleted", attachmentDataMap);
+
+        } catch (Exception e) {
+            log.error("Failed to send delivery deleted notification with attachments for delivery ID: {}", delivery.getId(), e);
+        }
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap) {
+        if (delivery == null) {
+            log.warn("Cannot send delivery updated notification with attachments: delivery is null");
+            return;
+        }
+
+        try {
+            String subject = String.format("📊 Dados da Entrega - %s",
+                    delivery.getTask() != null && delivery.getTask().getCode() != null ? 
+                            delivery.getTask().getCode() : "Código não disponível");
+
+            String htmlContent = buildDeliveryUpdatedEmailContent(delivery);
+
+            sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(delivery, subject, htmlContent, "updated", attachmentDataMap);
+
+        } catch (Exception e) {
+            log.error("Failed to send delivery updated notification with attachments for delivery ID: {}", delivery.getId(), e);
+        }
+    }
+    
+    private void sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(Delivery delivery, String subject, String htmlContent, String action, Map<String, byte[]> attachmentDataMap) {
+        String taskInfo = "Unknown";
+        if (delivery.getTask() != null) {
+            taskInfo = String.format("Task ID=%d, Code=%s",
+                    delivery.getTask().getId(),
+                    delivery.getTask().getCode());
+        }
+
+        log.debug("📧 Starting DELIVERY {} email notification process WITH IN-MEMORY ATTACHMENTS for: Delivery ID={}, Status={}, {}",
+                action.toUpperCase(), delivery.getId(), delivery.getStatus(), taskInfo);
+
+        String mainRecipient = null;
+        String ccRecipient = null;
+
+        // Definir destinatário principal (solicitante através da Task)
+        if (delivery.getTask() != null
+            && delivery.getTask().getRequester() != null
+            && delivery.getTask().getRequester().getEmail() != null
+            && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
+            mainRecipient = delivery.getTask().getRequester().getEmail();
+            String requesterName = delivery.getTask().getRequester().getName();
+            log.debug("📧 Main recipient (requester): {} <{}>",
+                    requesterName, mainRecipient);
+        } else {
+            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {}. Task chain: {}",
+                    delivery.getId(),
+                    delivery.getTask() != null ?
+                        (delivery.getTask().getRequester() != null ? "Requester has no email" : "No requester")
+                        : "No task");
+        }
+
+        // Definir destinatário em cópia (você)
+        if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
+            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
+            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
+                mainRecipient = emailProperties.getFrom();
+                ccRecipient = null;
+                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
+            } else {
+                ccRecipient = emailProperties.getFrom();
+                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
+            }
+        } else {
+            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
+        }
+
+        // Verificar se há destinatário principal
+        if (mainRecipient == null) {
+            log.error("📧 ❌ NO VALID RECIPIENTS found for delivery ID: {} ({} action). Email will NOT be sent!",
+                    delivery.getId(), action);
+            return;
+        }
+
+        // Enviar email único com CC e anexos em memória
+        try {
+            log.debug("📧 Sending DELIVERY {} notification WITH IN-MEMORY ATTACHMENTS - To: {}, CC: {}, Attachments: {}",
+                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none", 
+                    attachmentDataMap != null ? attachmentDataMap.size() : 0);
+
+            sendEmailWithInMemoryAttachments(mainRecipient, ccRecipient, subject, htmlContent, attachmentDataMap);
+
+            log.debug("📧 ✅ DELIVERY {} notification WITH IN-MEMORY ATTACHMENTS sent successfully for delivery ID: {} to: {} (cc: {})",
+                    action.toUpperCase(), delivery.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
+        } catch (Exception e) {
+            log.error("📧 ❌ FAILED to send delivery {} notification WITH IN-MEMORY ATTACHMENTS for delivery ID: {} to: {} (cc: {}) - Error: {}",
+                    action, delivery.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
+            throw e;
         }
     }
 }

@@ -234,4 +234,10 @@ public class DeliveryAttachmentServiceImpl implements DeliveryAttachmentService 
     private String buildFilePath(Long deliveryId, String fileName) {
         return String.format("deliveries/%d/attachments/%s", deliveryId, fileName);
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<br.com.devquote.entity.DeliveryAttachment> getDeliveryAttachmentsEntities(Long deliveryId) {
+        return deliveryAttachmentRepository.findByDeliveryId(deliveryId);
+    }
 }

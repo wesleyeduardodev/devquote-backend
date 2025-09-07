@@ -138,4 +138,36 @@ public class NoOpEmailService implements EmailService {
                 billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear());
         log.debug("📧 [EMAIL DISABLED] Would send to finance department with billing period details");
     }
+    
+    @Override
+    public void sendDeliveryDeletedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap) {
+        log.debug("📧 [EMAIL DISABLED] Would send DELIVERY DELETED notification WITH IN-MEMORY ATTACHMENTS for: Delivery ID={}, Status={}",
+                delivery.getId(), delivery.getStatus());
+        if (delivery.getTask() != null && delivery.getTask().getRequester() != null) {
+            log.debug("📧 [EMAIL DISABLED] Would send to requester: {} <{}>",
+                    delivery.getTask().getRequester().getName(),
+                    delivery.getTask().getRequester().getEmail());
+        }
+        if (attachmentDataMap != null && !attachmentDataMap.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} in-memory attachments: {}",
+                    attachmentDataMap.size(),
+                    attachmentDataMap.keySet());
+        }
+    }
+
+    @Override
+    public void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap) {
+        log.debug("📧 [EMAIL DISABLED] Would send DELIVERY UPDATED notification WITH IN-MEMORY ATTACHMENTS for: Delivery ID={}, Status={}",
+                delivery.getId(), delivery.getStatus());
+        if (delivery.getTask() != null && delivery.getTask().getRequester() != null) {
+            log.debug("📧 [EMAIL DISABLED] Would send to requester: {} <{}>",
+                    delivery.getTask().getRequester().getName(),
+                    delivery.getTask().getRequester().getEmail());
+        }
+        if (attachmentDataMap != null && !attachmentDataMap.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} in-memory attachments: {}",
+                    attachmentDataMap.size(),
+                    attachmentDataMap.keySet());
+        }
+    }
 }
