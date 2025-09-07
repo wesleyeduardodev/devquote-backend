@@ -82,7 +82,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             log.debug("Sending task updated notification for task ID: {}", task.getId());
 
-            String subject = String.format("DevQuote - Tarefa editada: [%s] - %s",
+            String subject = String.format("DevQuote - Dados da Tarefa: [%s] - %s",
                 task.getCode() != null ? task.getCode() : task.getId(),
                 task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskUpdatedEmailContent(task);
