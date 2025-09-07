@@ -52,4 +52,9 @@ public interface BillingPeriodAttachmentService {
      * Exclui todos os anexos de um período de faturamento e remove completamente a pasta do storage
      */
     void deleteAllBillingPeriodAttachmentsAndFolder(Long billingPeriodId);
+    
+    /**
+     * Busca anexos como entidades (para uso interno com emails)
+     */
+    List<br.com.devquote.entity.BillingPeriodAttachment> getBillingPeriodAttachmentsEntities(Long billingPeriodId);
 }

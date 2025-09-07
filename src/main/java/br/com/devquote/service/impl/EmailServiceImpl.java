@@ -2,6 +2,7 @@ package br.com.devquote.service.impl;
 
 import br.com.devquote.configuration.EmailProperties;
 import br.com.devquote.entity.BillingPeriod;
+import br.com.devquote.entity.BillingPeriodTask;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
@@ -24,8 +25,13 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.text.NumberFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import jakarta.annotation.PostConstruct;
@@ -1409,5 +1415,224 @@ public class EmailServiceImpl implements EmailService {
                     action, delivery.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
             throw e;
         }
+    }
+    
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap) {
+        if (billingPeriod == null) {
+            log.warn("Cannot send billing period notification with attachments: billingPeriod is null");
+            return;
+        }
+
+        try {
+            // Array com nomes dos meses em português
+            String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
+            String monthName = monthNames[billingPeriod.getMonth() - 1];
+            String subject = String.format("💰 Medição %s de %d - DevQuote", monthName, billingPeriod.getYear());
+
+            // Criar contexto e HTML usando a mesma lógica do método existente
+            Context context = new Context();
+            context.setVariable("billingPeriod", billingPeriod);
+
+            // Formato: "julho/2025"
+            context.setVariable("monthYear", String.format("%s/%d", monthName, billingPeriod.getYear()));
+
+            // Formato: "Medição julho de 2025"
+            context.setVariable("measurementPeriod", String.format("Medição %s de %d", monthName, billingPeriod.getYear()));
+
+            // Formatar data de pagamento
+            if (billingPeriod.getPaymentDate() != null) {
+                java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                context.setVariable("paymentDate", billingPeriod.getPaymentDate().format(formatter));
+            } else {
+                context.setVariable("paymentDate", null);
+            }
+
+            // Buscar tarefas vinculadas ao período de faturamento
+            List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodId(billingPeriod.getId());
+
+            // Processar tarefas e calcular totais
+            List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
+            java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
+
+            for (Object[] taskData : billingTasks) {
+                java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
+                taskMap.put("code", taskData[1]); // task_code
+                taskMap.put("title", taskData[2]); // task_title
+                taskMap.put("description", taskData[3]); // task_description
+                taskMap.put("amount", taskData[4]); // task_amount
+                tasksData.add(taskMap);
+
+                if (taskData[4] != null) {
+                    totalAmount = totalAmount.add((java.math.BigDecimal) taskData[4]);
+                }
+            }
+
+            context.setVariable("tasks", tasksData);
+            context.setVariable("totalAmount", totalAmount);
+            context.setVariable("taskCount", billingTasks.size());
+
+            String htmlContent = templateEngine.process("email/billing-period-notification", context);
+
+            // Obter o email do financeiro
+            String financeEmail = emailProperties.getFinanceEmail();
+            if (financeEmail == null || financeEmail.trim().isEmpty()) {
+                log.error("Finance email not configured. Cannot send billing period notification.");
+                return;
+            }
+
+            String ccRecipient = null;
+            if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty() 
+                && !emailProperties.getFrom().equals(financeEmail)) {
+                ccRecipient = emailProperties.getFrom();
+            }
+
+            // Enviar email com anexos em memória
+            sendEmailWithInMemoryAttachments(financeEmail, ccRecipient, subject, htmlContent, attachmentDataMap);
+
+            log.debug("Billing period notification WITH ATTACHMENTS sent successfully for period ID: {} to {}", 
+                billingPeriod.getId(), financeEmail);
+
+        } catch (Exception e) {
+            log.error("Failed to send billing period notification with attachments for period ID: {}", 
+                billingPeriod.getId(), e);
+        }
+    }
+    
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendBillingPeriodDeletedNotification(BillingPeriod billingPeriod) {
+        if (billingPeriod == null) {
+            log.warn("Cannot send billing period deleted notification: billingPeriod is null");
+            return;
+        }
+
+        try {
+            // Array com nomes dos meses em português
+            String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
+            String monthName = monthNames[billingPeriod.getMonth() - 1];
+            String subject = String.format("🗑️ Período de Faturamento Excluído - %s de %d", monthName, billingPeriod.getYear());
+
+            String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
+
+            // Obter o email do financeiro
+            String financeEmail = emailProperties.getFinanceEmail();
+            if (financeEmail == null || financeEmail.trim().isEmpty()) {
+                log.error("Finance email not configured. Cannot send billing period deleted notification.");
+                return;
+            }
+
+            String ccRecipient = null;
+            if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty() 
+                && !emailProperties.getFrom().equals(financeEmail)) {
+                ccRecipient = emailProperties.getFrom();
+            }
+
+            sendEmailWithCC(financeEmail, ccRecipient, subject, htmlContent);
+
+            log.debug("Billing period deleted notification sent successfully for period ID: {} to {}", 
+                billingPeriod.getId(), financeEmail);
+
+        } catch (Exception e) {
+            log.error("Failed to send billing period deleted notification for period ID: {}", 
+                billingPeriod.getId(), e);
+        }
+    }
+    
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendBillingPeriodDeletedNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap) {
+        if (billingPeriod == null) {
+            log.warn("Cannot send billing period deleted notification with attachments: billingPeriod is null");
+            return;
+        }
+
+        try {
+            // Array com nomes dos meses em português
+            String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
+            String monthName = monthNames[billingPeriod.getMonth() - 1];
+            String subject = String.format("🗑️ Período de Faturamento Excluído - %s de %d", monthName, billingPeriod.getYear());
+
+            String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
+
+            // Obter o email do financeiro
+            String financeEmail = emailProperties.getFinanceEmail();
+            if (financeEmail == null || financeEmail.trim().isEmpty()) {
+                log.error("Finance email not configured. Cannot send billing period deleted notification.");
+                return;
+            }
+
+            String ccRecipient = null;
+            if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty() 
+                && !emailProperties.getFrom().equals(financeEmail)) {
+                ccRecipient = emailProperties.getFrom();
+            }
+
+            // Enviar email com anexos em memória
+            sendEmailWithInMemoryAttachments(financeEmail, ccRecipient, subject, htmlContent, attachmentDataMap);
+
+            log.debug("Billing period deleted notification WITH ATTACHMENTS sent successfully for period ID: {} to {}", 
+                billingPeriod.getId(), financeEmail);
+
+        } catch (Exception e) {
+            log.error("Failed to send billing period deleted notification with attachments for period ID: {}", 
+                billingPeriod.getId(), e);
+        }
+    }
+    
+    private String buildBillingPeriodDeletedEmailContent(BillingPeriod billingPeriod) {
+        Context context = new Context();
+        
+        // Array com nomes dos meses em português
+        String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                               "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
+        String monthName = monthNames[billingPeriod.getMonth() - 1];
+        
+        // Dados do período
+        context.setVariable("periodId", billingPeriod.getId());
+        context.setVariable("month", billingPeriod.getMonth());
+        context.setVariable("monthName", monthName);
+        context.setVariable("year", billingPeriod.getYear());
+        
+        // Formatação da data de pagamento
+        if (billingPeriod.getPaymentDate() != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            context.setVariable("paymentDate", billingPeriod.getPaymentDate().format(formatter));
+        }
+        
+        // Buscar tarefas vinculadas ao período de faturamento para calcular totais
+        List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodId(billingPeriod.getId());
+
+        // Processar tarefas e calcular totais
+        List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
+        java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
+        for (Object[] taskData : billingTasks) {
+            java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
+            taskMap.put("code", taskData[1]); // task_code
+            taskMap.put("title", taskData[2]); // task_title
+            taskMap.put("amount", currencyFormat.format(taskData[4])); // task_amount formatado
+            tasksData.add(taskMap);
+
+            if (taskData[4] != null) {
+                totalAmount = totalAmount.add((java.math.BigDecimal) taskData[4]);
+            }
+        }
+
+        context.setVariable("tasks", tasksData);
+        context.setVariable("totalAmount", currencyFormat.format(totalAmount));
+        context.setVariable("taskCount", billingTasks.size());
+        context.setVariable("hasTasks", !billingTasks.isEmpty());
+        
+        // Data/hora atual para registro
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        context.setVariable("deletedAt", LocalDateTime.now().format(dateTimeFormatter));
+        
+        return templateEngine.process("email/billing-period-deleted", context);
     }
 }

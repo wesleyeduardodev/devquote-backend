@@ -175,19 +175,38 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
     @Override
     public void deleteAllBillingPeriodAttachmentsAndFolder(Long billingPeriodId) {
         try {
-            // Delete entire folder from storage
-            String folderPath = "billing-periods/" + billingPeriodId + "/";
-            fileStorageStrategy.deleteFolder(folderPath);
+            log.debug("Starting deletion of all attachments for billing period: {}", billingPeriodId);
             
-            // Delete all attachments from database
+            // 1. Find all attachments first
             List<BillingPeriodAttachment> attachments = billingPeriodAttachmentRepository.findByBillingPeriodId(billingPeriodId);
-            billingPeriodAttachmentRepository.deleteAll(attachments);
+            log.debug("Found {} attachments to delete for billing period: {}", attachments.size(), billingPeriodId);
             
-            log.info("All attachments and folder deleted for billing period: {}", billingPeriodId);
+            if (!attachments.isEmpty()) {
+                // 2. Delete files from S3 storage
+                String folderPath = "billing-periods/" + billingPeriodId + "/";
+                log.debug("Deleting folder from S3: {}", folderPath);
+                fileStorageStrategy.deleteFolder(folderPath);
+                log.debug("S3 folder deleted successfully");
+                
+                // 3. Delete records from database
+                log.debug("Deleting {} attachment records from database", attachments.size());
+                billingPeriodAttachmentRepository.deleteAll(attachments);
+                log.debug("Database records deleted successfully");
+                
+                // 4. Verify deletion
+                List<BillingPeriodAttachment> remainingAttachments = billingPeriodAttachmentRepository.findByBillingPeriodId(billingPeriodId);
+                if (!remainingAttachments.isEmpty()) {
+                    throw new RuntimeException("Failed to delete all attachments. " + remainingAttachments.size() + " records still remain");
+                }
+                
+                log.info("Successfully deleted {} attachments and folder for billing period: {}", attachments.size(), billingPeriodId);
+            } else {
+                log.debug("No attachments found for billing period: {}", billingPeriodId);
+            }
             
         } catch (Exception e) {
-            log.error("Error deleting all attachments and folder for billing period {}: {}", billingPeriodId, e.getMessage());
-            throw new RuntimeException("Error deleting all attachments and folder: " + e.getMessage());
+            log.error("CRITICAL ERROR deleting attachments for billing period {}: {}", billingPeriodId, e.getMessage(), e);
+            throw new RuntimeException("Error deleting all attachments and folder: " + e.getMessage(), e);
         }
     }
 
@@ -202,5 +221,11 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
         }
         
         return fileName.substring(lastDotIndex);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<br.com.devquote.entity.BillingPeriodAttachment> getBillingPeriodAttachmentsEntities(Long billingPeriodId) {
+        return billingPeriodAttachmentRepository.findByBillingPeriodId(billingPeriodId);
     }
 }

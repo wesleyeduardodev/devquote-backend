@@ -5,8 +5,11 @@ import br.com.devquote.dto.request.BillingPeriodRequest;
 import br.com.devquote.dto.response.BillingPeriodResponse;
 import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.repository.BillingPeriodRepository;
+import br.com.devquote.repository.BillingPeriodTaskRepository;
 import br.com.devquote.service.BillingPeriodService;
+import br.com.devquote.service.BillingPeriodAttachmentService;
 import br.com.devquote.service.EmailService;
+import br.com.devquote.service.storage.FileStorageStrategy;
 import br.com.devquote.utils.ExcelReportUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -31,9 +34,12 @@ import java.util.stream.Collectors;
 public class BillingPeriodServiceImpl implements BillingPeriodService {
 
     private final BillingPeriodRepository billingPeriodRepository;
+    private final BillingPeriodTaskRepository billingPeriodTaskRepository;
     private final EntityManager entityManager;
     private final ExcelReportUtils excelReportUtils;
     private final EmailService emailService;
+    private final BillingPeriodAttachmentService billingPeriodAttachmentService;
+    private final FileStorageStrategy fileStorageStrategy;
 
     @Override
     public List<BillingPeriodResponse> findAll() {
@@ -108,7 +114,75 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
 
     @Override
     public void delete(Long id) {
+        // Buscar o período antes de excluir para o email
+        BillingPeriod billingPeriod = billingPeriodRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("BillingPeriod not found"));
+        
+        // ESTRATÉGIA ROBUSTA: Tentar baixar anexos para memória
+        Map<String, byte[]> attachmentDataMap = new HashMap<>();
+        boolean hasAttachments = false;
+        
+        try {
+            List<br.com.devquote.entity.BillingPeriodAttachment> attachments = billingPeriodAttachmentService.getBillingPeriodAttachmentsEntities(id);
+            if (attachments != null && !attachments.isEmpty()) {
+                hasAttachments = true;
+                for (br.com.devquote.entity.BillingPeriodAttachment attachment : attachments) {
+                    try {
+                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
+                             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                            
+                            inputStream.transferTo(baos);
+                            byte[] data = baos.toByteArray();
+                            attachmentDataMap.put(attachment.getOriginalFileName(), data);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to download billing period attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error accessing billing period attachments from database: {}", e.getMessage());
+        }
+        
+        // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
+        try {
+            if (attachmentDataMap.isEmpty() && hasAttachments) {
+                // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
+                emailService.sendBillingPeriodDeletedNotification(billingPeriod);
+            } else if (!attachmentDataMap.isEmpty()) {
+                // Conseguiu baixar anexos - enviar email com anexos
+                emailService.sendBillingPeriodDeletedNotificationWithAttachmentData(billingPeriod, attachmentDataMap);
+            } else {
+                // Não tinha anexos - enviar email simples
+                emailService.sendBillingPeriodDeletedNotification(billingPeriod);
+            }
+        } catch (Exception e) {
+            log.error("FAILED to send deletion email for billing period ID: {} - Error: {}", id, e.getMessage());
+            // Não impede a exclusão do período
+        }
+        
+        // STEP 3/3 - DELETAR PERÍODO E RELACIONAMENTOS (sempre acontece, mesmo se email falhou)
+        try {
+            // 1. Excluir anexos (arquivos S3 e registros billing_period_attachments)
+            billingPeriodAttachmentService.deleteAllBillingPeriodAttachmentsAndFolder(id);
+            log.debug("Deleted all attachments for billing period ID: {}", id);
+        } catch (Exception e) {
+            log.error("CRITICAL: Failed to delete attachments for billing period {}: {}", id, e.getMessage());
+            throw e; // PROPAGAR ERRO - é crítico para integridade dos dados
+        }
+        
+        try {
+            // 2. Excluir relacionamentos com tarefas (billing_period_task)
+            billingPeriodTaskRepository.deleteByBillingPeriodId(id);
+            log.debug("Deleted all BillingPeriodTask records for billing period ID: {}", id);
+        } catch (Exception e) {
+            log.error("CRITICAL: Failed to delete billing period tasks for period {}: {}", id, e.getMessage());
+            throw e; // PROPAGAR ERRO - é crítico para integridade dos dados
+        }
+        
+        // 3. Excluir o período de faturamento
         billingPeriodRepository.deleteById(id);
+        log.debug("Successfully deleted BillingPeriod with ID: {}", id);
     }
 
     @Override
@@ -235,28 +309,11 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     public void deleteWithAllLinkedTasks(Long id) {
         log.debug("BILLING_PERIOD DELETE_WITH_TASKS id={}", id);
         
-        // Verificar se o período existe
-        BillingPeriod billingPeriod = billingPeriodRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Billing period not found with id: " + id));
+        // Usar o método delete() que já implementa o padrão robusto completo
+        // (busca dados, envia email, exclui anexos, exclui relacionamentos, exclui período)
+        delete(id);
         
-        try {
-            // 1. Primeiro, remover todos os vínculos de tarefas
-            String deleteTaskLinksQuery = "DELETE FROM billing_period_task WHERE billing_period_id = :billingPeriodId";
-            Query deleteTaskLinksNativeQuery = entityManager.createNativeQuery(deleteTaskLinksQuery);
-            deleteTaskLinksNativeQuery.setParameter("billingPeriodId", id);
-            int deletedLinks = deleteTaskLinksNativeQuery.executeUpdate();
-            
-            log.debug("BILLING_PERIOD DELETE_WITH_TASKS id={} deletedTaskLinks={}", id, deletedLinks);
-            
-            // 2. Depois, remover o período de faturamento
-            billingPeriodRepository.deleteById(id);
-            
-            log.debug("BILLING_PERIOD DELETE_WITH_TASKS id={} - completed successfully", id);
-            
-        } catch (Exception e) {
-            log.error("BILLING_PERIOD DELETE_WITH_TASKS id={} - error: {}", id, e.getMessage(), e);
-            throw new RuntimeException("Erro ao excluir período de faturamento com tarefas vinculadas: " + e.getMessage());
-        }
+        log.debug("BILLING_PERIOD DELETE_WITH_TASKS id={} - completed successfully using robust deletion pattern", id);
     }
 
     @Override
@@ -282,9 +339,41 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
         BillingPeriod billingPeriod = billingPeriodRepository.findById(billingPeriodId)
                 .orElseThrow(() -> new RuntimeException("BillingPeriod not found with id: " + billingPeriodId));
         
+        // ESTRATÉGIA ROBUSTA: Tentar baixar anexos, se conseguir incluir no email
+        Map<String, byte[]> attachmentDataMap = new HashMap<>();
+        boolean hasAttachments = false;
+        
         try {
-            // Enviar email com informações do período de faturamento
-            emailService.sendBillingPeriodNotificationAsync(billingPeriod);
+            List<br.com.devquote.entity.BillingPeriodAttachment> attachments = billingPeriodAttachmentService.getBillingPeriodAttachmentsEntities(billingPeriodId);
+            if (attachments != null && !attachments.isEmpty()) {
+                hasAttachments = true;
+                for (br.com.devquote.entity.BillingPeriodAttachment attachment : attachments) {
+                    try {
+                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
+                             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                            
+                            inputStream.transferTo(baos);
+                            byte[] data = baos.toByteArray();
+                            attachmentDataMap.put(attachment.getOriginalFileName(), data);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to download billing period attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error accessing billing period attachments from database: {}", e.getMessage());
+        }
+        
+        try {
+            // Enviar email com informações do período de faturamento (com anexos se conseguiu baixar)
+            if (!attachmentDataMap.isEmpty()) {
+                // Conseguiu baixar anexos - enviar email com anexos
+                emailService.sendBillingPeriodNotificationWithAttachmentData(billingPeriod, attachmentDataMap);
+            } else {
+                // Não conseguiu baixar anexos ou não tinha anexos - enviar email simples
+                emailService.sendBillingPeriodNotificationAsync(billingPeriod);
+            }
             
             // Marcar como email enviado
             billingPeriod.setBillingEmailSent(true);

@@ -34,4 +34,10 @@ public interface EmailService {
     
     void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod);
     
+    void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap);
+    
+    void sendBillingPeriodDeletedNotification(BillingPeriod billingPeriod);
+    
+    void sendBillingPeriodDeletedNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap);
+    
 }

@@ -39,6 +39,10 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
     @Modifying
     @Query("DELETE FROM BillingPeriodTask bpt WHERE bpt.billingPeriod.id = :billingPeriodId AND bpt.task.id IN :taskIds")
     void deleteByBillingPeriodIdAndTaskIds(@Param("billingPeriodId") Long billingPeriodId, @Param("taskIds") List<Long> taskIds);
+    
+    @Modifying
+    @Query("DELETE FROM BillingPeriodTask bpt WHERE bpt.billingPeriod.id = :billingPeriodId")
+    void deleteByBillingPeriodId(@Param("billingPeriodId") Long billingPeriodId);
 
     boolean existsByBillingPeriodIdAndTaskId(Long billingPeriodId, Long taskId);
     
