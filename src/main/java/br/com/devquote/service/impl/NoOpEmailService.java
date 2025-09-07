@@ -3,7 +3,10 @@ package br.com.devquote.service.impl;
 import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Task;
+import br.com.devquote.entity.TaskAttachment;
 import br.com.devquote.service.EmailService;
+
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -51,6 +54,21 @@ public class NoOpEmailService implements EmailService {
         if (task.getRequester() != null) {
             log.debug("📧 [EMAIL DISABLED] Would send to requester: {} <{}>", 
                     task.getRequester().getName(), task.getRequester().getEmail());
+        }
+    }
+
+    @Override
+    public void sendTaskDeletedNotificationWithAttachments(Task task, List<TaskAttachment> attachments) {
+        log.debug("📧 [EMAIL DISABLED] Would send TASK DELETED notification WITH ATTACHMENTS for: Task ID={}, Code={}, Title={}", 
+                task.getId(), task.getCode(), task.getTitle());
+        if (task.getRequester() != null) {
+            log.debug("📧 [EMAIL DISABLED] Would send to requester: {} <{}>", 
+                    task.getRequester().getName(), task.getRequester().getEmail());
+        }
+        if (attachments != null && !attachments.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} attachments: {}", 
+                    attachments.size(), 
+                    attachments.stream().map(TaskAttachment::getOriginalFileName).toList());
         }
     }
 

@@ -182,19 +182,64 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void delete(Long id) {
         Task entity = taskRepository.findById(id)
+                .map(task -> {
+                    // Inicializar relacionamentos lazy antes do envio assíncrono
+                    if (task.getRequester() != null) {
+                        task.getRequester().getName();
+                        task.getRequester().getEmail();
+                    }
+                    if (task.getCreatedBy() != null) {
+                        task.getCreatedBy().getUsername();
+                        task.getCreatedBy().getName();
+                    }
+                    if (task.getUpdatedBy() != null) {
+                        task.getUpdatedBy().getUsername();
+                        task.getUpdatedBy().getName();
+                    }
+                    return task;
+                })
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
         validateTaskAccess(entity, "excluir");
 
         User currentUser = securityUtils.getCurrentUser();
-        log.warn("TASK DELETE id={} title={} user={}",
+        log.warn("🗑️ TASK DELETE STARTED - id={} title={} user={}",
             id, entity.getTitle(), currentUser != null ? currentUser.getUsername() : "unknown");
+        
+        // Debug lazy loading initialization
+        log.debug("🔍 LAZY LOADING DEBUG - Requester: {}, CreatedBy: {}, UpdatedBy: {}", 
+            entity.getRequester() != null ? entity.getRequester().getName() : "null",
+            entity.getCreatedBy() != null ? entity.getCreatedBy().getUsername() : "null", 
+            entity.getUpdatedBy() != null ? entity.getUpdatedBy().getUsername() : "null");
 
-        // Enviar notificação por email ANTES de excluir os anexos
+        // Baixar anexos EM MEMÓRIA antes de excluir qualquer coisa
+        log.info("📎 Pre-loading attachments in memory for deletion email - task ID: {}", id);
+        List<TaskAttachment> attachmentsForEmail = null;
         try {
-            emailService.sendTaskDeletedNotification(entity);
+            attachmentsForEmail = taskAttachmentService.getTaskAttachmentsEntities(id);
+            if (attachmentsForEmail != null && !attachmentsForEmail.isEmpty()) {
+                log.info("📎 Found {} attachments to include in deletion email", attachmentsForEmail.size());
+                // Força o download de cada anexo para garantir que existem no S3
+                for (TaskAttachment attachment : attachmentsForEmail) {
+                    try {
+                        taskAttachmentService.downloadAttachment(attachment.getId()); // Valida se arquivo existe
+                        log.debug("📎 Validated attachment exists: {}", attachment.getOriginalFileName());
+                    } catch (Exception e) {
+                        log.warn("📎 Attachment validation failed for: {} - {}", attachment.getOriginalFileName(), e.getMessage());
+                    }
+                }
+            }
         } catch (Exception e) {
-            log.warn("Failed to send email notification for task deletion: {}", e.getMessage());
+            log.warn("📎 Failed to pre-load attachments for deletion email: {}", e.getMessage());
+        }
+
+        // Enviar notificação por email COM anexos já validados
+        log.info("📧 ATTEMPTING to send task deletion email notification for task ID: {}", id);
+        try {
+            emailService.sendTaskDeletedNotificationWithAttachments(entity, attachmentsForEmail);
+            log.info("📧 ✅ Successfully sent task deletion email notification for task ID: {}", id);
+        } catch (Exception e) {
+            log.error("📧 ❌ FAILED to send email notification for task deletion ID: {} - Error: {}", id, e.getMessage(), e);
         }
 
         // Excluir todos os anexos e pasta do storage após envio do email
@@ -296,6 +341,22 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void deleteTaskWithSubTasks(Long taskId) {
         Task task = taskRepository.findById(taskId)
+                .map(entity -> {
+                    // Inicializar relacionamentos lazy antes do envio assíncrono
+                    if (entity.getRequester() != null) {
+                        entity.getRequester().getName();
+                        entity.getRequester().getEmail();
+                    }
+                    if (entity.getCreatedBy() != null) {
+                        entity.getCreatedBy().getUsername();
+                        entity.getCreatedBy().getName();
+                    }
+                    if (entity.getUpdatedBy() != null) {
+                        entity.getUpdatedBy().getUsername();
+                        entity.getUpdatedBy().getName();
+                    }
+                    return entity;
+                })
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
         validateTaskAccess(task, "excluir");
@@ -304,11 +365,42 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("Cannot delete task. It is linked to a billing period.");
         }
 
-        // Enviar notificação por email ANTES de excluir os anexos
+        log.warn("🗑️ TASK WITH SUBTASKS DELETE STARTED - id={} title={}", taskId, task.getTitle());
+        
+        // Debug lazy loading initialization
+        log.debug("🔍 LAZY LOADING DEBUG (WITH SUBTASKS) - Requester: {}, CreatedBy: {}, UpdatedBy: {}", 
+            task.getRequester() != null ? task.getRequester().getName() : "null",
+            task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "null", 
+            task.getUpdatedBy() != null ? task.getUpdatedBy().getUsername() : "null");
+
+        // Baixar anexos EM MEMÓRIA antes de excluir qualquer coisa
+        log.info("📎 Pre-loading attachments in memory for deletion email - task ID: {}", taskId);
+        List<TaskAttachment> attachmentsForEmail = null;
         try {
-            emailService.sendTaskDeletedNotification(task);
+            attachmentsForEmail = taskAttachmentService.getTaskAttachmentsEntities(taskId);
+            if (attachmentsForEmail != null && !attachmentsForEmail.isEmpty()) {
+                log.info("📎 Found {} attachments to include in deletion email", attachmentsForEmail.size());
+                // Força o download de cada anexo para garantir que existem no S3
+                for (TaskAttachment attachment : attachmentsForEmail) {
+                    try {
+                        taskAttachmentService.downloadAttachment(attachment.getId()); // Valida se arquivo existe
+                        log.debug("📎 Validated attachment exists: {}", attachment.getOriginalFileName());
+                    } catch (Exception e) {
+                        log.warn("📎 Attachment validation failed for: {} - {}", attachment.getOriginalFileName(), e.getMessage());
+                    }
+                }
+            }
         } catch (Exception e) {
-            log.warn("Failed to send email notification for task with subtasks deletion: {}", e.getMessage());
+            log.warn("📎 Failed to pre-load attachments for deletion email: {}", e.getMessage());
+        }
+
+        // Enviar notificação por email COM anexos já validados
+        log.info("📧 ATTEMPTING to send task WITH SUBTASKS deletion email notification for task ID: {}", taskId);
+        try {
+            emailService.sendTaskDeletedNotificationWithAttachments(task, attachmentsForEmail);
+            log.info("📧 ✅ Successfully sent task WITH SUBTASKS deletion email notification for task ID: {}", taskId);
+        } catch (Exception e) {
+            log.error("📧 ❌ FAILED to send email notification for task WITH SUBTASKS deletion ID: {} - Error: {}", taskId, e.getMessage(), e);
         }
 
         // Excluir todos os anexos e pasta do storage após envio do email

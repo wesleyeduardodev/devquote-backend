@@ -39,6 +39,15 @@
         .content {
             padding: 30px;
         }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 25px;
+            color: #856404;
+            font-size: 14px;
+        }
         .section {
             background-color: #f8f9fa;
             border-left: 4px solid #dc3545;
@@ -134,18 +143,6 @@
         .link:hover {
             text-decoration: underline;
         }
-        .warning-box {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 20px 0;
-            color: #856404;
-        }
-        .warning-box strong {
-            display: block;
-            margin-bottom: 5px;
-        }
         @media (max-width: 700px) {
             .container {
                 margin: 10px;
@@ -177,8 +174,7 @@
     <div class="container">
         <div class="header">
             <div class="logo">🗑️ DevQuote</div>
-            <h1>Tarefa Excluída</h1>
-            <p>Uma tarefa foi removida do sistema</p>
+            <h1>Dados da Tarefa Excluída</h1>
         </div>
 
         <div class="content">
@@ -189,7 +185,7 @@
 
             <!-- DADOS PRINCIPAIS DA TAREFA -->
             <div class="section">
-                <h2>📋 Dados da Tarefa (Excluída)</h2>
+                <h2>📋 Dados da Tarefa</h2>
 
                 <div class="info-grid">
                     <div class="info-row" th:if="${!#strings.isEmpty(taskId)}">
@@ -253,6 +249,20 @@
                 </div>
             </div>
 
+            <!-- SUBTAREFAS -->
+            <div class="section" th:if="${hasSubTasks}">
+                <h2>📝 Subtarefas</h2>
+
+                <div th:each="subtask : ${subTasks}" class="subtask-item">
+                    <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}"
+                         th:text="${subtask.title}">Título da subtarefa</div>
+
+                    <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}"
+                         th:text="${subtask.description}">Descrição da subtarefa</div>
+
+                </div>
+            </div>
+
             <!-- DADOS DO SOLICITANTE -->
             <div class="section" th:if="${!#strings.isEmpty(requesterName) or !#strings.isEmpty(requesterEmail) or !#strings.isEmpty(requesterPhone)}">
                 <h2>👤 Solicitante</h2>
@@ -272,20 +282,6 @@
                         <div class="info-label">Telefone:</div>
                         <div class="info-value" th:text="${requesterPhone}">+55 11 99999-9999</div>
                     </div>
-                </div>
-            </div>
-
-            <!-- SUBTAREFAS -->
-            <div class="section" th:if="${hasSubTasks}">
-                <h2>📝 Subtarefas (Excluídas)</h2>
-
-                <div th:each="subtask : ${subTasks}" class="subtask-item">
-                    <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}"
-                         th:text="${subtask.title}">Título da subtarefa</div>
-
-                    <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}"
-                         th:text="${subtask.description}">Descrição da subtarefa</div>
-
                 </div>
             </div>
 

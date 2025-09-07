@@ -10,6 +10,7 @@ import br.com.devquote.repository.BillingPeriodTaskRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.service.EmailService;
 import br.com.devquote.service.TaskAttachmentService;
+import br.com.devquote.service.storage.FileStorageStrategy;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class EmailServiceImpl implements EmailService {
     private final SubTaskRepository subTaskRepository;
     private final BillingPeriodTaskRepository billingPeriodTaskRepository;
     private final TaskAttachmentService taskAttachmentService;
+    private final FileStorageStrategy fileStorageStrategy;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -97,29 +99,88 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async("emailTaskExecutor")
     public void sendTaskDeletedNotification(Task task) {
+        log.info("🗑️📧 TASK DELETION EMAIL SERVICE CALLED for task ID: {}, Code: {}, Title: {}", 
+                task.getId(), task.getCode(), task.getTitle());
+        
         if (!emailProperties.isEnabled()) {
-            log.debug("Email notifications are disabled");
+            log.warn("🗑️📧 ❌ EMAIL NOTIFICATIONS ARE DISABLED - task deletion email will NOT be sent");
             return;
         }
 
+        log.info("🗑️📧 EMAIL NOTIFICATIONS ENABLED - proceeding with task deletion email");
+
         try {
-            log.debug("Sending task deleted notification for task ID: {}", task.getId());
+            log.info("🗑️📧 Building task deletion notification for task ID: {}", task.getId());
+
+            // Debug task data
+            log.debug("🗑️📧 TASK DATA - Requester: {}, Email: {}", 
+                    task.getRequester() != null ? task.getRequester().getName() : "null",
+                    task.getRequester() != null ? task.getRequester().getEmail() : "null");
 
             String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s",
                 task.getCode() != null ? task.getCode() : task.getId(),
                 task.getTitle() != null ? task.getTitle() : "Sem título");
+            
+            log.info("🗑️📧 EMAIL SUBJECT: {}", subject);
+            
             String htmlContent = buildTaskDeletedEmailContent(task);
+            log.info("🗑️📧 HTML CONTENT BUILT - length: {} characters", htmlContent.length());
 
+            log.info("🗑️📧 CALLING sendToMultipleRecipients for DELETED task...");
             sendToMultipleRecipients(task, subject, htmlContent, "deleted");
+            log.info("🗑️📧 ✅ sendToMultipleRecipients completed for DELETED task ID: {}", task.getId());
 
         } catch (Exception e) {
-            log.error("Failed to send task deleted notification for task ID: {}", task.getId(), e);
+            log.error("🗑️📧 ❌ CRITICAL ERROR - Failed to send task deleted notification for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendTaskDeletedNotificationWithAttachments(Task task, List<TaskAttachment> preLoadedAttachments) {
+        log.info("🗑️📧 TASK DELETION EMAIL SERVICE WITH PRE-LOADED ATTACHMENTS called for task ID: {}, Code: {}, Title: {}", 
+                task.getId(), task.getCode(), task.getTitle());
+        
+        if (!emailProperties.isEnabled()) {
+            log.warn("🗑️📧 ❌ EMAIL NOTIFICATIONS ARE DISABLED - task deletion email will NOT be sent");
+            return;
+        }
+
+        log.info("🗑️📧 EMAIL NOTIFICATIONS ENABLED - proceeding with task deletion email WITH PRE-LOADED ATTACHMENTS");
+
+        try {
+            log.info("🗑️📧 Building task deletion notification for task ID: {}", task.getId());
+
+            // Debug task data
+            log.debug("🗑️📧 TASK DATA - Requester: {}, Email: {}", 
+                    task.getRequester() != null ? task.getRequester().getName() : "null",
+                    task.getRequester() != null ? task.getRequester().getEmail() : "null");
+
+            String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s",
+                task.getCode() != null ? task.getCode() : task.getId(),
+                task.getTitle() != null ? task.getTitle() : "Sem título");
+            
+            log.info("🗑️📧 EMAIL SUBJECT: {}", subject);
+            
+            String htmlContent = buildTaskDeletedEmailContent(task);
+            log.info("🗑️📧 HTML CONTENT BUILT - length: {} characters", htmlContent.length());
+
+            log.info("🗑️📧 CALLING sendToMultipleRecipientsWithPreLoadedAttachments for DELETED task...");
+            sendToMultipleRecipientsWithPreLoadedAttachments(task, subject, htmlContent, "deleted", preLoadedAttachments);
+            log.info("🗑️📧 ✅ sendToMultipleRecipientsWithPreLoadedAttachments completed for DELETED task ID: {}", task.getId());
+
+        } catch (Exception e) {
+            log.error("🗑️📧 ❌ CRITICAL ERROR - Failed to send task deleted notification WITH PRE-LOADED ATTACHMENTS for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
         }
     }
 
     private void sendToMultipleRecipients(Task task, String subject, String htmlContent, String action) {
-        log.debug("📧 Starting TASK {} email notification process for: Task ID={}, Code={}, Title={}",
+        log.info("📧 Starting TASK {} email notification process for: Task ID={}, Code={}, Title={}",
                 action.toUpperCase(), task.getId(), task.getCode(), task.getTitle());
+        
+        if ("deleted".equalsIgnoreCase(action)) {
+            log.info("🗑️📧 DELETION EMAIL FLOW - Processing task deletion email for task ID: {}", task.getId());
+        }
 
         String mainRecipient = null;
         String ccRecipient = null;
@@ -161,28 +222,133 @@ public class EmailServiceImpl implements EmailService {
         // Carregar anexos da tarefa (entidades para envio por email)
         List<TaskAttachment> taskAttachments = null;
         try {
+            log.info("📎 LOADING attachments for task ID: {} (action: {})", task.getId(), action.toUpperCase());
             taskAttachments = taskAttachmentService.getTaskAttachmentsEntities(task.getId());
             if (taskAttachments != null && !taskAttachments.isEmpty()) {
-                log.debug("📎 Found {} attachment(s) for task ID: {}", taskAttachments.size(), task.getId());
+                log.info("📎 ✅ Found {} attachment(s) for task ID: {} - Files: {}", 
+                        taskAttachments.size(), task.getId(), 
+                        taskAttachments.stream().map(TaskAttachment::getOriginalFileName).toList());
+                
+                if ("deleted".equalsIgnoreCase(action)) {
+                    log.info("🗑️📎 DELETION EMAIL - Will include {} attachments in deletion notification", taskAttachments.size());
+                }
+            } else {
+                log.info("📎 No attachments found for task ID: {} (action: {})", task.getId(), action.toUpperCase());
             }
         } catch (Exception e) {
-            log.warn("📎 Failed to load attachments for task ID: {} - {}", task.getId(), e.getMessage());
+            log.error("📎 ❌ FAILED to load attachments for task ID: {} (action: {}) - Error: {}", task.getId(), action.toUpperCase(), e.getMessage(), e);
             taskAttachments = null; // Continua sem anexos se houver erro
         }
 
         // Enviar email único com CC e anexos
         try {
-            log.debug("📧 Sending TASK {} notification - To: {}, CC: {}, Attachments: {}",
+            log.info("📧 Sending TASK {} notification - To: {}, CC: {}, Attachments: {}",
                     action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
                     taskAttachments != null ? taskAttachments.size() : 0);
 
+            if ("deleted".equalsIgnoreCase(action)) {
+                log.info("🗑️📧 CALLING sendEmailWithAttachments for DELETION email to: {} with {} attachments", 
+                        mainRecipient, taskAttachments != null ? taskAttachments.size() : 0);
+            }
+
             sendEmailWithAttachments(mainRecipient, ccRecipient, subject, htmlContent, taskAttachments);
 
-            log.debug("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {} (cc: {}, attachments: {})",
+            if ("deleted".equalsIgnoreCase(action)) {
+                log.info("🗑️📧 ✅ DELETION EMAIL SENT successfully for task ID: {} to: {}", task.getId(), mainRecipient);
+            }
+
+            log.info("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {} (cc: {}, attachments: {})",
                     action.toUpperCase(), task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
                     taskAttachments != null ? taskAttachments.size() : 0);
         } catch (Exception e) {
             log.error("📧 ❌ FAILED to send {} notification for task ID: {} to: {} (cc: {}) - Error: {}",
+                    action, task.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private void sendToMultipleRecipientsWithPreLoadedAttachments(Task task, String subject, String htmlContent, String action, List<TaskAttachment> preLoadedAttachments) {
+        log.info("📧 Starting TASK {} email notification process WITH PRE-LOADED ATTACHMENTS for: Task ID={}, Code={}, Title={}",
+                action.toUpperCase(), task.getId(), task.getCode(), task.getTitle());
+        
+        if ("deleted".equalsIgnoreCase(action)) {
+            log.info("🗑️📧 DELETION EMAIL FLOW WITH PRE-LOADED ATTACHMENTS - Processing task deletion email for task ID: {} with {} attachments", 
+                    task.getId(), preLoadedAttachments != null ? preLoadedAttachments.size() : 0);
+        }
+
+        String mainRecipient = null;
+        String ccRecipient = null;
+
+        // Definir destinatário principal (solicitante)
+        if (task.getRequester() != null && task.getRequester().getEmail() != null
+            && !task.getRequester().getEmail().trim().isEmpty()) {
+            mainRecipient = task.getRequester().getEmail();
+            log.debug("📧 Main recipient (requester): {} <{}>",
+                    task.getRequester().getName(), task.getRequester().getEmail());
+        } else {
+            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {}. Requester: {}",
+                    task.getId(),
+                    task.getRequester() != null ? task.getRequester().getName() : "null");
+        }
+
+        // Definir destinatário em cópia (você)
+        if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
+            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
+            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
+                mainRecipient = emailProperties.getFrom();
+                ccRecipient = null;
+                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
+            } else {
+                ccRecipient = emailProperties.getFrom();
+                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
+            }
+        } else {
+            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
+        }
+
+        // Verificar se há destinatário principal
+        if (mainRecipient == null) {
+            log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {} ({} action). Email will NOT be sent!",
+                    task.getId(), action);
+            return;
+        }
+
+        // Usar anexos pré-carregados (não buscar no banco/S3)
+        List<TaskAttachment> taskAttachments = preLoadedAttachments;
+        if (taskAttachments != null && !taskAttachments.isEmpty()) {
+            log.info("📎 ✅ Using {} PRE-LOADED attachment(s) for task ID: {} - Files: {}", 
+                    taskAttachments.size(), task.getId(), 
+                    taskAttachments.stream().map(TaskAttachment::getOriginalFileName).toList());
+            
+            if ("deleted".equalsIgnoreCase(action)) {
+                log.info("🗑️📎 DELETION EMAIL - Will include {} PRE-LOADED attachments in deletion notification", taskAttachments.size());
+            }
+        } else {
+            log.info("📎 No PRE-LOADED attachments for task ID: {} (action: {})", task.getId(), action.toUpperCase());
+        }
+
+        // Enviar email único com CC e anexos pré-carregados
+        try {
+            log.info("📧 Sending TASK {} notification WITH PRE-LOADED ATTACHMENTS - To: {}, CC: {}, Attachments: {}",
+                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
+                    taskAttachments != null ? taskAttachments.size() : 0);
+
+            if ("deleted".equalsIgnoreCase(action)) {
+                log.info("🗑️📧 CALLING sendEmailWithPreLoadedAttachments for DELETION email WITH PRE-LOADED ATTACHMENTS to: {} with {} attachments", 
+                        mainRecipient, taskAttachments != null ? taskAttachments.size() : 0);
+            }
+
+            sendEmailWithPreLoadedAttachments(mainRecipient, ccRecipient, subject, htmlContent, taskAttachments);
+
+            if ("deleted".equalsIgnoreCase(action)) {
+                log.info("🗑️📧 ✅ DELETION EMAIL WITH PRE-LOADED ATTACHMENTS SENT successfully for task ID: {} to: {}", task.getId(), mainRecipient);
+            }
+
+            log.info("📧 ✅ TASK {} notification WITH PRE-LOADED ATTACHMENTS sent successfully for task ID: {} to: {} (cc: {}, attachments: {})",
+                    action.toUpperCase(), task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
+                    taskAttachments != null ? taskAttachments.size() : 0);
+        } catch (Exception e) {
+            log.error("📧 ❌ FAILED to send {} notification WITH PRE-LOADED ATTACHMENTS for task ID: {} to: {} (cc: {}) - Error: {}",
                     action, task.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
             throw e;
         }
@@ -622,10 +788,15 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendEmailWithAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments) {
+        log.info("📧 SENDWITHATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}", 
+                to, cc != null ? cc : "none", subject, attachments != null ? attachments.size() : 0);
+        
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            log.debug("📧 Setting email headers - From: {}, To: {}, Subject: {}", emailProperties.getFrom(), to, subject);
+            
             helper.setFrom(emailProperties.getFrom());
             helper.setTo(to);
 
@@ -641,12 +812,12 @@ public class EmailServiceImpl implements EmailService {
                 log.debug("Adding {} attachments to email", attachments.size());
                 for (TaskAttachment attachment : attachments) {
                     try {
-                        // Criar InputStreamSource que gera stream fresco para cada chamada
+                        // Criar InputStreamSource que acessa diretamente o S3 sem buscar no banco
+                        // (necessário pois em emails de exclusão, o anexo já pode ter sido deletado do banco)
                         org.springframework.core.io.InputStreamSource inputStreamSource = new org.springframework.core.io.InputStreamSource() {
                             @Override
                             public java.io.InputStream getInputStream() throws java.io.IOException {
-                                org.springframework.core.io.Resource resource = taskAttachmentService.downloadAttachment(attachment.getId());
-                                return resource.getInputStream();
+                                return fileStorageStrategy.getFileStream(attachment.getFilePath());
                             }
                         };
                         
@@ -659,11 +830,83 @@ public class EmailServiceImpl implements EmailService {
                 }
             }
 
+            log.info("📧 CALLING mailSender.send() - Final step to send email to: {}", to);
             mailSender.send(message);
+            log.info("📧 ✅ EMAIL SENT successfully via mailSender to: {}", to);
 
         } catch (MessagingException e) {
-            log.error("Failed to send email to: {} (cc: {})", to, cc, e);
+            log.error("📧 ❌ MESSAGING EXCEPTION - Failed to send email to: {} (cc: {}) - Error: {}", to, cc, e.getMessage(), e);
             throw new RuntimeException("Failed to send email", e);
+        }
+    }
+
+    private void sendEmailWithPreLoadedAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments) {
+        log.info("📧 SENDWITHPRELOADEDATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}", 
+                to, cc != null ? cc : "none", subject, attachments != null ? attachments.size() : 0);
+        
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            log.debug("📧 Setting email headers - From: {}, To: {}, Subject: {}", emailProperties.getFrom(), to, subject);
+            
+            helper.setFrom(emailProperties.getFrom());
+            helper.setTo(to);
+
+            if (cc != null && !cc.trim().isEmpty()) {
+                helper.setCc(cc);
+            }
+
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            // Adicionar anexos pré-carregados (baixar dados em memória ANTES de acessar)
+            if (attachments != null && !attachments.isEmpty()) {
+                log.debug("📎 Pre-loading {} attachments data from S3 into memory", attachments.size());
+                for (TaskAttachment attachment : attachments) {
+                    try {
+                        // Baixar dados do S3 para memória ANTES de tentar anexar ao email
+                        log.debug("📎 Pre-loading attachment data: {} from path: {}", attachment.getOriginalFileName(), attachment.getFilePath());
+                        
+                        byte[] attachmentData;
+                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
+                             java.io.ByteArrayOutputStream byteArrayOutputStream = new java.io.ByteArrayOutputStream()) {
+                            
+                            inputStream.transferTo(byteArrayOutputStream);
+                            attachmentData = byteArrayOutputStream.toByteArray();
+                            
+                            log.debug("📎 Successfully loaded {} bytes for attachment: {}", attachmentData.length, attachment.getOriginalFileName());
+                        }
+                        
+                        // Criar InputStreamSource com dados em memória
+                        org.springframework.core.io.InputStreamSource inputStreamSource = new org.springframework.core.io.InputStreamSource() {
+                            @Override
+                            public java.io.InputStream getInputStream() throws java.io.IOException {
+                                return new java.io.ByteArrayInputStream(attachmentData);
+                            }
+                        };
+                        
+                        helper.addAttachment(attachment.getOriginalFileName(), inputStreamSource);
+                        log.debug("📎 ✅ Successfully attached pre-loaded file: {} ({} bytes)", attachment.getOriginalFileName(), attachmentData.length);
+                        
+                    } catch (Exception e) {
+                        log.warn("📎 ❌ Failed to pre-load attachment: {} from path: {} - Error: {}", 
+                                attachment.getOriginalFileName(), attachment.getFilePath(), e.getMessage());
+                        // Continua o processamento mesmo se um anexo falhar
+                    }
+                }
+            }
+
+            log.info("📧 CALLING mailSender.send() - Final step to send email with PRE-LOADED attachments to: {}", to);
+            mailSender.send(message);
+            log.info("📧 ✅ EMAIL WITH PRE-LOADED ATTACHMENTS SENT successfully via mailSender to: {}", to);
+
+        } catch (MessagingException e) {
+            log.error("📧 ❌ MESSAGING EXCEPTION - Failed to send email with PRE-LOADED attachments to: {} (cc: {}) - Error: {}", to, cc, e.getMessage(), e);
+            throw new RuntimeException("Failed to send email with pre-loaded attachments", e);
+        } catch (Exception e) {
+            log.error("📧 ❌ GENERAL EXCEPTION - Failed to send email with PRE-LOADED attachments to: {} (cc: {}) - Error: {}", to, cc, e.getMessage(), e);
+            throw new RuntimeException("Failed to send email with pre-loaded attachments", e);
         }
     }
 
