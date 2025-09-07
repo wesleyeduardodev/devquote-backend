@@ -55,7 +55,7 @@ public class BillingPeriodAttachmentController {
     }
 
     @GetMapping("/billing-period/{billingPeriodId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<BillingPeriodAttachmentResponse>> getBillingPeriodAttachments(@PathVariable Long billingPeriodId) {
         try {
             List<BillingPeriodAttachmentResponse> attachments = billingPeriodAttachmentService.getBillingPeriodAttachments(billingPeriodId);
@@ -67,7 +67,7 @@ public class BillingPeriodAttachmentController {
     }
 
     @GetMapping("/{attachmentId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<BillingPeriodAttachmentResponse> getAttachmentById(@PathVariable Long attachmentId) {
         try {
             BillingPeriodAttachmentResponse attachment = billingPeriodAttachmentService.getAttachmentById(attachmentId);
@@ -79,7 +79,7 @@ public class BillingPeriodAttachmentController {
     }
 
     @GetMapping("/{attachmentId}/download")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Resource> downloadAttachment(@PathVariable Long attachmentId) {
         try {
             BillingPeriodAttachmentResponse attachment = billingPeriodAttachmentService.getAttachmentById(attachmentId);
