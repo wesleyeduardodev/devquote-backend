@@ -26,6 +26,7 @@ import org.thymeleaf.context.Context;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import jakarta.annotation.PostConstruct;
 
@@ -171,6 +172,37 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("🗑️📧 ❌ CRITICAL ERROR - Failed to send task deleted notification WITH PRE-LOADED ATTACHMENTS for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendTaskDeletedNotificationWithAttachmentData(Task task, Map<String, byte[]> attachmentDataMap) {
+        log.info("🗑️📧 TASK DELETION EMAIL WITH IN-MEMORY ATTACHMENTS called for task ID: {}, Code: {}, Title: {} - {} attachments", 
+                task.getId(), task.getCode(), task.getTitle(), attachmentDataMap != null ? attachmentDataMap.size() : 0);
+        
+        if (!emailProperties.isEnabled()) {
+            log.warn("🗑️📧 ❌ EMAIL NOTIFICATIONS ARE DISABLED - task deletion email will NOT be sent");
+            return;
+        }
+
+        log.info("🗑️📧 EMAIL NOTIFICATIONS ENABLED - proceeding with task deletion email WITH IN-MEMORY ATTACHMENTS");
+
+        try {
+            String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s",
+                task.getCode() != null ? task.getCode() : task.getId(),
+                task.getTitle() != null ? task.getTitle() : "Sem título");
+            
+            log.info("🗑️📧 EMAIL SUBJECT: {}", subject);
+            
+            String htmlContent = buildTaskDeletedEmailContent(task);
+            log.info("🗑️📧 HTML CONTENT BUILT - length: {} characters", htmlContent.length());
+
+            sendToMultipleRecipientsWithInMemoryAttachments(task, subject, htmlContent, attachmentDataMap);
+            log.info("🗑️📧 ✅ Task deletion notification with in-memory attachments sent successfully for task ID: {}", task.getId());
+
+        } catch (Exception e) {
+            log.error("🗑️📧 ❌ CRITICAL ERROR - Failed to send task deleted notification WITH IN-MEMORY ATTACHMENTS for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
         }
     }
 
@@ -351,6 +383,123 @@ public class EmailServiceImpl implements EmailService {
             log.error("📧 ❌ FAILED to send {} notification WITH PRE-LOADED ATTACHMENTS for task ID: {} to: {} (cc: {}) - Error: {}",
                     action, task.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
             throw e;
+        }
+    }
+
+    private void sendToMultipleRecipientsWithInMemoryAttachments(Task task, String subject, String htmlContent, Map<String, byte[]> attachmentDataMap) {
+        log.info("📧 Starting TASK DELETION email notification process WITH IN-MEMORY ATTACHMENTS for: Task ID={}, Code={}, Title={} - {} attachments",
+                task.getId(), task.getCode(), task.getTitle(), attachmentDataMap != null ? attachmentDataMap.size() : 0);
+
+        String mainRecipient = null;
+        String ccRecipient = null;
+
+        // Definir destinatário principal (solicitante)
+        if (task.getRequester() != null && task.getRequester().getEmail() != null
+            && !task.getRequester().getEmail().trim().isEmpty()) {
+            mainRecipient = task.getRequester().getEmail();
+            log.debug("📧 Main recipient (requester): {} <{}>",
+                    task.getRequester().getName(), task.getRequester().getEmail());
+        } else {
+            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {}. Requester: {}",
+                    task.getId(),
+                    task.getRequester() != null ? task.getRequester().getName() : "null");
+        }
+
+        // Definir destinatário em cópia (você)
+        if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
+            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
+            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
+                mainRecipient = emailProperties.getFrom();
+                ccRecipient = null;
+                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
+            } else {
+                ccRecipient = emailProperties.getFrom();
+                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
+            }
+        } else {
+            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
+        }
+
+        // Verificar se há destinatário principal
+        if (mainRecipient == null) {
+            log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {}. Email will NOT be sent!", task.getId());
+            return;
+        }
+
+        // Enviar email com anexos em memória
+        try {
+            log.info("📧 Sending TASK DELETION notification WITH IN-MEMORY ATTACHMENTS - To: {}, CC: {}, Attachments: {}",
+                    mainRecipient, ccRecipient != null ? ccRecipient : "none",
+                    attachmentDataMap != null ? attachmentDataMap.size() : 0);
+
+            sendEmailWithInMemoryAttachments(mainRecipient, ccRecipient, subject, htmlContent, attachmentDataMap);
+
+            log.info("📧 ✅ TASK DELETION notification WITH IN-MEMORY ATTACHMENTS sent successfully for task ID: {} to: {} (cc: {}, attachments: {})",
+                    task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
+                    attachmentDataMap != null ? attachmentDataMap.size() : 0);
+        } catch (Exception e) {
+            log.error("📧 ❌ FAILED to send DELETION notification WITH IN-MEMORY ATTACHMENTS for task ID: {} to: {} (cc: {}) - Error: {}",
+                    task.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private void sendEmailWithInMemoryAttachments(String to, String cc, String subject, String htmlContent, Map<String, byte[]> attachmentDataMap) {
+        log.info("📧 SENDWITHINDEMEMORYATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}", 
+                to, cc != null ? cc : "none", subject, attachmentDataMap != null ? attachmentDataMap.size() : 0);
+        
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            log.debug("📧 Setting email headers - From: {}, To: {}, Subject: {}", emailProperties.getFrom(), to, subject);
+            
+            helper.setFrom(emailProperties.getFrom());
+            helper.setTo(to);
+
+            if (cc != null && !cc.trim().isEmpty()) {
+                helper.setCc(cc);
+            }
+
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            // Adicionar anexos que já estão em memória
+            if (attachmentDataMap != null && !attachmentDataMap.isEmpty()) {
+                log.debug("📎 Adding {} IN-MEMORY attachments to email", attachmentDataMap.size());
+                for (Map.Entry<String, byte[]> entry : attachmentDataMap.entrySet()) {
+                    try {
+                        String fileName = entry.getKey();
+                        byte[] fileData = entry.getValue();
+                        
+                        // Criar InputStreamSource com dados em memória
+                        org.springframework.core.io.InputStreamSource inputStreamSource = new org.springframework.core.io.InputStreamSource() {
+                            @Override
+                            public java.io.InputStream getInputStream() throws java.io.IOException {
+                                return new java.io.ByteArrayInputStream(fileData);
+                            }
+                        };
+                        
+                        helper.addAttachment(fileName, inputStreamSource);
+                        log.debug("📎 ✅ Successfully attached IN-MEMORY file: {} ({} bytes)", fileName, fileData.length);
+                        
+                    } catch (Exception e) {
+                        log.warn("📎 ❌ Failed to attach IN-MEMORY file: {} - Error: {}", entry.getKey(), e.getMessage());
+                        // Continua o processamento mesmo se um anexo falhar
+                    }
+                }
+            }
+
+            log.info("📧 CALLING mailSender.send() - Final step to send email with IN-MEMORY attachments to: {}", to);
+            mailSender.send(message);
+            log.info("📧 ✅ EMAIL WITH IN-MEMORY ATTACHMENTS SENT successfully via mailSender to: {}", to);
+
+        } catch (MessagingException e) {
+            log.error("📧 ❌ MESSAGING EXCEPTION - Failed to send email with IN-MEMORY attachments to: {} (cc: {}) - Error: {}", to, cc, e.getMessage(), e);
+            throw new RuntimeException("Failed to send email with in-memory attachments", e);
+        } catch (Exception e) {
+            log.error("📧 ❌ GENERAL EXCEPTION - Failed to send email with IN-MEMORY attachments to: {} (cc: {}) - Error: {}", to, cc, e.getMessage(), e);
+            throw new RuntimeException("Failed to send email with in-memory attachments", e);
         }
     }
 

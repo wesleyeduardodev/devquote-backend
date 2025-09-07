@@ -6,6 +6,7 @@ import br.com.devquote.entity.Task;
 import br.com.devquote.entity.TaskAttachment;
 
 import java.util.List;
+import java.util.Map;
 
 public interface EmailService {
     
@@ -16,6 +17,8 @@ public interface EmailService {
     void sendTaskDeletedNotification(Task task);
     
     void sendTaskDeletedNotificationWithAttachments(Task task, List<TaskAttachment> attachments);
+    
+    void sendTaskDeletedNotificationWithAttachmentData(Task task, Map<String, byte[]> attachmentDataMap);
     
     void sendDeliveryCreatedNotification(Delivery delivery);
     

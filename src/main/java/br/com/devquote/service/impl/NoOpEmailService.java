@@ -7,6 +7,7 @@ import br.com.devquote.entity.TaskAttachment;
 import br.com.devquote.service.EmailService;
 
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -69,6 +70,21 @@ public class NoOpEmailService implements EmailService {
             log.debug("📧 [EMAIL DISABLED] Would include {} attachments: {}", 
                     attachments.size(), 
                     attachments.stream().map(TaskAttachment::getOriginalFileName).toList());
+        }
+    }
+
+    @Override
+    public void sendTaskDeletedNotificationWithAttachmentData(Task task, Map<String, byte[]> attachmentDataMap) {
+        log.debug("📧 [EMAIL DISABLED] Would send TASK DELETED notification WITH IN-MEMORY ATTACHMENTS for: Task ID={}, Code={}, Title={}", 
+                task.getId(), task.getCode(), task.getTitle());
+        if (task.getRequester() != null) {
+            log.debug("📧 [EMAIL DISABLED] Would send to requester: {} <{}>", 
+                    task.getRequester().getName(), task.getRequester().getEmail());
+        }
+        if (attachmentDataMap != null && !attachmentDataMap.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} in-memory attachments: {}", 
+                    attachmentDataMap.size(), 
+                    attachmentDataMap.keySet());
         }
     }
 
