@@ -977,6 +977,14 @@ public class TaskServiceImpl implements TaskService {
                         entity.getRequester().getName();
                         entity.getRequester().getEmail();
                     }
+                    if (entity.getCreatedBy() != null) {
+                        entity.getCreatedBy().getUsername();
+                        entity.getCreatedBy().getName();
+                    }
+                    if (entity.getUpdatedBy() != null) {
+                        entity.getUpdatedBy().getUsername();
+                        entity.getUpdatedBy().getName();
+                    }
                     return entity;
                 })
                 .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com ID: " + taskId));

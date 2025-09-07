@@ -5,14 +5,17 @@ import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
+import br.com.devquote.entity.TaskAttachment;
 import br.com.devquote.repository.BillingPeriodTaskRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.service.EmailService;
+import br.com.devquote.service.TaskAttachmentService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -36,6 +39,7 @@ public class EmailServiceImpl implements EmailService {
     private final EmailProperties emailProperties;
     private final SubTaskRepository subTaskRepository;
     private final BillingPeriodTaskRepository billingPeriodTaskRepository;
+    private final TaskAttachmentService taskAttachmentService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -154,15 +158,29 @@ public class EmailServiceImpl implements EmailService {
             return;
         }
 
-        // Enviar email único com CC
+        // Carregar anexos da tarefa (entidades para envio por email)
+        List<TaskAttachment> taskAttachments = null;
         try {
-            log.debug("📧 Sending TASK {} notification - To: {}, CC: {}",
-                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
+            taskAttachments = taskAttachmentService.getTaskAttachmentsEntities(task.getId());
+            if (taskAttachments != null && !taskAttachments.isEmpty()) {
+                log.debug("📎 Found {} attachment(s) for task ID: {}", taskAttachments.size(), task.getId());
+            }
+        } catch (Exception e) {
+            log.warn("📎 Failed to load attachments for task ID: {} - {}", task.getId(), e.getMessage());
+            taskAttachments = null; // Continua sem anexos se houver erro
+        }
 
-            sendEmailWithCC(mainRecipient, ccRecipient, subject, htmlContent);
+        // Enviar email único com CC e anexos
+        try {
+            log.debug("📧 Sending TASK {} notification - To: {}, CC: {}, Attachments: {}",
+                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
+                    taskAttachments != null ? taskAttachments.size() : 0);
 
-            log.debug("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {} (cc: {})",
-                    action.toUpperCase(), task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
+            sendEmailWithAttachments(mainRecipient, ccRecipient, subject, htmlContent, taskAttachments);
+
+            log.debug("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {} (cc: {}, attachments: {})",
+                    action.toUpperCase(), task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
+                    taskAttachments != null ? taskAttachments.size() : 0);
         } catch (Exception e) {
             log.error("📧 ❌ FAILED to send {} notification for task ID: {} to: {} (cc: {}) - Error: {}",
                     action, task.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
@@ -600,6 +618,10 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendEmailWithCC(String to, String cc, String subject, String htmlContent) {
+        sendEmailWithAttachments(to, cc, subject, htmlContent, null);
+    }
+
+    private void sendEmailWithAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -613,6 +635,29 @@ public class EmailServiceImpl implements EmailService {
 
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
+
+            // Adicionar anexos se disponíveis
+            if (attachments != null && !attachments.isEmpty()) {
+                log.debug("Adding {} attachments to email", attachments.size());
+                for (TaskAttachment attachment : attachments) {
+                    try {
+                        // Criar InputStreamSource que gera stream fresco para cada chamada
+                        org.springframework.core.io.InputStreamSource inputStreamSource = new org.springframework.core.io.InputStreamSource() {
+                            @Override
+                            public java.io.InputStream getInputStream() throws java.io.IOException {
+                                org.springframework.core.io.Resource resource = taskAttachmentService.downloadAttachment(attachment.getId());
+                                return resource.getInputStream();
+                            }
+                        };
+                        
+                        helper.addAttachment(attachment.getOriginalFileName(), inputStreamSource);
+                        log.debug("Attached file: {} ({})", attachment.getOriginalFileName(), attachment.getContentType());
+                    } catch (Exception e) {
+                        log.warn("Failed to attach file: {} - {}", attachment.getOriginalFileName(), e.getMessage());
+                        // Continua o processamento mesmo se um anexo falhar
+                    }
+                }
+            }
 
             mailSender.send(message);
 

@@ -98,6 +98,12 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<TaskAttachment> getTaskAttachmentsEntities(Long taskId) {
+        return taskAttachmentRepository.findByTaskId(taskId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public TaskAttachmentResponse getAttachmentById(Long attachmentId) {
         TaskAttachment attachment = taskAttachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new RuntimeException("Anexo não encontrado com ID: " + attachmentId));

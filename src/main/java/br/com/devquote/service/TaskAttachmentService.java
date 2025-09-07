@@ -25,6 +25,11 @@ public interface TaskAttachmentService {
     List<TaskAttachmentResponse> getTaskAttachments(Long taskId);
 
     /**
+     * Lista entidades de anexos de uma tarefa (para uso interno como emails)
+     */
+    List<TaskAttachment> getTaskAttachmentsEntities(Long taskId);
+
+    /**
      * Busca anexo por ID
      */
     TaskAttachmentResponse getAttachmentById(Long attachmentId);
