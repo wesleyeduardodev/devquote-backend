@@ -215,8 +215,15 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
 
         // Validar tipos permitidos
         String contentType = file.getContentType();
-        if (contentType == null || !isAllowedContentType(contentType)) {
-            throw new RuntimeException("Tipo de arquivo não permitido: " + contentType);
+        String originalFilename = file.getOriginalFilename();
+        
+        // Se o tipo MIME não for reconhecido, validar por extensão
+        if (contentType == null || contentType.isEmpty() || contentType.equals("application/octet-stream") || !isAllowedContentType(contentType)) {
+            if (originalFilename != null && isAllowedByExtension(originalFilename)) {
+                // Arquivo permitido pela extensão
+                return;
+            }
+            throw new RuntimeException("Tipo de arquivo não permitido: " + contentType + " (arquivo: " + originalFilename + ")");
         }
     }
 
@@ -224,12 +231,15 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
         List<String> allowedTypes = List.of(
             // Documentos
             "application/pdf",
-            "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "application/vnd.ms-excel",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/msword",  // Word .doc
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  // Word .docx
+            "application/vnd.ms-excel",  // Excel .xls
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Excel .xlsx
+            "application/vnd.ms-powerpoint",  // PowerPoint .ppt
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",  // PowerPoint .pptx
             "text/plain",
             "text/csv",
+            "application/json",  // JSON
             // Imagens
             "image/jpeg",
             "image/png",
@@ -247,6 +257,23 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
         );
         
         return allowedTypes.contains(contentType);
+    }
+
+    private boolean isAllowedByExtension(String filename) {
+        if (filename == null || !filename.contains(".")) {
+            return false;
+        }
+        
+        String extension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+        List<String> allowedExtensions = List.of(
+            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+            "txt", "csv", "json",
+            "jpg", "jpeg", "png", "gif", "webp",
+            "mp4", "avi", "mov", "wmv",
+            "zip", "rar", "7z"
+        );
+        
+        return allowedExtensions.contains(extension);
     }
 
     private String generateFileName(String originalFilename) {
