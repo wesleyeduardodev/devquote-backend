@@ -8,7 +8,8 @@ public final class SortUtils {
 
     public static Sort buildAndSanitize(List<String> sortParams, Set<String> allowedFields, String defaultField) {
         if (sortParams == null || sortParams.isEmpty()) {
-            return Sort.by(Sort.Order.asc(defaultField));
+            // Ordenação padrão por ID decrescente para mostrar mais recentes primeiro
+            return Sort.by(Sort.Order.desc(defaultField));
         }
 
         List<Sort.Order> orders = new ArrayList<>();
@@ -27,11 +28,12 @@ public final class SortUtils {
         }
 
         if (orders.isEmpty()) {
-            return Sort.by(Sort.Order.asc(defaultField));
+            // Ordenação padrão por ID decrescente quando não há sort válido
+            return Sort.by(Sort.Order.desc(defaultField));
         }
 
         boolean hasDefault = orders.stream().anyMatch(o -> o.getProperty().equals(defaultField));
-        if (!hasDefault) orders.add(Sort.Order.asc(defaultField));
+        if (!hasDefault) orders.add(Sort.Order.desc(defaultField));
         return Sort.by(orders);
     }
 }
