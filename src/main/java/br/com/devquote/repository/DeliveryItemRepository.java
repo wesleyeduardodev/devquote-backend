@@ -101,7 +101,6 @@ public interface DeliveryItemRepository extends JpaRepository<DeliveryItem, Long
             di.branch,
             di.source_branch,
             di.pull_request,
-            di.script,
             di.notes,
             di.started_at,
             di.finished_at,

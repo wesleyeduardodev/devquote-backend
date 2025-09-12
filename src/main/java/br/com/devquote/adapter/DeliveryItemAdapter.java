@@ -26,7 +26,6 @@ public final class DeliveryItemAdapter {
                 .branch(entity.getBranch())
                 .sourceBranch(entity.getSourceBranch())
                 .pullRequest(entity.getPullRequest())
-                .script(entity.getScript())
                 .notes(entity.getNotes())
                 .startedAt(entity.getStartedAt())
                 .finishedAt(entity.getFinishedAt())
@@ -59,7 +58,6 @@ public final class DeliveryItemAdapter {
                 .branch(dto.getBranch())
                 .sourceBranch(dto.getSourceBranch())
                 .pullRequest(dto.getPullRequest())
-                .script(dto.getScript())
                 .notes(dto.getNotes())
                 .startedAt(dto.getStartedAt())
                 .finishedAt(dto.getFinishedAt())
@@ -83,7 +81,6 @@ public final class DeliveryItemAdapter {
         entity.setBranch(dto.getBranch());
         entity.setSourceBranch(dto.getSourceBranch());
         entity.setPullRequest(dto.getPullRequest());
-        entity.setScript(dto.getScript());
         entity.setNotes(dto.getNotes());
         entity.setStartedAt(dto.getStartedAt());
         entity.setFinishedAt(dto.getFinishedAt());

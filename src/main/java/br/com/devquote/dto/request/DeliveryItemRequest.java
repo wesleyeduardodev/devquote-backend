@@ -33,7 +33,6 @@ public class DeliveryItemRequest {
     @Size(max = 500, message = "Pull request URL must be at most 500 characters")
     private String pullRequest;
 
-    private String script;
 
     private String notes;
 

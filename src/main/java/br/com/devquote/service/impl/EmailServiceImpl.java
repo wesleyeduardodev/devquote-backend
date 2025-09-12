@@ -884,7 +884,6 @@ public class EmailServiceImpl implements EmailService {
                     map.put("branch", item.getBranch());
                     map.put("sourceBranch", item.getSourceBranch());
                     map.put("pullRequest", item.getPullRequest());
-                    map.put("script", item.getScript());
                     map.put("notes", "");
                     map.put("startedAt", item.getStartedAt());
                     map.put("finishedAt", item.getFinishedAt());

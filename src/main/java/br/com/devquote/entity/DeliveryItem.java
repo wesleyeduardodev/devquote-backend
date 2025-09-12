@@ -38,8 +38,6 @@ public class DeliveryItem extends BaseEntity {
     @Column(name = "pull_request", length = 500)
     private String pullRequest;
 
-    @Column(name = "script", columnDefinition = "TEXT")
-    private String script;
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;

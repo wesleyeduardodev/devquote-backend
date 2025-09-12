@@ -20,7 +20,6 @@ public class DeliveryItemResponse {
     private String branch;
     private String sourceBranch;
     private String pullRequest;
-    private String script;
     private String notes;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
