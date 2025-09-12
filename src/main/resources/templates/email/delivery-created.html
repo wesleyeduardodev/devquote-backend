@@ -284,13 +284,6 @@
                                 <div class="info-label">Notas:</div>
                                 <div class="info-value" th:text="${item.notes}">Notas</div>
                             </div>
-                            <!-- 5. Script (se houver no item) -->
-                            <div class="info-row" th:if="${!#strings.isEmpty(item.script)}">
-                                <div class="info-label">Script:</div>
-                                <div class="info-value">
-                                    <div class="code-block" th:text="${item.script}">Script do item...</div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

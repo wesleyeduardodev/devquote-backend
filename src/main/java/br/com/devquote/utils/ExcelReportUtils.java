@@ -734,7 +734,7 @@ public class ExcelReportUtils {
             "Tem Entrega", "Faturamento",
             
             // ENTREGAS (Azul Pálido) - 9 colunas - Pull Request reorganizado + notas
-            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Script", "Notas", "Início Entrega", "Fim Entrega",
+            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Notas", "Início Entrega", "Fim Entrega",
             
             // FATURAMENTO (Limão) - 3 colunas - No final
             "Ano Faturamento", "Mês Faturamento", "Status Faturamento"
@@ -742,7 +742,7 @@ public class ExcelReportUtils {
 
         Row headerRow = sheet.createRow(0);
         
-        // Aplicar cores nos headers por seção - Estrutura corrigida (25 colunas)
+        // Aplicar cores nos headers por seção - Estrutura corrigida (24 colunas)
         int colIndex = 0;
         
         // TAREFAS + METADADOS + STATUS (0-12) - Cinza
@@ -752,15 +752,15 @@ public class ExcelReportUtils {
             cell.setCellStyle(taskHeaderStyle);
         }
         
-        // ENTREGAS (13-21) - Azul Pálido
-        for (int i = 13; i < 22; i++) {
+        // ENTREGAS (13-20) - Azul Pálido
+        for (int i = 13; i < 21; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(deliveryHeaderStyle);
         }
         
-        // FATURAMENTO (22-24) - Limão (no final)
-        for (int i = 22; i < 25; i++) {
+        // FATURAMENTO (21-23) - Limão (no final)
+        for (int i = 21; i < 24; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(billingHeaderStyle);
@@ -794,23 +794,22 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle); // Link da entrega
             setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
-            setCellValue(row, colIndex++, taskData.get("delivery_script"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle); // Nova coluna de notas
             setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
             
-            // DADOS DE FATURAMENTO (24-26) - No final
+            // DADOS DE FATURAMENTO (21-23) - No final
             setCellValue(row, colIndex++, taskData.get("billing_year"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("billing_month"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("billing_status"), dataStyle);
         }
 
-        // Ajustar larguras das colunas (25 colunas total) - sem datas
+        // Ajustar larguras das colunas (24 colunas total) - sem datas
         setColumnWidths(sheet, new int[]{
             // TAREFAS + METADADOS + STATUS (13 colunas - removidas Data Criação e Data Atualização)
             2500, 3500, 10000, 12000, 3000, 4000, 6000, 4000, 4000, 4000, 4000, 3000, 4000,
-            // ENTREGAS (9 colunas) - Pull Request reorganizado + notas
-            3000, 3500, 6000, 10000, 8000, 8000, 6000, 4000, 4000,
+            // ENTREGAS (8 colunas) - Pull Request reorganizado + notas
+            3000, 3500, 6000, 10000, 8000, 6000, 4000, 4000,
             // FATURAMENTO (3 colunas) - No final
             2500, 2500, 4000
         });
@@ -860,13 +859,13 @@ public class ExcelReportUtils {
             "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
             "Tem Entrega",
             
-            // ENTREGAS (Azul Pálido) - 9 colunas
-            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Script", "Notas", "Início Entrega", "Fim Entrega"
+            // ENTREGAS (Azul Pálido) - 8 colunas
+            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Notas", "Início Entrega", "Fim Entrega"
         };
 
         Row headerRow = sheet.createRow(0);
         
-        // Aplicar cores nos headers por seção - 23 colunas total
+        // Aplicar cores nos headers por seção - 19 colunas total
         int colIndex = 0;
         
         // TAREFAS (0-10) - Cinza - SEM Valor, sem datas, sem faturamento
@@ -876,8 +875,8 @@ public class ExcelReportUtils {
             cell.setCellStyle(taskHeaderStyle);
         }
         
-        // ENTREGAS (11-19) - Azul Pálido
-        for (int i = 11; i < 20; i++) {
+        // ENTREGAS (11-18) - Azul Pálido
+        for (int i = 11; i < 19; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(deliveryHeaderStyle);
@@ -909,7 +908,6 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
-            setCellValue(row, colIndex++, taskData.get("delivery_script"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle); // Nova coluna de notas
             setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);

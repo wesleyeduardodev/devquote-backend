@@ -870,7 +870,6 @@ public class TaskServiceImpl implements TaskService {
                 p.name as project_name,
                 di.pull_request as delivery_pull_request,
                 di.branch as delivery_branch,
-                di.script as delivery_script,
                 di.notes as delivery_notes,
                 di.started_at as delivery_started_at,
                 di.finished_at as delivery_finished_at,
@@ -930,15 +929,14 @@ public class TaskServiceImpl implements TaskService {
             map.put("project_name", row[19]);
             map.put("delivery_pull_request", row[20]); // Link da entrega
             map.put("delivery_branch", row[21]);
-            map.put("delivery_script", row[22]);
-            map.put("delivery_notes", row[23]); // Nova coluna de notas
-            map.put("delivery_started_at", row[24]);
-            map.put("delivery_finished_at", row[25]);
+            map.put("delivery_notes", row[22]); // Nova coluna de notas
+            map.put("delivery_started_at", row[23]);
+            map.put("delivery_finished_at", row[24]);
 
-            // DADOS DE FATURAMENTO (26-28) - No final
-            map.put("billing_year", row[26]);
-            map.put("billing_month", row[27]);
-            map.put("billing_status", row[28]);
+            // DADOS DE FATURAMENTO (25-27) - No final
+            map.put("billing_year", row[25]);
+            map.put("billing_month", row[26]);
+            map.put("billing_status", row[27]);
 
             return map;
         }).collect(Collectors.toList());
@@ -989,7 +987,6 @@ public class TaskServiceImpl implements TaskService {
                 p.name as project_name,
                 di.pull_request as delivery_pull_request,
                 di.branch as delivery_branch,
-                di.script as delivery_script,
                 di.notes as delivery_notes,
                 di.started_at as delivery_started_at,
                 di.finished_at as delivery_finished_at
@@ -1034,10 +1031,9 @@ public class TaskServiceImpl implements TaskService {
             map.put("project_name", row[13]);
             map.put("delivery_pull_request", row[14]);
             map.put("delivery_branch", row[15]);
-            map.put("delivery_script", row[16]);
-            map.put("delivery_notes", row[17]); // Nova coluna de notas
-            map.put("delivery_started_at", row[18]);
-            map.put("delivery_finished_at", row[19]);
+            map.put("delivery_notes", row[16]); // Nova coluna de notas
+            map.put("delivery_started_at", row[17]);
+            map.put("delivery_finished_at", row[18]);
 
             return map;
         }).collect(Collectors.toList());
