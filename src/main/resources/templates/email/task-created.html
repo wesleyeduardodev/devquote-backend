@@ -221,10 +221,6 @@
                             <a href="#" th:href="${taskMeetingLink}" th:text="${taskMeetingLink}" class="link">Link da reunião</a>
                         </div>
                     </div>
-                    <div class="info-row" th:if="${!#strings.isEmpty(taskNotes)}">
-                        <div class="info-label">Notas:</div>
-                        <div class="info-value" th:text="${taskNotes}">Observações adicionais</div>
-                    </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(createdBy)}">
                         <div class="info-label">Criado por:</div>
                         <div class="info-value" th:text="${createdBy}">Usuário</div>

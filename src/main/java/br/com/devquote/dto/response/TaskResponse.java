@@ -30,7 +30,6 @@ public class TaskResponse {
 
     private String meetingLink;
 
-    private String notes;
 
     private LocalDateTime createdAt;
 

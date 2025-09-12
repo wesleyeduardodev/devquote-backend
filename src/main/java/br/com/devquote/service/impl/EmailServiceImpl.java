@@ -525,7 +525,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
         context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
         context.setVariable("taskMeetingLink", task.getMeetingLink() != null ? task.getMeetingLink() : "");
-        context.setVariable("taskNotes", task.getNotes() != null ? task.getNotes() : "");
+        context.setVariable("taskNotes", "");
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
 
@@ -588,7 +588,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
         context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
         context.setVariable("taskMeetingLink", task.getMeetingLink() != null ? task.getMeetingLink() : "");
-        context.setVariable("taskNotes", task.getNotes() != null ? task.getNotes() : "");
+        context.setVariable("taskNotes", "");
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
 
@@ -651,7 +651,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
         context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
         context.setVariable("taskMeetingLink", task.getMeetingLink() != null ? task.getMeetingLink() : "");
-        context.setVariable("taskNotes", task.getNotes() != null ? task.getNotes() : "");
+        context.setVariable("taskNotes", "");
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
 
@@ -885,7 +885,7 @@ public class EmailServiceImpl implements EmailService {
                     map.put("sourceBranch", item.getSourceBranch());
                     map.put("pullRequest", item.getPullRequest());
                     map.put("script", item.getScript());
-                    map.put("notes", item.getNotes());
+                    map.put("notes", "");
                     map.put("startedAt", item.getStartedAt());
                     map.put("finishedAt", item.getFinishedAt());
                     return map;

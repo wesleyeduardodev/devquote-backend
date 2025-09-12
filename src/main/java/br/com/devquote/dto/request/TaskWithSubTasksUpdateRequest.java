@@ -28,8 +28,6 @@ public class TaskWithSubTasksUpdateRequest {
     @Size(max = 500, message = "meetingLink must be at most 500 characters")
     private String meetingLink;
 
-    @Size(max = 256, message = "notes must be at most 256 characters")
-    private String notes;
 
     @Builder.Default
     private Boolean createQuote = Boolean.FALSE;

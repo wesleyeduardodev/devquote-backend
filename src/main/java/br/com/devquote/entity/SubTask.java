@@ -25,7 +25,7 @@ public class SubTask {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(length = 200)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false, precision = 10, scale = 2)

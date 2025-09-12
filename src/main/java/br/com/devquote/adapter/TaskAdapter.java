@@ -22,7 +22,6 @@ public class TaskAdapter {
                 .code(entity.getCode())
                 .link(entity.getLink())
                 .meetingLink(entity.getMeetingLink())
-                .notes(entity.getNotes())
                 .hasSubTasks(entity.getHasSubTasks())
                 .amount(entity.getAmount())
                 .taskType(entity.getTaskType())
@@ -52,7 +51,6 @@ public class TaskAdapter {
                 .code(dto.getCode())
                 .link(dto.getLink())
                 .meetingLink(dto.getMeetingLink())
-                .notes(dto.getNotes())
                 .hasSubTasks(dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false)
                 .amount(dto.getAmount())
                 .taskType(dto.getTaskType())
@@ -76,7 +74,6 @@ public class TaskAdapter {
         entity.setCode(dto.getCode());
         entity.setLink(dto.getLink());
         entity.setMeetingLink(dto.getMeetingLink());
-        entity.setNotes(dto.getNotes());
         entity.setHasSubTasks(dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false);
         entity.setAmount(dto.getAmount());
         entity.setTaskType(dto.getTaskType());

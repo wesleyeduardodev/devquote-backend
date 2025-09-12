@@ -37,7 +37,7 @@ public class ExcelReportUtils {
                 "ID", "Código", "Título", "Descrição", "Tipo",
                 "Prioridade", "Solicitante", "Criado Por", "Atualizado Por",
                 "Origem do Servidor", "Módulo do Sistema", "Link", "Link da Reunião",
-                "Observações", "Valor da Tarefa", "Tem Subtarefas", "Tem Entrega",
+                "Valor da Tarefa", "Tem Subtarefas", "Tem Entrega",
                 "Orçamento no Faturamento", "Data de Criação", "Data de Atualização",
                 "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição",
                 "Subtarefa Valor"
@@ -48,7 +48,7 @@ public class ExcelReportUtils {
                 "ID", "Código", "Título", "Descrição", "Tipo",
                 "Prioridade", "Solicitante", "Criado Por", "Atualizado Por",
                 "Origem do Servidor", "Módulo do Sistema", "Link", "Link da Reunião",
-                "Observações", "Tem Subtarefas", "Data de Criação", "Data de Atualização",
+                "Tem Subtarefas", "Data de Criação", "Data de Atualização",
                 "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição"
             };
         }
@@ -60,15 +60,15 @@ public class ExcelReportUtils {
             
             // Aplicar cores diferentes para colunas de tarefas vs subtarefas
             if (canViewAmounts) {
-                // ADMIN/MANAGER: colunas 0-19 são tarefas (azul), 20-23 são subtarefas (verde)
-                if (i <= 19) {
+                // ADMIN/MANAGER: colunas 0-18 são tarefas (azul), 19-22 são subtarefas (verde)
+                if (i <= 18) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
                     cell.setCellStyle(subtaskHeaderStyle);
                 }
             } else {
-                // USER: colunas 0-16 são tarefas (azul), 17-19 são subtarefas (verde)
-                if (i <= 16) {
+                // USER: colunas 0-13 são tarefas (azul), 14-18 são subtarefas (verde)
+                if (i <= 13) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
                     cell.setCellStyle(subtaskHeaderStyle);
@@ -96,17 +96,16 @@ public class ExcelReportUtils {
                 setCellValue(row, 10, taskData.get("system_module"), dataStyle);
                 setCellValue(row, 11, taskData.get("task_link"), dataStyle);
                 setCellValue(row, 12, taskData.get("meeting_link"), dataStyle);
-                setCellValue(row, 13, taskData.get("task_notes"), dataStyle);
-                setCellValue(row, 14, taskData.get("task_amount"), currencyStyle);
-                setCellValue(row, 15, taskData.get("has_subtasks"), dataStyle);
-                setCellValue(row, 16, taskData.get("has_delivery"), dataStyle);
-                setCellValue(row, 17, taskData.get("has_quote_in_billing"), dataStyle);
-                setCellValue(row, 18, taskData.get("task_created_at"), dateStyle);
-                setCellValue(row, 19, taskData.get("task_updated_at"), dateStyle);
-                setCellValue(row, 20, taskData.get("subtask_id"), dataStyle);
-                setCellValue(row, 21, taskData.get("subtask_title"), dataStyle);
-                setCellValue(row, 22, taskData.get("subtask_description"), dataStyle);
-                setCellValue(row, 23, taskData.get("subtask_amount"), currencyStyle);
+                setCellValue(row, 13, taskData.get("task_amount"), currencyStyle);
+                setCellValue(row, 14, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 15, taskData.get("has_delivery"), dataStyle);
+                setCellValue(row, 16, taskData.get("has_quote_in_billing"), dataStyle);
+                setCellValue(row, 17, taskData.get("task_created_at"), dateStyle);
+                setCellValue(row, 18, taskData.get("task_updated_at"), dateStyle);
+                setCellValue(row, 19, taskData.get("subtask_id"), dataStyle);
+                setCellValue(row, 20, taskData.get("subtask_title"), dataStyle);
+                setCellValue(row, 21, taskData.get("subtask_description"), dataStyle);
+                setCellValue(row, 22, taskData.get("subtask_amount"), currencyStyle);
             } else {
                 // USER: Remove colunas sensíveis
                 setCellValue(row, 0, taskData.get("task_id"), dataStyle);
@@ -122,19 +121,18 @@ public class ExcelReportUtils {
                 setCellValue(row, 10, taskData.get("system_module"), dataStyle);
                 setCellValue(row, 11, taskData.get("task_link"), dataStyle);
                 setCellValue(row, 12, taskData.get("meeting_link"), dataStyle);
-                setCellValue(row, 13, taskData.get("task_notes"), dataStyle);
-                setCellValue(row, 14, taskData.get("has_subtasks"), dataStyle);
-                setCellValue(row, 15, taskData.get("task_created_at"), dateStyle);
-                setCellValue(row, 16, taskData.get("task_updated_at"), dateStyle);
-                setCellValue(row, 17, taskData.get("subtask_id"), dataStyle);
-                setCellValue(row, 18, taskData.get("subtask_title"), dataStyle);
-                setCellValue(row, 19, taskData.get("subtask_description"), dataStyle);
+                setCellValue(row, 13, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 14, taskData.get("task_created_at"), dateStyle);
+                setCellValue(row, 15, taskData.get("task_updated_at"), dateStyle);
+                setCellValue(row, 16, taskData.get("subtask_id"), dataStyle);
+                setCellValue(row, 17, taskData.get("subtask_title"), dataStyle);
+                setCellValue(row, 18, taskData.get("subtask_description"), dataStyle);
             }
         }
 
         // Ajustar largura das colunas baseado no conteúdo
         if (canViewAmounts) {
-            // ADMIN/MANAGER: 24 colunas
+            // ADMIN/MANAGER: 23 colunas
             setColumnWidths(sheet, new int[]{
                 2500,  // ID
                 3500,  // Código
@@ -149,7 +147,6 @@ public class ExcelReportUtils {
                 4000,  // Módulo do Sistema
                 8000,  // Link (maior para URLs)
                 8000,  // Link da Reunião (maior para URLs)
-                6000,  // Observações
                 3500,  // Valor da Tarefa
                 3000,  // Tem Subtarefas
                 3000,  // Tem Entrega
@@ -162,7 +159,7 @@ public class ExcelReportUtils {
                 3500   // Subtarefa Valor
             });
         } else {
-            // USER: 20 colunas (sem colunas de valores)
+            // USER: 19 colunas (sem colunas de valores)
             setColumnWidths(sheet, new int[]{
                 2500,  // ID
                 3500,  // Código
@@ -177,7 +174,6 @@ public class ExcelReportUtils {
                 4000,  // Módulo do Sistema
                 8000,  // Link (maior para URLs)
                 8000,  // Link da Reunião (maior para URLs)
-                6000,  // Observações
                 3000,  // Tem Subtarefas
                 6000,  // Data de Criação (aumentada para dd/mm/yyyy hh:mm:ss)
                 6000,  // Data de Atualização (aumentada para dd/mm/yyyy hh:mm:ss)

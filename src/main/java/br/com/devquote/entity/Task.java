@@ -40,8 +40,6 @@ public class Task {
     @Column(name = "meeting_link", length = 500)
     private String meetingLink;
 
-    @Column(name = "notes", length = 256)
-    private String notes;
 
     @Column(name = "has_sub_tasks", nullable = false)
     @Builder.Default

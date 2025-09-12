@@ -19,7 +19,6 @@ public class TaskRequest {
     @Size(max = 200, message = "Title must be at most 200 characters")
     private String title;
 
-    @Size(max = 200, message = "Description must be at most 200 characters")
     private String description;
 
     @NotBlank(message = "Code is required")
@@ -29,8 +28,6 @@ public class TaskRequest {
     @Size(max = 500, message = "meetingLink must be at most 500 characters")
     private String meetingLink;
 
-    @Size(max = 256, message = "notes must be at most 256 characters")
-    private String notes;
 
     @Size(max = 200, message = "Link must be at most 200 characters")
     @Pattern(regexp = "^(http(s)?://.*)?$", message = "Link must be a valid URL")

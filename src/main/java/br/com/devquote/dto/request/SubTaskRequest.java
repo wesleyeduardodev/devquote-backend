@@ -18,7 +18,6 @@ public class SubTaskRequest {
     @Size(max = 200, message = "Title must be at most 200 characters")
     private String title;
 
-    @Size(max = 200, message = "Description must be at most 200 characters")
     private String description;
 
     @DecimalMin(value = "0.00", message = "Amount must be greater than or equal to zero")
