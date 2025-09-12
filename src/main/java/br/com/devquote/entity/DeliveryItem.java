@@ -41,7 +41,7 @@ public class DeliveryItem extends BaseEntity {
     @Column(name = "script", columnDefinition = "TEXT")
     private String script;
 
-    @Column(name = "notes", length = 1000)
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
     @Column(name = "started_at")

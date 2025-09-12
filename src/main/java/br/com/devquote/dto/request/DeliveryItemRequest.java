@@ -35,7 +35,6 @@ public class DeliveryItemRequest {
 
     private String script;
 
-    @Size(max = 1000, message = "Notes must be at most 1000 characters")
     private String notes;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
