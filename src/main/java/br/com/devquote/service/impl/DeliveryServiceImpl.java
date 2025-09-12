@@ -676,8 +676,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 di.pull_request as item_pull_request,
                 di.notes as item_notes,
                 di.started_at as item_started_at,
-                di.finished_at as item_finished_at,
-                di.script as item_script
+                di.finished_at as item_finished_at
             FROM delivery d
             INNER JOIN task t ON d.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
@@ -711,7 +710,6 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("item_notes", row[11]);
             map.put("item_started_at", row[12]);
             map.put("item_finished_at", row[13]);
-            map.put("item_script", row[14]); // Script por último
             
             return map;
         }).collect(Collectors.toList());

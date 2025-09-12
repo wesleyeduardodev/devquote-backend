@@ -539,7 +539,7 @@ public class ExcelReportUtils {
             "Status Geral da Entrega",
             // Dados do Item de Entrega
             "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem", 
-            "Pull Request", "Observações", "Data Início", "Data Fim", "Script"
+            "Pull Request", "Observações", "Data Início", "Data Fim"
         };
 
         Row headerRow = sheet.createRow(0);
@@ -581,10 +581,9 @@ public class ExcelReportUtils {
             setCellValue(row, 11, deliveryData.get("item_notes"), dataStyle);
             setCellValue(row, 12, deliveryData.get("item_started_at"), dateOnlyStyle);
             setCellValue(row, 13, deliveryData.get("item_finished_at"), dateOnlyStyle);
-            setCellValue(row, 14, deliveryData.get("item_script"), dataStyle); // Script por último
         }
 
-        // Ajustar largura das colunas (15 colunas no total - sem IDs, valor e datas da entrega)
+        // Ajustar largura das colunas (14 colunas no total - sem IDs, valor e datas da entrega)
         setColumnWidths(sheet, new int[]{
             // Dados da Tarefa
             2500,  // ID Tarefa
@@ -602,15 +601,14 @@ public class ExcelReportUtils {
             8000,  // Pull Request (maior para URLs)
             6000,  // Observações
             4000,  // Data Início
-            4000,  // Data Fim
-            12000  // Script (último e maior para texto)
+            4000   // Data Fim
         });
 
         // Ajustar altura das linhas
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
             if (row != null) {
-                row.setHeightInPoints(35); // Altura maior para acomodar script e URLs
+                row.setHeightInPoints(35); // Altura maior para acomodar URLs
             }
         }
 
