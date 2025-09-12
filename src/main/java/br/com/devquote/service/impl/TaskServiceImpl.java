@@ -764,7 +764,6 @@ public class TaskServiceImpl implements TaskService {
                 t.system_module,
                 t.link as task_link,
                 t.meeting_link,
-                t.notes as task_notes,
                 t.amount as task_amount,
                 t.has_sub_tasks as has_subtasks,
                 CASE WHEN EXISTS(SELECT 1 FROM delivery d WHERE d.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_delivery,
@@ -804,17 +803,16 @@ public class TaskServiceImpl implements TaskService {
             map.put("system_module", row[10]);
             map.put("task_link", row[11]);
             map.put("meeting_link", row[12]);
-            map.put("task_notes", row[13]);
-            map.put("task_amount", row[14]);
-            map.put("has_subtasks", Boolean.TRUE.equals(row[15]) ? "Sim" : "Não");
-            map.put("has_delivery", row[16]);
-            map.put("has_quote_in_billing", row[17]);
-            map.put("task_created_at", row[18]);
-            map.put("task_updated_at", row[19]);
-            map.put("subtask_id", row[20]);
-            map.put("subtask_title", row[21]);
-            map.put("subtask_description", row[22]);
-            map.put("subtask_amount", row[23]);
+            map.put("task_amount", row[13]);
+            map.put("has_subtasks", Boolean.TRUE.equals(row[14]) ? "Sim" : "Não");
+            map.put("has_delivery", row[15]);
+            map.put("has_quote_in_billing", row[16]);
+            map.put("task_created_at", row[17]);
+            map.put("task_updated_at", row[18]);
+            map.put("subtask_id", row[19]);
+            map.put("subtask_title", row[20]);
+            map.put("subtask_description", row[21]);
+            map.put("subtask_amount", row[22]);
             return map;
         }).collect(Collectors.toList());
 
