@@ -46,37 +46,39 @@
             padding: 30px;
         }
         
-        .task-info {
-            background-color: #f1f5f9;
-            border-radius: 8px;
+        .section {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
-        
-        .task-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 16px;
+
+        .info-grid {
+            display: table;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
         }
-        
+
         .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            align-items: center;
+            display: table-row;
         }
-        
-        .label {
+
+        .info-label {
+            display: table-cell;
             font-weight: 600;
             color: #475569;
-            min-width: 120px;
+            padding-right: 15px;
+            width: 150px;
+            vertical-align: top;
         }
-        
-        .value {
+
+        .info-value {
+            display: table-cell;
             color: #1e293b;
-            text-align: right;
-            flex: 1;
+            vertical-align: top;
+            word-wrap: break-word;
         }
         
         
@@ -198,14 +200,24 @@
                 padding: 20px;
             }
             
-            .info-row {
-                flex-direction: column;
-                align-items: flex-start;
+            .info-grid {
+                display: block;
             }
-            
-            .value {
-                text-align: left;
-                margin-top: 4px;
+
+            .info-row {
+                display: block;
+                margin-bottom: 10px;
+            }
+
+            .info-label, .info-value {
+                display: block;
+                width: 100%;
+                padding-right: 0;
+            }
+
+            .info-label {
+                margin-bottom: 5px;
+                font-weight: 700;
             }
             
             .subtask-footer {
@@ -231,61 +243,109 @@
         </div>
         
         <div class="content">
-            <div class="task-info">
-                <div class="info-row">
-                    <span class="label">Código:</span>
-                    <span class="value" th:text="${task.code}">TASK-001</span>
-                </div>
-                
-                <div class="task-title" th:text="${task.title}">Título da Tarefa</div>
-                
-                <div class="info-row" th:if="${task.description}">
-                    <span class="label">Descrição:</span>
-                    <span class="value" th:text="${task.description}">Descrição da tarefa</span>
-                </div>
-                
-                
-                <div class="info-row">
-                    <span class="label">Criado por:</span>
-                    <span class="value" th:text="${task.requester.name}">Nome do Solicitante</span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="label">Prioridade:</span>
-                    <span class="value">
-                        <span class="priority-badge"
-                              th:class="${'priority-badge priority-' + #strings.toLowerCase(priorityTranslation)}"
-                              th:text="${priorityTranslation}">
-                            Média
-                        </span>
-                    </span>
-                </div>
-                
-                <div class="info-row" th:if="${task.link}">
-                    <span class="label">Link:</span>
-                    <span class="value">
-                        <a th:href="${task.link}" class="link" target="_blank" th:text="${task.link}">
-                            Link da tarefa
-                        </a>
-                    </span>
+            <!-- DADOS PRINCIPAIS DA TAREFA -->
+            <div class="section">
+                <h2 class="section-title">📋 Dados da Tarefa</h2>
+
+                <div class="info-grid">
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskId)}">
+                        <div class="info-label">ID:</div>
+                        <div class="info-value" th:text="${taskId}">123</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskCode)}">
+                        <div class="info-label">Código:</div>
+                        <div class="info-value" th:text="${taskCode}">TSK-001</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskTitle)}">
+                        <div class="info-label">Título:</div>
+                        <div class="info-value" th:text="${taskTitle}">Título da tarefa</div>
+                    </div>
+                    <div class="info-row" th:if="${taskDescription != null and !#strings.isEmpty(taskDescription)}">
+                        <div class="info-label">Descrição:</div>
+                        <div class="info-value" th:text="${taskDescription}">Descrição da tarefa</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskPriority)}">
+                        <div class="info-label">Prioridade:</div>
+                        <div class="info-value">
+                            <span class="priority-badge"
+                                  th:class="${'priority-badge priority-' + #strings.toLowerCase(taskPriority)}"
+                                  th:text="${taskPriority}">
+                                Média
+                            </span>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskType)}">
+                        <div class="info-label">Tipo da Tarefa:</div>
+                        <div class="info-value" th:text="${taskType}">Nova Funcionalidade</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskSystemModule)}">
+                        <div class="info-label">Módulo do Sistema:</div>
+                        <div class="info-value" th:text="${taskSystemModule}">Backend</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskServerOrigin)}">
+                        <div class="info-label">Servidor de Origem:</div>
+                        <div class="info-value" th:text="${taskServerOrigin}">Produção</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskLink)}">
+                        <div class="info-label">Link da Tarefa:</div>
+                        <div class="info-value">
+                            <a th:href="${taskLink}" class="link" target="_blank" th:text="${taskLink}">Link da tarefa</a>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskMeetingLink)}">
+                        <div class="info-label">Link da Reunião:</div>
+                        <div class="info-value">
+                            <a th:href="${taskMeetingLink}" class="link" target="_blank" th:text="${taskMeetingLink}">Link da reunião</a>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(createdBy)}">
+                        <div class="info-label">Criado por:</div>
+                        <div class="info-value" th:text="${createdBy}">Usuário</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(createdAt)}">
+                        <div class="info-label">Data de Criação:</div>
+                        <div class="info-value" th:text="${createdAt}">01/01/2024 10:00</div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Subtarefas -->
-            <div class="subtasks-section" th:if="${task.hasSubTasks and not #lists.isEmpty(subTasks)}">
-                <div class="section-title">Subtarefas</div>
-                
+            <!-- SUBTAREFAS -->
+            <div class="section" th:if="${task.hasSubTasks and not #lists.isEmpty(subTasks)}">
+                <h2 class="section-title">📝 Subtarefas</h2>
+
                 <div class="subtask-item" th:each="subtask : ${subTasks}">
-                    <div class="subtask-title" th:text="${subtask.title}">Título da Subtarefa</div>
-                    
-                    <div class="subtask-description" th:if="${subtask.description}" th:text="${subtask.description}">
+                    <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}" th:text="${subtask.title}">Título da Subtarefa</div>
+
+                    <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}" th:text="${subtask.description}">
                         Descrição da subtarefa
                     </div>
-                    
+
                     <div class="subtask-footer">
                         <span class="amount">
                             R$ <span th:text="${#numbers.formatDecimal(subtask.amount != null ? subtask.amount : 0, 1, 2)}">0,00</span>
                         </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DADOS DO SOLICITANTE -->
+            <div class="section" th:if="${!#strings.isEmpty(requesterName) or !#strings.isEmpty(requesterEmail) or !#strings.isEmpty(requesterPhone)}">
+                <h2 class="section-title">👤 Solicitante</h2>
+
+                <div class="info-grid">
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterName)}">
+                        <div class="info-label">Nome:</div>
+                        <div class="info-value" th:text="${requesterName}">Nome do Solicitante</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterEmail)}">
+                        <div class="info-label">Email:</div>
+                        <div class="info-value">
+                            <a th:href="${'mailto:' + requesterEmail}" th:text="${requesterEmail}" class="link">email@exemplo.com</a>
+                        </div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterPhone)}">
+                        <div class="info-label">Telefone:</div>
+                        <div class="info-value" th:text="${requesterPhone}">+55 11 99999-9999</div>
                     </div>
                 </div>
             </div>

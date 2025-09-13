@@ -1167,7 +1167,28 @@ public class EmailServiceImpl implements EmailService {
             log.debug("Sending financial notification for task ID: {} to {}", task.getId(), financeEmail);
 
             Context context = new Context();
+
+            // Dados principais da tarefa (mesmo padrão de buildTaskUpdatedEmailContent)
             context.setVariable("task", task);
+            context.setVariable("taskId", task.getId());
+            context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
+            context.setVariable("taskTitle", task.getTitle() != null ? task.getTitle() : "");
+            context.setVariable("taskDescription", task.getDescription() != null ? task.getDescription() : "");
+            context.setVariable("taskPriority", translatePriority(task.getPriority()));
+            context.setVariable("taskType", translateTaskType(task.getTaskType()));
+            context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
+            context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
+            context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
+            context.setVariable("taskMeetingLink", task.getMeetingLink() != null ? task.getMeetingLink() : "");
+            context.setVariable("taskNotes", "");
+            context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
+            context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
+
+            // Dados do solicitante
+            context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
+            context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
+            context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
+
             // Task status removed
             context.setVariable("priorityTranslation", translatePriority(task.getPriority()));
 
