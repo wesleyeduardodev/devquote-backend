@@ -1221,10 +1221,28 @@ public class EmailServiceImpl implements EmailService {
                 ccRecipient = emailProperties.getFrom();
             }
 
-            log.debug("📧 Sending FINANCIAL notification - To: {}, CC: {}",
-                    financeEmail, ccRecipient != null ? ccRecipient : "none");
+            // Carregar anexos da tarefa (mesmo padrão do sendToMultipleRecipients)
+            List<TaskAttachment> taskAttachments = null;
+            try {
+                log.info("📎 LOADING attachments for FINANCIAL notification - task ID: {}", task.getId());
+                taskAttachments = taskAttachmentService.getTaskAttachmentsEntities(task.getId());
+                if (taskAttachments != null && !taskAttachments.isEmpty()) {
+                    log.info("📎 ✅ Found {} attachment(s) for FINANCIAL notification - task ID: {} - Files: {}",
+                            taskAttachments.size(), task.getId(),
+                            taskAttachments.stream().map(TaskAttachment::getOriginalFileName).toList());
+                } else {
+                    log.info("📎 No attachments found for FINANCIAL notification - task ID: {}", task.getId());
+                }
+            } catch (Exception e) {
+                log.error("📎 ❌ FAILED to load attachments for FINANCIAL notification - task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
+                taskAttachments = null; // Continua sem anexos se houver erro
+            }
 
-            sendEmailWithCC(financeEmail, ccRecipient, "💰 Notificação Financeira - Tarefa " + task.getCode(), htmlContent);
+            log.debug("📧 Sending FINANCIAL notification - To: {}, CC: {}, Attachments: {}",
+                    financeEmail, ccRecipient != null ? ccRecipient : "none",
+                    taskAttachments != null ? taskAttachments.size() : 0);
+
+            sendEmailWithAttachments(financeEmail, ccRecipient, "💰 Notificação Financeira - Tarefa " + task.getCode(), htmlContent, taskAttachments);
 
             log.debug("Financial notification sent successfully for task ID: {} to {}", task.getId(), financeEmail);
 
