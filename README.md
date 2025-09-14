@@ -124,7 +124,7 @@ docker build -t devquote-backend .
 
 # Executar container
 docker run -p 8080:8080 \
-  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host:5432/devquote \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host:5434/devquote \
   -e APP_JWTSECRET=secret \
   devquote-backend
 ```
