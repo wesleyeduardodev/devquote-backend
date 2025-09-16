@@ -1304,7 +1304,6 @@ public class EmailServiceImpl implements EmailService {
                 java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
                 taskMap.put("code", taskData[1]); // task_code
                 taskMap.put("title", taskData[2]); // task_title
-                taskMap.put("description", taskData[3]); // task_description
                 taskMap.put("amount", taskData[4]); // task_amount
                 tasksData.add(taskMap);
 
@@ -1499,7 +1498,6 @@ public class EmailServiceImpl implements EmailService {
                 java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
                 taskMap.put("code", taskData[1]); // task_code
                 taskMap.put("title", taskData[2]); // task_title
-                taskMap.put("description", taskData[3]); // task_description
                 taskMap.put("amount", taskData[4]); // task_amount
                 tasksData.add(taskMap);
 
