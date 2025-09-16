@@ -258,11 +258,11 @@
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskTitle)}">
                         <div class="info-label">Título:</div>
-                        <div class="info-value" th:text="${taskTitle}">Título da tarefa</div>
+                        <div class="info-value" th:utext="${taskTitle}">Título da tarefa</div>
                     </div>
                     <div class="info-row" th:if="${taskDescription != null and !#strings.isEmpty(taskDescription)}">
                         <div class="info-label">Descrição:</div>
-                        <div class="info-value" th:text="${taskDescription}">Descrição da tarefa</div>
+                        <div class="info-value" th:utext="${taskDescription}">Descrição da tarefa</div>
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskPriority)}">
                         <div class="info-label">Prioridade:</div>
@@ -314,9 +314,9 @@
                 <h2 class="section-title">📝 Subtarefas</h2>
 
                 <div class="subtask-item" th:each="subtask : ${subTasks}">
-                    <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}" th:text="${subtask.title}">Título da Subtarefa</div>
+                    <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}" th:utext="${subtask.title}">Título da Subtarefa</div>
 
-                    <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}" th:text="${subtask.description}">
+                    <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}" th:utext="${subtask.description}">
                         Descrição da subtarefa
                     </div>
 

@@ -185,11 +185,11 @@
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskTitle)}">
                         <div class="info-label">Título:</div>
-                        <div class="info-value" th:text="${taskTitle}">Título da tarefa</div>
+                        <div class="info-value" th:utext="${taskTitle}">Título da tarefa</div>
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskDescription)}">
                         <div class="info-label">Descrição:</div>
-                        <div class="info-value" th:text="${taskDescription}">Descrição da tarefa</div>
+                        <div class="info-value" th:utext="${taskDescription}">Descrição da tarefa</div>
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskPriority)}">
                         <div class="info-label">Prioridade:</div>
@@ -260,10 +260,10 @@
 
                 <div th:each="subtask : ${subTasks}" class="subtask-item">
                     <div class="subtask-title" th:if="${!#strings.isEmpty(subtask.title)}"
-                         th:text="${subtask.title}">Título da subtarefa</div>
+                         th:utext="${subtask.title}">Título da subtarefa</div>
 
                     <div class="subtask-description" th:if="${!#strings.isEmpty(subtask.description)}"
-                         th:text="${subtask.description}">Descrição da subtarefa</div>
+                         th:utext="${subtask.description}">Descrição da subtarefa</div>
 
                 </div>
             </div>
