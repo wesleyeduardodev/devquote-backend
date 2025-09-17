@@ -942,20 +942,30 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendEmailWithAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments) {
-        log.info("📧 SENDWITHATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}", 
+        log.info("📧 SENDWITHATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}",
                 to, cc != null ? cc : "none", subject, attachments != null ? attachments.size() : 0);
-        
+
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             log.debug("📧 Setting email headers - From: {}, To: {}, Subject: {}", emailProperties.getFrom(), to, subject);
-            
+
             helper.setFrom(emailProperties.getFrom());
             helper.setTo(to);
 
             if (cc != null && !cc.trim().isEmpty()) {
-                helper.setCc(cc);
+                // Se contém vírgula, divide em array para múltiplos destinatários
+                if (cc.contains(",")) {
+                    String[] ccArray = cc.split(",");
+                    // Remove espaços em branco de cada email
+                    for (int i = 0; i < ccArray.length; i++) {
+                        ccArray[i] = ccArray[i].trim();
+                    }
+                    helper.setCc(ccArray);
+                } else {
+                    helper.setCc(cc.trim());
+                }
             }
 
             helper.setSubject(subject);
@@ -1157,14 +1167,14 @@ public class EmailServiceImpl implements EmailService {
             return;
         }
 
-        String financeEmail = emailProperties.getFinanceEmail();
-        if (financeEmail == null || financeEmail.trim().isEmpty()) {
+        String primaryFinanceEmail = emailProperties.getPrimaryFinanceEmail();
+        if (primaryFinanceEmail == null || primaryFinanceEmail.trim().isEmpty()) {
             log.error("Finance email not configured. Cannot send financial notification for task ID: {}", task.getId());
             return;
         }
 
         try {
-            log.debug("Sending financial notification for task ID: {} to {}", task.getId(), financeEmail);
+            log.debug("Sending financial notification for task ID: {} to {}", task.getId(), primaryFinanceEmail);
 
             Context context = new Context();
 
@@ -1215,10 +1225,17 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = templateEngine.process("email/financial-notification", context);
 
-            // Se o email financeiro for diferente do email remetente, colocar remetente em CC
-            String ccRecipient = null;
-            if (!financeEmail.equals(emailProperties.getFrom())) {
-                ccRecipient = emailProperties.getFrom();
+            // Montar lista de destinatários em CC
+            List<String> ccRecipients = new java.util.ArrayList<>();
+
+            // Adicionar emails financeiros secundários em CC
+            ccRecipients.addAll(emailProperties.getSecondaryFinanceEmails());
+
+            // Adicionar email remetente em CC se for diferente do email financeiro principal
+            if (emailProperties.getFrom() != null &&
+                !emailProperties.getFrom().trim().isEmpty() &&
+                !primaryFinanceEmail.equals(emailProperties.getFrom())) {
+                ccRecipients.add(emailProperties.getFrom());
             }
 
             // Carregar anexos da tarefa (mesmo padrão do sendToMultipleRecipients)
@@ -1239,16 +1256,18 @@ public class EmailServiceImpl implements EmailService {
             }
 
             log.debug("📧 Sending FINANCIAL notification - To: {}, CC: {}, Attachments: {}",
-                    financeEmail, ccRecipient != null ? ccRecipient : "none",
+                    primaryFinanceEmail, ccRecipients.isEmpty() ? "none" : ccRecipients.toString(),
                     taskAttachments != null ? taskAttachments.size() : 0);
 
-            sendEmailWithAttachments(financeEmail, ccRecipient, "💰 Notificação Financeira - Tarefa " + task.getCode(), htmlContent, taskAttachments);
+            // Converter lista de CC para array (método original aceita String, mas precisa usar array)
+            String ccRecipientsString = ccRecipients.isEmpty() ? null : String.join(",", ccRecipients);
+            sendEmailWithAttachments(primaryFinanceEmail, ccRecipientsString, "💰 Notificação Financeira - Tarefa " + task.getCode(), htmlContent, taskAttachments);
 
-            log.debug("Financial notification sent successfully for task ID: {} to {}", task.getId(), financeEmail);
+            log.debug("Financial notification sent successfully for task ID: {} to {}", task.getId(), primaryFinanceEmail);
 
         } catch (Exception e) {
             log.error("Unexpected error while sending financial notification for task ID: {} to {}: {}",
-                task.getId(), financeEmail, e.getMessage(), e);
+                task.getId(), primaryFinanceEmail, e.getMessage(), e);
             throw new RuntimeException("Failed to send financial notification email", e);
         }
     }
