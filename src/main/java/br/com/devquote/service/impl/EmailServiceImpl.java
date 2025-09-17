@@ -1280,7 +1280,7 @@ public class EmailServiceImpl implements EmailService {
             return;
         }
 
-        String financeEmail = emailProperties.getFinanceEmail();
+        String financeEmail = emailProperties.getPrimaryFinanceEmail();
         if (financeEmail == null || financeEmail.trim().isEmpty()) {
             log.error("Finance email not configured. Cannot send billing period notification for period ID: {}", billingPeriod.getId());
             return;
@@ -1532,7 +1532,7 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = templateEngine.process("email/billing-period-notification", context);
 
             // Obter o email do financeiro
-            String financeEmail = emailProperties.getFinanceEmail();
+            String financeEmail = emailProperties.getPrimaryFinanceEmail();
             if (financeEmail == null || financeEmail.trim().isEmpty()) {
                 log.error("Finance email not configured. Cannot send billing period notification.");
                 return;
@@ -1574,7 +1574,7 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
 
             // Obter o email do financeiro
-            String financeEmail = emailProperties.getFinanceEmail();
+            String financeEmail = emailProperties.getPrimaryFinanceEmail();
             if (financeEmail == null || financeEmail.trim().isEmpty()) {
                 log.error("Finance email not configured. Cannot send billing period deleted notification.");
                 return;
@@ -1615,7 +1615,7 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
 
             // Obter o email do financeiro
-            String financeEmail = emailProperties.getFinanceEmail();
+            String financeEmail = emailProperties.getPrimaryFinanceEmail();
             if (financeEmail == null || financeEmail.trim().isEmpty()) {
                 log.error("Finance email not configured. Cannot send billing period deleted notification.");
                 return;
