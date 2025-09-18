@@ -1354,15 +1354,7 @@ public class EmailServiceImpl implements EmailService {
             return;
         }
 
-        String primaryFinanceEmail = emailProperties.getPrimaryFinanceEmail();
-        if (primaryFinanceEmail == null || primaryFinanceEmail.trim().isEmpty()) {
-            log.error("Finance email not configured. Cannot send financial notification for task ID: {}", task.getId());
-            return;
-        }
-
         try {
-            log.debug("Sending financial notification for task ID: {} to {}", task.getId(), primaryFinanceEmail);
-
             Context context = new Context();
 
             // Dados principais da tarefa (mesmo padrão de buildTaskUpdatedEmailContent)
@@ -1411,51 +1403,86 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("totalAmount", totalAmount);
 
             String htmlContent = templateEngine.process("email/financial-notification", context);
+            String subject = "💰 Notificação Financeira - Tarefa " + task.getCode();
 
-            // Montar lista de destinatários em CC
-            List<String> ccRecipients = new java.util.ArrayList<>();
-
-            // Adicionar emails financeiros secundários em CC
-            ccRecipients.addAll(emailProperties.getSecondaryFinanceEmails());
-
-            // Adicionar email remetente em CC se for diferente do email financeiro principal
-            if (emailProperties.getFrom() != null &&
-                !emailProperties.getFrom().trim().isEmpty() &&
-                !primaryFinanceEmail.equals(emailProperties.getFrom())) {
-                ccRecipients.add(emailProperties.getFrom());
-            }
-
-            // Carregar anexos da tarefa (mesmo padrão do sendToMultipleRecipients)
-            List<TaskAttachment> taskAttachments = null;
-            try {
-                log.info("📎 LOADING attachments for FINANCIAL notification - task ID: {}", task.getId());
-                taskAttachments = taskAttachmentService.getTaskAttachmentsEntities(task.getId());
-                if (taskAttachments != null && !taskAttachments.isEmpty()) {
-                    log.info("📎 ✅ Found {} attachment(s) for FINANCIAL notification - task ID: {} - Files: {}",
-                            taskAttachments.size(), task.getId(),
-                            taskAttachments.stream().map(TaskAttachment::getOriginalFileName).toList());
-                } else {
-                    log.info("📎 No attachments found for FINANCIAL notification - task ID: {}", task.getId());
-                }
-            } catch (Exception e) {
-                log.error("📎 ❌ FAILED to load attachments for FINANCIAL notification - task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
-                taskAttachments = null; // Continua sem anexos se houver erro
-            }
-
-            log.debug("📧 Sending FINANCIAL notification - To: {}, CC: {}, Attachments: {}",
-                    primaryFinanceEmail, ccRecipients.isEmpty() ? "none" : ccRecipients.toString(),
-                    taskAttachments != null ? taskAttachments.size() : 0);
-
-            // Converter lista de CC para array (método original aceita String, mas precisa usar array)
-            String ccRecipientsString = ccRecipients.isEmpty() ? null : String.join(",", ccRecipients);
-            sendEmailWithAttachments(primaryFinanceEmail, ccRecipientsString, "💰 Notificação Financeira - Tarefa " + task.getCode(), htmlContent, taskAttachments);
-
-            log.debug("Financial notification sent successfully for task ID: {} to {}", task.getId(), primaryFinanceEmail);
+            sendFinancialEmailWithNotificationConfig(task, subject, htmlContent);
 
         } catch (Exception e) {
-            log.error("Unexpected error while sending financial notification for task ID: {} to {}: {}",
-                task.getId(), primaryFinanceEmail, e.getMessage(), e);
+            log.error("Unexpected error while sending financial notification for task ID: {}: {}",
+                task.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to send financial notification email", e);
+        }
+    }
+
+    private void sendFinancialEmailWithNotificationConfig(Task task, String subject, String htmlContent) {
+        NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ORCAMENTO_TAREFA, NotificationType.EMAIL);
+
+        if (config == null) {
+            log.warn("No notification config found for NOTIFICACAO_ORCAMENTO_TAREFA + EMAIL. Task ID: {}", task.getId());
+            return;
+        }
+
+        List<String> toEmails = new ArrayList<>();
+        List<String> ccEmails = new ArrayList<>();
+
+        // Determinar destinatário principal
+        if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
+            // Usar email do solicitante se disponível
+            if (task.getRequester() != null && task.getRequester().getEmail() != null
+                && !task.getRequester().getEmail().trim().isEmpty()) {
+                toEmails.add(task.getRequester().getEmail());
+            }
+        } else {
+            // Usar email da configuração se disponível
+            if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
+                toEmails.add(config.getPrimaryEmail());
+            }
+        }
+
+        // Adicionar emails em cópia da configuração
+        if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
+            ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Validar se há pelo menos um destinatário
+        if (toEmails.isEmpty()) {
+            log.warn("No valid recipients found for financial notification. Task ID: {}, Config ID: {}",
+                task.getId(), config.getId());
+            return;
+        }
+
+        // Carregar anexos da tarefa
+        List<TaskAttachment> taskAttachments = null;
+        try {
+            log.info("📎 LOADING attachments for FINANCIAL notification - task ID: {}", task.getId());
+            taskAttachments = taskAttachmentService.getTaskAttachmentsEntities(task.getId());
+            if (taskAttachments != null && !taskAttachments.isEmpty()) {
+                log.info("📎 ✅ Found {} attachment(s) for FINANCIAL notification - task ID: {} - Files: {}",
+                        taskAttachments.size(), task.getId(),
+                        taskAttachments.stream().map(TaskAttachment::getOriginalFileName).toList());
+            } else {
+                log.info("📎 No attachments found for FINANCIAL notification - task ID: {}", task.getId());
+            }
+        } catch (Exception e) {
+            log.error("📎 ❌ FAILED to load attachments for FINANCIAL notification - task ID: {} - Error: {}",
+                task.getId(), e.getMessage(), e);
+            taskAttachments = null;
+        }
+
+        log.debug("📧 Sending FINANCIAL notification with config - To: {}, CC: {}, Attachments: {}",
+                toEmails, ccEmails.isEmpty() ? "none" : ccEmails,
+                taskAttachments != null ? taskAttachments.size() : 0);
+
+        // Enviar para cada destinatário principal
+        for (String toEmail : toEmails) {
+            try {
+                String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
+                sendEmailWithAttachments(toEmail, ccRecipientsString, subject, htmlContent, taskAttachments);
+                log.debug("Financial notification sent successfully for task ID: {} to {}", task.getId(), toEmail);
+            } catch (Exception e) {
+                log.error("Failed to send financial notification for task ID: {} to {}: {}",
+                    task.getId(), toEmail, e.getMessage(), e);
+            }
         }
     }
 
