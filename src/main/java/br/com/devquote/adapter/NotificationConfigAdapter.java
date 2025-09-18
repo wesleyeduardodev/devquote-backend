@@ -36,8 +36,8 @@ public class NotificationConfigAdapter {
                 .configType(dto.getConfigType())
                 .notificationType(dto.getNotificationType())
                 .useRequesterContact(dto.getUseRequesterContact())
-                .primaryEmail(dto.getPrimaryEmail())
-                .primaryPhone(dto.getPrimaryPhone())
+                .primaryEmail(Boolean.TRUE.equals(dto.getUseRequesterContact()) ? null : dto.getPrimaryEmail())
+                .primaryPhone(Boolean.TRUE.equals(dto.getUseRequesterContact()) ? null : dto.getPrimaryPhone())
                 .build();
 
         entity.setCopyEmailsList(dto.getCopyEmails());
@@ -54,8 +54,16 @@ public class NotificationConfigAdapter {
         entity.setConfigType(dto.getConfigType());
         entity.setNotificationType(dto.getNotificationType());
         entity.setUseRequesterContact(dto.getUseRequesterContact());
-        entity.setPrimaryEmail(dto.getPrimaryEmail());
-        entity.setPrimaryPhone(dto.getPrimaryPhone());
+
+        // Se usar contato do solicitante, limpar campos de contato da configuração
+        if (Boolean.TRUE.equals(dto.getUseRequesterContact())) {
+            entity.setPrimaryEmail(null);
+            entity.setPrimaryPhone(null);
+        } else {
+            entity.setPrimaryEmail(dto.getPrimaryEmail());
+            entity.setPrimaryPhone(dto.getPrimaryPhone());
+        }
+
         entity.setCopyEmailsList(dto.getCopyEmails());
         entity.setPhoneNumbersList(dto.getPhoneNumbers());
     }
