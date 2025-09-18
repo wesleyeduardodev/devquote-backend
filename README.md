@@ -80,7 +80,6 @@ APP_FRONTEND_URL=http://localhost:5173
 # Email (Obrigatório para notificações)
 DEVQUOTE_EMAIL_ENABLED=true
 DEVQUOTE_EMAIL_FROM=seu-email@gmail.com
-DEVQUOTE_EMAIL_FINANCE=financeiro@empresa.com
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USERNAME=seu-email@gmail.com

@@ -1716,28 +1716,59 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = templateEngine.process("email/billing-period-notification", context);
 
-            // Obter o email do financeiro
-            String financeEmail = emailProperties.getPrimaryFinanceEmail();
-            if (financeEmail == null || financeEmail.trim().isEmpty()) {
-                log.error("Finance email not configured. Cannot send billing period notification.");
-                return;
-            }
-
-            String ccRecipient = null;
-            if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty() 
-                && !emailProperties.getFrom().equals(financeEmail)) {
-                ccRecipient = emailProperties.getFrom();
-            }
-
-            // Enviar email com anexos em memória
-            sendEmailWithInMemoryAttachments(financeEmail, ccRecipient, subject, htmlContent, attachmentDataMap);
-
-            log.debug("Billing period notification WITH ATTACHMENTS sent successfully for period ID: {} to {}", 
-                billingPeriod.getId(), financeEmail);
+            sendBillingEmailWithAttachmentsUsingNotificationConfig(billingPeriod, subject, htmlContent, attachmentDataMap);
 
         } catch (Exception e) {
-            log.error("Failed to send billing period notification with attachments for period ID: {}", 
+            log.error("Failed to send billing period notification with attachments for period ID: {}",
                 billingPeriod.getId(), e);
+        }
+    }
+
+    private void sendBillingEmailWithAttachmentsUsingNotificationConfig(BillingPeriod billingPeriod, String subject, String htmlContent, Map<String, byte[]> attachmentDataMap) {
+        NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_FATURAMENTO, NotificationType.EMAIL);
+
+        if (config == null) {
+            log.warn("No notification config found for NOTIFICACAO_FATURAMENTO + EMAIL. BillingPeriod ID: {}", billingPeriod.getId());
+            return;
+        }
+
+        List<String> toEmails = new ArrayList<>();
+        List<String> ccEmails = new ArrayList<>();
+
+        // Determinar destinatário principal - Faturamento não tem solicitante específico
+        if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
+            log.warn("Billing period cannot use requester contact - no requester associated. BillingPeriod ID: {}, Config ID: {}",
+                billingPeriod.getId(), config.getId());
+            return;
+        } else {
+            // Usar email da configuração se disponível
+            if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
+                toEmails.add(config.getPrimaryEmail());
+            }
+        }
+
+        // Adicionar emails em cópia da configuração
+        if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
+            ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Validar se há pelo menos um destinatário
+        if (toEmails.isEmpty()) {
+            log.warn("No valid recipients found for billing notification with attachments. BillingPeriod ID: {}, Config ID: {}",
+                billingPeriod.getId(), config.getId());
+            return;
+        }
+
+        // Enviar para cada destinatário principal com anexos
+        for (String toEmail : toEmails) {
+            try {
+                String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
+                sendEmailWithInMemoryAttachments(toEmail, ccRecipientsString, subject, htmlContent, attachmentDataMap);
+                log.debug("Billing notification with attachments sent successfully for period ID: {} to {}", billingPeriod.getId(), toEmail);
+            } catch (Exception e) {
+                log.error("Failed to send billing notification with attachments for period ID: {} to {}: {}",
+                    billingPeriod.getId(), toEmail, e.getMessage(), e);
+            }
         }
     }
     
@@ -1783,24 +1814,7 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
 
-            // Obter o email do financeiro
-            String financeEmail = emailProperties.getPrimaryFinanceEmail();
-            if (financeEmail == null || financeEmail.trim().isEmpty()) {
-                log.error("Finance email not configured. Cannot send billing period deleted notification.");
-                return;
-            }
-
-            String ccRecipient = null;
-            if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty() 
-                && !emailProperties.getFrom().equals(financeEmail)) {
-                ccRecipient = emailProperties.getFrom();
-            }
-
-            // Enviar email com anexos em memória
-            sendEmailWithInMemoryAttachments(financeEmail, ccRecipient, subject, htmlContent, attachmentDataMap);
-
-            log.debug("Billing period deleted notification WITH ATTACHMENTS sent successfully for period ID: {} to {}", 
-                billingPeriod.getId(), financeEmail);
+            sendBillingEmailWithAttachmentsUsingNotificationConfig(billingPeriod, subject, htmlContent, attachmentDataMap);
 
         } catch (Exception e) {
             log.error("Failed to send billing period deleted notification with attachments for period ID: {}", 
