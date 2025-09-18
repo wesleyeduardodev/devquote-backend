@@ -1434,16 +1434,7 @@ public class EmailServiceImpl implements EmailService {
             return;
         }
 
-        String financeEmail = emailProperties.getPrimaryFinanceEmail();
-        if (financeEmail == null || financeEmail.trim().isEmpty()) {
-            log.error("Finance email not configured. Cannot send billing period notification for period ID: {}", billingPeriod.getId());
-            return;
-        }
-
         try {
-            log.debug("Sending billing period notification for period ID: {} ({}/{}) to {}",
-                billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear(), financeEmail);
-
             Context context = new Context();
             context.setVariable("billingPeriod", billingPeriod);
 
@@ -1490,29 +1481,69 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("taskCount", billingTasks.size());
 
             String htmlContent = templateEngine.process("email/billing-period-notification", context);
-
-            // Se o email financeiro for diferente do email remetente, colocar remetente em CC
-            String ccRecipient = null;
-            if (!financeEmail.equals(emailProperties.getFrom())) {
-                ccRecipient = emailProperties.getFrom();
-            }
-
             String subject = "📊 Faturamento Mensal - " + String.format("%02d/%d", billingPeriod.getMonth(), billingPeriod.getYear());
 
-            log.debug("📧 Sending BILLING PERIOD notification - To: {}, CC: {}",
-                    financeEmail, ccRecipient != null ? ccRecipient : "none");
-
-            sendEmailWithCC(financeEmail, ccRecipient, subject, htmlContent);
-
-            log.debug("Billing period notification sent successfully for period ID: {} to {}", billingPeriod.getId(), financeEmail);
+            sendBillingEmailWithNotificationConfig(billingPeriod, subject, htmlContent);
 
         } catch (Exception e) {
-            log.error("Unexpected error while sending billing period notification for period ID: {} to {}: {}",
-                billingPeriod.getId(), financeEmail, e.getMessage(), e);
+            log.error("Unexpected error while sending billing period notification for period ID: {}: {}",
+                billingPeriod.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to send billing period notification email", e);
         }
     }
-    
+
+    private void sendBillingEmailWithNotificationConfig(BillingPeriod billingPeriod, String subject, String htmlContent) {
+        NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_FATURAMENTO, NotificationType.EMAIL);
+
+        if (config == null) {
+            log.warn("No notification config found for NOTIFICACAO_FATURAMENTO + EMAIL. BillingPeriod ID: {}", billingPeriod.getId());
+            return;
+        }
+
+        List<String> toEmails = new ArrayList<>();
+        List<String> ccEmails = new ArrayList<>();
+
+        // Determinar destinatário principal - Faturamento não tem solicitante específico
+        // então só usamos a configuração de email principal
+        if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
+            log.warn("Billing period cannot use requester contact - no requester associated. BillingPeriod ID: {}, Config ID: {}",
+                billingPeriod.getId(), config.getId());
+            return;
+        } else {
+            // Usar email da configuração se disponível
+            if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
+                toEmails.add(config.getPrimaryEmail());
+            }
+        }
+
+        // Adicionar emails em cópia da configuração
+        if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
+            ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Validar se há pelo menos um destinatário
+        if (toEmails.isEmpty()) {
+            log.warn("No valid recipients found for billing notification. BillingPeriod ID: {}, Config ID: {}",
+                billingPeriod.getId(), config.getId());
+            return;
+        }
+
+        log.debug("📧 Sending BILLING notification with config - To: {}, CC: {}",
+                toEmails, ccEmails.isEmpty() ? "none" : ccEmails);
+
+        // Enviar para cada destinatário principal (billing não tem anexos)
+        for (String toEmail : toEmails) {
+            try {
+                String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
+                sendEmailWithAttachments(toEmail, ccRecipientsString, subject, htmlContent, null);
+                log.debug("Billing notification sent successfully for period ID: {} to {}", billingPeriod.getId(), toEmail);
+            } catch (Exception e) {
+                log.error("Failed to send billing notification for period ID: {} to {}: {}",
+                    billingPeriod.getId(), toEmail, e.getMessage(), e);
+            }
+        }
+    }
+
     @Override
     @Async("emailTaskExecutor")
     public void sendDeliveryDeletedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap) {
@@ -1727,26 +1758,10 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
 
-            // Obter o email do financeiro
-            String financeEmail = emailProperties.getPrimaryFinanceEmail();
-            if (financeEmail == null || financeEmail.trim().isEmpty()) {
-                log.error("Finance email not configured. Cannot send billing period deleted notification.");
-                return;
-            }
-
-            String ccRecipient = null;
-            if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty() 
-                && !emailProperties.getFrom().equals(financeEmail)) {
-                ccRecipient = emailProperties.getFrom();
-            }
-
-            sendEmailWithCC(financeEmail, ccRecipient, subject, htmlContent);
-
-            log.debug("Billing period deleted notification sent successfully for period ID: {} to {}", 
-                billingPeriod.getId(), financeEmail);
+            sendBillingEmailWithNotificationConfig(billingPeriod, subject, htmlContent);
 
         } catch (Exception e) {
-            log.error("Failed to send billing period deleted notification for period ID: {}", 
+            log.error("Failed to send billing period deleted notification for period ID: {}",
                 billingPeriod.getId(), e);
         }
     }
