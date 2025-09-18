@@ -111,39 +111,22 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async("emailTaskExecutor")
     public void sendTaskDeletedNotification(Task task) {
-        log.info("🗑️📧 TASK DELETION EMAIL SERVICE CALLED for task ID: {}, Code: {}, Title: {}", 
-                task.getId(), task.getCode(), task.getTitle());
-        
         if (!emailProperties.isEnabled()) {
-            log.warn("🗑️📧 ❌ EMAIL NOTIFICATIONS ARE DISABLED - task deletion email will NOT be sent");
+            log.warn("Email notifications are disabled. Skipping task deletion notification for task ID: {}", task.getId());
             return;
         }
 
-        log.info("🗑️📧 EMAIL NOTIFICATIONS ENABLED - proceeding with task deletion email");
-
         try {
-            log.info("🗑️📧 Building task deletion notification for task ID: {}", task.getId());
-
-            // Debug task data
-            log.debug("🗑️📧 TASK DATA - Requester: {}, Email: {}", 
-                    task.getRequester() != null ? task.getRequester().getName() : "null",
-                    task.getRequester() != null ? task.getRequester().getEmail() : "null");
-
             String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s",
                 task.getCode() != null ? task.getCode() : task.getId(),
                 task.getTitle() != null ? task.getTitle() : "Sem título");
-            
-            log.info("🗑️📧 EMAIL SUBJECT: {}", subject);
-            
-            String htmlContent = buildTaskDeletedEmailContent(task);
-            log.info("🗑️📧 HTML CONTENT BUILT - length: {} characters", htmlContent.length());
 
-            log.info("🗑️📧 CALLING sendToMultipleRecipients for DELETED task...");
-            sendToMultipleRecipients(task, subject, htmlContent, "deleted");
-            log.info("🗑️📧 ✅ sendToMultipleRecipients completed for DELETED task ID: {}", task.getId());
+            String htmlContent = buildTaskDeletedEmailContent(task);
+
+            sendTaskDataEmailWithNotificationConfig(task, subject, htmlContent);
 
         } catch (Exception e) {
-            log.error("🗑️📧 ❌ CRITICAL ERROR - Failed to send task deleted notification for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
+            log.error("Failed to send task deleted notification for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
         }
     }
 
@@ -822,12 +805,10 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.debug("Sending delivery updated notification for delivery ID: {}", delivery.getId());
-
             String subject = String.format("DevQuote - Dados da Entrega: #%d", delivery.getId());
             String htmlContent = buildDeliveryUpdatedEmailContent(delivery);
 
-            sendToMultipleRecipientsForDelivery(delivery, subject, htmlContent, "updated");
+            sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent);
 
         } catch (Exception e) {
             log.error("Failed to send delivery updated notification for delivery ID: {}", delivery.getId(), e);
@@ -843,15 +824,67 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            log.debug("Sending delivery deleted notification for delivery ID: {}", delivery.getId());
-
             String subject = String.format("DevQuote - Entrega excluída: #%d", delivery.getId());
             String htmlContent = buildDeliveryDeletedEmailContent(delivery);
 
-            sendToMultipleRecipientsForDelivery(delivery, subject, htmlContent, "deleted");
+            sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent);
 
         } catch (Exception e) {
             log.error("Failed to send delivery deleted notification for delivery ID: {}", delivery.getId(), e);
+        }
+    }
+
+    private void sendDeliveryEmailWithNotificationConfig(Delivery delivery, String subject, String htmlContent) {
+        NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ENTREGA, NotificationType.EMAIL);
+
+        if (config == null) {
+            log.warn("No notification config found for NOTIFICACAO_ENTREGA + EMAIL. Delivery ID: {}", delivery.getId());
+            return;
+        }
+
+        List<String> toEmails = new ArrayList<>();
+        List<String> ccEmails = new ArrayList<>();
+
+        // Determinar destinatário principal
+        if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
+            // Usar email do solicitante se disponível
+            if (delivery.getTask() != null && delivery.getTask().getRequester() != null
+                && delivery.getTask().getRequester().getEmail() != null
+                && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
+                toEmails.add(delivery.getTask().getRequester().getEmail());
+            }
+        } else {
+            // Usar email da configuração se disponível
+            if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
+                toEmails.add(config.getPrimaryEmail());
+            }
+        }
+
+        // Adicionar emails em cópia da configuração
+        if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
+            ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Validar se há pelo menos um destinatário
+        if (toEmails.isEmpty()) {
+            log.warn("No valid recipients found for delivery notification. Delivery ID: {}, Config ID: {}",
+                delivery.getId(), config.getId());
+            return;
+        }
+
+        log.debug("📧 Sending DELIVERY notification with config - To: {}, CC: {}",
+                toEmails, ccEmails.isEmpty() ? "none" : ccEmails);
+
+        // Enviar para cada destinatário principal (delivery não tem anexos como tasks)
+        for (String toEmail : toEmails) {
+            try {
+                String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
+                sendEmailWithAttachments(toEmail, ccRecipientsString, subject, htmlContent, null);
+                log.debug("Delivery notification sent successfully for delivery ID: {} to {}", delivery.getId(), toEmail);
+            } catch (Exception e) {
+                log.error("Failed to send delivery notification for delivery ID: {} to {}: {}",
+                    delivery.getId(), toEmail, e.getMessage(), e);
+            }
         }
     }
 
