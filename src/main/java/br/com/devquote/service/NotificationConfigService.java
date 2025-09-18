@@ -37,4 +37,12 @@ public interface NotificationConfigService {
             NotificationConfigType configType,
             NotificationType notificationType
     );
+
+    /**
+     * Busca configuração específica retornando a entidade para uso no EmailService
+     */
+    br.com.devquote.entity.NotificationConfig findEntityByConfigTypeAndNotificationType(
+            NotificationConfigType configType,
+            NotificationType notificationType
+    );
 }

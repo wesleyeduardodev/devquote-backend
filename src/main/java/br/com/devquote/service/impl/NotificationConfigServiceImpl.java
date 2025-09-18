@@ -93,4 +93,12 @@ public class NotificationConfigServiceImpl implements NotificationConfigService 
                 .map(NotificationConfigAdapter::toResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public NotificationConfig findEntityByConfigTypeAndNotificationType(NotificationConfigType configType, NotificationType notificationType) {
+        return notificationConfigRepository.findByConfigTypeAndNotificationType(configType, notificationType)
+                .stream()
+                .findFirst()
+                .orElse(null);
+    }
 }

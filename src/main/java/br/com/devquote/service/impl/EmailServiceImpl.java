@@ -4,12 +4,16 @@ import br.com.devquote.configuration.EmailProperties;
 import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.entity.BillingPeriodTask;
 import br.com.devquote.entity.Delivery;
+import br.com.devquote.entity.NotificationConfig;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
 import br.com.devquote.entity.TaskAttachment;
+import br.com.devquote.enums.NotificationConfigType;
+import br.com.devquote.enums.NotificationType;
 import br.com.devquote.repository.BillingPeriodTaskRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.service.EmailService;
+import br.com.devquote.service.NotificationConfigService;
 import br.com.devquote.service.TaskAttachmentService;
 import br.com.devquote.service.storage.FileStorageStrategy;
 import jakarta.mail.MessagingException;
@@ -49,6 +53,7 @@ public class EmailServiceImpl implements EmailService {
     private final BillingPeriodTaskRepository billingPeriodTaskRepository;
     private final TaskAttachmentService taskAttachmentService;
     private final FileStorageStrategy fileStorageStrategy;
+    private final NotificationConfigService notificationConfigService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -96,7 +101,7 @@ public class EmailServiceImpl implements EmailService {
                 task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskUpdatedEmailContent(task);
 
-            sendToMultipleRecipients(task, subject, htmlContent, "updated");
+            sendTaskDataEmailWithNotificationConfig(task, subject, htmlContent);
 
         } catch (Exception e) {
             log.error("Failed to send task updated notification for task ID: {}", task.getId(), e);
@@ -209,6 +214,188 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("🗑️📧 ❌ CRITICAL ERROR - Failed to send task deleted notification WITH IN-MEMORY ATTACHMENTS for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Busca configuração de notificação específica para um tipo
+     */
+    private NotificationConfig findNotificationConfig(NotificationConfigType configType, NotificationType notificationType) {
+        try {
+            return notificationConfigService.findEntityByConfigTypeAndNotificationType(configType, notificationType);
+        } catch (Exception e) {
+            log.warn("Erro ao buscar configuração de notificação para {} - {}: {}", configType, notificationType, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Envio de email de dados da tarefa usando NotificationConfig
+     */
+    private void sendTaskDataEmailWithNotificationConfig(Task task, String subject, String htmlContent) {
+        log.info("📧 🎯 Enviando email de DADOS DA TAREFA com NotificationConfig para Task ID={}, Code={}, Title={}",
+                task.getId(), task.getCode(), task.getTitle());
+
+        // 1. Buscar configuração de notificação para DADOS DA TAREFA + EMAIL
+        NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_DADOS_TAREFA, NotificationType.EMAIL);
+
+        String mainRecipient = null;
+        List<String> ccRecipients = new ArrayList<>();
+
+        // 2. Definir destinatário principal
+        if (config == null) {
+            // Sem configuração: enviar apenas para o solicitante
+            log.info("📧 ⚙️ Nenhuma configuração encontrada para DADOS_TAREFA + EMAIL - usando apenas solicitante");
+            if (task.getRequester() != null && task.getRequester().getEmail() != null && !task.getRequester().getEmail().trim().isEmpty()) {
+                mainRecipient = task.getRequester().getEmail();
+                log.info("📧 ✅ Destinatário principal (solicitante): {} <{}>",
+                        task.getRequester().getName(), task.getRequester().getEmail());
+            } else {
+                log.warn("📧 ⚠️ Solicitante sem email válido para task ID: {}", task.getId());
+            }
+        } else {
+            // Com configuração: verificar flag useRequesterContact
+            log.info("📧 ⚙️ Configuração encontrada ID={}, useRequesterContact={}",
+                    config.getId(), config.getUseRequesterContact());
+
+            if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
+                // Usar email do solicitante
+                if (task.getRequester() != null && task.getRequester().getEmail() != null && !task.getRequester().getEmail().trim().isEmpty()) {
+                    mainRecipient = task.getRequester().getEmail();
+                    log.info("📧 ✅ Destinatário principal (solicitante via config): {} <{}>",
+                            task.getRequester().getName(), task.getRequester().getEmail());
+                } else {
+                    log.warn("📧 ⚠️ Config configurada para usar solicitante, mas solicitante sem email válido para task ID: {}", task.getId());
+                }
+            } else {
+                // Usar email da configuração
+                if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
+                    mainRecipient = config.getPrimaryEmail();
+                    log.info("📧 ✅ Destinatário principal (config): {}", config.getPrimaryEmail());
+                } else {
+                    log.warn("📧 ⚠️ Config configurada para usar email próprio, mas primaryEmail está vazio para config ID: {}", config.getId());
+                }
+            }
+
+            // 3. Adicionar emails em cópia se existirem
+            if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
+                ccRecipients.addAll(config.getCopyEmailsList());
+                log.info("📧 📬 Adicionando {} email(s) em cópia: {}",
+                        ccRecipients.size(), String.join(", ", ccRecipients));
+            }
+        }
+
+        // 4. Verificar se há destinatário principal
+        if (mainRecipient == null || mainRecipient.trim().isEmpty()) {
+            log.error("📧 ❌ Nenhum destinatário principal válido encontrado para task ID: {}. Email NÃO será enviado!", task.getId());
+            return;
+        }
+
+        // 5. Enviar email (anexos são tratados automaticamente pelo método existente)
+        try {
+            log.info("📧 🚀 Enviando email para: TO={}, CC={}",
+                    mainRecipient,
+                    ccRecipients.isEmpty() ? "nenhum" : String.join(", ", ccRecipients));
+
+            // Usar o método existente que já funciona, só mudando os destinatários
+            sendToMultipleRecipientsWithConfig(task, subject, htmlContent, "updated", mainRecipient, ccRecipients);
+
+            log.info("📧 ✅ Email de dados da tarefa enviado com sucesso para task ID: {}", task.getId());
+        } catch (Exception e) {
+            log.error("📧 ❌ Erro ao enviar email de dados da tarefa para task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Envio limpo usando NotificationConfig - SEM adicionar DEVQUOTE_EMAIL_FROM automaticamente
+     */
+    private void sendToMultipleRecipientsWithConfig(Task task, String subject, String htmlContent, String action,
+                                                   String mainRecipient, List<String> ccRecipients) {
+
+        log.info("📧 🎯 Enviando email LIMPO (sem CC automático): TO={}, CC={}",
+                mainRecipient, ccRecipients.isEmpty() ? "nenhum" : String.join(", ", ccRecipients));
+
+        // Carregar anexos da tarefa (mesmo padrão do método original)
+        List<TaskAttachment> taskAttachments = null;
+        try {
+            log.info("📎 LOADING attachments for task ID: {}", task.getId());
+            taskAttachments = taskAttachmentService.getTaskAttachmentsEntities(task.getId());
+            if (taskAttachments != null && !taskAttachments.isEmpty()) {
+                log.info("📎 ✅ Found {} attachment(s) for task ID: {}", taskAttachments.size(), task.getId());
+            } else {
+                log.info("📎 No attachments found for task ID: {}", task.getId());
+            }
+        } catch (Exception e) {
+            log.error("📎 ❌ FAILED to load attachments for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
+            taskAttachments = null;
+        }
+
+        // Enviar email diretamente com os destinatários específicos
+        try {
+            sendEmailDirectly(mainRecipient, ccRecipients, subject, htmlContent, taskAttachments);
+
+            log.info("📧 ✅ Email limpo enviado com sucesso para task ID: {} - TO: {}, CC: {}, Anexos: {}",
+                    task.getId(), mainRecipient,
+                    ccRecipients.isEmpty() ? "nenhum" : String.join(", ", ccRecipients),
+                    taskAttachments != null ? taskAttachments.size() : 0);
+        } catch (Exception e) {
+            log.error("📧 ❌ Erro ao enviar email limpo para task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Método que envia email diretamente com os destinatários especificados
+     */
+    private void sendEmailDirectly(String toEmail, List<String> ccEmails, String subject, String htmlContent,
+                                  List<TaskAttachment> taskAttachments) throws Exception {
+
+        log.info("📧 📤 Preparando para enviar email direto: TO={}, CC={}",
+                toEmail, ccEmails.isEmpty() ? "nenhum" : String.join(", ", ccEmails));
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            // Configurações básicas
+            helper.setFrom(emailProperties.getFrom());
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            // Adicionar CC apenas se existirem
+            if (ccEmails != null && !ccEmails.isEmpty()) {
+                helper.setCc(ccEmails.toArray(new String[0]));
+                log.debug("📧 📬 CC adicionados: {}", String.join(", ", ccEmails));
+            }
+
+            // Adicionar anexos se existirem (mesmo padrão do método original)
+            if (taskAttachments != null && !taskAttachments.isEmpty()) {
+                for (TaskAttachment attachment : taskAttachments) {
+                    try {
+                        // Criar InputStreamSource da mesma forma que o método original
+                        org.springframework.core.io.InputStreamSource inputStreamSource = new org.springframework.core.io.InputStreamSource() {
+                            @Override
+                            public java.io.InputStream getInputStream() throws java.io.IOException {
+                                return fileStorageStrategy.getFileStream(attachment.getFilePath());
+                            }
+                        };
+
+                        helper.addAttachment(attachment.getOriginalFileName(), inputStreamSource);
+                        log.debug("📎 Anexo adicionado: {}", attachment.getOriginalFileName());
+                    } catch (Exception e) {
+                        log.warn("📎 ⚠️ Erro ao adicionar anexo {}: {}", attachment.getOriginalFileName(), e.getMessage());
+                    }
+                }
+            }
+
+            // Enviar email
+            log.info("📧 CALLING mailSender.send() direto - TO: {}, CC: {}", toEmail,
+                    ccEmails.isEmpty() ? "nenhum" : String.join(", ", ccEmails));
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            log.error("📧 ❌ ERRO CRÍTICO ao enviar email direto: {}", e.getMessage(), e);
+            throw e;
         }
     }
 
