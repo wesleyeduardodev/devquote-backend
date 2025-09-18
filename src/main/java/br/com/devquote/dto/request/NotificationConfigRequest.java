@@ -23,8 +23,13 @@ public class NotificationConfigRequest {
     @NotNull(message = "Notification type is required")
     private NotificationType notificationType;
 
+    @Builder.Default
+    private Boolean useRequesterContact = false;
+
     @Email(message = "Invalid email format")
     private String primaryEmail;
+
+    private String primaryPhone;
 
     private List<String> copyEmails;
 

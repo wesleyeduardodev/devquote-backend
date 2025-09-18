@@ -17,7 +17,9 @@ public class NotificationConfigAdapter {
                 .id(entity.getId())
                 .configType(entity.getConfigType())
                 .notificationType(entity.getNotificationType())
+                .useRequesterContact(entity.getUseRequesterContact())
                 .primaryEmail(entity.getPrimaryEmail())
+                .primaryPhone(entity.getPrimaryPhone())
                 .copyEmails(entity.getCopyEmailsList())
                 .phoneNumbers(entity.getPhoneNumbersList())
                 .createdAt(entity.getCreatedAt())
@@ -33,7 +35,9 @@ public class NotificationConfigAdapter {
         NotificationConfig entity = NotificationConfig.builder()
                 .configType(dto.getConfigType())
                 .notificationType(dto.getNotificationType())
+                .useRequesterContact(dto.getUseRequesterContact())
                 .primaryEmail(dto.getPrimaryEmail())
+                .primaryPhone(dto.getPrimaryPhone())
                 .build();
 
         entity.setCopyEmailsList(dto.getCopyEmails());
@@ -49,7 +53,9 @@ public class NotificationConfigAdapter {
 
         entity.setConfigType(dto.getConfigType());
         entity.setNotificationType(dto.getNotificationType());
+        entity.setUseRequesterContact(dto.getUseRequesterContact());
         entity.setPrimaryEmail(dto.getPrimaryEmail());
+        entity.setPrimaryPhone(dto.getPrimaryPhone());
         entity.setCopyEmailsList(dto.getCopyEmails());
         entity.setPhoneNumbersList(dto.getPhoneNumbers());
     }

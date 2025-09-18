@@ -25,8 +25,15 @@ public class NotificationConfig extends BaseEntity {
     @Column(name = "notification_type", nullable = false)
     private NotificationType notificationType;
 
+    @Column(name = "use_requester_contact", nullable = false)
+    @Builder.Default
+    private Boolean useRequesterContact = false;
+
     @Column(name = "primary_email")
     private String primaryEmail;
+
+    @Column(name = "primary_phone")
+    private String primaryPhone;
 
     @Column(name = "copy_emails", columnDefinition = "TEXT")
     private String copyEmails;

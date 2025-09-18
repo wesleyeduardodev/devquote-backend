@@ -22,7 +22,11 @@ public class NotificationConfigResponse {
 
     private NotificationType notificationType;
 
+    private Boolean useRequesterContact;
+
     private String primaryEmail;
+
+    private String primaryPhone;
 
     private List<String> copyEmails;
 
