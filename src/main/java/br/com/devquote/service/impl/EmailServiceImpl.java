@@ -528,20 +528,30 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendEmailWithInMemoryAttachments(String to, String cc, String subject, String htmlContent, Map<String, byte[]> attachmentDataMap) {
-        log.info("📧 SENDWITHINDEMEMORYATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}", 
+        log.info("📧 SENDWITHINDEMEMORYATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}",
                 to, cc != null ? cc : "none", subject, attachmentDataMap != null ? attachmentDataMap.size() : 0);
-        
+
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             log.debug("📧 Setting email headers - From: {}, To: {}, Subject: {}", emailProperties.getFrom(), to, subject);
-            
+
             helper.setFrom(emailProperties.getFrom());
             helper.setTo(to);
 
             if (cc != null && !cc.trim().isEmpty()) {
-                helper.setCc(cc);
+                // Se contém vírgula, divide em array para múltiplos destinatários
+                if (cc.contains(",")) {
+                    String[] ccArray = cc.split(",");
+                    // Remove espaços em branco de cada email
+                    for (int i = 0; i < ccArray.length; i++) {
+                        ccArray[i] = ccArray[i].trim();
+                    }
+                    helper.setCc(ccArray);
+                } else {
+                    helper.setCc(cc.trim());
+                }
             }
 
             helper.setSubject(subject);
@@ -1589,72 +1599,56 @@ public class EmailServiceImpl implements EmailService {
     }
     
     private void sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(Delivery delivery, String subject, String htmlContent, String action, Map<String, byte[]> attachmentDataMap) {
-        String taskInfo = "Unknown";
-        if (delivery.getTask() != null) {
-            taskInfo = String.format("Task ID=%d, Code=%s",
-                    delivery.getTask().getId(),
-                    delivery.getTask().getCode());
-        }
+        NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ENTREGA, NotificationType.EMAIL);
 
-        log.debug("📧 Starting DELIVERY {} email notification process WITH IN-MEMORY ATTACHMENTS for: Delivery ID={}, Status={}, {}",
-                action.toUpperCase(), delivery.getId(), delivery.getStatus(), taskInfo);
-
-        String mainRecipient = null;
-        String ccRecipient = null;
-
-        // Definir destinatário principal (solicitante através da Task)
-        if (delivery.getTask() != null
-            && delivery.getTask().getRequester() != null
-            && delivery.getTask().getRequester().getEmail() != null
-            && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
-            mainRecipient = delivery.getTask().getRequester().getEmail();
-            String requesterName = delivery.getTask().getRequester().getName();
-            log.debug("📧 Main recipient (requester): {} <{}>",
-                    requesterName, mainRecipient);
-        } else {
-            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {}. Task chain: {}",
-                    delivery.getId(),
-                    delivery.getTask() != null ?
-                        (delivery.getTask().getRequester() != null ? "Requester has no email" : "No requester")
-                        : "No task");
-        }
-
-        // Definir destinatário em cópia (você)
-        if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
-            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
-                mainRecipient = emailProperties.getFrom();
-                ccRecipient = null;
-                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
-            } else {
-                ccRecipient = emailProperties.getFrom();
-                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
-            }
-        } else {
-            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
-        }
-
-        // Verificar se há destinatário principal
-        if (mainRecipient == null) {
-            log.error("📧 ❌ NO VALID RECIPIENTS found for delivery ID: {} ({} action). Email will NOT be sent!",
-                    delivery.getId(), action);
+        if (config == null) {
+            log.warn("No notification config found for NOTIFICACAO_ENTREGA + EMAIL. Delivery ID: {}", delivery.getId());
             return;
         }
 
-        // Enviar email único com CC e anexos em memória
-        try {
-            log.debug("📧 Sending DELIVERY {} notification WITH IN-MEMORY ATTACHMENTS - To: {}, CC: {}, Attachments: {}",
-                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none", 
-                    attachmentDataMap != null ? attachmentDataMap.size() : 0);
+        List<String> toEmails = new ArrayList<>();
+        List<String> ccEmails = new ArrayList<>();
 
-            sendEmailWithInMemoryAttachments(mainRecipient, ccRecipient, subject, htmlContent, attachmentDataMap);
+        // Determinar destinatário principal
+        if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
+            // Usar email do solicitante se disponível
+            if (delivery.getTask() != null && delivery.getTask().getRequester() != null
+                && delivery.getTask().getRequester().getEmail() != null
+                && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
+                toEmails.add(delivery.getTask().getRequester().getEmail());
+            }
+        } else {
+            // Usar email da configuração se disponível
+            if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
+                toEmails.add(config.getPrimaryEmail());
+            }
+        }
 
-            log.debug("📧 ✅ DELIVERY {} notification WITH IN-MEMORY ATTACHMENTS sent successfully for delivery ID: {} to: {} (cc: {})",
-                    action.toUpperCase(), delivery.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
-        } catch (Exception e) {
-            log.error("📧 ❌ FAILED to send delivery {} notification WITH IN-MEMORY ATTACHMENTS for delivery ID: {} to: {} (cc: {}) - Error: {}",
-                    action, delivery.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
-            throw e;
+        // Adicionar emails em cópia da configuração
+        if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
+            ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Validar se há pelo menos um destinatário
+        if (toEmails.isEmpty()) {
+            log.warn("No valid recipients found for delivery notification with attachments. Delivery ID: {}, Config ID: {}",
+                delivery.getId(), config.getId());
+            return;
+        }
+
+        log.debug("📧 Sending DELIVERY {} notification WITH IN-MEMORY ATTACHMENTS with config - To: {}, CC: {}",
+                action.toUpperCase(), toEmails, ccEmails.isEmpty() ? "none" : ccEmails);
+
+        // Enviar para cada destinatário principal com anexos
+        for (String toEmail : toEmails) {
+            try {
+                String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
+                sendEmailWithInMemoryAttachments(toEmail, ccRecipientsString, subject, htmlContent, attachmentDataMap);
+                log.debug("Delivery notification with attachments sent successfully for delivery ID: {} to {}", delivery.getId(), toEmail);
+            } catch (Exception e) {
+                log.error("Failed to send delivery notification with attachments for delivery ID: {} to {}: {}",
+                    delivery.getId(), toEmail, e.getMessage(), e);
+            }
         }
     }
     
