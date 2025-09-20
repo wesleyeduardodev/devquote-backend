@@ -24,6 +24,10 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
+  # Thymeleaf Configuration
+  thymeleaf:
+    cache: false
+
   # Email Configuration - Todas as variáveis são obrigatórias
   mail:
     host: ${MAIL_HOST}
