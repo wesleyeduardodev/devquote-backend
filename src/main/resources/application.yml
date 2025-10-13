@@ -131,8 +131,6 @@ management:
   endpoint:
     health:
       show-details: always
-    prometheus:
-      enabled: true
   metrics:
     export:
       prometheus:
@@ -140,9 +138,3 @@ management:
     tags:
       application: ${spring.application.name}
       environment: ${SPRING_PROFILES_ACTIVE:dev}
-  # Segurança HTTP Basic para Actuator (Grafana Cloud)
-  security:
-    enabled: true
-  user:
-    name: ${ACTUATOR_USERNAME:grafana}
-    password: ${ACTUATOR_PASSWORD:grafana123}

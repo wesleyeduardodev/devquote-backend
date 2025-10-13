@@ -41,9 +41,10 @@ public class SecurityConfig {
             "/api/public/**",
             "/.well-known/**",
             "/oauth2/**",
-            "/error",             // evita loop em erros
-            "/actuator/health"    // health check público
-            // /actuator/prometheus e /actuator/metrics agora exigem HTTP Basic Auth
+            "/error",              // evita loop em erros
+            "/actuator/health",    // health check público
+            "/actuator/prometheus", // métricas públicas para Grafana
+            "/actuator/metrics/**"  // métricas detalhadas
     };
 
     private final UserDetailsService userDetailsService;
