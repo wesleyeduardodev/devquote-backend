@@ -42,7 +42,9 @@ public class SecurityConfig {
             "/.well-known/**",
             "/oauth2/**",
             "/error",             // evita loop em erros
-            "/actuator/health"    // opcional
+            "/actuator/health",   // health check
+            "/actuator/prometheus", // métricas para Grafana
+            "/actuator/metrics/**"  // métricas detalhadas
     };
 
     private final UserDetailsService userDetailsService;
