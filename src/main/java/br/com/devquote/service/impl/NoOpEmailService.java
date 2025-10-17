@@ -105,14 +105,18 @@ public class NoOpEmailService implements EmailService {
     }
 
     @Override
-    public void sendDeliveryUpdatedNotification(Delivery delivery) {
-        log.debug("📧 [EMAIL DISABLED] Would send DELIVERY UPDATED notification for: Delivery ID={}, Status={}", 
+    public void sendDeliveryUpdatedNotification(Delivery delivery, List<String> additionalEmails) {
+        log.debug("📧 [EMAIL DISABLED] Would send DELIVERY UPDATED notification for: Delivery ID={}, Status={}",
                 delivery.getId(), delivery.getStatus());
-        if (delivery.getTask() != null && 
+        if (delivery.getTask() != null &&
             delivery.getTask().getRequester() != null) {
-            log.debug("📧 [EMAIL DISABLED] Would send to requester: {} <{}>", 
-                    delivery.getTask().getRequester().getName(), 
+            log.debug("📧 [EMAIL DISABLED] Would send to requester: {} <{}>",
+                    delivery.getTask().getRequester().getName(),
                     delivery.getTask().getRequester().getEmail());
+        }
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} additional email(s) in CC: {}",
+                    additionalEmails.size(), additionalEmails);
         }
     }
 
@@ -164,7 +168,7 @@ public class NoOpEmailService implements EmailService {
     }
 
     @Override
-    public void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap) {
+    public void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
         log.debug("📧 [EMAIL DISABLED] Would send DELIVERY UPDATED notification WITH IN-MEMORY ATTACHMENTS for: Delivery ID={}, Status={}",
                 delivery.getId(), delivery.getStatus());
         if (delivery.getTask() != null && delivery.getTask().getRequester() != null) {
@@ -176,6 +180,10 @@ public class NoOpEmailService implements EmailService {
             log.debug("📧 [EMAIL DISABLED] Would include {} in-memory attachments: {}",
                     attachmentDataMap.size(),
                     attachmentDataMap.keySet());
+        }
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} additional email(s) in CC: {}",
+                    additionalEmails.size(), additionalEmails);
         }
     }
     

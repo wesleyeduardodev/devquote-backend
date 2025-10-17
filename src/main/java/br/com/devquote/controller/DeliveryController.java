@@ -260,9 +260,15 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @PostMapping("/{id}/send-delivery-email")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<String> sendDeliveryEmail(@PathVariable Long id) {
+    public ResponseEntity<String> sendDeliveryEmail(
+            @PathVariable Long id,
+            @RequestBody(required = false) br.com.devquote.dto.request.SendFinancialEmailRequest request
+    ) {
         try {
-            deliveryService.sendDeliveryEmail(id);
+            java.util.List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
+                    ? request.getAdditionalEmails()
+                    : new java.util.ArrayList<>();
+            deliveryService.sendDeliveryEmail(id, additionalEmails);
             return ResponseEntity.ok("Email de entrega enviado com sucesso!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

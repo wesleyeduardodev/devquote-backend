@@ -22,13 +22,13 @@ public interface EmailService {
     
     void sendDeliveryCreatedNotification(Delivery delivery);
     
-    void sendDeliveryUpdatedNotification(Delivery delivery);
-    
+    void sendDeliveryUpdatedNotification(Delivery delivery, List<String> additionalEmails);
+
     void sendDeliveryDeletedNotification(Delivery delivery);
-    
+
     void sendDeliveryDeletedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap);
-    
-    void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap);
+
+    void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails);
 
     void sendFinancialNotificationAsync(Task task, List<String> additionalEmails);
 

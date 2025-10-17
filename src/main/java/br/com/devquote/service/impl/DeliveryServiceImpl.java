@@ -889,8 +889,8 @@ public class DeliveryServiceImpl implements DeliveryService {
     
     @Override
     @Transactional
-    public void sendDeliveryEmail(Long id) {
-        
+    public void sendDeliveryEmail(Long id, List<String> additionalEmails) {
+
         final Delivery delivery = deliveryRepository.findById(id)
                 .map(entity -> {
                     // Inicializar relacionamentos lazy antes do envio assíncrono
@@ -913,7 +913,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     return entity;
                 })
                 .orElseThrow(() -> new RuntimeException("Entrega não encontrada com ID: " + id));
-        
+
         // ESTRATÉGIA ROBUSTA: Tentar baixar anexos da entrega e dos itens, se conseguir incluir no email
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
         boolean hasAttachments = false;
@@ -964,10 +964,10 @@ public class DeliveryServiceImpl implements DeliveryService {
         try {
             if (!attachmentDataMap.isEmpty()) {
                 // Conseguiu baixar anexos - enviar email com anexos
-                emailService.sendDeliveryUpdatedNotificationWithAttachmentData(delivery, attachmentDataMap);
+                emailService.sendDeliveryUpdatedNotificationWithAttachmentData(delivery, attachmentDataMap, additionalEmails);
             } else {
                 // Não conseguiu baixar anexos ou não tinha anexos - enviar email simples
-                emailService.sendDeliveryUpdatedNotification(delivery);
+                emailService.sendDeliveryUpdatedNotification(delivery, additionalEmails);
             }
         } catch (Exception e) {
             log.error("FAILED to send delivery email for delivery ID: {} - Error: {}", id, e.getMessage());

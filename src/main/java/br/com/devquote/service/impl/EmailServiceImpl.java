@@ -820,7 +820,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendDeliveryUpdatedNotification(Delivery delivery) {
+    public void sendDeliveryUpdatedNotification(Delivery delivery, List<String> additionalEmails) {
         if (!emailProperties.isEnabled()) {
             log.debug("Email notifications are disabled");
             return;
@@ -830,7 +830,7 @@ public class EmailServiceImpl implements EmailService {
             String subject = String.format("DevQuote - Dados da Entrega: #%d", delivery.getId());
             String htmlContent = buildDeliveryUpdatedEmailContent(delivery);
 
-            sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent);
+            sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent, additionalEmails);
 
         } catch (Exception e) {
             log.error("Failed to send delivery updated notification for delivery ID: {}", delivery.getId(), e);
@@ -849,14 +849,14 @@ public class EmailServiceImpl implements EmailService {
             String subject = String.format("DevQuote - Entrega excluída: #%d", delivery.getId());
             String htmlContent = buildDeliveryDeletedEmailContent(delivery);
 
-            sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent);
+            sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent, new ArrayList<>());
 
         } catch (Exception e) {
             log.error("Failed to send delivery deleted notification for delivery ID: {}", delivery.getId(), e);
         }
     }
 
-    private void sendDeliveryEmailWithNotificationConfig(Delivery delivery, String subject, String htmlContent) {
+    private void sendDeliveryEmailWithNotificationConfig(Delivery delivery, String subject, String htmlContent, List<String> additionalEmails) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ENTREGA, NotificationType.EMAIL);
 
         if (config == null) {
@@ -885,6 +885,18 @@ public class EmailServiceImpl implements EmailService {
         // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Adicionar emails extras fornecidos pelo usuário
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            // Validar e adicionar apenas emails válidos
+            additionalEmails.stream()
+                    .filter(email -> email != null && !email.trim().isEmpty())
+                    .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
+                    .forEach(ccEmails::add);
+
+            log.info("Added {} additional email(s) to CC list for delivery notification. Delivery ID: {}",
+                    additionalEmails.size(), delivery.getId());
         }
 
         // Validar se há pelo menos um destinatário
@@ -1593,7 +1605,7 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = buildDeliveryDeletedEmailContent(delivery);
 
-            sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(delivery, subject, htmlContent, "deleted", attachmentDataMap);
+            sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(delivery, subject, htmlContent, "deleted", attachmentDataMap, new ArrayList<>());
 
         } catch (Exception e) {
             log.error("Failed to send delivery deleted notification with attachments for delivery ID: {}", delivery.getId(), e);
@@ -1602,7 +1614,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap) {
+    public void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
         if (delivery == null) {
             log.warn("Cannot send delivery updated notification with attachments: delivery is null");
             return;
@@ -1610,19 +1622,19 @@ public class EmailServiceImpl implements EmailService {
 
         try {
             String subject = String.format("📊 Dados da Entrega - %s",
-                    delivery.getTask() != null && delivery.getTask().getCode() != null ? 
+                    delivery.getTask() != null && delivery.getTask().getCode() != null ?
                             delivery.getTask().getCode() : "Código não disponível");
 
             String htmlContent = buildDeliveryUpdatedEmailContent(delivery);
 
-            sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(delivery, subject, htmlContent, "updated", attachmentDataMap);
+            sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(delivery, subject, htmlContent, "updated", attachmentDataMap, additionalEmails);
 
         } catch (Exception e) {
             log.error("Failed to send delivery updated notification with attachments for delivery ID: {}", delivery.getId(), e);
         }
     }
     
-    private void sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(Delivery delivery, String subject, String htmlContent, String action, Map<String, byte[]> attachmentDataMap) {
+    private void sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(Delivery delivery, String subject, String htmlContent, String action, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ENTREGA, NotificationType.EMAIL);
 
         if (config == null) {
@@ -1651,6 +1663,18 @@ public class EmailServiceImpl implements EmailService {
         // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Adicionar emails extras fornecidos pelo usuário
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            // Validar e adicionar apenas emails válidos
+            additionalEmails.stream()
+                    .filter(email -> email != null && !email.trim().isEmpty())
+                    .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
+                    .forEach(ccEmails::add);
+
+            log.info("Added {} additional email(s) to CC list for delivery notification with attachments. Delivery ID: {}",
+                    additionalEmails.size(), delivery.getId());
         }
 
         // Validar se há pelo menos um destinatário
