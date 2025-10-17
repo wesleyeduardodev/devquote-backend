@@ -332,17 +332,17 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     }
 
     @Override
-    public void sendBillingEmail(Long billingPeriodId) {
+    public void sendBillingEmail(Long billingPeriodId, List<String> additionalEmails) {
         log.debug("BILLING_PERIOD SEND_EMAIL id={}", billingPeriodId);
-        
+
         // Buscar o período de faturamento
         BillingPeriod billingPeriod = billingPeriodRepository.findById(billingPeriodId)
                 .orElseThrow(() -> new RuntimeException("BillingPeriod not found with id: " + billingPeriodId));
-        
+
         // ESTRATÉGIA ROBUSTA: Tentar baixar anexos, se conseguir incluir no email
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
         boolean hasAttachments = false;
-        
+
         try {
             List<br.com.devquote.entity.BillingPeriodAttachment> attachments = billingPeriodAttachmentService.getBillingPeriodAttachmentsEntities(billingPeriodId);
             if (attachments != null && !attachments.isEmpty()) {
@@ -351,7 +351,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
-                            
+
                             inputStream.transferTo(baos);
                             byte[] data = baos.toByteArray();
                             attachmentDataMap.put(attachment.getOriginalFileName(), data);
@@ -364,15 +364,15 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
         } catch (Exception e) {
             log.error("Error accessing billing period attachments from database: {}", e.getMessage());
         }
-        
+
         try {
             // Enviar email com informações do período de faturamento (com anexos se conseguiu baixar)
             if (!attachmentDataMap.isEmpty()) {
                 // Conseguiu baixar anexos - enviar email com anexos
-                emailService.sendBillingPeriodNotificationWithAttachmentData(billingPeriod, attachmentDataMap);
+                emailService.sendBillingPeriodNotificationWithAttachmentData(billingPeriod, attachmentDataMap, additionalEmails);
             } else {
                 // Não conseguiu baixar anexos ou não tinha anexos - enviar email simples
-                emailService.sendBillingPeriodNotificationAsync(billingPeriod);
+                emailService.sendBillingPeriodNotificationAsync(billingPeriod, additionalEmails);
             }
             
             // Marcar como email enviado

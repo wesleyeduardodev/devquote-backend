@@ -32,9 +32,9 @@ public interface EmailService {
 
     void sendFinancialNotificationAsync(Task task, List<String> additionalEmails);
 
-    void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod);
-    
-    void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap);
+    void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails);
+
+    void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails);
     
     void sendBillingPeriodDeletedNotification(BillingPeriod billingPeriod);
     

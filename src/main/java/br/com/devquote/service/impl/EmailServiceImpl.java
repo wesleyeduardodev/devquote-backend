@@ -1474,7 +1474,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async
-    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod) {
+    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails) {
         if (!emailProperties.isEnabled()) {
             log.warn("Email notifications are disabled. Skipping billing period notification for period ID: {}", billingPeriod.getId());
             return;
@@ -1529,7 +1529,7 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = templateEngine.process("email/billing-period-notification", context);
             String subject = "📊 Faturamento Mensal - " + String.format("%02d/%d", billingPeriod.getMonth(), billingPeriod.getYear());
 
-            sendBillingEmailWithNotificationConfig(billingPeriod, subject, htmlContent);
+            sendBillingEmailWithNotificationConfig(billingPeriod, subject, htmlContent, additionalEmails);
 
         } catch (Exception e) {
             log.error("Unexpected error while sending billing period notification for period ID: {}: {}",
@@ -1538,7 +1538,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    private void sendBillingEmailWithNotificationConfig(BillingPeriod billingPeriod, String subject, String htmlContent) {
+    private void sendBillingEmailWithNotificationConfig(BillingPeriod billingPeriod, String subject, String htmlContent, List<String> additionalEmails) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_FATURAMENTO, NotificationType.EMAIL);
 
         if (config == null) {
@@ -1565,6 +1565,18 @@ public class EmailServiceImpl implements EmailService {
         // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Adicionar emails extras fornecidos pelo usuário
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            // Validar e adicionar apenas emails válidos
+            additionalEmails.stream()
+                    .filter(email -> email != null && !email.trim().isEmpty())
+                    .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
+                    .forEach(ccEmails::add);
+
+            log.info("Added {} additional email(s) to CC list for billing period notification. BillingPeriod ID: {}",
+                    additionalEmails.size(), billingPeriod.getId());
         }
 
         // Validar se há pelo menos um destinatário
@@ -1702,7 +1714,7 @@ public class EmailServiceImpl implements EmailService {
     
     @Override
     @Async("emailTaskExecutor")
-    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap) {
+    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
         if (billingPeriod == null) {
             log.warn("Cannot send billing period notification with attachments: billingPeriod is null");
             return;
@@ -1758,7 +1770,7 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = templateEngine.process("email/billing-period-notification", context);
 
-            sendBillingEmailWithAttachmentsUsingNotificationConfig(billingPeriod, subject, htmlContent, attachmentDataMap);
+            sendBillingEmailWithAttachmentsUsingNotificationConfig(billingPeriod, subject, htmlContent, attachmentDataMap, additionalEmails);
 
         } catch (Exception e) {
             log.error("Failed to send billing period notification with attachments for period ID: {}",
@@ -1766,7 +1778,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    private void sendBillingEmailWithAttachmentsUsingNotificationConfig(BillingPeriod billingPeriod, String subject, String htmlContent, Map<String, byte[]> attachmentDataMap) {
+    private void sendBillingEmailWithAttachmentsUsingNotificationConfig(BillingPeriod billingPeriod, String subject, String htmlContent, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_FATURAMENTO, NotificationType.EMAIL);
 
         if (config == null) {
@@ -1792,6 +1804,18 @@ public class EmailServiceImpl implements EmailService {
         // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Adicionar emails extras fornecidos pelo usuário
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            // Validar e adicionar apenas emails válidos
+            additionalEmails.stream()
+                    .filter(email -> email != null && !email.trim().isEmpty())
+                    .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
+                    .forEach(ccEmails::add);
+
+            log.info("Added {} additional email(s) to CC list for billing period notification with attachments. BillingPeriod ID: {}",
+                    additionalEmails.size(), billingPeriod.getId());
         }
 
         // Validar se há pelo menos um destinatário
@@ -1831,7 +1855,7 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
 
-            sendBillingEmailWithNotificationConfig(billingPeriod, subject, htmlContent);
+            sendBillingEmailWithNotificationConfig(billingPeriod, subject, htmlContent, new ArrayList<>());
 
         } catch (Exception e) {
             log.error("Failed to send billing period deleted notification for period ID: {}",
@@ -1856,7 +1880,7 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
 
-            sendBillingEmailWithAttachmentsUsingNotificationConfig(billingPeriod, subject, htmlContent, attachmentDataMap);
+            sendBillingEmailWithAttachmentsUsingNotificationConfig(billingPeriod, subject, htmlContent, attachmentDataMap, new ArrayList<>());
 
         } catch (Exception e) {
             log.error("Failed to send billing period deleted notification with attachments for period ID: {}", 

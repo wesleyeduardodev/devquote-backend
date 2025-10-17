@@ -145,10 +145,14 @@ public class NoOpEmailService implements EmailService {
     }
 
     @Override
-    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod) {
-        log.debug("📧 [EMAIL DISABLED] Would send BILLING PERIOD notification for: Period ID={}, Month={}, Year={}", 
+    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails) {
+        log.debug("📧 [EMAIL DISABLED] Would send BILLING PERIOD notification for: Period ID={}, Month={}, Year={}",
                 billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear());
         log.debug("📧 [EMAIL DISABLED] Would send to finance department with billing period details");
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} additional email(s) in CC: {}",
+                    additionalEmails.size(), additionalEmails);
+        }
     }
     
     @Override
@@ -188,7 +192,7 @@ public class NoOpEmailService implements EmailService {
     }
     
     @Override
-    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap) {
+    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
         log.debug("📧 [EMAIL DISABLED] Would send BILLING PERIOD notification WITH IN-MEMORY ATTACHMENTS for: Period ID={}, Month={}, Year={}",
                 billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear());
         log.debug("📧 [EMAIL DISABLED] Would send to finance department with billing period details");
@@ -196,6 +200,10 @@ public class NoOpEmailService implements EmailService {
             log.debug("📧 [EMAIL DISABLED] Would include {} in-memory attachments: {}",
                     attachmentDataMap.size(),
                     attachmentDataMap.keySet());
+        }
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} additional email(s) in CC: {}",
+                    additionalEmails.size(), additionalEmails);
         }
     }
     

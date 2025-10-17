@@ -127,8 +127,13 @@ public class BillingPeriodController {
 
     @PostMapping("/{id}/send-billing-email")
     @PreAuthorize("hasAnyRole('ADMIN')")
-    public ResponseEntity<Void> sendBillingEmail(@PathVariable Long id) {
-        billingPeriodService.sendBillingEmail(id);
+    public ResponseEntity<Void> sendBillingEmail(
+            @PathVariable Long id,
+            @RequestBody(required = false) br.com.devquote.dto.request.SendFinancialEmailRequest request) {
+        java.util.List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
+                ? request.getAdditionalEmails()
+                : new java.util.ArrayList<>();
+        billingPeriodService.sendBillingEmail(id, additionalEmails);
         return ResponseEntity.ok().build();
     }
 }
