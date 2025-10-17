@@ -1046,7 +1046,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void sendFinancialEmail(Long taskId) {
+    public void sendFinancialEmail(Long taskId, List<String> additionalEmails) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
@@ -1054,7 +1054,7 @@ public class TaskServiceImpl implements TaskService {
         task.getRequester().getName();
 
         try {
-            emailService.sendFinancialNotificationAsync(task);
+            emailService.sendFinancialNotificationAsync(task, additionalEmails);
             // Marca como enviado
             task.setFinancialEmailSent(true);
             taskRepository.save(task);

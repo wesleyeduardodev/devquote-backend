@@ -1298,7 +1298,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendFinancialNotificationAsync(Task task) {
+    public void sendFinancialNotificationAsync(Task task, List<String> additionalEmails) {
         if (!emailProperties.isEnabled()) {
             log.warn("Email notifications are disabled. Skipping financial notification for task ID: {}", task.getId());
             return;
@@ -1355,7 +1355,7 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = templateEngine.process("email/financial-notification", context);
             String subject = "💰 Notificação Financeira - Tarefa " + task.getCode();
 
-            sendFinancialEmailWithNotificationConfig(task, subject, htmlContent);
+            sendFinancialEmailWithNotificationConfig(task, subject, htmlContent, additionalEmails);
 
         } catch (Exception e) {
             log.error("Unexpected error while sending financial notification for task ID: {}: {}",
@@ -1364,7 +1364,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    private void sendFinancialEmailWithNotificationConfig(Task task, String subject, String htmlContent) {
+    private void sendFinancialEmailWithNotificationConfig(Task task, String subject, String htmlContent, List<String> additionalEmails) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ORCAMENTO_TAREFA, NotificationType.EMAIL);
 
         if (config == null) {
@@ -1392,6 +1392,18 @@ public class EmailServiceImpl implements EmailService {
         // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Adicionar emails extras fornecidos pelo usuário
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            // Validar e adicionar apenas emails válidos
+            additionalEmails.stream()
+                    .filter(email -> email != null && !email.trim().isEmpty())
+                    .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
+                    .forEach(ccEmails::add);
+
+            log.info("Added {} additional email(s) to CC list for task ID: {}",
+                    additionalEmails.size(), task.getId());
         }
 
         // Validar se há pelo menos um destinatário

@@ -125,11 +125,15 @@ public class NoOpEmailService implements EmailService {
     }
 
     @Override
-    public void sendFinancialNotificationAsync(Task task) {
-        log.debug("📧 [EMAIL DISABLED] Would send FINANCIAL notification for: Task ID={}, Code={}, Title={}", 
+    public void sendFinancialNotificationAsync(Task task, List<String> additionalEmails) {
+        log.debug("📧 [EMAIL DISABLED] Would send FINANCIAL notification for: Task ID={}, Code={}, Title={}",
                 task.getId(), task.getCode(), task.getTitle());
-        log.debug("📧 [EMAIL DISABLED] Would send to finance department with task amount: {}", 
+        log.debug("📧 [EMAIL DISABLED] Would send to finance department with task amount: {}",
                 task.getAmount() != null ? task.getAmount() : "0.00");
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} additional email(s) in CC: {}",
+                    additionalEmails.size(), additionalEmails);
+        }
     }
 
     @Override

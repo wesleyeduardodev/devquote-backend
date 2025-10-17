@@ -29,9 +29,9 @@ public interface EmailService {
     void sendDeliveryDeletedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap);
     
     void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap);
-    
-    void sendFinancialNotificationAsync(Task task);
-    
+
+    void sendFinancialNotificationAsync(Task task, List<String> additionalEmails);
+
     void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod);
     
     void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap);

@@ -1,6 +1,7 @@
 package br.com.devquote.controller;
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.TaskControllerDoc;
+import br.com.devquote.dto.request.SendFinancialEmailRequest;
 import br.com.devquote.dto.request.TaskRequest;
 import br.com.devquote.dto.request.TaskWithSubTasksCreateRequest;
 import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequest;
@@ -25,9 +26,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
-import java.util.List;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -175,8 +176,14 @@ public class TaskController implements TaskControllerDoc {
 
     @PostMapping("/{id}/send-financial-email")
     @PreAuthorize("hasAnyRole('ADMIN')")
-    public ResponseEntity<Void> sendFinancialEmail(@PathVariable Long id) {
-        taskService.sendFinancialEmail(id);
+    public ResponseEntity<Void> sendFinancialEmail(
+            @PathVariable Long id,
+            @RequestBody(required = false) SendFinancialEmailRequest request
+    ) {
+        List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
+                ? request.getAdditionalEmails()
+                : new ArrayList<>();
+        taskService.sendFinancialEmail(id, additionalEmails);
         return ResponseEntity.ok().build();
     }
 
