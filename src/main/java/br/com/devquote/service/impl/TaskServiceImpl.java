@@ -1066,8 +1066,8 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public void sendTaskEmail(Long taskId) {
-        
+    public void sendTaskEmail(Long taskId, List<String> additionalEmails) {
+
         final Task task = taskRepository.findById(taskId)
                 .map(entity -> {
                     // Inicializar relacionamentos lazy antes do envio assíncrono
@@ -1086,10 +1086,10 @@ public class TaskServiceImpl implements TaskService {
                     return entity;
                 })
                 .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com ID: " + taskId));
-        
+
         // Enviar email de notificação
-        emailService.sendTaskUpdatedNotification(task);
-        
+        emailService.sendTaskUpdatedNotification(task, additionalEmails);
+
         // Marcar email como enviado
         task.setTaskEmailSent(true);
         taskRepository.save(task);

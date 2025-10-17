@@ -70,5 +70,5 @@ public interface TaskService {
 
     void sendFinancialEmail(Long taskId, List<String> additionalEmails);
 
-    void sendTaskEmail(Long taskId);
+    void sendTaskEmail(Long taskId, List<String> additionalEmails);
 }

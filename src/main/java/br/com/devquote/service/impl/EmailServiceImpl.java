@@ -87,7 +87,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendTaskUpdatedNotification(Task task) {
+    public void sendTaskUpdatedNotification(Task task, List<String> additionalEmails) {
         if (!emailProperties.isEnabled()) {
             log.debug("Email notifications are disabled");
             return;
@@ -101,7 +101,7 @@ public class EmailServiceImpl implements EmailService {
                 task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskUpdatedEmailContent(task);
 
-            sendTaskDataEmailWithNotificationConfig(task, subject, htmlContent);
+            sendTaskDataEmailWithNotificationConfig(task, subject, htmlContent, additionalEmails);
 
         } catch (Exception e) {
             log.error("Failed to send task updated notification for task ID: {}", task.getId(), e);
@@ -123,7 +123,7 @@ public class EmailServiceImpl implements EmailService {
 
             String htmlContent = buildTaskDeletedEmailContent(task);
 
-            sendTaskDataEmailWithNotificationConfig(task, subject, htmlContent);
+            sendTaskDataEmailWithNotificationConfig(task, subject, htmlContent, new ArrayList<>());
 
         } catch (Exception e) {
             log.error("Failed to send task deleted notification for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
@@ -215,7 +215,7 @@ public class EmailServiceImpl implements EmailService {
     /**
      * Envio de email de dados da tarefa usando NotificationConfig
      */
-    private void sendTaskDataEmailWithNotificationConfig(Task task, String subject, String htmlContent) {
+    private void sendTaskDataEmailWithNotificationConfig(Task task, String subject, String htmlContent, List<String> additionalEmails) {
         // Buscar configuração de notificação para DADOS DA TAREFA + EMAIL
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_DADOS_TAREFA, NotificationType.EMAIL);
 
@@ -244,6 +244,18 @@ public class EmailServiceImpl implements EmailService {
         // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
+        }
+
+        // Adicionar emails extras fornecidos pelo usuário
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            // Validar e adicionar apenas emails válidos
+            additionalEmails.stream()
+                    .filter(email -> email != null && !email.trim().isEmpty())
+                    .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
+                    .forEach(ccEmails::add);
+
+            log.info("Added {} additional email(s) to CC list for task data notification. Task ID: {}",
+                    additionalEmails.size(), task.getId());
         }
 
         // Validar se há pelo menos um destinatário

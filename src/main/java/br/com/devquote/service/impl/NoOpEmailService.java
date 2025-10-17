@@ -39,12 +39,16 @@ public class NoOpEmailService implements EmailService {
     }
 
     @Override
-    public void sendTaskUpdatedNotification(Task task) {
-        log.debug("📧 [EMAIL DISABLED] Would send TASK UPDATED notification for: Task ID={}, Code={}, Title={}", 
+    public void sendTaskUpdatedNotification(Task task, List<String> additionalEmails) {
+        log.debug("📧 [EMAIL DISABLED] Would send TASK UPDATED notification for: Task ID={}, Code={}, Title={}",
                 task.getId(), task.getCode(), task.getTitle());
         if (task.getRequester() != null) {
-            log.debug("📧 [EMAIL DISABLED] Would send to requester: {} <{}>", 
+            log.debug("📧 [EMAIL DISABLED] Would send to requester: {} <{}>",
                     task.getRequester().getName(), task.getRequester().getEmail());
+        }
+        if (additionalEmails != null && !additionalEmails.isEmpty()) {
+            log.debug("📧 [EMAIL DISABLED] Would include {} additional email(s) in CC: {}",
+                    additionalEmails.size(), additionalEmails);
         }
     }
 

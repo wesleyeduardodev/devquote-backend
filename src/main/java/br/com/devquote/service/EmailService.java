@@ -11,9 +11,9 @@ import java.util.Map;
 public interface EmailService {
     
     void sendTaskCreatedNotification(Task task);
-    
-    void sendTaskUpdatedNotification(Task task);
-    
+
+    void sendTaskUpdatedNotification(Task task, List<String> additionalEmails);
+
     void sendTaskDeletedNotification(Task task);
     
     void sendTaskDeletedNotificationWithAttachments(Task task, List<TaskAttachment> attachments);

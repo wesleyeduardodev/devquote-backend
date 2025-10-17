@@ -286,13 +286,14 @@ public class TaskController implements TaskControllerDoc {
 
     @PostMapping("/{id}/send-task-email")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<String> sendTaskEmail(@PathVariable Long id) {
-        try {
-            taskService.sendTaskEmail(id);
-            return ResponseEntity.ok("Email de tarefa enviado com sucesso!");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Falha ao enviar email: " + e.getMessage());
-        }
+    public ResponseEntity<Void> sendTaskEmail(
+            @PathVariable Long id,
+            @RequestBody(required = false) SendFinancialEmailRequest request
+    ) {
+        List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
+                ? request.getAdditionalEmails()
+                : new ArrayList<>();
+        taskService.sendTaskEmail(id, additionalEmails);
+        return ResponseEntity.ok().build();
     }
 }
