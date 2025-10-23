@@ -145,6 +145,8 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
         }
         
         // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
+        // DESABILITADO: Não enviar mais email na exclusão de período de faturamento
+        /*
         try {
             if (attachmentDataMap.isEmpty() && hasAttachments) {
                 // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
@@ -160,6 +162,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             log.error("FAILED to send deletion email for billing period ID: {} - Error: {}", id, e.getMessage());
             // Não impede a exclusão do período
         }
+        */
         
         // STEP 3/3 - DELETAR PERÍODO E RELACIONAMENTOS (sempre acontece, mesmo se email falhou)
         try {

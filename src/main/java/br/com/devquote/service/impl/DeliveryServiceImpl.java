@@ -240,6 +240,8 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
         
         // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
+        // DESABILITADO: Não enviar mais email na exclusão de entrega
+        /*
         try {
             if (attachmentDataMap.isEmpty() && hasAttachments) {
                 // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
@@ -255,6 +257,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             log.error("FAILED to send deletion email for delivery ID: {} - Error: {}", id, e.getMessage());
             // Não impede a exclusão da entrega
         }
+        */
         
         // STEP 3/3 - DELETAR ENTREGA E ANEXOS (sempre acontece, mesmo se email falhou)
         try {
@@ -288,6 +291,8 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
         
         // Enviar notificação por email para cada entrega
+        // DESABILITADO: Não enviar mais email na exclusão de entrega
+        /*
         for (Delivery delivery : deliveriesToDelete) {
             try {
                 // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
@@ -313,12 +318,13 @@ public class DeliveryServiceImpl implements DeliveryService {
                         return d;
                     })
                     .orElse(delivery);
-                    
+
                 emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
             } catch (Exception e) {
                 log.error("Failed to send email notification for delivery deletion ID: {}", delivery.getId(), e);
             }
         }
+        */
         
         // Deletar todas as entregas
         deliveryRepository.deleteAllById(ids);
@@ -354,6 +360,8 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
 
         // Enviar notificação por email para a delivery antes da exclusão
+        // DESABILITADO: Não enviar mais email na exclusão de entrega
+        /*
         {
             try {
                 log.debug("Sending deletion notification for delivery ID: {}", delivery.getId());
@@ -388,6 +396,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 log.error("Failed to send email notification for delivery deletion ID: {}", delivery.getId(), e);
             }
         }
+        */
 
         // Deletar todas as deliveries da task
         deliveryRepository.deleteByTaskId(taskId);

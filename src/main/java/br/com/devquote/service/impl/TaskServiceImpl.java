@@ -233,6 +233,8 @@ public class TaskServiceImpl implements TaskService {
         }
 
         // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
+        // DESABILITADO: Não enviar mais email na exclusão de tarefa
+        /*
         try {
             if (attachmentDataMap.isEmpty() && hasAttachments) {
                 // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
@@ -248,6 +250,7 @@ public class TaskServiceImpl implements TaskService {
             log.error("FAILED to send deletion email for task ID: {} - Error: {}", id, e.getMessage());
             // Não impede a exclusão da tarefa
         }
+        */
 
         // STEP 3/3 - DELETAR TAREFA E ANEXOS (sempre acontece, mesmo se email falhou)
         try {
@@ -401,6 +404,8 @@ public class TaskServiceImpl implements TaskService {
         }
 
         // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
+        // DESABILITADO: Não enviar mais email na exclusão de tarefa
+        /*
         try {
             if (attachmentDataMap.isEmpty() && hasAttachments) {
                 // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
@@ -416,6 +421,7 @@ public class TaskServiceImpl implements TaskService {
             log.error("FAILED to send deletion email for task ID: {} - Error: {}", taskId, e.getMessage());
             // Não impede a exclusão da tarefa
         }
+        */
 
         // STEP 3/3 - DELETAR TAREFA E ANEXOS (sempre acontece, mesmo se email falhou)
         try {
