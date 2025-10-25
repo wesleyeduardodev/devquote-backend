@@ -32,6 +32,8 @@ public class DeliveryResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
+    private String notes;
+
     // Lista de itens da entrega
     private java.util.List<DeliveryItemResponse> items;
 }

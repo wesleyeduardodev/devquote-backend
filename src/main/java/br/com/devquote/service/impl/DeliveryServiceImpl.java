@@ -85,6 +85,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         Delivery entity = Delivery.builder()
                 .task(task)
                 .status(dto.getStatus() != null ? br.com.devquote.enums.DeliveryStatus.fromString(dto.getStatus()) : br.com.devquote.enums.DeliveryStatus.PENDING)
+                .notes(dto.getNotes())
                 .build();
         
         // Salvar delivery primeiro para ter ID gerado
@@ -133,6 +134,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (dto.getStatus() != null) {
             entity.setStatus(br.com.devquote.enums.DeliveryStatus.fromString(dto.getStatus()));
         }
+        entity.setNotes(dto.getNotes());
         
         // Limpar itens existentes
         entity.getItems().clear();

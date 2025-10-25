@@ -228,6 +228,12 @@
                         <div class="info-label">Data de Criação:</div>
                         <div class="info-value" th:text="${createdAt}">01/01/2024 10:00</div>
                     </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(notes)}">
+                        <div class="info-label">Observações Gerais:</div>
+                        <div class="info-value">
+                            <div class="notes-value" th:text="${notes}">Observações gerais da entrega</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

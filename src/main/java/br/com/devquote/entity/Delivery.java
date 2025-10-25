@@ -41,6 +41,9 @@ public class Delivery {
     @Builder.Default
     private Boolean deliveryEmailSent = false;
 
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

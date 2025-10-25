@@ -33,7 +33,8 @@ public final class DeliveryAdapter {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .deliveryEmailSent(entity.getDeliveryEmailSent())
-                .items(entity.getItems() != null ? 
+                .notes(entity.getNotes())
+                .items(entity.getItems() != null ?
                         DeliveryItemAdapter.toResponseDTOList(entity.getItems()) : null)
                 .build();
     }
@@ -51,6 +52,7 @@ public final class DeliveryAdapter {
         Delivery delivery = Delivery.builder()
                 .task(task)
                 .status(dto.getStatus() != null ? DeliveryStatus.fromString(dto.getStatus()) : DeliveryStatus.PENDING)
+                .notes(dto.getNotes())
                 .build();
 
         // Adicionar itens se fornecidos
@@ -68,10 +70,12 @@ public final class DeliveryAdapter {
         if (dto == null || entity == null) return;
 
         if (task != null) entity.setTask(task);
-        
+
         if (dto.getStatus() != null) {
             entity.setStatus(DeliveryStatus.fromString(dto.getStatus()));
         }
+
+        entity.setNotes(dto.getNotes());
 
         // Atualizar itens será gerenciado separadamente no service
         // pois envolve lógica mais complexa de CRUD dos DeliveryItems
