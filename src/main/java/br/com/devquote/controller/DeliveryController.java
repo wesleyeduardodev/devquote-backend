@@ -1,6 +1,7 @@
 package br.com.devquote.controller;
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.DeliveryControllerDoc;
+import br.com.devquote.dto.request.DeliveryNotesRequest;
 import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.dto.response.DeliveryGroupResponse;
@@ -116,6 +117,14 @@ public class DeliveryController implements DeliveryControllerDoc {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<DeliveryResponse> update(@PathVariable Long id, @RequestBody @Valid DeliveryRequest dto) {
         return ResponseEntity.ok(deliveryService.update(id, dto));
+    }
+
+    @PatchMapping("/{id}/notes")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<DeliveryResponse> updateNotes(
+            @PathVariable Long id,
+            @RequestBody @Valid DeliveryNotesRequest request) {
+        return ResponseEntity.ok(deliveryService.updateNotes(id, request.getNotes()));
     }
 
     @Override

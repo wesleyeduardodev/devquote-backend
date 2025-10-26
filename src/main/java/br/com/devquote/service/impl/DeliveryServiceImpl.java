@@ -1013,4 +1013,19 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
         return null;
     }
+
+    @Override
+    @Transactional
+    public DeliveryResponse updateNotes(Long id, String notes) {
+        Delivery entity = deliveryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Delivery not found with ID: " + id));
+
+        // Atualizar apenas o campo notes
+        entity.setNotes(notes);
+
+        // Salvar apenas a entrega, sem mexer nos items
+        entity = deliveryRepository.save(entity);
+
+        return DeliveryAdapter.toResponseDTO(entity);
+    }
 }
