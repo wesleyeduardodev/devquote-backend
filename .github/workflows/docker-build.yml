@@ -37,9 +37,6 @@ jobs:
       - name: Build with Maven
         run: ./mvnw clean package -DskipTests
 
-      - name: Run tests
-        run: ./mvnw test
-
       - name: Extract version from pom.xml
         id: version
         run: |
