@@ -21,7 +21,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("DevQuote API")
                         .description("Sistema de orçamentos automatizados.\n\n" +
-                                "📅 Data da subida: 27/10/2025 v3\n" +
+                                "📅 Data da subida: 27/10/2025 v4\n" +
                                 "🔖 Versão: 1.0.2\n" +
                                 "👨‍💻 Autor: Wesley Eduardo\n")
                         .version("1.0.0")
