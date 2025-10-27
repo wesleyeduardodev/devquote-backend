@@ -53,7 +53,7 @@ spring:
   cache:
     type: redis
     redis:
-      time-to-live: 900000 # 15 minutos default (em ms)
+      time-to-live: 600000 # 10 minutos default (em ms)
       cache-null-values: false
   redis:
     host: ${REDIS_HOST:localhost}
