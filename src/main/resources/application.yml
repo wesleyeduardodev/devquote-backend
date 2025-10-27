@@ -49,6 +49,23 @@ spring:
       max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:10MB}
       max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:10MB}
 
+  # Redis Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 900000 # 15 minutos default (em ms)
+      cache-null-values: false
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
   # OAuth2 Security (issuer pode ser sobrescrito por ENV)
   security:
     oauth2:

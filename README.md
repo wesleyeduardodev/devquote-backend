@@ -139,6 +139,52 @@ docker run -p 8080:8080 devquote-backend
 
 ---
 
+## 🗄️ Redis Cache
+
+### Criar Container Redis (se necessário)
+
+```bash
+docker run -d \
+  --name devquote-redis \
+  -p 6379:6379 \
+  -v devquote_redis_data:/data \
+  redis:7-alpine
+
+# Verificar se está rodando
+docker ps | grep devquote-redis
+```
+
+### Comandos Básicos
+
+```bash
+# Conectar no Redis
+docker exec -it devquote-redis redis-cli
+
+# Listar todas as chaves
+KEYS *
+
+# Ver conteúdo de uma chave
+GET "projects::1"
+
+# Ver tempo de expiração (segundos)
+TTL "projects::1"
+
+# Ver logs do Redis
+docker logs -f devquote-redis
+
+# Ver informações do Redis
+docker exec -it devquote-redis redis-cli INFO
+
+# Monitorar comandos em tempo real
+docker exec -it devquote-redis redis-cli MONITOR
+```
+
+**Cache configurado:**
+- TTL: 10 minutos
+- Método: `findById()` em `ProjectServiceImpl`
+
+---
+
 ## 📈 Monitoramento
 
 ### Health Check

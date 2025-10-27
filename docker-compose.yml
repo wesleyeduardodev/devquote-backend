@@ -19,6 +19,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: devquote-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - devquote_redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   devquote-backend:
     build:
       context: .
@@ -27,6 +40,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -34,6 +49,9 @@ services:
       SPRING_DATASOURCE_USERNAME: "postgres"
       SPRING_DATASOURCE_PASSWORD: "root"
       SERVER_PORT: "8080"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
 
 volumes:
   devquote_pgdata:
+  devquote_redis_data:

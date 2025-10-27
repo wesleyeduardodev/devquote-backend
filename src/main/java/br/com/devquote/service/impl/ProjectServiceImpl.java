@@ -7,12 +7,15 @@ import br.com.devquote.repository.ProjectRepository;
 import br.com.devquote.service.ProjectService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -28,10 +31,14 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Cacheable(value = "projects", key = "#id")
     public ProjectResponse findById(Long id) {
+        log.warn("🔍 REDIS CACHE MISS - Buscando projeto ID {} do BANCO", id);
         Project entity = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
-        return ProjectAdapter.toResponseDTO(entity);
+        ProjectResponse response = ProjectAdapter.toResponseDTO(entity);
+        log.warn("🔍 REDIS - Salvando projeto ID {} no cache", id);
+        return response;
     }
 
     @Override
