@@ -8,8 +8,10 @@ import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequest;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
+import br.com.devquote.enums.FlowType;
 import br.com.devquote.service.TaskService;
 import br.com.devquote.service.TaskAttachmentService;
+import br.com.devquote.utils.FlowTypeUtils;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +61,7 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
+            @RequestParam(required = false) List<String> flowTypes,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -69,8 +72,10 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
+        List<FlowType> flowTypeEnums = FlowTypeUtils.convertToFlowTypeList(flowTypes);
+
         Page<TaskResponse> pageResult = taskService.findAllPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnums, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
@@ -90,6 +95,7 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
+            @RequestParam(required = false) List<String> flowTypes,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -100,8 +106,10 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
+        List<FlowType> flowTypeEnums = FlowTypeUtils.convertToFlowTypeList(flowTypes);
+
         Page<TaskResponse> pageResult = taskService.findUnlinkedBillingByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnums, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
@@ -121,6 +129,7 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
+            @RequestParam(required = false) List<String> flowTypes,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -131,8 +140,10 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
+        List<FlowType> flowTypeEnums = FlowTypeUtils.convertToFlowTypeList(flowTypes);
+
         Page<TaskResponse> pageResult = taskService.findUnlinkedDeliveryByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnums, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
@@ -199,21 +210,17 @@ public class TaskController implements TaskControllerDoc {
     public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasksAndFiles(
             @RequestPart("task") @Valid TaskWithSubTasksCreateRequest dto,
             @RequestParam(value = "files", required = false) List<MultipartFile> files) {
-        
-        // Criar a tarefa primeiro
+
         TaskWithSubTasksResponse createdTask = taskService.createWithSubTasks(dto);
-        
-        // Se há arquivos, fazer upload após criar a tarefa
+
         if (files != null && !files.isEmpty() && createdTask.getId() != null) {
             try {
                 taskAttachmentService.uploadFiles(createdTask.getId(), files);
             } catch (Exception e) {
-                // Log do erro, mas não falha a criação da tarefa
-                // A tarefa foi criada com sucesso, apenas o upload falhou
                 System.err.println("Erro ao fazer upload dos arquivos para tarefa " + createdTask.getId() + ": " + e.getMessage());
             }
         }
-        
+
         return new ResponseEntity<>(createdTask, HttpStatus.CREATED);
     }
 
@@ -228,7 +235,6 @@ public class TaskController implements TaskControllerDoc {
     @DeleteMapping("/full/{taskId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId) {
-        // O método deleteTaskWithSubTasks já cuida da exclusão dos anexos automaticamente
         taskService.deleteTaskWithSubTasks(taskId);
         return ResponseEntity.noContent().build();
     }

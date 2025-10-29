@@ -4,6 +4,7 @@ import br.com.devquote.dto.request.TaskWithSubTasksCreateRequest;
 import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequest;
 import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
+import br.com.devquote.enums.FlowType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.io.IOException;
@@ -38,6 +39,7 @@ public interface TaskService {
                                         String link,
                                         String createdAt,
                                         String updatedAt,
+                                        List<FlowType> flowTypes,
                                         Pageable pageable);
 
     Page<TaskResponse> findUnlinkedBillingByOptionalFieldsPaginated(Long id,
@@ -49,6 +51,7 @@ public interface TaskService {
                                                                     String link,
                                                                     String createdAt,
                                                                     String updatedAt,
+                                                                    List<FlowType> flowTypes,
                                                                     Pageable pageable);
 
     Page<TaskResponse> findUnlinkedDeliveryByOptionalFieldsPaginated(Long id,
@@ -60,6 +63,7 @@ public interface TaskService {
                                                                      String link,
                                                                      String createdAt,
                                                                      String updatedAt,
+                                                                     List<FlowType> flowTypes,
                                                                      Pageable pageable);
     
     byte[] exportTasksToExcel() throws IOException;

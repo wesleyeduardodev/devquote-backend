@@ -2,6 +2,7 @@ package br.com.devquote.service.impl;
 import br.com.devquote.adapter.BillingPeriodAdapter;
 import br.com.devquote.adapter.SubTaskAdapter;
 import br.com.devquote.adapter.TaskAdapter;
+import br.com.devquote.enums.FlowType;
 import br.com.devquote.error.BusinessException;
 import br.com.devquote.error.ResourceNotFoundException;
 import br.com.devquote.configuration.BillingProperties;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -110,12 +112,22 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
         }
 
-        log.debug("TASK CREATE requesterId={} title={} user={}",
-            dto.getRequesterId(), dto.getTitle(), currentUser.getUsername());
+        log.debug("TASK CREATE requesterId={} title={} user={} flowType={}",
+            dto.getRequesterId(), dto.getTitle(), currentUser.getUsername(), dto.getFlowType());
 
-        // Verificar se o código já existe ANTES de tentar salvar
-        if (taskRepository.existsByCode(dto.getCode())) {
-            throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
+        FlowType flowType = FlowType.fromString(dto.getFlowType());
+
+        if (flowType == FlowType.OPERACIONAL) {
+            String generatedCode = generateRandomCode();
+            dto.setCode(generatedCode);
+            log.debug("Generated code for OPERACIONAL task: {}", generatedCode);
+        } else {
+            if (dto.getCode() == null || dto.getCode().trim().isEmpty()) {
+                throw new BusinessException("Código é obrigatório para tarefas de desenvolvimento", "CODE_REQUIRED");
+            }
+            if (taskRepository.existsByCode(dto.getCode())) {
+                throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
+            }
         }
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
@@ -444,11 +456,12 @@ public class TaskServiceImpl implements TaskService {
                                                String link,
                                                String createdAt,
                                                String updatedAt,
+                                               List<FlowType> flowTypes,
                                                Pageable pageable) {
 
         // Todos os usuários podem ver todas as tarefas
         Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypes, pageable
         );
         return buildTaskResponsePage(page, pageable);
     }
@@ -463,10 +476,11 @@ public class TaskServiceImpl implements TaskService {
                                                                            String link,
                                                                            String createdAt,
                                                                            String updatedAt,
+                                                                           List<FlowType> flowTypes,
                                                                            Pageable pageable) {
 
         Page<Task> page = taskRepository.findUnlinkedBillingByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypes, pageable
         );
         return buildTaskResponsePage(page, pageable);
     }
@@ -481,10 +495,11 @@ public class TaskServiceImpl implements TaskService {
                                                                             String link,
                                                                             String createdAt,
                                                                             String updatedAt,
+                                                                            List<FlowType> flowTypes,
                                                                             Pageable pageable) {
 
         Page<Task> page = taskRepository.findUnlinkedDeliveryByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypes, pageable
         );
         return buildTaskResponsePage(page, pageable);
     }
@@ -1099,6 +1114,25 @@ public class TaskServiceImpl implements TaskService {
         // Marcar email como enviado
         task.setTaskEmailSent(true);
         taskRepository.save(task);
+    }
+
+    private String generateRandomCode() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random random = new Random();
+        StringBuilder code = new StringBuilder(6);
+
+        for (int i = 0; i < 6; i++) {
+            code.append(chars.charAt(random.nextInt(chars.length())));
+        }
+
+        String generatedCode = code.toString();
+
+        if (taskRepository.existsByCode(generatedCode)) {
+            log.debug("Generated code {} already exists, generating new one", generatedCode);
+            return generateRandomCode();
+        }
+
+        return generatedCode;
     }
 
     /**

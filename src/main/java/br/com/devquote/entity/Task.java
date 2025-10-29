@@ -1,4 +1,5 @@
 package br.com.devquote.entity;
+import br.com.devquote.enums.FlowType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,7 +50,11 @@ public class Task {
     private BigDecimal amount;
 
     @Column(name = "task_type", length = 50)
-    private String taskType; // BUG, ENHANCEMENT, NEW_FEATURE
+    private String taskType;
+
+    @Column(name = "flow_type", nullable = false, length = 30)
+    @Enumerated(EnumType.STRING)
+    private FlowType flowType;
 
     @Column(name = "server_origin", length = 100)
     private String serverOrigin;

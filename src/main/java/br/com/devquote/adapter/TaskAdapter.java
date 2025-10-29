@@ -3,6 +3,7 @@ import br.com.devquote.dto.request.TaskRequest;
 import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.entity.Requester;
 import br.com.devquote.entity.Task;
+import br.com.devquote.enums.FlowType;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -20,6 +21,7 @@ public class TaskAdapter {
                 .title(entity.getTitle())
                 .description(entity.getDescription())
                 .code(entity.getCode())
+                .flowType(entity.getFlowType().name())
                 .link(entity.getLink())
                 .meetingLink(entity.getMeetingLink())
                 .hasSubTasks(entity.getHasSubTasks())
@@ -49,6 +51,7 @@ public class TaskAdapter {
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .code(dto.getCode())
+                .flowType(FlowType.fromString(dto.getFlowType()))
                 .link(dto.getLink())
                 .meetingLink(dto.getMeetingLink())
                 .hasSubTasks(dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false)
@@ -72,6 +75,7 @@ public class TaskAdapter {
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
         entity.setCode(dto.getCode());
+        entity.setFlowType(FlowType.fromString(dto.getFlowType()));
         entity.setLink(dto.getLink());
         entity.setMeetingLink(dto.getMeetingLink());
         entity.setHasSubTasks(dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false);

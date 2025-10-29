@@ -21,7 +21,9 @@ public class TaskRequest {
 
     private String description;
 
-    @NotBlank(message = "Code is required")
+    @NotBlank(message = "Flow type is required")
+    private String flowType;
+
     @Size(max = 100, message = "Code must be at most 100 characters")
     private String code;
 
