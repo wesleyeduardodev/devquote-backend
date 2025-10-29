@@ -341,7 +341,10 @@ public class TaskServiceImpl implements TaskService {
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
 
-        // Valida se pode alterar a flag hasSubTasks
+        if (!dto.getCode().equals(task.getCode()) && taskRepository.existsByCode(dto.getCode())) {
+            throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
+        }
+
         Boolean newHasSubTasks = dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false;
         validateCanRemoveSubTasksFlag(task, newHasSubTasks);
 
