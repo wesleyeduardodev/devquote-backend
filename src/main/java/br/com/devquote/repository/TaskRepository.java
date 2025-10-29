@@ -30,7 +30,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:link IS NULL OR :link = '' OR LOWER(t.link) LIKE LOWER(CONCAT('%', :link, '%')))
               AND (:createdAt IS NULL OR :createdAt = '' OR CAST(t.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
               AND (:updatedAt IS NULL OR :updatedAt = '' OR CAST(t.updatedAt AS string) LIKE CONCAT('%', :updatedAt, '%'))
-              AND (:flowTypes IS NULL OR SIZE(:flowTypes) = 0 OR t.flowType IN :flowTypes)
+              AND (:flowTypes IS NULL OR t.flowType IN :flowTypes)
             """)
     Page<Task> findByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -60,7 +60,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:link IS NULL OR :link = '' OR LOWER(t.link) LIKE LOWER(CONCAT('%', :link, '%')))
               AND (:createdAt IS NULL OR :createdAt = '' OR CAST(t.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
               AND (:updatedAt IS NULL OR :updatedAt = '' OR CAST(t.updatedAt AS string) LIKE CONCAT('%', :updatedAt, '%'))
-              AND (:flowTypes IS NULL OR SIZE(:flowTypes) = 0 OR t.flowType IN :flowTypes)
+              AND (:flowTypes IS NULL OR t.flowType IN :flowTypes)
             """)
     Page<Task> findUnlinkedBillingByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -90,7 +90,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:link IS NULL OR :link = '' OR LOWER(t.link) LIKE LOWER(CONCAT('%', :link, '%')))
               AND (:createdAt IS NULL OR :createdAt = '' OR CAST(t.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
               AND (:updatedAt IS NULL OR :updatedAt = '' OR CAST(t.updatedAt AS string) LIKE CONCAT('%', :updatedAt, '%'))
-              AND (:flowTypes IS NULL OR SIZE(:flowTypes) = 0 OR t.flowType IN :flowTypes)
+              AND (:flowTypes IS NULL OR t.flowType IN :flowTypes)
             """)
     Page<Task> findUnlinkedDeliveryByOptionalFieldsPaginated(
             @Param("id") Long id,
