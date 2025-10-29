@@ -19,8 +19,10 @@ public class TaskWithSubTasksUpdateRequest {
 
     private String description;
 
+    @NotBlank(message = "Flow type is required")
+    private String flowType;
 
-    @NotBlank(message = "Code is required")
+    @Size(max = 100, message = "Code must be at most 100 characters")
     private String code;
 
     private String link;

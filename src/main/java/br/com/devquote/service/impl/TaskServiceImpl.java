@@ -293,6 +293,21 @@ public class TaskServiceImpl implements TaskService {
     public TaskWithSubTasksResponse createWithSubTasks(TaskWithSubTasksCreateRequest dto) {
         validateCreatePermission();
 
+        FlowType flowType = FlowType.fromString(dto.getFlowType());
+
+        if (flowType == FlowType.OPERACIONAL) {
+            String generatedCode = generateRandomCode();
+            dto.setCode(generatedCode);
+            log.debug("Generated code for OPERACIONAL task: {}", generatedCode);
+        } else {
+            if (dto.getCode() == null || dto.getCode().trim().isEmpty()) {
+                throw new BusinessException("Código é obrigatório para tarefas de desenvolvimento", "CODE_REQUIRED");
+            }
+            if (taskRepository.existsByCode(dto.getCode())) {
+                throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
+            }
+        }
+
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
 
@@ -334,6 +349,7 @@ public class TaskServiceImpl implements TaskService {
                 .requesterId(dto.getRequesterId())
                 .title(dto.getTitle())
                 .description(dto.getDescription())
+                .flowType(dto.getFlowType())
                 .code(dto.getCode())
                 .link(dto.getLink())
                 .meetingLink(dto.getMeetingLink())
@@ -546,6 +562,7 @@ public class TaskServiceImpl implements TaskService {
                 .requesterId(dto.getRequesterId())
                 .title(dto.getTitle())
                 .description(dto.getDescription())
+                .flowType(dto.getFlowType())
                 .code(dto.getCode())
                 .link(dto.getLink())
                 .meetingLink(dto.getMeetingLink())
