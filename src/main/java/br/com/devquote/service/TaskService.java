@@ -39,7 +39,7 @@ public interface TaskService {
                                         String link,
                                         String createdAt,
                                         String updatedAt,
-                                        List<FlowType> flowTypes,
+                                        FlowType flowType,
                                         Pageable pageable);
 
     Page<TaskResponse> findUnlinkedBillingByOptionalFieldsPaginated(Long id,
@@ -51,7 +51,7 @@ public interface TaskService {
                                                                     String link,
                                                                     String createdAt,
                                                                     String updatedAt,
-                                                                    List<FlowType> flowTypes,
+                                                                    FlowType flowType,
                                                                     Pageable pageable);
 
     Page<TaskResponse> findUnlinkedDeliveryByOptionalFieldsPaginated(Long id,
@@ -63,7 +63,7 @@ public interface TaskService {
                                                                      String link,
                                                                      String createdAt,
                                                                      String updatedAt,
-                                                                     List<FlowType> flowTypes,
+                                                                     FlowType flowType,
                                                                      Pageable pageable);
     
     byte[] exportTasksToExcel() throws IOException;

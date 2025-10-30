@@ -11,7 +11,6 @@ import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.enums.FlowType;
 import br.com.devquote.service.TaskService;
 import br.com.devquote.service.TaskAttachmentService;
-import br.com.devquote.utils.FlowTypeUtils;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +60,7 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
-            @RequestParam(required = false) List<String> flowTypes,
+            @RequestParam(required = false) String flowType,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -72,10 +71,13 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        List<FlowType> flowTypeEnums = FlowTypeUtils.convertToFlowTypeList(flowTypes);
+        // Converter String para FlowType (null se TODOS ou null)
+        FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
+                ? null
+                : FlowType.fromString(flowType);
 
         Page<TaskResponse> pageResult = taskService.findAllPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnums, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
@@ -95,7 +97,7 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
-            @RequestParam(required = false) List<String> flowTypes,
+            @RequestParam(required = false) String flowType,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -106,10 +108,13 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        List<FlowType> flowTypeEnums = FlowTypeUtils.convertToFlowTypeList(flowTypes);
+        // Converter String para FlowType (null se TODOS ou null)
+        FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
+                ? null
+                : FlowType.fromString(flowType);
 
         Page<TaskResponse> pageResult = taskService.findUnlinkedBillingByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnums, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
@@ -129,7 +134,7 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
-            @RequestParam(required = false) List<String> flowTypes,
+            @RequestParam(required = false) String flowType,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -140,10 +145,12 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        List<FlowType> flowTypeEnums = FlowTypeUtils.convertToFlowTypeList(flowTypes);
+        FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
+                ? null
+                : FlowType.fromString(flowType);
 
         Page<TaskResponse> pageResult = taskService.findUnlinkedDeliveryByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnums, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));

@@ -38,7 +38,7 @@ public interface TaskControllerDoc {
     @Parameter(name = "link", description = "Filter by link (partial match)", example = "github.com")
     @Parameter(name = "createdAt", description = "Filter by creation date. Supports partial dates: '2024', '2024-01', '2024-01-15'", example = "2024-01")
     @Parameter(name = "updatedAt", description = "Filter by update date. Supports partial dates: '2024', '2024-01', '2024-01-15'", example = "2024-01-15")
-    @Parameter(name = "flowTypes", description = "Filter by flow types (DESENVOLVIMENTO, OPERACIONAL)", example = "DESENVOLVIMENTO")
+    @Parameter(name = "flowType", description = "Filter by flow type: TODOS (default), DESENVOLVIMENTO, or OPERACIONAL", example = "DESENVOLVIMENTO")
     @Parameter(
             name = "sort",
             description = "Repeatable. Format: field,(asc|desc). Allowed: id,requesterId,title,description,code,link,createdAt,updatedAt",
@@ -56,7 +56,7 @@ public interface TaskControllerDoc {
             @RequestParam(required = false) String link,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
-            @RequestParam(required = false) List<String> flowTypes,
+            @RequestParam(required = false) String flowType,
             @RequestParam MultiValueMap<String, String> params
     );
 

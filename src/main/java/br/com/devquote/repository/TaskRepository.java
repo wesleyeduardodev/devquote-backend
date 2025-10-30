@@ -30,7 +30,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:link IS NULL OR :link = '' OR LOWER(t.link) LIKE LOWER(CONCAT('%', :link, '%')))
               AND (:createdAt IS NULL OR :createdAt = '' OR CAST(t.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
               AND (:updatedAt IS NULL OR :updatedAt = '' OR CAST(t.updatedAt AS string) LIKE CONCAT('%', :updatedAt, '%'))
-              AND (:flowTypes IS NULL OR t.flowType IN :flowTypes)
+              AND (:flowType IS NULL OR t.flowType = :flowType)
             """)
     Page<Task> findByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -42,7 +42,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("link") String link,
             @Param("createdAt") String createdAt,
             @Param("updatedAt") String updatedAt,
-            @Param("flowTypes") List<FlowType> flowTypes,
+            @Param("flowType") FlowType flowType,
             Pageable pageable
     );
 
@@ -60,7 +60,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:link IS NULL OR :link = '' OR LOWER(t.link) LIKE LOWER(CONCAT('%', :link, '%')))
               AND (:createdAt IS NULL OR :createdAt = '' OR CAST(t.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
               AND (:updatedAt IS NULL OR :updatedAt = '' OR CAST(t.updatedAt AS string) LIKE CONCAT('%', :updatedAt, '%'))
-              AND (:flowTypes IS NULL OR t.flowType IN :flowTypes)
+              AND (:flowType IS NULL OR t.flowType = :flowType)
             """)
     Page<Task> findUnlinkedBillingByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -72,7 +72,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("link") String link,
             @Param("createdAt") String createdAt,
             @Param("updatedAt") String updatedAt,
-            @Param("flowTypes") List<FlowType> flowTypes,
+            @Param("flowType") FlowType flowType,
             Pageable pageable
     );
 
@@ -90,7 +90,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:link IS NULL OR :link = '' OR LOWER(t.link) LIKE LOWER(CONCAT('%', :link, '%')))
               AND (:createdAt IS NULL OR :createdAt = '' OR CAST(t.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
               AND (:updatedAt IS NULL OR :updatedAt = '' OR CAST(t.updatedAt AS string) LIKE CONCAT('%', :updatedAt, '%'))
-              AND (:flowTypes IS NULL OR t.flowType IN :flowTypes)
+              AND (:flowType IS NULL OR t.flowType = :flowType)
             """)
     Page<Task> findUnlinkedDeliveryByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -102,7 +102,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("link") String link,
             @Param("createdAt") String createdAt,
             @Param("updatedAt") String updatedAt,
-            @Param("flowTypes") List<FlowType> flowTypes,
+            @Param("flowType") FlowType flowType,
             Pageable pageable
     );
 }

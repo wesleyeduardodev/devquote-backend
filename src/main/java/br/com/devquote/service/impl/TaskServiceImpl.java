@@ -475,12 +475,12 @@ public class TaskServiceImpl implements TaskService {
                                                String link,
                                                String createdAt,
                                                String updatedAt,
-                                               List<FlowType> flowTypes,
+                                               FlowType flowType,
                                                Pageable pageable) {
 
         // Todos os usuários podem ver todas as tarefas
         Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypes, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, pageable
         );
         return buildTaskResponsePage(page, pageable);
     }
@@ -495,11 +495,11 @@ public class TaskServiceImpl implements TaskService {
                                                                            String link,
                                                                            String createdAt,
                                                                            String updatedAt,
-                                                                           List<FlowType> flowTypes,
+                                                                           FlowType flowType,
                                                                            Pageable pageable) {
 
         Page<Task> page = taskRepository.findUnlinkedBillingByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypes, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, pageable
         );
         return buildTaskResponsePage(page, pageable);
     }
@@ -514,11 +514,11 @@ public class TaskServiceImpl implements TaskService {
                                                                             String link,
                                                                             String createdAt,
                                                                             String updatedAt,
-                                                                            List<FlowType> flowTypes,
+                                                                            FlowType flowType,
                                                                             Pageable pageable) {
 
         Page<Task> page = taskRepository.findUnlinkedDeliveryByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypes, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, pageable
         );
         return buildTaskResponsePage(page, pageable);
     }
