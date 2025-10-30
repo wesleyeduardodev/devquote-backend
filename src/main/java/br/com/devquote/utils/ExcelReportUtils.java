@@ -663,7 +663,7 @@ public class ExcelReportUtils {
             "Status Geral da Entrega", "Observações da Entrega",
             // Dados do Item Operacional
             "Título do Item", "Descrição do Item", "Status do Item",
-            "Data Início", "Data Fim", "Qtd. Anexos"
+            "Data Início", "Data Fim"
         };
 
         Row headerRow = sheet.createRow(0);
@@ -703,10 +703,9 @@ public class ExcelReportUtils {
             setOperationalItemStatusCell(row, 9, deliveryData.get("item_status"), dataStyle);
             setCellValue(row, 10, deliveryData.get("item_started_at"), dateOnlyStyle);
             setCellValue(row, 11, deliveryData.get("item_finished_at"), dateOnlyStyle);
-            setCellValue(row, 12, deliveryData.get("attachments_count"), dataStyle);
         }
 
-        // Ajustar largura das colunas (13 colunas no total)
+        // Ajustar largura das colunas (12 colunas no total)
         setColumnWidths(sheet, new int[]{
             // Dados da Tarefa
             2500,  // ID Tarefa
@@ -722,8 +721,7 @@ public class ExcelReportUtils {
             9000,  // Descrição do Item (maior)
             3500,  // Status do Item
             4000,  // Data Início
-            4000,  // Data Fim
-            3000   // Qtd. Anexos
+            4000   // Data Fim
         });
 
         // Ajustar altura das linhas

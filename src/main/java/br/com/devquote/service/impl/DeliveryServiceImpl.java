@@ -760,9 +760,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 doi.description as item_description,
                 doi.status as item_status,
                 doi.started_at as item_started_at,
-                doi.finished_at as item_finished_at,
-                (SELECT COUNT(*) FROM delivery_operational_attachment doa
-                 WHERE doa.delivery_operational_item_id = doi.id) as attachments_count
+                doi.finished_at as item_finished_at
             FROM delivery d
             INNER JOIN task t ON d.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
@@ -789,7 +787,6 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("item_status", row[9]);
             map.put("item_started_at", row[10]);
             map.put("item_finished_at", row[11]);
-            map.put("attachments_count", row[12]);
             return map;
         }).collect(Collectors.toList());
 
