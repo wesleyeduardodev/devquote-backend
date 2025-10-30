@@ -84,6 +84,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         // Criar delivery sem itens primeiro
         Delivery entity = Delivery.builder()
                 .task(task)
+                .flowType(task.getFlowType()) // Pega o flowType da tarefa
                 .status(dto.getStatus() != null ? br.com.devquote.enums.DeliveryStatus.fromString(dto.getStatus()) : br.com.devquote.enums.DeliveryStatus.PENDING)
                 .notes(dto.getNotes())
                 .build();

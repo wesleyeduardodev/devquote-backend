@@ -1,5 +1,6 @@
 package br.com.devquote.entity;
 import br.com.devquote.enums.DeliveryStatus;
+import br.com.devquote.enums.FlowType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -21,6 +22,10 @@ public class Delivery {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "task_id", nullable = false, unique = true)
     private Task task;
+
+    @Column(name = "flow_type", nullable = false, length = 30)
+    @Enumerated(EnumType.STRING)
+    private FlowType flowType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

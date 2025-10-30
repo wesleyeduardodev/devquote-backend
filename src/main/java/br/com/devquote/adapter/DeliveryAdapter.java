@@ -21,6 +21,7 @@ public final class DeliveryAdapter {
                 .taskId(entity.getTask() != null ? entity.getTask().getId() : null)
                 .taskName(entity.getTask() != null ? entity.getTask().getTitle() : null)
                 .taskCode(entity.getTask() != null ? entity.getTask().getCode() : null)
+                .flowType(entity.getFlowType() != null ? entity.getFlowType().name() : null)
                 .status(entity.getStatus() != null ? entity.getStatus().name() : null)
                 .totalItems(entity.getTotalItems())
                 .pendingCount(entity.getItemsByStatus(DeliveryStatus.PENDING))
@@ -51,6 +52,7 @@ public final class DeliveryAdapter {
 
         Delivery delivery = Delivery.builder()
                 .task(task)
+                .flowType(task != null ? task.getFlowType() : null)
                 .status(dto.getStatus() != null ? DeliveryStatus.fromString(dto.getStatus()) : DeliveryStatus.PENDING)
                 .notes(dto.getNotes())
                 .build();
