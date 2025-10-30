@@ -36,6 +36,10 @@ public class Delivery {
     @Builder.Default
     private List<DeliveryItem> items = new ArrayList<>();
 
+    @OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @Builder.Default
+    private List<DeliveryOperationalItem> operationalItems = new ArrayList<>();
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -62,14 +66,41 @@ public class Delivery {
 
     // Método para calcular o status automaticamente baseado nos itens
     public DeliveryStatus calculateStatus() {
-        if (items == null || items.isEmpty()) {
+        List<DeliveryStatus> itemStatuses = new ArrayList<>();
+
+        // Adicionar status dos itens de desenvolvimento
+        if (items != null && !items.isEmpty()) {
+            itemStatuses.addAll(items.stream()
+                    .map(DeliveryItem::getStatus)
+                    .toList());
+        }
+
+        // Adicionar status dos itens operacionais (mapeando para DeliveryStatus)
+        if (operationalItems != null && !operationalItems.isEmpty()) {
+            itemStatuses.addAll(operationalItems.stream()
+                    .map(item -> {
+                        // Mapear OperationalItemStatus para DeliveryStatus
+                        switch (item.getStatus()) {
+                            case PENDING -> {
+                                return DeliveryStatus.PENDING;
+                            }
+                            case DELIVERED -> {
+                                return DeliveryStatus.DELIVERED;
+                            }
+                            default -> {
+                                return DeliveryStatus.PENDING;
+                            }
+                        }
+                    })
+                    .toList());
+        }
+
+        // Se não há itens, retorna PENDING
+        if (itemStatuses.isEmpty()) {
             return DeliveryStatus.PENDING;
         }
 
-        List<DeliveryStatus> itemStatuses = items.stream()
-                .map(DeliveryItem::getStatus)
-                .distinct()
-                .toList();
+        itemStatuses = itemStatuses.stream().distinct().toList();
 
         // Se todos os itens têm o mesmo status, a entrega tem esse status
         if (itemStatuses.size() == 1) {
@@ -115,12 +146,29 @@ public class Delivery {
     
     // Método helper para contagens
     public int getTotalItems() {
-        return items != null ? items.size() : 0;
+        int devItems = items != null ? items.size() : 0;
+        int opItems = operationalItems != null ? operationalItems.size() : 0;
+        return devItems + opItems;
     }
-    
+
     public long getItemsByStatus(DeliveryStatus status) {
-        if (items == null) return 0;
-        return items.stream().filter(item -> item.getStatus() == status).count();
+        long devItemsCount = items != null ? items.stream().filter(item -> item.getStatus() == status).count() : 0;
+
+        // Mapear OperationalItemStatus para DeliveryStatus para comparação
+        long opItemsCount = 0;
+        if (operationalItems != null) {
+            opItemsCount = operationalItems.stream()
+                .filter(item -> {
+                    DeliveryStatus mappedStatus = switch (item.getStatus()) {
+                        case PENDING -> DeliveryStatus.PENDING;
+                        case DELIVERED -> DeliveryStatus.DELIVERED;
+                    };
+                    return mappedStatus == status;
+                })
+                .count();
+        }
+
+        return devItemsCount + opItemsCount;
     }
 
     // Método helper para adicionar item
@@ -137,6 +185,25 @@ public class Delivery {
     public void removeItem(DeliveryItem item) {
         if (items != null) {
             items.remove(item);
+            item.setDelivery(null);
+            updateStatus(); // Atualiza status automaticamente
+        }
+    }
+
+    // Método helper para adicionar item operacional
+    public void addOperationalItem(DeliveryOperationalItem item) {
+        if (operationalItems == null) {
+            operationalItems = new ArrayList<>();
+        }
+        operationalItems.add(item);
+        item.setDelivery(this);
+        updateStatus(); // Atualiza status automaticamente
+    }
+
+    // Método helper para remover item operacional
+    public void removeOperationalItem(DeliveryOperationalItem item) {
+        if (operationalItems != null) {
+            operationalItems.remove(item);
             item.setDelivery(null);
             updateStatus(); // Atualiza status automaticamente
         }
