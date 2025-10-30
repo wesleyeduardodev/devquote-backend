@@ -103,21 +103,26 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
 
         Delivery delivery = item.getDelivery();
 
-        // 1. Deletar anexos do storage antes de deletar o item
+        // 1. Deletar anexos do storage E do banco antes de deletar o item
         List<DeliveryOperationalAttachment> attachments = attachmentRepository.findByDeliveryOperationalItemId(id);
         for (DeliveryOperationalAttachment attachment : attachments) {
             try {
+                // Deletar arquivo do storage
                 fileStorageStrategy.deleteFile(attachment.getFilePath());
                 log.info("File deleted from storage: {}", attachment.getFilePath());
             } catch (Exception e) {
                 log.warn("Could not delete file from storage: {} - {}", attachment.getFilePath(), e.getMessage());
             }
+
+            // Deletar registro do banco
+            attachmentRepository.delete(attachment);
+            log.info("Attachment deleted from database: {}", attachment.getOriginalName());
         }
 
         // 2. Remover o item da lista da delivery ANTES de deletar (evita erro de merge)
         delivery.removeOperationalItem(item);
 
-        // 3. Deletar o item (cascade vai deletar os anexos do banco)
+        // 3. Deletar o item
         operationalItemRepository.delete(item);
 
         // 4. Atualizar status da delivery

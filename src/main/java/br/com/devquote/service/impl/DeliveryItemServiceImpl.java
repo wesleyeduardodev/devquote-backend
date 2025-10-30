@@ -5,13 +5,16 @@ import br.com.devquote.dto.request.DeliveryItemRequest;
 import br.com.devquote.dto.response.DeliveryItemResponse;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.DeliveryItem;
+import br.com.devquote.entity.DeliveryItemAttachment;
 import br.com.devquote.entity.Project;
 import br.com.devquote.enums.DeliveryStatus;
+import br.com.devquote.repository.DeliveryItemAttachmentRepository;
 import br.com.devquote.repository.DeliveryItemRepository;
 import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.repository.ProjectRepository;
 import br.com.devquote.service.DeliveryItemService;
 import br.com.devquote.service.EmailService;
+import br.com.devquote.service.storage.FileStorageStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -35,9 +38,11 @@ import java.util.stream.IntStream;
 public class DeliveryItemServiceImpl implements DeliveryItemService {
 
     private final DeliveryItemRepository deliveryItemRepository;
+    private final DeliveryItemAttachmentRepository deliveryItemAttachmentRepository;
     private final DeliveryRepository deliveryRepository;
     private final ProjectRepository projectRepository;
     private final EmailService emailService;
+    private final FileStorageStrategy fileStorageStrategy;
 
     @Override
     public List<DeliveryItemResponse> findAll() {
@@ -126,25 +131,41 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                 .orElseThrow(() -> new RuntimeException("DeliveryItem not found with id: " + id));
 
         Long deliveryId = item.getDelivery().getId();
-        
-        // Remover o item da lista da delivery antes de deletar
+
+        // 1. Deletar anexos do storage E do banco antes de deletar o item
+        List<DeliveryItemAttachment> attachments = deliveryItemAttachmentRepository.findByDeliveryItemId(id);
+        for (DeliveryItemAttachment attachment : attachments) {
+            try {
+                // Deletar arquivo do storage
+                fileStorageStrategy.deleteFile(attachment.getFilePath());
+                log.info("File deleted from storage: {}", attachment.getFilePath());
+            } catch (Exception e) {
+                log.warn("Could not delete file from storage: {} - {}", attachment.getFilePath(), e.getMessage());
+            }
+
+            // Deletar registro do banco
+            deliveryItemAttachmentRepository.delete(attachment);
+            log.info("Attachment deleted from database: {}", attachment.getOriginalFileName());
+        }
+
+        // 2. Remover o item da lista da delivery antes de deletar (evita erro de merge)
         Delivery delivery = item.getDelivery();
-        delivery.getItems().remove(item);
-        
-        // Deletar o item
+        delivery.removeItem(item);
+
+        // 3. Deletar o item
         deliveryItemRepository.delete(item);
 
-        // Buscar a delivery novamente para garantir que está atualizada
+        // 4. Buscar a delivery novamente para garantir que está atualizada
         delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
-        
-        // Atualizar status da delivery automaticamente
+
+        // 5. Atualizar status da delivery automaticamente
         delivery.updateStatus();
         delivery = deliveryRepository.save(delivery);
 
         // Email automático removido - agora é manual via botão na listagem
 
-        log.debug("DeliveryItem deleted with id: {}", id);
+        log.info("Delivery item deleted successfully: {}", id);
     }
 
     @Override
