@@ -620,6 +620,7 @@ public class EmailServiceImpl implements EmailService {
         // Task status removed
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
+        context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
         context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
         context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
         context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
@@ -683,6 +684,7 @@ public class EmailServiceImpl implements EmailService {
         // Task status removed
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
+        context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
         context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
         context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
         context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
@@ -746,6 +748,7 @@ public class EmailServiceImpl implements EmailService {
         // Task status removed
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
+        context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
         context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
         context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
         context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
@@ -1279,6 +1282,7 @@ public class EmailServiceImpl implements EmailService {
             case "TEST" -> "Teste";
             case "RESEARCH" -> "Pesquisa";
             case "SUPPORT" -> "Suporte";
+            case "MONITORING" -> "Monitoramento";
             default -> taskType;
         };
     }
@@ -1340,6 +1344,7 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("taskDescription", convertLineBreaksToHtml(task.getDescription()));
             context.setVariable("taskPriority", translatePriority(task.getPriority()));
             context.setVariable("taskType", translateTaskType(task.getTaskType()));
+            context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
             context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
             context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
             context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");

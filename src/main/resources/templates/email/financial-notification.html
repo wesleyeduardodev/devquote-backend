@@ -252,6 +252,13 @@
                         <div class="info-label">ID:</div>
                         <div class="info-value" th:text="${taskId}">123</div>
                     </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskFlowType)}">
+                        <div class="info-label">Tipo de Fluxo:</div>
+                        <div class="info-value">
+                            <span th:if="${taskFlowType == 'OPERACIONAL'}">⚙️ Operacional</span>
+                            <span th:if="${taskFlowType == 'DESENVOLVIMENTO'}">💻 Desenvolvimento</span>
+                        </div>
+                    </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskCode)}">
                         <div class="info-label">Código:</div>
                         <div class="info-value" th:text="${taskCode}">TSK-001</div>
