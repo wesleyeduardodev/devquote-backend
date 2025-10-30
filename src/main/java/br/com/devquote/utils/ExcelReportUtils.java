@@ -544,7 +544,7 @@ public class ExcelReportUtils {
         // Cabeçalhos reorganizados: Tarefa -> Entrega -> Item (sem IDs, valor e datas da entrega, script no final)
         String[] headers = {
             // Dados da Tarefa
-            "ID Tarefa", "Código da Tarefa", "Fluxo", "Título da Tarefa", "Qtd. Subtarefas", "Solicitante",
+            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Qtd. Subtarefas", "Solicitante",
             // Dados da Entrega
             "Status Geral da Entrega", "Observações da Entrega",
             // Dados do Item de Entrega
@@ -558,9 +558,9 @@ public class ExcelReportUtils {
             cell.setCellValue(headers[i]);
 
             // Aplicar cores diferentes por grupo
-            if (i <= 5) {
+            if (i <= 4) {
                 cell.setCellStyle(taskHeaderStyle); // Azul para tarefas
-            } else if (i >= 6 && i <= 7) {
+            } else if (i >= 5 && i <= 6) {
                 cell.setCellStyle(deliveryHeaderStyle); // Verde para entrega
             } else {
                 cell.setCellStyle(itemHeaderStyle); // Amarelo para itens
@@ -575,32 +575,30 @@ public class ExcelReportUtils {
             // Dados da tarefa
             setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
             setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
-            setFlowTypeCell(row, 2, deliveryData.get("task_flow_type"), dataStyle);
-            setCellValue(row, 3, deliveryData.get("task_title"), dataStyle);
-            setCellValue(row, 4, deliveryData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 5, deliveryData.get("requester_name"), dataStyle);
+            setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
+            setCellValue(row, 3, deliveryData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 4, deliveryData.get("requester_name"), dataStyle);
 
             // Dados da entrega
-            setDeliveryStatusCell(row, 6, deliveryData.get("delivery_status"), dataStyle);
-            setCellValue(row, 7, deliveryData.get("delivery_notes"), dataStyle);
+            setDeliveryStatusCell(row, 5, deliveryData.get("delivery_status"), dataStyle);
+            setCellValue(row, 6, deliveryData.get("delivery_notes"), dataStyle);
 
             // Dados do item
-            setCellValue(row, 8, deliveryData.get("project_name"), dataStyle);
-            setDeliveryStatusCell(row, 9, deliveryData.get("item_status"), dataStyle);
-            setCellValue(row, 10, deliveryData.get("item_branch"), dataStyle);
-            setCellValue(row, 11, deliveryData.get("item_source_branch"), dataStyle);
-            setCellValue(row, 12, deliveryData.get("item_pull_request"), dataStyle);
-            setCellValue(row, 13, deliveryData.get("item_notes"), dataStyle);
-            setCellValue(row, 14, deliveryData.get("item_started_at"), dateOnlyStyle);
-            setCellValue(row, 15, deliveryData.get("item_finished_at"), dateOnlyStyle);
+            setCellValue(row, 7, deliveryData.get("project_name"), dataStyle);
+            setDeliveryStatusCell(row, 8, deliveryData.get("item_status"), dataStyle);
+            setCellValue(row, 9, deliveryData.get("item_branch"), dataStyle);
+            setCellValue(row, 10, deliveryData.get("item_source_branch"), dataStyle);
+            setCellValue(row, 11, deliveryData.get("item_pull_request"), dataStyle);
+            setCellValue(row, 12, deliveryData.get("item_notes"), dataStyle);
+            setCellValue(row, 13, deliveryData.get("item_started_at"), dateOnlyStyle);
+            setCellValue(row, 14, deliveryData.get("item_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar largura das colunas (16 colunas no total)
+        // Ajustar largura das colunas (15 colunas no total)
         setColumnWidths(sheet, new int[]{
             // Dados da Tarefa
             2500,  // ID Tarefa
             3500,  // Código da Tarefa
-            4000,  // Fluxo
             8000,  // Título da Tarefa (maior)
             3000,  // Qtd. Subtarefas
             6000,  // Solicitante
@@ -641,6 +639,130 @@ public class ExcelReportUtils {
         workbook.close();
 
         return outputStream.toByteArray();
+    }
+
+    public byte[] generateOperationalDeliveriesReport(List<Map<String, Object>> data) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Relatório de Entregas Operacionais");
+
+        // Criar estilos
+        CellStyle headerStyle = createHeaderStyle(workbook);
+        CellStyle dataStyle = createDataStyle(workbook);
+        CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
+
+        // Estilos coloridos para cabeçalhos agrupados
+        CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
+        CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
+        CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_ORANGE.getIndex());
+
+        // Cabeçalhos para relatório OPERACIONAL
+        String[] headers = {
+            // Dados da Tarefa
+            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Qtd. Subtarefas", "Solicitante",
+            // Dados da Entrega
+            "Status Geral da Entrega", "Observações da Entrega",
+            // Dados do Item Operacional
+            "Título do Item", "Descrição do Item", "Status do Item",
+            "Data Início", "Data Fim", "Qtd. Anexos"
+        };
+
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+
+            // Aplicar cores diferentes por grupo
+            if (i <= 4) {
+                cell.setCellStyle(taskHeaderStyle); // Azul para tarefas
+            } else if (i >= 5 && i <= 6) {
+                cell.setCellStyle(deliveryHeaderStyle); // Verde para entrega
+            } else {
+                cell.setCellStyle(itemHeaderStyle); // Laranja para itens operacionais
+            }
+        }
+
+        // Adicionar dados
+        int rowNum = 1;
+        for (Map<String, Object> deliveryData : data) {
+            Row row = sheet.createRow(rowNum++);
+
+            // Dados da tarefa
+            setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
+            setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
+            setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
+            setCellValue(row, 3, deliveryData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 4, deliveryData.get("requester_name"), dataStyle);
+
+            // Dados da entrega
+            setDeliveryStatusCell(row, 5, deliveryData.get("delivery_status"), dataStyle);
+            setCellValue(row, 6, deliveryData.get("delivery_notes"), dataStyle);
+
+            // Dados do item operacional
+            setCellValue(row, 7, deliveryData.get("item_title"), dataStyle);
+            setCellValue(row, 8, deliveryData.get("item_description"), dataStyle);
+            setOperationalItemStatusCell(row, 9, deliveryData.get("item_status"), dataStyle);
+            setCellValue(row, 10, deliveryData.get("item_started_at"), dateOnlyStyle);
+            setCellValue(row, 11, deliveryData.get("item_finished_at"), dateOnlyStyle);
+            setCellValue(row, 12, deliveryData.get("attachments_count"), dataStyle);
+        }
+
+        // Ajustar largura das colunas (13 colunas no total)
+        setColumnWidths(sheet, new int[]{
+            // Dados da Tarefa
+            2500,  // ID Tarefa
+            3500,  // Código da Tarefa
+            8000,  // Título da Tarefa (maior)
+            3000,  // Qtd. Subtarefas
+            6000,  // Solicitante
+            // Dados da Entrega
+            4000,  // Status Geral da Entrega
+            7000,  // Observações da Entrega
+            // Dados do Item Operacional
+            7000,  // Título do Item
+            9000,  // Descrição do Item (maior)
+            3500,  // Status do Item
+            4000,  // Data Início
+            4000,  // Data Fim
+            3000   // Qtd. Anexos
+        });
+
+        // Ajustar altura das linhas
+        for (int i = 1; i <= data.size(); i++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                row.setHeightInPoints(35);
+            }
+        }
+
+        // Altura do cabeçalho
+        headerRow.setHeightInPoints(40);
+
+        // Aplicar filtros
+        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
+
+        // Congelar primeira linha (cabeçalho)
+        sheet.createFreezePane(0, 1);
+
+        // Converter para bytes
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream.toByteArray();
+    }
+
+    private void setOperationalItemStatusCell(Row row, int cellIndex, Object value, CellStyle defaultStyle) {
+        if (value == null) {
+            Cell cell = row.createCell(cellIndex);
+            cell.setCellValue("");
+            cell.setCellStyle(defaultStyle);
+            return;
+        }
+
+        String status = value.toString();
+        Cell cell = row.createCell(cellIndex);
+        cell.setCellValue(status.equals("PENDING") ? "Pendente" : "Entregue");
+        cell.setCellStyle(defaultStyle);
     }
 
     public byte[] generateBillingReport(List<Map<String, Object>> data) throws IOException {

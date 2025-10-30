@@ -679,20 +679,21 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public byte[] exportToExcel(String flowType) throws IOException {
-        log.debug("EXCEL EXPORT (Deliveries) STARTED with flowType={}", flowType);
-
-        // Construir filtro de flowType
-        String whereClause = "";
-        if (flowType != null && !flowType.equals("TODOS")) {
-            whereClause = "WHERE t.flow_type = '" + flowType + "' ";
+        if ("OPERACIONAL".equals(flowType)) {
+            return exportOperationalToExcel();
+        } else {
+            return exportDevelopmentToExcel();
         }
+    }
 
-        // Nova query adaptada para estrutura com DeliveryItem (sem IDs, valor e datas da entrega)
+    private byte[] exportDevelopmentToExcel() throws IOException {
+        log.debug("EXCEL EXPORT (Development Deliveries) STARTED");
+
+        // Query para entregas de DESENVOLVIMENTO (usa delivery_item)
         String sql = """
             SELECT
                 t.id as task_id,
                 t.code as task_code,
-                t.flow_type as task_flow_type,
                 t.title as task_title,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
@@ -711,7 +712,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             INNER JOIN requester r ON t.requester_id = r.id
             LEFT JOIN delivery_item di ON di.delivery_id = d.id
             LEFT JOIN project p ON di.project_id = p.id
-            """ + whereClause + """
+            WHERE t.flow_type = 'DESENVOLVIMENTO'
             ORDER BY t.id DESC, d.id DESC, di.id ASC
         """;
 
@@ -721,32 +722,78 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         List<Map<String, Object>> data = results.stream().map(row -> {
             Map<String, Object> map = new HashMap<>();
-            // Dados da tarefa primeiro (colunas básicas)
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
-            map.put("task_flow_type", row[2]); // Nova coluna flowType
-            map.put("task_title", row[3]);
-            map.put("subtasks_count", row[4]);
-            map.put("requester_name", row[5]);
-
-            // Dados da entrega (sem datas)
-            map.put("delivery_status", row[6]);
-            map.put("delivery_notes", row[7]);
-
-            // Dados do item de entrega (podem ser múltiplos por tarefa)
-            map.put("project_name", row[8]);
-            map.put("item_status", row[9]);
-            map.put("item_branch", row[10]);
-            map.put("item_source_branch", row[11]);
-            map.put("item_pull_request", row[12]);
-            map.put("item_notes", row[13]);
-            map.put("item_started_at", row[14]);
-            map.put("item_finished_at", row[15]);
-
+            map.put("task_title", row[2]);
+            map.put("subtasks_count", row[3]);
+            map.put("requester_name", row[4]);
+            map.put("delivery_status", row[5]);
+            map.put("delivery_notes", row[6]);
+            map.put("project_name", row[7]);
+            map.put("item_status", row[8]);
+            map.put("item_branch", row[9]);
+            map.put("item_source_branch", row[10]);
+            map.put("item_pull_request", row[11]);
+            map.put("item_notes", row[12]);
+            map.put("item_started_at", row[13]);
+            map.put("item_finished_at", row[14]);
             return map;
         }).collect(Collectors.toList());
 
         return excelReportUtils.generateDeliveriesReport(data);
+    }
+
+    private byte[] exportOperationalToExcel() throws IOException {
+        log.debug("EXCEL EXPORT (Operational Deliveries) STARTED");
+
+        // Query para entregas OPERACIONAIS (usa delivery_operational_item)
+        String sql = """
+            SELECT
+                t.id as task_id,
+                t.code as task_code,
+                t.title as task_title,
+                (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
+                r.name as requester_name,
+                d.status as delivery_status,
+                d.notes as delivery_notes,
+                doi.title as item_title,
+                doi.description as item_description,
+                doi.status as item_status,
+                doi.started_at as item_started_at,
+                doi.finished_at as item_finished_at,
+                (SELECT COUNT(*) FROM delivery_operational_attachment doa
+                 WHERE doa.delivery_operational_item_id = doi.id) as attachments_count
+            FROM delivery d
+            INNER JOIN task t ON d.task_id = t.id
+            INNER JOIN requester r ON t.requester_id = r.id
+            LEFT JOIN delivery_operational_item doi ON doi.delivery_id = d.id
+            WHERE t.flow_type = 'OPERACIONAL'
+            ORDER BY t.id DESC, d.id DESC, doi.id ASC
+        """;
+
+        Query query = entityManager.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = query.getResultList();
+
+        List<Map<String, Object>> data = results.stream().map(row -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("task_id", row[0]);
+            map.put("task_code", row[1]);
+            map.put("task_title", row[2]);
+            map.put("subtasks_count", row[3]);
+            map.put("requester_name", row[4]);
+            map.put("delivery_status", row[5]);
+            map.put("delivery_notes", row[6]);
+            map.put("item_title", row[7]);
+            map.put("item_description", row[8]);
+            map.put("item_status", row[9]);
+            map.put("item_started_at", row[10]);
+            map.put("item_finished_at", row[11]);
+            map.put("attachments_count", row[12]);
+            return map;
+        }).collect(Collectors.toList());
+
+        return excelReportUtils.generateOperationalDeliveriesReport(data);
     }
 
     @Override
