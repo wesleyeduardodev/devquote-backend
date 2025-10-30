@@ -248,8 +248,9 @@ public class TaskController implements TaskControllerDoc {
 
     @GetMapping("/export/excel")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
-    public ResponseEntity<byte[]> exportTasksToExcel() throws IOException {
-        byte[] excelData = taskService.exportTasksToExcel();
+    public ResponseEntity<byte[]> exportTasksToExcel(
+            @RequestParam(required = false) String flowType) throws IOException {
+        byte[] excelData = taskService.exportTasksToExcel(flowType);
 
         String filename = "Relatorio_Tarefas_" +
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) +

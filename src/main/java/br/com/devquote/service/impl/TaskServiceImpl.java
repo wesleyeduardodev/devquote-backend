@@ -776,8 +776,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public byte[] exportTasksToExcel() throws IOException {
-        log.debug("EXCEL EXPORT STARTED");
+    public byte[] exportTasksToExcel(String flowType) throws IOException {
+        log.debug("EXCEL EXPORT STARTED with flowType={}", flowType);
 
         // Verificar perfil do usuário para controle de colunas de valor
         User currentUser = securityUtils.getCurrentUser();
@@ -789,9 +789,15 @@ public class TaskServiceImpl implements TaskService {
         boolean canViewAmounts = profiles.contains("ADMIN") || profiles.contains("MANAGER");
         log.debug("EXCEL EXPORT user={} canViewAmounts={}", currentUser.getUsername(), canViewAmounts);
 
+        // Construir filtro de flowType
+        String whereClause = "";
+        if (flowType != null && !flowType.equals("TODOS")) {
+            whereClause = "WHERE t.flow_type = '" + flowType + "' ";
+        }
+
         // Consulta nativa SQL para obter todos os dados de tarefas e subtarefas
         String sql = """
-            SELECT 
+            SELECT
                 t.id as task_id,
                 t.code as task_code,
                 t.title as task_title,
@@ -809,7 +815,7 @@ public class TaskServiceImpl implements TaskService {
                 t.amount as task_amount,
                 t.has_sub_tasks as has_subtasks,
                 CASE WHEN EXISTS(SELECT 1 FROM delivery d WHERE d.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_delivery,
-                CASE WHEN EXISTS(SELECT 1 FROM billing_period_task bpt 
+                CASE WHEN EXISTS(SELECT 1 FROM billing_period_task bpt
                                  WHERE bpt.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
                 t.created_at as task_created_at,
                 t.updated_at as task_updated_at,
@@ -822,6 +828,7 @@ public class TaskServiceImpl implements TaskService {
             LEFT JOIN users cb ON t.created_by = cb.id
             LEFT JOIN users ub ON t.updated_by = ub.id
             LEFT JOIN sub_task st ON st.task_id = t.id
+            """ + whereClause + """
             ORDER BY t.id desc, st.id
             """;
 

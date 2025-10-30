@@ -66,7 +66,7 @@ public interface TaskService {
                                                                      FlowType flowType,
                                                                      Pageable pageable);
     
-    byte[] exportTasksToExcel() throws IOException;
+    byte[] exportTasksToExcel(String flowType) throws IOException;
     
     byte[] exportGeneralReport() throws IOException;
     
