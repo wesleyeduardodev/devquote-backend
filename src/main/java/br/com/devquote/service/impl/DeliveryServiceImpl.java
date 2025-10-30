@@ -692,6 +692,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
                 d.status as delivery_status,
+                d.notes as delivery_notes,
                 p.name as project_name,
                 di.status as item_status,
                 di.branch as item_branch,
@@ -725,16 +726,17 @@ public class DeliveryServiceImpl implements DeliveryService {
 
             // Dados da entrega (sem datas)
             map.put("delivery_status", row[6]);
+            map.put("delivery_notes", row[7]);
 
             // Dados do item de entrega (podem ser múltiplos por tarefa)
-            map.put("project_name", row[7]);
-            map.put("item_status", row[8]);
-            map.put("item_branch", row[9]);
-            map.put("item_source_branch", row[10]);
-            map.put("item_pull_request", row[11]);
-            map.put("item_notes", row[12]);
-            map.put("item_started_at", row[13]);
-            map.put("item_finished_at", row[14]);
+            map.put("project_name", row[8]);
+            map.put("item_status", row[9]);
+            map.put("item_branch", row[10]);
+            map.put("item_source_branch", row[11]);
+            map.put("item_pull_request", row[12]);
+            map.put("item_notes", row[13]);
+            map.put("item_started_at", row[14]);
+            map.put("item_finished_at", row[15]);
 
             return map;
         }).collect(Collectors.toList());

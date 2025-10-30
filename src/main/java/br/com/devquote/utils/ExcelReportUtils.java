@@ -546,10 +546,10 @@ public class ExcelReportUtils {
             // Dados da Tarefa
             "ID Tarefa", "Código da Tarefa", "Fluxo", "Título da Tarefa", "Qtd. Subtarefas", "Solicitante",
             // Dados da Entrega
-            "Status Geral da Entrega",
+            "Status Geral da Entrega", "Observações da Entrega",
             // Dados do Item de Entrega
             "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
-            "Pull Request", "Observações", "Data Início", "Data Fim"
+            "Pull Request", "Observações do Item", "Data Início", "Data Fim"
         };
 
         Row headerRow = sheet.createRow(0);
@@ -560,7 +560,7 @@ public class ExcelReportUtils {
             // Aplicar cores diferentes por grupo
             if (i <= 5) {
                 cell.setCellStyle(taskHeaderStyle); // Azul para tarefas
-            } else if (i == 6) {
+            } else if (i >= 6 && i <= 7) {
                 cell.setCellStyle(deliveryHeaderStyle); // Verde para entrega
             } else {
                 cell.setCellStyle(itemHeaderStyle); // Amarelo para itens
@@ -580,38 +580,40 @@ public class ExcelReportUtils {
             setCellValue(row, 4, deliveryData.get("subtasks_count"), dataStyle);
             setCellValue(row, 5, deliveryData.get("requester_name"), dataStyle);
 
-            // Dados da entrega (sem datas)
+            // Dados da entrega
             setDeliveryStatusCell(row, 6, deliveryData.get("delivery_status"), dataStyle);
+            setCellValue(row, 7, deliveryData.get("delivery_notes"), dataStyle);
 
             // Dados do item
-            setCellValue(row, 7, deliveryData.get("project_name"), dataStyle);
-            setDeliveryStatusCell(row, 8, deliveryData.get("item_status"), dataStyle);
-            setCellValue(row, 9, deliveryData.get("item_branch"), dataStyle);
-            setCellValue(row, 10, deliveryData.get("item_source_branch"), dataStyle);
-            setCellValue(row, 11, deliveryData.get("item_pull_request"), dataStyle);
-            setCellValue(row, 12, deliveryData.get("item_notes"), dataStyle);
-            setCellValue(row, 13, deliveryData.get("item_started_at"), dateOnlyStyle);
-            setCellValue(row, 14, deliveryData.get("item_finished_at"), dateOnlyStyle);
+            setCellValue(row, 8, deliveryData.get("project_name"), dataStyle);
+            setDeliveryStatusCell(row, 9, deliveryData.get("item_status"), dataStyle);
+            setCellValue(row, 10, deliveryData.get("item_branch"), dataStyle);
+            setCellValue(row, 11, deliveryData.get("item_source_branch"), dataStyle);
+            setCellValue(row, 12, deliveryData.get("item_pull_request"), dataStyle);
+            setCellValue(row, 13, deliveryData.get("item_notes"), dataStyle);
+            setCellValue(row, 14, deliveryData.get("item_started_at"), dateOnlyStyle);
+            setCellValue(row, 15, deliveryData.get("item_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar largura das colunas (15 colunas no total - incluindo Fluxo)
+        // Ajustar largura das colunas (16 colunas no total)
         setColumnWidths(sheet, new int[]{
             // Dados da Tarefa
             2500,  // ID Tarefa
             3500,  // Código da Tarefa
-            4000,  // Fluxo (NOVO)
+            4000,  // Fluxo
             8000,  // Título da Tarefa (maior)
             3000,  // Qtd. Subtarefas
             6000,  // Solicitante
             // Dados da Entrega
             4000,  // Status Geral da Entrega
+            7000,  // Observações da Entrega
             // Dados do Item de Entrega
             6000,  // Projeto/Repositório
             3500,  // Status do Item
             5000,  // Branch
             5000,  // Branch Origem
             8000,  // Pull Request (maior para URLs)
-            6000,  // Observações
+            6000,  // Observações do Item
             4000,  // Data Início
             4000   // Data Fim
         });
