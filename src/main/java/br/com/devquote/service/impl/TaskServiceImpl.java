@@ -797,6 +797,7 @@ public class TaskServiceImpl implements TaskService {
                 t.title as task_title,
                 t.description as task_description,
                 t.task_type as task_type,
+                t.flow_type as task_flow_type,
                 t.priority as task_priority,
                 r.name as requester_name,
                 cb.username as created_by_user,
@@ -836,24 +837,25 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_title", row[2]);
             map.put("task_description", row[3]);
             map.put("task_type", row[4]);
-            map.put("task_priority", row[5]);
-            map.put("requester_name", row[6]);
-            map.put("created_by_user", row[7]);
-            map.put("updated_by_user", row[8]);
-            map.put("server_origin", row[9]);
-            map.put("system_module", row[10]);
-            map.put("task_link", row[11]);
-            map.put("meeting_link", row[12]);
-            map.put("task_amount", row[13]);
-            map.put("has_subtasks", Boolean.TRUE.equals(row[14]) ? "Sim" : "Não");
-            map.put("has_delivery", row[15]);
-            map.put("has_quote_in_billing", row[16]);
-            map.put("task_created_at", row[17]);
-            map.put("task_updated_at", row[18]);
-            map.put("subtask_id", row[19]);
-            map.put("subtask_title", row[20]);
-            map.put("subtask_description", row[21]);
-            map.put("subtask_amount", row[22]);
+            map.put("task_flow_type", row[5]);
+            map.put("task_priority", row[6]);
+            map.put("requester_name", row[7]);
+            map.put("created_by_user", row[8]);
+            map.put("updated_by_user", row[9]);
+            map.put("server_origin", row[10]);
+            map.put("system_module", row[11]);
+            map.put("task_link", row[12]);
+            map.put("meeting_link", row[13]);
+            map.put("task_amount", row[14]);
+            map.put("has_subtasks", Boolean.TRUE.equals(row[15]) ? "Sim" : "Não");
+            map.put("has_delivery", row[16]);
+            map.put("has_quote_in_billing", row[17]);
+            map.put("task_created_at", row[18]);
+            map.put("task_updated_at", row[19]);
+            map.put("subtask_id", row[20]);
+            map.put("subtask_title", row[21]);
+            map.put("subtask_description", row[22]);
+            map.put("subtask_amount", row[23]);
             return map;
         }).collect(Collectors.toList());
 
