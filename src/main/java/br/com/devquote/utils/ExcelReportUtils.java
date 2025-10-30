@@ -32,13 +32,12 @@ public class ExcelReportUtils {
         // Definir cabeçalhos baseado no perfil do usuário
         String[] headers;
         if (canViewAmounts) {
-            // ADMIN/MANAGER: Todas as colunas
+            // ADMIN/MANAGER: Todas as colunas (sem Criado Por, Atualizado Por, Datas de Criação/Atualização)
             headers = new String[] {
                 "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
-                "Prioridade", "Solicitante", "Criado Por", "Atualizado Por",
-                "Origem do Servidor", "Módulo do Sistema", "Link", "Link da Reunião",
-                "Valor da Tarefa", "Tem Subtarefas", "Tem Entrega",
-                "Orçamento no Faturamento", "Data de Criação", "Data de Atualização",
+                "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
+                "Link", "Link da Reunião", "Valor da Tarefa", "Tem Subtarefas",
+                "Tem Entrega", "Orçamento no Faturamento",
                 "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição",
                 "Subtarefa Valor"
             };
@@ -46,9 +45,8 @@ public class ExcelReportUtils {
             // USER: Remove colunas sensíveis (Valor da Tarefa, Tem Orçamento, Orçamento no Faturamento, Subtarefa Valor)
             headers = new String[] {
                 "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
-                "Prioridade", "Solicitante", "Criado Por", "Atualizado Por",
-                "Origem do Servidor", "Módulo do Sistema", "Link", "Link da Reunião",
-                "Tem Subtarefas", "Data de Criação", "Data de Atualização",
+                "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
+                "Link", "Link da Reunião", "Tem Subtarefas",
                 "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição"
             };
         }
@@ -60,15 +58,15 @@ public class ExcelReportUtils {
             
             // Aplicar cores diferentes para colunas de tarefas vs subtarefas
             if (canViewAmounts) {
-                // ADMIN/MANAGER: colunas 0-19 são tarefas (azul), 20-23 são subtarefas (verde)
-                if (i <= 19) {
+                // ADMIN/MANAGER: colunas 0-15 são tarefas (azul), 16-19 são subtarefas (verde)
+                if (i <= 15) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
                     cell.setCellStyle(subtaskHeaderStyle);
                 }
             } else {
-                // USER: colunas 0-14 são tarefas (azul), 15-18 são subtarefas (verde)
-                if (i <= 14) {
+                // USER: colunas 0-12 são tarefas (azul), 13-15 são subtarefas (verde)
+                if (i <= 12) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
                     cell.setCellStyle(subtaskHeaderStyle);
@@ -82,7 +80,7 @@ public class ExcelReportUtils {
             Row row = sheet.createRow(rowNum++);
 
             if (canViewAmounts) {
-                // ADMIN/MANAGER: Todas as colunas
+                // ADMIN/MANAGER: 20 colunas (sem Criado Por, Atualizado Por, Datas)
                 setCellValue(row, 0, taskData.get("task_id"), dataStyle);
                 setFlowTypeCell(row, 1, taskData.get("task_flow_type"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_code"), dataStyle);
@@ -91,24 +89,20 @@ public class ExcelReportUtils {
                 setTaskTypeCell(row, 5, taskData.get("task_type"), dataStyle);
                 setPriorityCell(row, 6, taskData.get("task_priority"), dataStyle);
                 setCellValue(row, 7, taskData.get("requester_name"), dataStyle);
-                setCellValue(row, 8, taskData.get("created_by_user"), dataStyle);
-                setCellValue(row, 9, taskData.get("updated_by_user"), dataStyle);
-                setCellValue(row, 10, taskData.get("server_origin"), dataStyle);
-                setCellValue(row, 11, taskData.get("system_module"), dataStyle);
-                setCellValue(row, 12, taskData.get("task_link"), dataStyle);
-                setCellValue(row, 13, taskData.get("meeting_link"), dataStyle);
-                setCellValue(row, 14, taskData.get("task_amount"), currencyStyle);
-                setCellValue(row, 15, taskData.get("has_subtasks"), dataStyle);
-                setCellValue(row, 16, taskData.get("has_delivery"), dataStyle);
-                setCellValue(row, 17, taskData.get("has_quote_in_billing"), dataStyle);
-                setCellValue(row, 18, taskData.get("task_created_at"), dateStyle);
-                setCellValue(row, 19, taskData.get("task_updated_at"), dateStyle);
-                setCellValue(row, 20, taskData.get("subtask_id"), dataStyle);
-                setCellValue(row, 21, taskData.get("subtask_title"), dataStyle);
-                setCellValue(row, 22, taskData.get("subtask_description"), dataStyle);
-                setCellValue(row, 23, taskData.get("subtask_amount"), currencyStyle);
+                setCellValue(row, 8, taskData.get("server_origin"), dataStyle);
+                setCellValue(row, 9, taskData.get("system_module"), dataStyle);
+                setCellValue(row, 10, taskData.get("task_link"), dataStyle);
+                setCellValue(row, 11, taskData.get("meeting_link"), dataStyle);
+                setCellValue(row, 12, taskData.get("task_amount"), currencyStyle);
+                setCellValue(row, 13, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 14, taskData.get("has_delivery"), dataStyle);
+                setCellValue(row, 15, taskData.get("has_quote_in_billing"), dataStyle);
+                setCellValue(row, 16, taskData.get("subtask_id"), dataStyle);
+                setCellValue(row, 17, taskData.get("subtask_title"), dataStyle);
+                setCellValue(row, 18, taskData.get("subtask_description"), dataStyle);
+                setCellValue(row, 19, taskData.get("subtask_amount"), currencyStyle);
             } else {
-                // USER: Remove colunas sensíveis
+                // USER: 16 colunas (sem colunas sensíveis, Criado Por, Atualizado Por, Datas)
                 setCellValue(row, 0, taskData.get("task_id"), dataStyle);
                 setFlowTypeCell(row, 1, taskData.get("task_flow_type"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_code"), dataStyle);
@@ -117,24 +111,20 @@ public class ExcelReportUtils {
                 setTaskTypeCell(row, 5, taskData.get("task_type"), dataStyle);
                 setPriorityCell(row, 6, taskData.get("task_priority"), dataStyle);
                 setCellValue(row, 7, taskData.get("requester_name"), dataStyle);
-                setCellValue(row, 8, taskData.get("created_by_user"), dataStyle);
-                setCellValue(row, 9, taskData.get("updated_by_user"), dataStyle);
-                setCellValue(row, 10, taskData.get("server_origin"), dataStyle);
-                setCellValue(row, 11, taskData.get("system_module"), dataStyle);
-                setCellValue(row, 12, taskData.get("task_link"), dataStyle);
-                setCellValue(row, 13, taskData.get("meeting_link"), dataStyle);
-                setCellValue(row, 14, taskData.get("has_subtasks"), dataStyle);
-                setCellValue(row, 15, taskData.get("task_created_at"), dateStyle);
-                setCellValue(row, 16, taskData.get("task_updated_at"), dateStyle);
-                setCellValue(row, 17, taskData.get("subtask_id"), dataStyle);
-                setCellValue(row, 18, taskData.get("subtask_title"), dataStyle);
-                setCellValue(row, 19, taskData.get("subtask_description"), dataStyle);
+                setCellValue(row, 8, taskData.get("server_origin"), dataStyle);
+                setCellValue(row, 9, taskData.get("system_module"), dataStyle);
+                setCellValue(row, 10, taskData.get("task_link"), dataStyle);
+                setCellValue(row, 11, taskData.get("meeting_link"), dataStyle);
+                setCellValue(row, 12, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 13, taskData.get("subtask_id"), dataStyle);
+                setCellValue(row, 14, taskData.get("subtask_title"), dataStyle);
+                setCellValue(row, 15, taskData.get("subtask_description"), dataStyle);
             }
         }
 
         // Ajustar largura das colunas baseado no conteúdo
         if (canViewAmounts) {
-            // ADMIN/MANAGER: 24 colunas
+            // ADMIN/MANAGER: 20 colunas
             setColumnWidths(sheet, new int[]{
                 2500,  // ID
                 4000,  // Fluxo
@@ -144,8 +134,6 @@ public class ExcelReportUtils {
                 3500,  // Tipo
                 3000,  // Prioridade
                 6000,  // Solicitante
-                4000,  // Criado Por
-                4000,  // Atualizado Por
                 4000,  // Origem do Servidor
                 4000,  // Módulo do Sistema
                 8000,  // Link (maior para URLs)
@@ -154,15 +142,13 @@ public class ExcelReportUtils {
                 3000,  // Tem Subtarefas
                 3000,  // Tem Entrega
                 4000,  // Orçamento no Faturamento
-                6000,  // Data de Criação (aumentada para dd/mm/yyyy hh:mm:ss)
-                6000,  // Data de Atualização (aumentada para dd/mm/yyyy hh:mm:ss)
                 2500,  // Subtarefa ID
                 8000,  // Subtarefa Título (maior)
                 10000, // Subtarefa Descrição (maior)
                 3500   // Subtarefa Valor
             });
         } else {
-            // USER: 20 colunas (sem colunas de valores)
+            // USER: 16 colunas (sem colunas de valores)
             setColumnWidths(sheet, new int[]{
                 2500,  // ID
                 4000,  // Fluxo
@@ -172,15 +158,11 @@ public class ExcelReportUtils {
                 3500,  // Tipo
                 3000,  // Prioridade
                 6000,  // Solicitante
-                4000,  // Criado Por
-                4000,  // Atualizado Por
                 4000,  // Origem do Servidor
                 4000,  // Módulo do Sistema
                 8000,  // Link (maior para URLs)
                 8000,  // Link da Reunião (maior para URLs)
                 3000,  // Tem Subtarefas
-                6000,  // Data de Criação (aumentada para dd/mm/yyyy hh:mm:ss)
-                6000,  // Data de Atualização (aumentada para dd/mm/yyyy hh:mm:ss)
                 2500,  // Subtarefa ID
                 8000,  // Subtarefa Título (maior)
                 10000  // Subtarefa Descrição (maior)
@@ -537,7 +519,7 @@ public class ExcelReportUtils {
     private String translateFlowType(String flowType) {
         if (flowType == null) return "";
         return switch (flowType.toUpperCase()) {
-            case "DESENVOLVIMENTO" -> "💻 Desenvolvimento";
+            case "DESENVOLVIMENTO" -> "Desenvolvimento";
             case "OPERACIONAL" -> "Operacional";
             default -> flowType;
         };
