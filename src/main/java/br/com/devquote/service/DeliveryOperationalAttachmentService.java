@@ -18,4 +18,6 @@ public interface DeliveryOperationalAttachmentService {
     void delete(Long id) throws IOException;
 
     Resource downloadFile(Long id) throws IOException;
+
+    void deleteAllOperationalAttachmentsByDeliveryId(Long deliveryId) throws IOException;
 }

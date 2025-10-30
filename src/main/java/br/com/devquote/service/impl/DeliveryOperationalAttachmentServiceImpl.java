@@ -193,4 +193,31 @@ public class DeliveryOperationalAttachmentServiceImpl implements DeliveryOperati
     private String buildFilePath(Long deliveryId, Long operationalItemId, String fileName) {
         return String.format("deliveries/%d/operational-items/%d/attachments/%s", deliveryId, operationalItemId, fileName);
     }
+
+    @Override
+    public void deleteAllOperationalAttachmentsByDeliveryId(Long deliveryId) throws IOException {
+        // Buscar todos os itens operacionais da delivery
+        List<DeliveryOperationalItem> operationalItems = operationalItemRepository.findByDeliveryId(deliveryId);
+
+        for (DeliveryOperationalItem item : operationalItems) {
+            // Buscar todos os anexos deste item operacional
+            List<DeliveryOperationalAttachment> attachments = attachmentRepository.findByDeliveryOperationalItemId(item.getId());
+
+            for (DeliveryOperationalAttachment attachment : attachments) {
+                try {
+                    // Deletar arquivo do storage
+                    fileStorageStrategy.deleteFile(attachment.getFilePath());
+                    log.info("File deleted from storage: {}", attachment.getFilePath());
+                } catch (Exception e) {
+                    log.warn("Could not delete file from storage: {} - {}", attachment.getFilePath(), e.getMessage());
+                }
+
+                // Deletar do banco de dados
+                attachmentRepository.delete(attachment);
+                log.info("Attachment deleted from database: {}", attachment.getOriginalName());
+            }
+        }
+
+        log.info("All operational attachments deleted for delivery ID: {}", deliveryId);
+    }
 }

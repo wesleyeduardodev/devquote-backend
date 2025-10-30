@@ -4,12 +4,15 @@ import br.com.devquote.dto.request.DeliveryOperationalItemRequest;
 import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
 import br.com.devquote.dto.response.DeliveryOperationalItemResponse;
 import br.com.devquote.entity.Delivery;
+import br.com.devquote.entity.DeliveryOperationalAttachment;
 import br.com.devquote.entity.DeliveryOperationalItem;
 import br.com.devquote.enums.OperationalItemStatus;
 import br.com.devquote.error.ResourceNotFoundException;
+import br.com.devquote.repository.DeliveryOperationalAttachmentRepository;
 import br.com.devquote.repository.DeliveryOperationalItemRepository;
 import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.service.DeliveryOperationalItemService;
+import br.com.devquote.service.storage.FileStorageStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +27,9 @@ import java.util.stream.Collectors;
 public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalItemService {
 
     private final DeliveryOperationalItemRepository operationalItemRepository;
+    private final DeliveryOperationalAttachmentRepository attachmentRepository;
     private final DeliveryRepository deliveryRepository;
+    private final FileStorageStrategy fileStorageStrategy;
 
     @Override
     @Transactional
@@ -97,11 +102,29 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
                 .orElseThrow(() -> new ResourceNotFoundException("Operational item not found"));
 
         Delivery delivery = item.getDelivery();
+
+        // 1. Deletar anexos do storage antes de deletar o item
+        List<DeliveryOperationalAttachment> attachments = attachmentRepository.findByDeliveryOperationalItemId(id);
+        for (DeliveryOperationalAttachment attachment : attachments) {
+            try {
+                fileStorageStrategy.deleteFile(attachment.getFilePath());
+                log.info("File deleted from storage: {}", attachment.getFilePath());
+            } catch (Exception e) {
+                log.warn("Could not delete file from storage: {} - {}", attachment.getFilePath(), e.getMessage());
+            }
+        }
+
+        // 2. Remover o item da lista da delivery ANTES de deletar (evita erro de merge)
+        delivery.removeOperationalItem(item);
+
+        // 3. Deletar o item (cascade vai deletar os anexos do banco)
         operationalItemRepository.delete(item);
 
-        // Atualizar status da delivery
+        // 4. Atualizar status da delivery
         delivery.updateStatus();
         deliveryRepository.save(delivery);
+
+        log.info("Operational item deleted successfully: {}", id);
     }
 
     @Override

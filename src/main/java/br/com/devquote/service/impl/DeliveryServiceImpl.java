@@ -14,6 +14,7 @@ import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.DeliveryService;
 import br.com.devquote.service.DeliveryAttachmentService;
 import br.com.devquote.service.DeliveryItemAttachmentService;
+import br.com.devquote.service.DeliveryOperationalAttachmentService;
 import br.com.devquote.service.EmailService;
 import br.com.devquote.service.storage.FileStorageStrategy;
 import br.com.devquote.utils.ExcelReportUtils;
@@ -46,6 +47,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final EmailService emailService;
     private final DeliveryAttachmentService deliveryAttachmentService;
     private final DeliveryItemAttachmentService deliveryItemAttachmentService;
+    private final DeliveryOperationalAttachmentService deliveryOperationalAttachmentService;
     private final FileStorageStrategy fileStorageStrategy;
 
     @Override
@@ -266,6 +268,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         try {
             deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(id);
             deliveryItemAttachmentService.deleteAllDeliveryItemAttachmentsByDeliveryId(id);
+            deliveryOperationalAttachmentService.deleteAllOperationalAttachmentsByDeliveryId(id);
         } catch (Exception e) {
             log.error("Failed to delete attachments for delivery {}: {}", id, e.getMessage());
         }
@@ -287,6 +290,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             try {
                 deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(deliveryId);
                 deliveryItemAttachmentService.deleteAllDeliveryItemAttachmentsByDeliveryId(deliveryId);
+                deliveryOperationalAttachmentService.deleteAllOperationalAttachmentsByDeliveryId(deliveryId);
                 log.info("Successfully deleted all attachments for delivery {}", deliveryId);
             } catch (Exception e) {
                 log.warn("Failed to delete attachments for delivery {}: {}", deliveryId, e.getMessage());
@@ -357,6 +361,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         try {
             deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(deliveryId);
             deliveryItemAttachmentService.deleteAllDeliveryItemAttachmentsByDeliveryId(deliveryId);
+            deliveryOperationalAttachmentService.deleteAllOperationalAttachmentsByDeliveryId(deliveryId);
             log.info("Successfully deleted all attachments for delivery {} (task {})", deliveryId, taskId);
         } catch (Exception e) {
             log.warn("Failed to delete attachments for delivery {} (task {}): {}", deliveryId, taskId, e.getMessage());
