@@ -410,6 +410,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public Page<DeliveryResponse> findAllPaginated(Long id,
                                                    String taskName,
                                                    String taskCode,
+                                                   String flowType,
                                                    String status,
                                                    String createdAt,
                                                    String updatedAt,
@@ -420,7 +421,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         // 1. Buscar apenas IDs com paginação (eficiente, sem JOIN FETCH)
         Page<Long> idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                id, taskName, taskCode, statusEnum, createdAt, updatedAt, pageable
+                id, taskName, taskCode, flowType, statusEnum, createdAt, updatedAt, pageable
         );
 
         if (idsPage.isEmpty()) {
@@ -518,13 +519,14 @@ public class DeliveryServiceImpl implements DeliveryService {
     public Page<DeliveryGroupResponse> findAllGroupedByTask(Long taskId,
                                                              String taskName,
                                                              String taskCode,
+                                                             String flowType,
                                                              String status,
                                                              String createdAt,
                                                              String updatedAt,
                                                              Pageable pageable) {
 
-        log.debug("findAllGroupedByTask - taskId: {}, taskName: {}, taskCode: {}, status: {}, pageable: {}", 
-                taskId, taskName, taskCode, status, pageable);
+        log.debug("findAllGroupedByTask - taskId: {}, taskName: {}, taskCode: {}, flowType: {}, status: {}, pageable: {}",
+                taskId, taskName, taskCode, flowType, status, pageable);
 
         // Converter status String para enum usando método auxiliar
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
@@ -532,11 +534,11 @@ public class DeliveryServiceImpl implements DeliveryService {
         // Buscar deliveries com paginação usando estratégia de duas queries (sem EntityGraph + Pageable)
         Page<Long> idsPage;
         try {
-            if (taskId != null || taskName != null || taskCode != null || statusEnum != null) {
+            if (taskId != null || taskName != null || taskCode != null || flowType != null || statusEnum != null) {
                 // Se tem filtros, usa o método com filtros (apenas IDs)
                 log.debug("Using filtered query for IDs");
                 idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                        taskId, taskName, taskCode, statusEnum, createdAt, updatedAt, pageable
+                        taskId, taskName, taskCode, flowType, statusEnum, createdAt, updatedAt, pageable
                 );
             } else {
                 // Se não tem filtros, usa o método simples (apenas IDs)
@@ -671,12 +673,21 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public byte[] exportToExcel() throws IOException {
+    public byte[] exportToExcel(String flowType) throws IOException {
+        log.debug("EXCEL EXPORT (Deliveries) STARTED with flowType={}", flowType);
+
+        // Construir filtro de flowType
+        String whereClause = "";
+        if (flowType != null && !flowType.equals("TODOS")) {
+            whereClause = "WHERE t.flow_type = '" + flowType + "' ";
+        }
+
         // Nova query adaptada para estrutura com DeliveryItem (sem IDs, valor e datas da entrega)
         String sql = """
-            SELECT 
+            SELECT
                 t.id as task_id,
                 t.code as task_code,
+                t.flow_type as task_flow_type,
                 t.title as task_title,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
@@ -694,6 +705,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             INNER JOIN requester r ON t.requester_id = r.id
             LEFT JOIN delivery_item di ON di.delivery_id = d.id
             LEFT JOIN project p ON di.project_id = p.id
+            """ + whereClause + """
             ORDER BY t.id DESC, d.id DESC, di.id ASC
         """;
 
@@ -706,23 +718,24 @@ public class DeliveryServiceImpl implements DeliveryService {
             // Dados da tarefa primeiro (colunas básicas)
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
-            map.put("task_title", row[2]);
-            map.put("subtasks_count", row[3]);
-            map.put("requester_name", row[4]);
-            
+            map.put("task_flow_type", row[2]); // Nova coluna flowType
+            map.put("task_title", row[3]);
+            map.put("subtasks_count", row[4]);
+            map.put("requester_name", row[5]);
+
             // Dados da entrega (sem datas)
-            map.put("delivery_status", row[5]);
-            
+            map.put("delivery_status", row[6]);
+
             // Dados do item de entrega (podem ser múltiplos por tarefa)
-            map.put("project_name", row[6]);
-            map.put("item_status", row[7]);
-            map.put("item_branch", row[8]);
-            map.put("item_source_branch", row[9]);
-            map.put("item_pull_request", row[10]);
-            map.put("item_notes", row[11]);
-            map.put("item_started_at", row[12]);
-            map.put("item_finished_at", row[13]);
-            
+            map.put("project_name", row[7]);
+            map.put("item_status", row[8]);
+            map.put("item_branch", row[9]);
+            map.put("item_source_branch", row[10]);
+            map.put("item_pull_request", row[11]);
+            map.put("item_notes", row[12]);
+            map.put("item_started_at", row[13]);
+            map.put("item_finished_at", row[14]);
+
             return map;
         }).collect(Collectors.toList());
 
@@ -812,12 +825,12 @@ public class DeliveryServiceImpl implements DeliveryService {
      * Método otimizado para buscar grupos de entregas com dados pré-calculados
      * Melhora significativa de performance comparado ao método original
      */
-    public Page<DeliveryGroupResponse> findAllGroupedByTaskOptimized(String taskName, String taskCode, 
-                                                                     String status, String createdAt, 
+    public Page<DeliveryGroupResponse> findAllGroupedByTaskOptimized(String taskName, String taskCode,
+                                                                     String status, String createdAt,
                                                                      String updatedAt, Pageable pageable) {
-        
+
         // Na nova arquitetura, usar o método não otimizado que já funciona
-        return findAllGroupedByTask(null, taskName, taskCode, status, createdAt, updatedAt, pageable);
+        return findAllGroupedByTask(null, taskName, taskCode, null, status, createdAt, updatedAt, pageable);
     }
 
     /**

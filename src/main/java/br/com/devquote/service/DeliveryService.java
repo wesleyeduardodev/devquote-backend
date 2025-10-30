@@ -26,6 +26,7 @@ public interface DeliveryService {
     Page<DeliveryResponse> findAllPaginated(Long id,
                                             String taskName,
                                             String taskCode,
+                                            String flowType,
                                             String status,
                                             String createdAt,
                                             String updatedAt,
@@ -34,6 +35,7 @@ public interface DeliveryService {
     Page<DeliveryGroupResponse> findAllGroupedByTask(Long taskId,
                                                       String taskName,
                                                       String taskCode,
+                                                      String flowType,
                                                       String status,
                                                       String createdAt,
                                                       String updatedAt,
@@ -57,7 +59,7 @@ public interface DeliveryService {
 
     void updateAllDeliveryStatuses();
 
-    byte[] exportToExcel() throws IOException;
+    byte[] exportToExcel(String flowType) throws IOException;
     
     DeliveryResponse findByTaskId(Long taskId);
 

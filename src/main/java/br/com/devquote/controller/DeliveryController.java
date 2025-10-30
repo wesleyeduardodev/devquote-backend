@@ -52,6 +52,7 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String taskCode,
+            @RequestParam(required = false) String flowType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
@@ -66,7 +67,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         );
 
         Page<DeliveryResponse> pageResult = deliveryService.findAllPaginated(
-                id, taskName, taskCode, status, createdAt, updatedAt, pageable
+                id, taskName, taskCode, flowType, status, createdAt, updatedAt, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
@@ -157,6 +158,7 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) Long taskId,
             @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String taskCode,
+            @RequestParam(required = false) String flowType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
@@ -165,7 +167,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         List<String> sortParams = allParams != null ? allParams.get("sort") : null;
         Pageable pageable = PageRequest.of(page, size, SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id"));
         Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTask(
-                taskId, taskName, taskCode, status, createdAt, updatedAt, pageable
+                taskId, taskName, taskCode, flowType, status, createdAt, updatedAt, pageable
         );
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
     }
@@ -178,6 +180,7 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) Long taskId,
             @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String taskCode,
+            @RequestParam(required = false) String flowType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
@@ -186,7 +189,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         List<String> sortParams = allParams != null ? allParams.get("sort") : null;
         Pageable pageable = PageRequest.of(page, size, SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id"));
         Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTask(
-                taskId, taskName, taskCode, status, createdAt, updatedAt, pageable
+                taskId, taskName, taskCode, flowType, status, createdAt, updatedAt, pageable
         );
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
     }
@@ -252,8 +255,9 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @GetMapping("/export/excel")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
-    public ResponseEntity<byte[]> exportDeliveriesToExcel() throws IOException {
-        byte[] excelData = deliveryService.exportToExcel();
+    public ResponseEntity<byte[]> exportDeliveriesToExcel(
+            @RequestParam(required = false) String flowType) throws IOException {
+        byte[] excelData = deliveryService.exportToExcel(flowType);
         
         String filename = "relatorio_entregas_" + 
                          LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) + 

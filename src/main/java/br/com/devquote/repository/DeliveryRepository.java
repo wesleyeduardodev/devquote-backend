@@ -37,7 +37,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
           JOIN d.task t
          WHERE (:taskId IS NULL OR t.id = :taskId)
            AND (:taskName IS NULL OR :taskName = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :taskName, '%')))
-           AND (:taskCode IS NULL OR :taskCode = '' OR LOWER(t.code) LIKE LOWER(CONCAT('%', :taskCode, '%')))        
+           AND (:taskCode IS NULL OR :taskCode = '' OR LOWER(t.code) LIKE LOWER(CONCAT('%', :taskCode, '%')))
+           AND (:flowType IS NULL OR :flowType = '' OR CAST(t.flowType AS string) = :flowType)
            AND (:status IS NULL OR :status = '' OR d.status = :status)
          ORDER BY t.id DESC
         """)
@@ -45,6 +46,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             @Param("taskId") Long taskId,
             @Param("taskName") String taskName,
             @Param("taskCode") String taskCode,
+            @Param("flowType") String flowType,
             @Param("status") br.com.devquote.enums.DeliveryStatus status,
             @Param("createdAt") String createdAt,
             @Param("updatedAt") String updatedAt,

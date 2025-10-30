@@ -544,11 +544,11 @@ public class ExcelReportUtils {
         // Cabeçalhos reorganizados: Tarefa -> Entrega -> Item (sem IDs, valor e datas da entrega, script no final)
         String[] headers = {
             // Dados da Tarefa
-            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Qtd. Subtarefas", "Solicitante",
+            "ID Tarefa", "Código da Tarefa", "Fluxo", "Título da Tarefa", "Qtd. Subtarefas", "Solicitante",
             // Dados da Entrega
             "Status Geral da Entrega",
             // Dados do Item de Entrega
-            "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem", 
+            "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
             "Pull Request", "Observações", "Data Início", "Data Fim"
         };
 
@@ -556,11 +556,11 @@ public class ExcelReportUtils {
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
-            
+
             // Aplicar cores diferentes por grupo
-            if (i <= 4) {
+            if (i <= 5) {
                 cell.setCellStyle(taskHeaderStyle); // Azul para tarefas
-            } else if (i == 5) {
+            } else if (i == 6) {
                 cell.setCellStyle(deliveryHeaderStyle); // Verde para entrega
             } else {
                 cell.setCellStyle(itemHeaderStyle); // Amarelo para itens
@@ -575,29 +575,31 @@ public class ExcelReportUtils {
             // Dados da tarefa
             setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
             setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
-            setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
-            setCellValue(row, 3, deliveryData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 4, deliveryData.get("requester_name"), dataStyle);
+            setFlowTypeCell(row, 2, deliveryData.get("task_flow_type"), dataStyle);
+            setCellValue(row, 3, deliveryData.get("task_title"), dataStyle);
+            setCellValue(row, 4, deliveryData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 5, deliveryData.get("requester_name"), dataStyle);
 
             // Dados da entrega (sem datas)
-            setDeliveryStatusCell(row, 5, deliveryData.get("delivery_status"), dataStyle);
+            setDeliveryStatusCell(row, 6, deliveryData.get("delivery_status"), dataStyle);
 
             // Dados do item
-            setCellValue(row, 6, deliveryData.get("project_name"), dataStyle);
-            setDeliveryStatusCell(row, 7, deliveryData.get("item_status"), dataStyle);
-            setCellValue(row, 8, deliveryData.get("item_branch"), dataStyle);
-            setCellValue(row, 9, deliveryData.get("item_source_branch"), dataStyle);
-            setCellValue(row, 10, deliveryData.get("item_pull_request"), dataStyle);
-            setCellValue(row, 11, deliveryData.get("item_notes"), dataStyle);
-            setCellValue(row, 12, deliveryData.get("item_started_at"), dateOnlyStyle);
-            setCellValue(row, 13, deliveryData.get("item_finished_at"), dateOnlyStyle);
+            setCellValue(row, 7, deliveryData.get("project_name"), dataStyle);
+            setDeliveryStatusCell(row, 8, deliveryData.get("item_status"), dataStyle);
+            setCellValue(row, 9, deliveryData.get("item_branch"), dataStyle);
+            setCellValue(row, 10, deliveryData.get("item_source_branch"), dataStyle);
+            setCellValue(row, 11, deliveryData.get("item_pull_request"), dataStyle);
+            setCellValue(row, 12, deliveryData.get("item_notes"), dataStyle);
+            setCellValue(row, 13, deliveryData.get("item_started_at"), dateOnlyStyle);
+            setCellValue(row, 14, deliveryData.get("item_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar largura das colunas (14 colunas no total - sem IDs, valor e datas da entrega)
+        // Ajustar largura das colunas (15 colunas no total - incluindo Fluxo)
         setColumnWidths(sheet, new int[]{
             // Dados da Tarefa
             2500,  // ID Tarefa
             3500,  // Código da Tarefa
+            4000,  // Fluxo (NOVO)
             8000,  // Título da Tarefa (maior)
             3000,  // Qtd. Subtarefas
             6000,  // Solicitante

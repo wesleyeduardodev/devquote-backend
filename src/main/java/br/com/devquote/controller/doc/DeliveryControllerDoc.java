@@ -30,6 +30,7 @@ public interface DeliveryControllerDoc {
     @Parameter(name = "taskId", description = "Filter by task ID", example = "789")
     @Parameter(name = "taskName", description = "Filter by task title (partial)", example = "Landing page")
     @Parameter(name = "taskCode", description = "Filter by task code (partial)", example = "TASK-001")
+    @Parameter(name = "flowType", description = "Filter by flow type", example = "OPERACIONAL")
     @Parameter(name = "status", description = "Filter by status (partial)", example = "DEVELOPMENT")
     @Parameter(name = "createdAt", description = "Filter by creation date (supports partial)", example = "2025-08")
     @Parameter(name = "updatedAt", description = "Filter by update date (supports partial)", example = "2025-08-19")
@@ -44,6 +45,7 @@ public interface DeliveryControllerDoc {
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String taskCode,
+            @RequestParam(required = false) String flowType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
