@@ -433,6 +433,19 @@ public class ExcelReportUtils {
         }
     }
 
+    private void setMonthNameCell(Row row, int columnIndex, Object value, CellStyle style) {
+        Cell cell = row.createCell(columnIndex);
+        cell.setCellStyle(style);
+
+        if (value == null) {
+            cell.setCellValue("");
+        } else {
+            int month = Integer.parseInt(value.toString());
+            String monthName = translateMonth(month);
+            cell.setCellValue(monthName);
+        }
+    }
+
     private String translateStatus(String status) {
         if (status == null) return "";
         return switch (status.toUpperCase()) {
@@ -521,6 +534,24 @@ public class ExcelReportUtils {
             case "DESENVOLVIMENTO" -> "Desenvolvimento";
             case "OPERACIONAL" -> "Operacional";
             default -> flowType;
+        };
+    }
+
+    private String translateMonth(int month) {
+        return switch (month) {
+            case 1 -> "Janeiro";
+            case 2 -> "Fevereiro";
+            case 3 -> "Março";
+            case 4 -> "Abril";
+            case 5 -> "Maio";
+            case 6 -> "Junho";
+            case 7 -> "Julho";
+            case 8 -> "Agosto";
+            case 9 -> "Setembro";
+            case 10 -> "Outubro";
+            case 11 -> "Novembro";
+            case 12 -> "Dezembro";
+            default -> "";
         };
     }
 
@@ -778,7 +809,7 @@ public class ExcelReportUtils {
 
         // Cabeçalhos: Faturamento -> Tarefa (com Fluxo e Tipo da Tarefa, sem orçamento e sem datas)
         String[] headers = {
-            "Ano", "Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa",
+            "Ano", "Mês", "Nome do Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa",
             "Fluxo", "Título da Tarefa", "Tipo da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas",
             "Solicitante"
         };
@@ -798,23 +829,25 @@ public class ExcelReportUtils {
             // Dados do faturamento
             setCellValue(row, 0, billingData.get("billing_year"), dataStyle);
             setCellValue(row, 1, billingData.get("billing_month"), dataStyle);
-            setStatusCell(row, 2, billingData.get("billing_status"), dataStyle);
+            setMonthNameCell(row, 2, billingData.get("billing_month"), dataStyle);
+            setStatusCell(row, 3, billingData.get("billing_status"), dataStyle);
 
             // Dados da tarefa
-            setCellValue(row, 3, billingData.get("task_id"), dataStyle);
-            setCellValue(row, 4, billingData.get("task_code"), dataStyle);
-            setFlowTypeCell(row, 5, billingData.get("task_flow_type"), dataStyle);
-            setCellValue(row, 6, billingData.get("task_title"), dataStyle);
-            setTaskTypeCell(row, 7, billingData.get("task_type"), dataStyle);
-            setCellValue(row, 8, billingData.get("task_amount"), currencyStyle);
-            setCellValue(row, 9, billingData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 10, billingData.get("requester_name"), dataStyle);
+            setCellValue(row, 4, billingData.get("task_id"), dataStyle);
+            setCellValue(row, 5, billingData.get("task_code"), dataStyle);
+            setFlowTypeCell(row, 6, billingData.get("task_flow_type"), dataStyle);
+            setCellValue(row, 7, billingData.get("task_title"), dataStyle);
+            setTaskTypeCell(row, 8, billingData.get("task_type"), dataStyle);
+            setCellValue(row, 9, billingData.get("task_amount"), currencyStyle);
+            setCellValue(row, 10, billingData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 11, billingData.get("requester_name"), dataStyle);
         }
 
-        // Ajustar largura das colunas (11 colunas)
+        // Ajustar largura das colunas (12 colunas)
         setColumnWidths(sheet, new int[]{
             2500,  // Ano
             2500,  // Mês
+            3500,  // Nome do Mês
             4000,  // Status do Faturamento
             2500,  // ID Tarefa
             3500,  // Código da Tarefa
