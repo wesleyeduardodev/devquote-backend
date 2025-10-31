@@ -4,7 +4,6 @@ import br.com.devquote.dto.request.UserProfileRequest;
 import br.com.devquote.entity.Permission;
 import br.com.devquote.entity.Profile;
 import br.com.devquote.entity.User;
-import br.com.devquote.entity.UserProfile;
 import br.com.devquote.repository.PermissionRepository;
 import br.com.devquote.repository.ProfileRepository;
 import br.com.devquote.repository.UserRepository;
@@ -114,7 +113,13 @@ public class UserManagementService {
             user.setEmail(request.getEmail());
         }
 
-        user.setName(request.getFirstName() + " " + request.getLastName());
+        // Atualiza o nome (usa name direto ou fallback para firstName + lastName para compatibilidade)
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            user.setName(request.getName());
+        } else if (request.getFirstName() != null && request.getLastName() != null) {
+            user.setName(request.getFirstName() + " " + request.getLastName());
+        }
+
         user.setActive(request.getEnabled());
 
         if (request.getProfileCodes() != null) {
