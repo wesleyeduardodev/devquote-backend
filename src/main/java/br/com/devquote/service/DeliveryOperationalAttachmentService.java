@@ -20,4 +20,9 @@ public interface DeliveryOperationalAttachmentService {
     Resource downloadFile(Long id) throws IOException;
 
     void deleteAllOperationalAttachmentsByDeliveryId(Long deliveryId) throws IOException;
+
+    /**
+     * Busca anexos operacionais como entidades por delivery ID (para uso interno com emails)
+     */
+    List<br.com.devquote.entity.DeliveryOperationalAttachment> getOperationalAttachmentsEntitiesByDeliveryId(Long deliveryId);
 }

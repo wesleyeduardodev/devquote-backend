@@ -5,6 +5,7 @@ import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.dto.response.DeliveryGroupResponse;
 import br.com.devquote.dto.response.DeliveryStatusCount;
 import br.com.devquote.entity.Delivery;
+import br.com.devquote.entity.DeliveryOperationalAttachment;
 import br.com.devquote.entity.Project;
 import br.com.devquote.entity.Task;
 import br.com.devquote.enums.DeliveryStatus;
@@ -205,7 +206,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         // ESTRATÉGIA ROBUSTA: Tentar baixar anexos da entrega e dos itens para memória
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
         boolean hasAttachments = false;
-        
+
         try {
             // Buscar anexos da entrega
             List<br.com.devquote.entity.DeliveryAttachment> deliveryAttachments = deliveryAttachmentService.getDeliveryAttachmentsEntities(id);
@@ -215,7 +216,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
-                            
+
                             inputStream.transferTo(baos);
                             byte[] data = baos.toByteArray();
                             attachmentDataMap.put("delivery_" + attachment.getOriginalFileName(), data);
@@ -225,7 +226,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     }
                 }
             }
-            
+
             // Buscar anexos dos itens de entrega
             List<br.com.devquote.entity.DeliveryItemAttachment> itemAttachments = deliveryItemAttachmentService.getDeliveryItemAttachmentsEntitiesByDeliveryId(id);
             if (itemAttachments != null && !itemAttachments.isEmpty()) {
@@ -234,7 +235,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
-                            
+
                             inputStream.transferTo(baos);
                             byte[] data = baos.toByteArray();
                             attachmentDataMap.put("item_" + attachment.getOriginalFileName(), data);
@@ -244,10 +245,29 @@ public class DeliveryServiceImpl implements DeliveryService {
                     }
                 }
             }
+
+            // Buscar anexos dos itens operacionais
+            List<DeliveryOperationalAttachment> operationalAttachments = deliveryOperationalAttachmentService.getOperationalAttachmentsEntitiesByDeliveryId(id);
+            if (operationalAttachments != null && !operationalAttachments.isEmpty()) {
+                hasAttachments = true;
+                for (DeliveryOperationalAttachment attachment : operationalAttachments) {
+                    try {
+                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
+                             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+
+                            inputStream.transferTo(baos);
+                            byte[] data = baos.toByteArray();
+                            attachmentDataMap.put("operational_" + attachment.getOriginalName(), data);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to download operational attachment {} from S3: {}", attachment.getOriginalName(), e.getMessage());
+                    }
+                }
+            }
         } catch (Exception e) {
             log.error("Error accessing attachments from database: {}", e.getMessage());
         }
-        
+
         // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
         // DESABILITADO: Não enviar mais email na exclusão de entrega
         /*
@@ -1023,7 +1043,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         // ESTRATÉGIA ROBUSTA: Tentar baixar anexos da entrega e dos itens, se conseguir incluir no email
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
         boolean hasAttachments = false;
-        
+
         try {
             // Buscar anexos da entrega
             List<br.com.devquote.entity.DeliveryAttachment> deliveryAttachments = deliveryAttachmentService.getDeliveryAttachmentsEntities(id);
@@ -1033,7 +1053,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
-                            
+
                             inputStream.transferTo(baos);
                             byte[] data = baos.toByteArray();
                             attachmentDataMap.put("delivery_" + attachment.getOriginalFileName(), data);
@@ -1043,7 +1063,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     }
                 }
             }
-            
+
             // Buscar anexos dos itens de entrega
             List<br.com.devquote.entity.DeliveryItemAttachment> itemAttachments = deliveryItemAttachmentService.getDeliveryItemAttachmentsEntitiesByDeliveryId(id);
             if (itemAttachments != null && !itemAttachments.isEmpty()) {
@@ -1052,7 +1072,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
-                            
+
                             inputStream.transferTo(baos);
                             byte[] data = baos.toByteArray();
                             attachmentDataMap.put("item_" + attachment.getOriginalFileName(), data);
@@ -1062,10 +1082,29 @@ public class DeliveryServiceImpl implements DeliveryService {
                     }
                 }
             }
+
+            // Buscar anexos dos itens operacionais
+            List<DeliveryOperationalAttachment> operationalAttachments = deliveryOperationalAttachmentService.getOperationalAttachmentsEntitiesByDeliveryId(id);
+            if (operationalAttachments != null && !operationalAttachments.isEmpty()) {
+                hasAttachments = true;
+                for (DeliveryOperationalAttachment attachment : operationalAttachments) {
+                    try {
+                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
+                             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+
+                            inputStream.transferTo(baos);
+                            byte[] data = baos.toByteArray();
+                            attachmentDataMap.put("operational_" + attachment.getOriginalName(), data);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to download operational attachment {} from S3: {}", attachment.getOriginalName(), e.getMessage());
+                    }
+                }
+            }
         } catch (Exception e) {
             log.error("Error accessing attachments from database: {}", e.getMessage());
         }
-        
+
         // Enviar email de notificação (com anexos se conseguiu baixar, sem anexos se não conseguiu)
         try {
             if (!attachmentDataMap.isEmpty()) {

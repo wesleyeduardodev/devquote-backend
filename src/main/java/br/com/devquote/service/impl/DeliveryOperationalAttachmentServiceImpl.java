@@ -220,4 +220,10 @@ public class DeliveryOperationalAttachmentServiceImpl implements DeliveryOperati
 
         log.info("All operational attachments deleted for delivery ID: {}", deliveryId);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DeliveryOperationalAttachment> getOperationalAttachmentsEntitiesByDeliveryId(Long deliveryId) {
+        return attachmentRepository.findByDeliveryId(deliveryId);
+    }
 }
