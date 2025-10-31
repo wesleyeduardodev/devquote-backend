@@ -226,6 +226,14 @@ public class UserManagementService {
                 .build();
     }
 
+    @Transactional
+    public void resetPassword(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setPassword(passwordEncoder.encode("usuario123"));
+        userRepository.save(user);
+    }
+
     private UserDto convertToDto(User user) {
         Set<String> profileCodes = user.getActiveProfileCodes();
         

@@ -103,4 +103,11 @@ public class UserManagementController {
         List<PermissionDto> permissions = userManagementService.getAllPermissions();
         return ResponseEntity.ok(permissions);
     }
+
+    @PostMapping("/{id}/reset-password")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Void> resetPassword(@PathVariable Long id) {
+        userManagementService.resetPassword(id);
+        return ResponseEntity.ok().build();
+    }
 }
