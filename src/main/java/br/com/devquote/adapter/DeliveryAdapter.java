@@ -1,6 +1,8 @@
 package br.com.devquote.adapter;
 
 import br.com.devquote.dto.request.DeliveryRequest;
+import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
+import br.com.devquote.dto.response.DeliveryOperationalItemResponse;
 import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Task;
@@ -38,6 +40,40 @@ public final class DeliveryAdapter {
                 .notes(entity.getNotes())
                 .items(entity.getItems() != null ?
                         DeliveryItemAdapter.toResponseDTOList(entity.getItems()) : null)
+                .operationalItems(entity.getOperationalItems() != null ?
+                        entity.getOperationalItems().stream()
+                                .map(item -> {
+                                    List<DeliveryOperationalAttachmentResponse> attachments = item.getAttachments() != null
+                                            ? item.getAttachments().stream()
+                                                    .map(att -> DeliveryOperationalAttachmentResponse.builder()
+                                                            .id(att.getId())
+                                                            .deliveryOperationalItemId(item.getId())
+                                                            .fileName(att.getFileName())
+                                                            .originalName(att.getOriginalName())
+                                                            .filePath(att.getFilePath())
+                                                            .fileSize(att.getFileSize())
+                                                            .contentType(att.getContentType())
+                                                            .uploadedAt(att.getUploadedAt())
+                                                            .createdAt(att.getCreatedAt())
+                                                            .updatedAt(att.getUpdatedAt())
+                                                            .build())
+                                                    .collect(Collectors.toList())
+                                            : List.of();
+
+                                    return DeliveryOperationalItemResponse.builder()
+                                            .id(item.getId())
+                                            .deliveryId(entity.getId())
+                                            .title(item.getTitle())
+                                            .description(item.getDescription())
+                                            .status(item.getStatus().name())
+                                            .startedAt(item.getStartedAt())
+                                            .finishedAt(item.getFinishedAt())
+                                            .attachments(attachments)
+                                            .createdAt(item.getCreatedAt())
+                                            .updatedAt(item.getUpdatedAt())
+                                            .build();
+                                })
+                                .collect(Collectors.toList()) : null)
                 .build();
     }
 

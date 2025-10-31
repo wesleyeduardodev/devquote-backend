@@ -38,4 +38,7 @@ public class DeliveryResponse {
 
     // Lista de itens da entrega
     private java.util.List<DeliveryItemResponse> items;
+
+    // Lista de itens operacionais da entrega
+    private java.util.List<DeliveryOperationalItemResponse> operationalItems;
 }
