@@ -271,33 +271,43 @@
                     <div style="background-color: white; border: 1px solid #e9ecef; border-radius: 4px; padding: 15px; margin-bottom: 15px;">
                         <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">
                             Item #<span th:text="${stat.count}">1</span>
-                            <span th:if="${item.project != null}" th:text="${' - ' + item.project.name}" style="color: #666; font-weight: normal;">Projeto</span>
+                            <!-- Item de Desenvolvimento -->
+                            <span th:if="${item.containsKey('project') and item.project != null}" th:text="${' - ' + item.project.name}" style="color: #666; font-weight: normal;">Projeto</span>
+                            <!-- Item Operacional -->
+                            <span th:if="${item.containsKey('title') and !#strings.isEmpty(item.title)}" th:text="${' - ' + item.title}" style="color: #666; font-weight: normal;">Título</span>
                         </h3>
-                        
+
                         <div class="info-grid">
-                            <!-- 1. Status -->
+                            <!-- Status (ambos os tipos) -->
                             <div class="info-row" th:if="${item.status != null}">
                                 <div class="info-label">Status:</div>
                                 <div class="info-value">
                                     <span class="status pendente" th:text="${item.status}">Pendente</span>
                                 </div>
                             </div>
-                            <!-- 2. Link da Entrega (Pull Request) -->
-                            <div class="info-row" th:if="${!#strings.isEmpty(item.pullRequest)}">
+
+                            <!-- Campos específicos de ITEM OPERACIONAL -->
+                            <div class="info-row" th:if="${item.containsKey('description') and !#strings.isEmpty(item.description)}">
+                                <div class="info-label">Descrição:</div>
+                                <div class="info-value">
+                                    <div class="notes-value" th:text="${item.description}">Descrição do item</div>
+                                </div>
+                            </div>
+
+                            <!-- Campos específicos de ITEM DE DESENVOLVIMENTO -->
+                            <div class="info-row" th:if="${item.containsKey('pullRequest') and !#strings.isEmpty(item.pullRequest)}">
                                 <div class="info-label">Link da Entrega (Pull Request):</div>
                                 <div class="info-value">
                                     <a href="#" th:href="${item.pullRequest}" th:text="${item.pullRequest}" class="link">Link PR</a>
                                 </div>
                             </div>
-                            <!-- 3. Branch -->
-                            <div class="info-row" th:if="${!#strings.isEmpty(item.branch)}">
+                            <div class="info-row" th:if="${item.containsKey('branch') and !#strings.isEmpty(item.branch)}">
                                 <div class="info-label">Branch:</div>
                                 <div class="info-value">
                                     <code th:text="${item.branch}">feature/branch</code>
                                 </div>
                             </div>
-                            <!-- 4. Observações -->
-                            <div class="info-row" th:if="${!#strings.isEmpty(item.notes)}">
+                            <div class="info-row" th:if="${item.containsKey('notes') and !#strings.isEmpty(item.notes)}">
                                 <div class="info-label">Observações:</div>
                                 <div class="info-value">
                                     <div class="notes-value" th:text="${item.notes}">Observações do item</div>

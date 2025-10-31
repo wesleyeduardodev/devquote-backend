@@ -69,6 +69,10 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (entity.getItems() != null) {
             entity.getItems().size();
         }
+        // Inicializar itens operacionais lazy se necessário
+        if (entity.getOperationalItems() != null) {
+            entity.getOperationalItems().size();
+        }
 
         return DeliveryAdapter.toResponseDTO(entity);
     }
@@ -576,10 +580,20 @@ public class DeliveryServiceImpl implements DeliveryService {
             // Calcular status e contagem de itens
             String calculatedStatus = "PENDING";
             int totalItems = 0;
-            
+
+            // Inicializar e contar itens de desenvolvimento
             if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
-                totalItems = delivery.getItems().size(); // Inicializa Items e conta
-                delivery.updateStatus(); // Atualiza status baseado nos itens
+                totalItems += delivery.getItems().size();
+            }
+
+            // Inicializar e contar itens operacionais
+            if (delivery.getOperationalItems() != null && !delivery.getOperationalItems().isEmpty()) {
+                totalItems += delivery.getOperationalItems().size();
+            }
+
+            // Atualizar status baseado em todos os itens (desenvolvimento + operacional)
+            if (totalItems > 0) {
+                delivery.updateStatus();
                 calculatedStatus = delivery.getStatus().name();
             }
 
@@ -992,6 +1006,14 @@ public class DeliveryServiceImpl implements DeliveryService {
                             if (item.getProject() != null) {
                                 item.getProject().getName();
                             }
+                        });
+                    }
+                    // Inicializar itens operacionais lazy
+                    if (entity.getOperationalItems() != null) {
+                        entity.getOperationalItems().forEach(item -> {
+                            item.getStatus();
+                            item.getTitle();
+                            item.getDescription();
                         });
                     }
                     return entity;

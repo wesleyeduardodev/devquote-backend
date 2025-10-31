@@ -77,10 +77,10 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             t.amount as task_value,
             t.created_at,
             t.updated_at,
-            COUNT(di.id) as total_items,
-            SUM(CASE WHEN di.status = 'PENDING' THEN 1 ELSE 0 END) as pending_count,
+            (COUNT(di.id) + COUNT(doi.id)) as total_items,
+            (SUM(CASE WHEN di.status = 'PENDING' THEN 1 ELSE 0 END) + SUM(CASE WHEN doi.status = 'PENDING' THEN 1 ELSE 0 END)) as pending_count,
             SUM(CASE WHEN di.status = 'DEVELOPMENT' THEN 1 ELSE 0 END) as development_count,
-            SUM(CASE WHEN di.status = 'DELIVERED' THEN 1 ELSE 0 END) as delivered_count,
+            (SUM(CASE WHEN di.status = 'DELIVERED' THEN 1 ELSE 0 END) + SUM(CASE WHEN doi.status = 'DELIVERED' THEN 1 ELSE 0 END)) as delivered_count,
             SUM(CASE WHEN di.status = 'HOMOLOGATION' THEN 1 ELSE 0 END) as homologation_count,
             SUM(CASE WHEN di.status = 'APPROVED' THEN 1 ELSE 0 END) as approved_count,
             SUM(CASE WHEN di.status = 'REJECTED' THEN 1 ELSE 0 END) as rejected_count,
@@ -88,6 +88,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         FROM task t
         INNER JOIN delivery d ON d.task_id = t.id
         LEFT JOIN delivery_item di ON di.delivery_id = d.id
+        LEFT JOIN delivery_operational_item doi ON doi.delivery_id = d.id
         WHERE t.id = :taskId
         GROUP BY d.id, d.status, t.id, t.title, t.code, t.task_type, t.amount, t.created_at, t.updated_at
         """, nativeQuery = true)

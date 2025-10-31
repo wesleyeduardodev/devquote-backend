@@ -1030,18 +1030,11 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("notes", delivery.getNotes() != null ? delivery.getNotes() : "");
 
         // Dados dos itens da entrega (nova arquitetura)
+        var allTranslatedItems = new java.util.ArrayList<java.util.HashMap<String, Object>>();
+
+        // Itens de desenvolvimento
         if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
-            // Remover dados técnicos da seção principal - eles ficam apenas nos itens
-            context.setVariable("deliveryBranch", "");
-            context.setVariable("deliverySourceBranch", "");
-            context.setVariable("deliveryPullRequest", "");
-            context.setVariable("deliveryScript", "");
-            context.setVariable("deliveryNotes", "");
-            context.setVariable("deliveryStartedAt", "");
-            context.setVariable("deliveryFinishedAt", "");
-            
-            // Lista completa de itens para templates - aqui ficam todos os dados técnicos
-            var translatedItems = delivery.getItems().stream()
+            var devItems = delivery.getItems().stream()
                 .map(item -> {
                     var map = new java.util.HashMap<String, Object>();
                     map.put("project", item.getProject());
@@ -1054,10 +1047,36 @@ public class EmailServiceImpl implements EmailService {
                     map.put("finishedAt", item.getFinishedAt());
                     return map;
                 })
-                .collect(java.util.stream.Collectors.toList());
-            
-            context.setVariable("deliveryItems", translatedItems);
-            context.setVariable("hasMultipleItems", delivery.getItems().size() >= 1); // Sempre mostrar itens quando houver
+                .toList();
+            allTranslatedItems.addAll(devItems);
+        }
+
+        // Itens operacionais
+        if (delivery.getOperationalItems() != null && !delivery.getOperationalItems().isEmpty()) {
+            var opItems = delivery.getOperationalItems().stream()
+                .map(item -> {
+                    var map = new java.util.HashMap<String, Object>();
+                    map.put("title", item.getTitle());
+                    map.put("description", item.getDescription());
+                    map.put("status", translateOperationalItemStatus(item.getStatus()));
+                    map.put("startedAt", item.getStartedAt());
+                    map.put("finishedAt", item.getFinishedAt());
+                    return map;
+                })
+                .toList();
+            allTranslatedItems.addAll(opItems);
+        }
+
+        if (!allTranslatedItems.isEmpty()) {
+            context.setVariable("deliveryBranch", "");
+            context.setVariable("deliverySourceBranch", "");
+            context.setVariable("deliveryPullRequest", "");
+            context.setVariable("deliveryScript", "");
+            context.setVariable("deliveryNotes", "");
+            context.setVariable("deliveryStartedAt", "");
+            context.setVariable("deliveryFinishedAt", "");
+            context.setVariable("deliveryItems", allTranslatedItems);
+            context.setVariable("hasMultipleItems", allTranslatedItems.size() >= 1);
         } else {
             // Valores padrão se não houver itens
             context.setVariable("deliveryBranch", "");
@@ -1107,6 +1126,14 @@ public class EmailServiceImpl implements EmailService {
         return switch (flowType) {
             case DESENVOLVIMENTO -> "Desenvolvimento";
             case OPERACIONAL -> "Operacional";
+        };
+    }
+
+    private String translateOperationalItemStatus(br.com.devquote.enums.OperationalItemStatus status) {
+        if (status == null) return "N/A";
+        return switch (status) {
+            case PENDING -> "Pendente";
+            case DELIVERED -> "Entregue";
         };
     }
 
