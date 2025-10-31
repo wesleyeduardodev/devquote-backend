@@ -145,9 +145,9 @@ public class NoOpEmailService implements EmailService {
     }
 
     @Override
-    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails) {
-        log.debug("📧 [EMAIL DISABLED] Would send BILLING PERIOD notification for: Period ID={}, Month={}, Year={}",
-                billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear());
+    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails, String flowType) {
+        log.debug("📧 [EMAIL DISABLED] Would send BILLING PERIOD notification for: Period ID={}, Month={}, Year={}, FlowType={}",
+                billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear(), flowType);
         log.debug("📧 [EMAIL DISABLED] Would send to finance department with billing period details");
         if (additionalEmails != null && !additionalEmails.isEmpty()) {
             log.debug("📧 [EMAIL DISABLED] Would include {} additional email(s) in CC: {}",
@@ -192,9 +192,9 @@ public class NoOpEmailService implements EmailService {
     }
     
     @Override
-    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
-        log.debug("📧 [EMAIL DISABLED] Would send BILLING PERIOD notification WITH IN-MEMORY ATTACHMENTS for: Period ID={}, Month={}, Year={}",
-                billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear());
+    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails, String flowType) {
+        log.debug("📧 [EMAIL DISABLED] Would send BILLING PERIOD notification WITH IN-MEMORY ATTACHMENTS for: Period ID={}, Month={}, Year={}, FlowType={}",
+                billingPeriod.getId(), billingPeriod.getMonth(), billingPeriod.getYear(), flowType);
         log.debug("📧 [EMAIL DISABLED] Would send to finance department with billing period details");
         if (attachmentDataMap != null && !attachmentDataMap.isEmpty()) {
             log.debug("📧 [EMAIL DISABLED] Would include {} in-memory attachments: {}",

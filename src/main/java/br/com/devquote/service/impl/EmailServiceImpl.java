@@ -1519,7 +1519,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async
-    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails) {
+    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails, String flowType) {
         if (!emailProperties.isEnabled()) {
             log.warn("Email notifications are disabled. Skipping billing period notification for period ID: {}", billingPeriod.getId());
             return;
@@ -1548,8 +1548,11 @@ public class EmailServiceImpl implements EmailService {
                 context.setVariable("paymentDate", null);
             }
 
-            // Buscar tarefas vinculadas ao período de faturamento
-            List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodId(billingPeriod.getId());
+            // Buscar tarefas vinculadas ao período de faturamento com filtro de fluxo
+            List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodIdAndFlowType(
+                billingPeriod.getId(),
+                flowType
+            );
 
             // Processar tarefas e calcular totais
             List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
@@ -1560,6 +1563,9 @@ public class EmailServiceImpl implements EmailService {
                 taskMap.put("code", taskData[1]); // task_code
                 taskMap.put("title", taskData[2]); // task_title
                 taskMap.put("amount", taskData[4]); // task_amount
+                taskMap.put("requesterName", taskData[5]); // requester_name
+                taskMap.put("flowType", taskData[7]); // task_flow_type
+                taskMap.put("taskType", taskData[8]); // task_type
                 tasksData.add(taskMap);
 
                 if (taskData[4] != null) {
@@ -1759,7 +1765,7 @@ public class EmailServiceImpl implements EmailService {
     
     @Override
     @Async("emailTaskExecutor")
-    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
+    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails, String flowType) {
         if (billingPeriod == null) {
             log.warn("Cannot send billing period notification with attachments: billingPeriod is null");
             return;
@@ -1790,8 +1796,11 @@ public class EmailServiceImpl implements EmailService {
                 context.setVariable("paymentDate", null);
             }
 
-            // Buscar tarefas vinculadas ao período de faturamento
-            List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodId(billingPeriod.getId());
+            // Buscar tarefas vinculadas ao período de faturamento com filtro de fluxo
+            List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodIdAndFlowType(
+                billingPeriod.getId(),
+                flowType
+            );
 
             // Processar tarefas e calcular totais
             List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
@@ -1802,6 +1811,9 @@ public class EmailServiceImpl implements EmailService {
                 taskMap.put("code", taskData[1]); // task_code
                 taskMap.put("title", taskData[2]); // task_title
                 taskMap.put("amount", taskData[4]); // task_amount
+                taskMap.put("requesterName", taskData[5]); // requester_name
+                taskMap.put("flowType", taskData[7]); // task_flow_type
+                taskMap.put("taskType", taskData[8]); // task_type
                 tasksData.add(taskMap);
 
                 if (taskData[4] != null) {

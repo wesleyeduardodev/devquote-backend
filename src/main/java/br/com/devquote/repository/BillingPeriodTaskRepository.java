@@ -71,7 +71,9 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
                t.description as task_description,
                t.amount as task_amount,
                r.name as requester_name,
-               r.email as requester_email
+               r.email as requester_email,
+               t.flow_type as task_flow_type,
+               t.task_type as task_type
         FROM billing_period_task bpt
         JOIN task t ON bpt.task_id = t.id
         JOIN requester r ON t.requester_id = r.id
@@ -79,6 +81,28 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
         ORDER BY t.code
         """, nativeQuery = true)
     List<Object[]> findTasksWithDetailsByBillingPeriodId(@Param("billingPeriodId") Long billingPeriodId);
+
+    @Query(value = """
+        SELECT bpt.id as billing_period_task_id,
+               t.code as task_code,
+               t.title as task_title,
+               t.description as task_description,
+               t.amount as task_amount,
+               r.name as requester_name,
+               r.email as requester_email,
+               t.flow_type as task_flow_type,
+               t.task_type as task_type
+        FROM billing_period_task bpt
+        JOIN task t ON bpt.task_id = t.id
+        JOIN requester r ON t.requester_id = r.id
+        WHERE bpt.billing_period_id = :billingPeriodId
+          AND (:flowType IS NULL OR :flowType = '' OR :flowType = 'TODOS' OR t.flow_type = :flowType)
+        ORDER BY t.code
+        """, nativeQuery = true)
+    List<Object[]> findTasksWithDetailsByBillingPeriodIdAndFlowType(
+        @Param("billingPeriodId") Long billingPeriodId,
+        @Param("flowType") String flowType
+    );
 
     // Buscar tarefas vinculadas a um período filtradas por flowType
     @Query("""

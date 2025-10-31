@@ -156,8 +156,41 @@
             color: #1e293b;
             margin: 8px 0;
         }
-        
-        
+
+        .task-meta {
+            margin-top: 12px;
+        }
+
+        .task-meta-item {
+            display: block;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .task-meta-label {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .task-flow-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .flow-desenvolvimento {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .flow-operacional {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
         .task-amount {
             font-size: 20px;
             font-weight: 700;
@@ -261,6 +294,44 @@
                             <div>
                                 <div class="task-code" th:text="${task.code}">TASK-001</div>
                                 <div class="task-title" th:text="${task.title}">Título da Tarefa</div>
+
+                                <!-- Metadados da Tarefa -->
+                                <div class="task-meta">
+                                    <!-- Fluxo da Tarefa -->
+                                    <div class="task-meta-item">
+                                        <span class="task-flow-badge"
+                                              th:classappend="${task.flowType == 'DESENVOLVIMENTO' ? 'flow-desenvolvimento' : 'flow-operacional'}"
+                                              th:text="${task.flowType == 'DESENVOLVIMENTO' ? 'Desenvolvimento' : 'Operacional'}">Desenvolvimento</span>
+                                    </div>
+
+                                    <!-- Tipo da Tarefa -->
+                                    <div class="task-meta-item">
+                                        <span class="task-meta-label">Tipo:</span>
+                                        <span th:switch="${task.taskType}">
+                                            <span th:case="'BUG'">Bug</span>
+                                            <span th:case="'FEATURE'">Nova Funcionalidade</span>
+                                            <span th:case="'ENHANCEMENT'">Melhoria</span>
+                                            <span th:case="'MAINTENANCE'">Manutenção</span>
+                                            <span th:case="'REFACTORING'">Refatoração</span>
+                                            <span th:case="'DOCUMENTATION'">Documentação</span>
+                                            <span th:case="'TEST'">Teste</span>
+                                            <span th:case="'BACKUP'">Backup</span>
+                                            <span th:case="'DEPLOY'">Deploy</span>
+                                            <span th:case="'LOGS'">Logs</span>
+                                            <span th:case="'NEW_SERVER'">Novo Servidor</span>
+                                            <span th:case="'MONITORING'">Monitoramento</span>
+                                            <span th:case="'SUPPORT'">Suporte</span>
+                                            <span th:case="'SECURITY'">Segurança</span>
+                                            <span th:case="*" th:text="${task.taskType}">Outro</span>
+                                        </span>
+                                    </div>
+
+                                    <!-- Solicitante -->
+                                    <div class="task-meta-item">
+                                        <span class="task-meta-label">Solicitante:</span>
+                                        <span th:text="${task.requesterName}">Nome do Solicitante</span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="task-amount">
                                 R$ <span th:text="${#numbers.formatDecimal(task.amount != null ? task.amount : 0, 1, 2)}">0,00</span>

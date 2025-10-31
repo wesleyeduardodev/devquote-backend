@@ -148,7 +148,8 @@ public class BillingPeriodController {
         java.util.List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
                 ? request.getAdditionalEmails()
                 : new java.util.ArrayList<>();
-        billingPeriodService.sendBillingEmail(id, additionalEmails);
+        String flowType = request != null ? request.getFlowType() : null;
+        billingPeriodService.sendBillingEmail(id, additionalEmails, flowType);
         return ResponseEntity.ok().build();
     }
 }

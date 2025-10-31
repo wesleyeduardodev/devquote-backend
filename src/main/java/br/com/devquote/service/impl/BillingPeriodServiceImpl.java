@@ -379,8 +379,8 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     }
 
     @Override
-    public void sendBillingEmail(Long billingPeriodId, List<String> additionalEmails) {
-        log.debug("BILLING_PERIOD SEND_EMAIL id={}", billingPeriodId);
+    public void sendBillingEmail(Long billingPeriodId, List<String> additionalEmails, String flowType) {
+        log.debug("BILLING_PERIOD SEND_EMAIL id={} flowType={}", billingPeriodId, flowType);
 
         // Buscar o período de faturamento
         BillingPeriod billingPeriod = billingPeriodRepository.findById(billingPeriodId)
@@ -416,10 +416,10 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             // Enviar email com informações do período de faturamento (com anexos se conseguiu baixar)
             if (!attachmentDataMap.isEmpty()) {
                 // Conseguiu baixar anexos - enviar email com anexos
-                emailService.sendBillingPeriodNotificationWithAttachmentData(billingPeriod, attachmentDataMap, additionalEmails);
+                emailService.sendBillingPeriodNotificationWithAttachmentData(billingPeriod, attachmentDataMap, additionalEmails, flowType);
             } else {
                 // Não conseguiu baixar anexos ou não tinha anexos - enviar email simples
-                emailService.sendBillingPeriodNotificationAsync(billingPeriod, additionalEmails);
+                emailService.sendBillingPeriodNotificationAsync(billingPeriod, additionalEmails, flowType);
             }
             
             // Marcar como email enviado

@@ -28,5 +28,5 @@ public interface BillingPeriodService {
 
     void deleteWithAllLinkedTasks(Long id);
     BillingPeriodResponse updateStatus(Long id, String status);
-    void sendBillingEmail(Long id, List<String> additionalEmails);
+    void sendBillingEmail(Long id, List<String> additionalEmails, String flowType);
 }
