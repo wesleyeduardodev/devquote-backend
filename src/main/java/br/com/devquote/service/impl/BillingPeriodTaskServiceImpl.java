@@ -6,6 +6,7 @@ import br.com.devquote.dto.response.BillingPeriodTaskResponse;
 import br.com.devquote.entity.Task;
 import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.entity.BillingPeriodTask;
+import br.com.devquote.enums.FlowType;
 import br.com.devquote.repository.BillingPeriodRepository;
 import br.com.devquote.repository.BillingPeriodTaskRepository;
 import br.com.devquote.repository.TaskRepository;
@@ -163,6 +164,13 @@ public class BillingPeriodTaskServiceImpl implements BillingPeriodTaskService {
     @Override
     public List<BillingPeriodTaskResponse> findByBillingPeriod(Long billingPeriodId) {
         return findTaskLinksByBillingPeriod(billingPeriodId);
+    }
+
+    @Override
+    public List<BillingPeriodTaskResponse> findByBillingPeriodAndFlowType(Long billingPeriodId, FlowType flowType) {
+        return billingPeriodTaskRepository.findByBillingPeriodIdAndFlowType(billingPeriodId, flowType).stream()
+                .map(BillingPeriodTaskAdapter::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override

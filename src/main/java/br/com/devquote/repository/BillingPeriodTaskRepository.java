@@ -1,6 +1,7 @@
 package br.com.devquote.repository;
 
 import br.com.devquote.entity.BillingPeriodTask;
+import br.com.devquote.enums.FlowType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -65,4 +66,18 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
         ORDER BY t.code
         """, nativeQuery = true)
     List<Object[]> findTasksWithDetailsByBillingPeriodId(@Param("billingPeriodId") Long billingPeriodId);
+
+    // Buscar tarefas vinculadas a um período filtradas por flowType
+    @Query("""
+        SELECT bpt FROM BillingPeriodTask bpt
+        JOIN FETCH bpt.task t
+        JOIN FETCH t.requester
+        WHERE bpt.billingPeriod.id = :billingPeriodId
+          AND (:flowType IS NULL OR t.flowType = :flowType)
+        ORDER BY bpt.id DESC
+        """)
+    List<BillingPeriodTask> findByBillingPeriodIdAndFlowType(
+        @Param("billingPeriodId") Long billingPeriodId,
+        @Param("flowType") FlowType flowType
+    );
 }

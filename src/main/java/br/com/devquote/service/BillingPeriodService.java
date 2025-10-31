@@ -2,6 +2,7 @@ package br.com.devquote.service;
 import br.com.devquote.dto.request.BillingPeriodRequest;
 import br.com.devquote.dto.response.BillingPeriodResponse;
 import br.com.devquote.entity.BillingPeriod;
+import br.com.devquote.enums.FlowType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,6 +12,7 @@ import java.util.Map;
 
 public interface BillingPeriodService {
     List<BillingPeriodResponse> findAll();
+    List<BillingPeriodResponse> findAllWithFilters(Integer year, Integer month, String status, FlowType flowType);
     List<BillingPeriodResponse> findAllWithTotals();
     BillingPeriodResponse findById(Long id);
     BillingPeriodResponse create(BillingPeriodRequest dto);

@@ -30,4 +30,17 @@ public interface BillingPeriodRepository extends JpaRepository<BillingPeriod, Lo
 
     @Query("SELECT bp.status as status, COUNT(bp) as count FROM BillingPeriod bp GROUP BY bp.status")
     List<Object[]> getStatusStatistics();
+
+    @Query("""
+        SELECT bp FROM BillingPeriod bp
+        WHERE (:year IS NULL OR bp.year = :year)
+          AND (:month IS NULL OR bp.month = :month)
+          AND (:status IS NULL OR bp.status = :status)
+        ORDER BY bp.id DESC
+        """)
+    List<BillingPeriod> findByFilters(
+        @Param("year") Integer year,
+        @Param("month") Integer month,
+        @Param("status") String status
+    );
 }

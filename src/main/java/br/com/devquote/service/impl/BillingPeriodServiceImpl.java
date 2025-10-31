@@ -4,6 +4,8 @@ import br.com.devquote.adapter.BillingPeriodAdapter;
 import br.com.devquote.dto.request.BillingPeriodRequest;
 import br.com.devquote.dto.response.BillingPeriodResponse;
 import br.com.devquote.entity.BillingPeriod;
+import br.com.devquote.entity.BillingPeriodTask;
+import br.com.devquote.enums.FlowType;
 import br.com.devquote.repository.BillingPeriodRepository;
 import br.com.devquote.repository.BillingPeriodTaskRepository;
 import br.com.devquote.service.BillingPeriodService;
@@ -21,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +90,37 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
                 .taskCount(((Number) row[9]).longValue())
                 .build();
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<BillingPeriodResponse> findAllWithFilters(Integer year, Integer month, String status, FlowType flowType) {
+        // Buscar períodos com filtros básicos (ano, mês, status)
+        List<BillingPeriod> periods = billingPeriodRepository.findByFilters(year, month, status);
+
+        // Para cada período, calcular totais considerando o flowType
+        return periods.stream()
+            .map(period -> {
+                BillingPeriodResponse response = BillingPeriodAdapter.toResponseDTO(period);
+
+                // Buscar tarefas vinculadas a este período filtradas por flowType
+                List<BillingPeriodTask> filteredTasks =
+                    billingPeriodTaskRepository.findByBillingPeriodIdAndFlowType(
+                        period.getId(),
+                        flowType
+                    );
+
+                // Calcular total e quantidade
+                BigDecimal totalAmount = filteredTasks.stream()
+                    .map(link -> link.getTask().getAmount())
+                    .filter(amount -> amount != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                response.setTotalAmount(totalAmount);
+                response.setTaskCount((long) filteredTasks.size());
+
+                return response;
+            })
+            .collect(Collectors.toList());
     }
 
     @Override

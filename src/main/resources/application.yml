@@ -78,7 +78,7 @@ spring:
 
 # Server Configuration
 server:
-  port: ${PORT:${SERVER_PORT:8080}}
+  port: ${PORT:${SERVER_PORT:8085}}
   error:
     include-message: ${SERVER_ERROR_INCLUDE_MESSAGE:always}
 
@@ -130,6 +130,8 @@ logging:
     org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
     # HTTP Client logs
     org.apache.http: WARN
+    # Suprimir warning de PageImpl serialization
+    org.springframework.data.web.PageableHandlerMethodArgumentResolver: ERROR
     # Root level
     root: ${LOG_LEVEL_ROOT:INFO}
   file:

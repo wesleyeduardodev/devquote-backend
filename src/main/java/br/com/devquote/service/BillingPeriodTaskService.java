@@ -2,6 +2,7 @@ package br.com.devquote.service;
 
 import br.com.devquote.dto.request.BillingPeriodTaskRequest;
 import br.com.devquote.dto.response.BillingPeriodTaskResponse;
+import br.com.devquote.enums.FlowType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,8 +16,9 @@ public interface BillingPeriodTaskService {
     BillingPeriodTaskResponse update(Long id, BillingPeriodTaskRequest dto);
     void delete(Long id);
     void deleteBulk(List<Long> ids);
-    
+
     List<BillingPeriodTaskResponse> findByBillingPeriod(Long billingPeriodId);
+    List<BillingPeriodTaskResponse> findByBillingPeriodAndFlowType(Long billingPeriodId, FlowType flowType);
     Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable);
     List<BillingPeriodTaskResponse> bulkCreate(List<BillingPeriodTaskRequest> requests);
     void bulkUnlinkTasks(Long billingPeriodId, List<Long> taskIds);

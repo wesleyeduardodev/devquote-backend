@@ -2,6 +2,7 @@ package br.com.devquote.controller;
 
 import br.com.devquote.dto.request.BillingPeriodTaskRequest;
 import br.com.devquote.dto.response.BillingPeriodTaskResponse;
+import br.com.devquote.enums.FlowType;
 import br.com.devquote.service.BillingPeriodTaskService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -65,8 +66,16 @@ public class BillingPeriodTaskController {
 
     @GetMapping("/billing-period/{billingPeriodId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<List<BillingPeriodTaskResponse>> findByBillingPeriod(@PathVariable Long billingPeriodId) {
-        return ResponseEntity.ok(billingPeriodTaskService.findByBillingPeriod(billingPeriodId));
+    public ResponseEntity<List<BillingPeriodTaskResponse>> findByBillingPeriod(
+            @PathVariable Long billingPeriodId,
+            @RequestParam(required = false) String flowType) {
+
+        // Converter String para Enum FlowType
+        FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
+            ? null
+            : FlowType.fromString(flowType);
+
+        return ResponseEntity.ok(billingPeriodTaskService.findByBillingPeriodAndFlowType(billingPeriodId, flowTypeEnum));
     }
 
     @GetMapping("/billing-period/{billingPeriodId}/paginated")
