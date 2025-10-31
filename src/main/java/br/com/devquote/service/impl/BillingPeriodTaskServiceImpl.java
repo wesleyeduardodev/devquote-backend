@@ -179,6 +179,32 @@ public class BillingPeriodTaskServiceImpl implements BillingPeriodTaskService {
     }
 
     @Override
+    public Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable, FlowType flowType) {
+        // Se flowType for null, retorna tudo
+        if (flowType == null) {
+            return findByBillingPeriodPaginated(billingPeriodId, pageable);
+        }
+
+        // 1. Buscar IDs com paginação filtrando por flowType (sem JOIN FETCH - eficiente)
+        Page<Long> idsPage = billingPeriodTaskRepository.findIdsByBillingPeriodIdAndFlowTypePaginated(billingPeriodId, flowType, pageable);
+
+        // 2. Se não há resultados, retorna página vazia
+        if (idsPage.getContent().isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 3. Buscar dados completos pelos IDs (com JOIN FETCH)
+        List<BillingPeriodTask> tasks = billingPeriodTaskRepository.findByIdsWithDetails(idsPage.getContent());
+
+        // 4. Converter para DTO mantendo a informação de paginação
+        List<BillingPeriodTaskResponse> content = tasks.stream()
+                .map(BillingPeriodTaskAdapter::toResponseDTO)
+                .toList();
+
+        return new PageImpl<>(content, pageable, idsPage.getTotalElements());
+    }
+
+    @Override
     public List<BillingPeriodTaskResponse> bulkCreate(List<BillingPeriodTaskRequest> requests) {
         return bulkLinkTasks(requests);
     }

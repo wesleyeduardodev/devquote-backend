@@ -20,6 +20,7 @@ public interface BillingPeriodTaskService {
     List<BillingPeriodTaskResponse> findByBillingPeriod(Long billingPeriodId);
     List<BillingPeriodTaskResponse> findByBillingPeriodAndFlowType(Long billingPeriodId, FlowType flowType);
     Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable);
+    Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable, FlowType flowType);
     List<BillingPeriodTaskResponse> bulkCreate(List<BillingPeriodTaskRequest> requests);
     void bulkUnlinkTasks(Long billingPeriodId, List<Long> taskIds);
     

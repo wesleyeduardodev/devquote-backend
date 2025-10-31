@@ -29,7 +29,20 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
     // Primeira query: buscar apenas IDs com paginação (sem JOIN FETCH)
     @Query("SELECT bpt.id FROM BillingPeriodTask bpt WHERE bpt.billingPeriod.id = :billingPeriodId")
     Page<Long> findIdsByBillingPeriodIdPaginated(@Param("billingPeriodId") Long billingPeriodId, Pageable pageable);
-    
+
+    // Buscar IDs com paginação filtrando por flowType
+    @Query("""
+        SELECT bpt.id FROM BillingPeriodTask bpt
+        JOIN bpt.task t
+        WHERE bpt.billingPeriod.id = :billingPeriodId
+          AND (:flowType IS NULL OR t.flowType = :flowType)
+        """)
+    Page<Long> findIdsByBillingPeriodIdAndFlowTypePaginated(
+        @Param("billingPeriodId") Long billingPeriodId,
+        @Param("flowType") FlowType flowType,
+        Pageable pageable
+    );
+
     // Segunda query: buscar dados completos pelos IDs (com JOIN FETCH)
     @Query("SELECT bpt FROM BillingPeriodTask bpt " +
            "JOIN FETCH bpt.task t " +

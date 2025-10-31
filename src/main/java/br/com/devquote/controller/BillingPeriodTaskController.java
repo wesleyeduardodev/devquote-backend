@@ -85,12 +85,18 @@ public class BillingPeriodTaskController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDirection) {
-        
+            @RequestParam(defaultValue = "desc") String sortDirection,
+            @RequestParam(required = false) String flowType) {
+
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        
-        return ResponseEntity.ok(billingPeriodTaskService.findByBillingPeriodPaginated(billingPeriodId, pageable));
+
+        // Converter String para Enum FlowType
+        FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
+            ? null
+            : FlowType.fromString(flowType);
+
+        return ResponseEntity.ok(billingPeriodTaskService.findByBillingPeriodPaginated(billingPeriodId, pageable, flowTypeEnum));
     }
 
     @PostMapping("/bulk-link")
