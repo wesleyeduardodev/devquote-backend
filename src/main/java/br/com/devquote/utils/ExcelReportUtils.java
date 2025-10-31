@@ -776,10 +776,10 @@ public class ExcelReportUtils {
         CellStyle dateStyle = createDateStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
-        // Cabeçalhos: Faturamento -> Tarefa (sem orçamento e sem datas)
+        // Cabeçalhos: Faturamento -> Tarefa (com Fluxo e Tipo da Tarefa, sem orçamento e sem datas)
         String[] headers = {
-            "Ano", "Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa", 
-            "Título da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas", 
+            "Ano", "Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa",
+            "Fluxo", "Título da Tarefa", "Tipo da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas",
             "Solicitante"
         };
 
@@ -803,20 +803,24 @@ public class ExcelReportUtils {
             // Dados da tarefa
             setCellValue(row, 3, billingData.get("task_id"), dataStyle);
             setCellValue(row, 4, billingData.get("task_code"), dataStyle);
-            setCellValue(row, 5, billingData.get("task_title"), dataStyle);
-            setCellValue(row, 6, billingData.get("task_amount"), currencyStyle);
-            setCellValue(row, 7, billingData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 8, billingData.get("requester_name"), dataStyle);
+            setFlowTypeCell(row, 5, billingData.get("task_flow_type"), dataStyle);
+            setCellValue(row, 6, billingData.get("task_title"), dataStyle);
+            setTaskTypeCell(row, 7, billingData.get("task_type"), dataStyle);
+            setCellValue(row, 8, billingData.get("task_amount"), currencyStyle);
+            setCellValue(row, 9, billingData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 10, billingData.get("requester_name"), dataStyle);
         }
 
-        // Ajustar largura das colunas (9 colunas)
+        // Ajustar largura das colunas (11 colunas)
         setColumnWidths(sheet, new int[]{
             2500,  // Ano
             2500,  // Mês
             4000,  // Status do Faturamento
             2500,  // ID Tarefa
             3500,  // Código da Tarefa
+            4000,  // Fluxo
             8000,  // Título da Tarefa (maior)
+            4000,  // Tipo da Tarefa
             4000,  // Valor da Tarefa
             3000,  // Qtd. Subtarefas
             6000   // Solicitante

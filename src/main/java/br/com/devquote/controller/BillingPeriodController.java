@@ -113,14 +113,15 @@ public class BillingPeriodController {
     public ResponseEntity<byte[]> exportToExcel(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) String status) throws IOException {
-        
-        byte[] excelData = billingPeriodService.exportToExcel(month, year, status);
-        
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String flowType) throws IOException {
+
+        byte[] excelData = billingPeriodService.exportToExcel(month, year, status, flowType);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentDispositionFormData("attachment", "relatorio-faturamento.xlsx");
-        
+
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
 

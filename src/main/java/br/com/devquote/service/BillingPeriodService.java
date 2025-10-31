@@ -23,9 +23,9 @@ public interface BillingPeriodService {
     
     Page<BillingPeriodResponse> findAllPaginated(Integer month, Integer year, String status, Pageable pageable);
     Map<String, Object> getStatistics();
-    
-    byte[] exportToExcel(Integer month, Integer year, String status) throws IOException;
-    
+
+    byte[] exportToExcel(Integer month, Integer year, String status, String flowType) throws IOException;
+
     void deleteWithAllLinkedTasks(Long id);
     BillingPeriodResponse updateStatus(Long id, String status);
     void sendBillingEmail(Long id, List<String> additionalEmails);

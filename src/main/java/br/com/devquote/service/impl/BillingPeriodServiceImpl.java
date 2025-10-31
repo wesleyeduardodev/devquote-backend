@@ -272,16 +272,18 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     }
 
     @Override
-    public byte[] exportToExcel(Integer month, Integer year, String status) throws IOException {
+    public byte[] exportToExcel(Integer month, Integer year, String status, String flowType) throws IOException {
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("""
-            SELECT 
+            SELECT
                 bp.year as billing_year,
                 bp.month as billing_month,
                 bp.status as billing_status,
                 t.id as task_id,
                 t.code as task_code,
+                t.flow_type as task_flow_type,
                 t.title as task_title,
+                t.task_type as task_type,
                 t.amount as task_amount,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
@@ -294,21 +296,24 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             WHERE 1=1
         """);
 
+        int paramCount = 0;
         if (month != null) {
-            sqlBuilder.append(" AND bp.month = ?1");
+            sqlBuilder.append(" AND bp.month = ?").append(++paramCount);
         }
         if (year != null) {
-            sqlBuilder.append(" AND bp.year = ?").append(month != null ? "2" : "1");
+            sqlBuilder.append(" AND bp.year = ?").append(++paramCount);
         }
         if (status != null && !status.trim().isEmpty()) {
-            int paramIndex = (month != null ? 1 : 0) + (year != null ? 1 : 0) + 1;
-            sqlBuilder.append(" AND bp.status = ?").append(paramIndex);
+            sqlBuilder.append(" AND bp.status = ?").append(++paramCount);
         }
-        
+        if (flowType != null && !flowType.trim().isEmpty() && !flowType.equalsIgnoreCase("TODOS")) {
+            sqlBuilder.append(" AND t.flow_type = ?").append(++paramCount);
+        }
+
         sqlBuilder.append(" ORDER BY bp.year DESC, bp.month DESC, t.id DESC");
 
         Query query = entityManager.createNativeQuery(sqlBuilder.toString());
-        
+
         int paramIndex = 1;
         if (month != null) {
             query.setParameter(paramIndex++, month);
@@ -317,9 +322,12 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             query.setParameter(paramIndex++, year);
         }
         if (status != null && !status.trim().isEmpty()) {
-            query.setParameter(paramIndex, status);
+            query.setParameter(paramIndex++, status);
         }
-        
+        if (flowType != null && !flowType.trim().isEmpty() && !flowType.equalsIgnoreCase("TODOS")) {
+            query.setParameter(paramIndex, flowType);
+        }
+
         @SuppressWarnings("unchecked")
         List<Object[]> results = query.getResultList();
 
@@ -330,12 +338,14 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             map.put("billing_status", row[2]);
             map.put("task_id", row[3]);
             map.put("task_code", row[4]);
-            map.put("task_title", row[5]);
-            map.put("task_amount", row[6]);
-            map.put("subtasks_count", row[7]);
-            map.put("requester_name", row[8]);
-            map.put("created_at", row[9]);
-            map.put("updated_at", row[10]);
+            map.put("task_flow_type", row[5]);
+            map.put("task_title", row[6]);
+            map.put("task_type", row[7]);
+            map.put("task_amount", row[8]);
+            map.put("subtasks_count", row[9]);
+            map.put("requester_name", row[10]);
+            map.put("created_at", row[11]);
+            map.put("updated_at", row[12]);
             return map;
         }).collect(Collectors.toList());
 
