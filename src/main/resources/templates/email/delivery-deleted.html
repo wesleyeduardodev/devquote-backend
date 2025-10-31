@@ -224,6 +224,14 @@
                         <div class="info-label">Título:</div>
                         <div class="info-value" th:text="${quoteName}">Nome da tarefa</div>
                     </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskFlowType)}">
+                        <div class="info-label">Fluxo:</div>
+                        <div class="info-value" th:text="${taskFlowType}">Desenvolvimento</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskType)}">
+                        <div class="info-label">Tipo de Tarefa:</div>
+                        <div class="info-value" th:text="${taskType}">Bug</div>
+                    </div>
                 </div>
             </div>
 

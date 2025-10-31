@@ -1075,11 +1075,15 @@ public class EmailServiceImpl implements EmailService {
         if (delivery.getTask() != null) {
             context.setVariable("quoteCode", delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "");
             context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
+            context.setVariable("taskFlowType", translateFlowType(delivery.getTask().getFlowType()));
+            context.setVariable("taskType", translateTaskType(delivery.getTask().getTaskType()));
             context.setVariable("requesterName", delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "");
             context.setVariable("requesterEmail", delivery.getTask().getRequester() != null && delivery.getTask().getRequester().getEmail() != null ? delivery.getTask().getRequester().getEmail() : "");
         } else {
             context.setVariable("quoteCode", "");
             context.setVariable("quoteName", "");
+            context.setVariable("taskFlowType", "");
+            context.setVariable("taskType", "");
             context.setVariable("requesterName", "");
             context.setVariable("requesterEmail", "");
         }
@@ -1095,6 +1099,32 @@ public class EmailServiceImpl implements EmailService {
             case APPROVED -> "Aprovado";
             case REJECTED -> "Rejeitado";
             case PRODUCTION -> "Produção";
+        };
+    }
+
+    private String translateFlowType(br.com.devquote.enums.FlowType flowType) {
+        if (flowType == null) return "";
+        return switch (flowType) {
+            case DESENVOLVIMENTO -> "Desenvolvimento";
+            case OPERACIONAL -> "Operacional";
+        };
+    }
+
+    private String translateTaskType(String taskType) {
+        if (taskType == null || taskType.isEmpty()) return "";
+        return switch (taskType.toUpperCase()) {
+            // Tipos operacionais
+            case "BACKUP" -> "Backup";
+            case "DEPLOY" -> "Deploy";
+            case "LOGS" -> "Logs";
+            case "NEW_SERVER" -> "Novo Servidor";
+            case "MONITORING" -> "Monitoramento";
+            case "SUPPORT" -> "Suporte";
+            // Tipos de desenvolvimento
+            case "BUG" -> "Bug";
+            case "ENHANCEMENT" -> "Melhoria";
+            case "NEW_FEATURE" -> "Nova Funcionalidade";
+            default -> taskType;
         };
     }
 
@@ -1266,24 +1296,6 @@ public class EmailServiceImpl implements EmailService {
             case "IMMEDIATE" -> "Imediata";
             case "NORMAL" -> "Normal";
             default -> priority;
-        };
-    }
-
-    private String translateTaskType(String taskType) {
-        if (taskType == null) return "";
-        return switch (taskType.toUpperCase()) {
-            case "BUG" -> "Bug/Correção";
-            case "ENHANCEMENT" -> "Melhoria";
-            case "NEW_FEATURE" -> "Nova Funcionalidade";
-            case "FEATURE" -> "Funcionalidade";
-            case "MAINTENANCE" -> "Manutenção";
-            case "DOCUMENTATION" -> "Documentação";
-            case "REFACTOR" -> "Refatoração";
-            case "TEST" -> "Teste";
-            case "RESEARCH" -> "Pesquisa";
-            case "SUPPORT" -> "Suporte";
-            case "MONITORING" -> "Monitoramento";
-            default -> taskType;
         };
     }
 
