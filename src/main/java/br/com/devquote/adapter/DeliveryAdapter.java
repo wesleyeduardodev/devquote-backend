@@ -21,6 +21,7 @@ public final class DeliveryAdapter {
                 .taskId(entity.getTask() != null ? entity.getTask().getId() : null)
                 .taskName(entity.getTask() != null ? entity.getTask().getTitle() : null)
                 .taskCode(entity.getTask() != null ? entity.getTask().getCode() : null)
+                .taskType(entity.getTask() != null ? entity.getTask().getTaskType() : null)
                 .flowType(entity.getFlowType() != null ? entity.getFlowType().name() : null)
                 .status(entity.getStatus() != null ? entity.getStatus().name() : null)
                 .totalItems(entity.getTotalItems())

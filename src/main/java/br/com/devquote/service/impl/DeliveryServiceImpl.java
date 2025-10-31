@@ -587,6 +587,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     .taskId(task != null ? task.getId() : null)
                     .taskName(task != null ? task.getTitle() : null)
                     .taskCode(task != null ? task.getCode() : null)
+                    .taskType(task != null ? task.getTaskType() : null)
                     .deliveryStatus(calculatedStatus)
                     .calculatedDeliveryStatus(calculatedStatus) // Status calculado para exibição
                     .totalItems(totalItems) // Quantidade de itens
@@ -665,6 +666,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .taskId(taskId)
                 .taskName(task.getTitle())
                 .taskCode(task.getCode())
+                .taskType(task.getTaskType())
                 .deliveryStatus(delivery.getStatus().name())
                 .taskValue(task.getAmount())
                 .createdAt(task.getCreatedAt())
@@ -695,6 +697,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 t.id as task_id,
                 t.code as task_code,
                 t.title as task_title,
+                t.task_type as task_type,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
                 d.status as delivery_status,
@@ -725,18 +728,19 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
-            map.put("subtasks_count", row[3]);
-            map.put("requester_name", row[4]);
-            map.put("delivery_status", row[5]);
-            map.put("delivery_notes", row[6]);
-            map.put("project_name", row[7]);
-            map.put("item_status", row[8]);
-            map.put("item_branch", row[9]);
-            map.put("item_source_branch", row[10]);
-            map.put("item_pull_request", row[11]);
-            map.put("item_notes", row[12]);
-            map.put("item_started_at", row[13]);
-            map.put("item_finished_at", row[14]);
+            map.put("task_type", row[3]);
+            map.put("subtasks_count", row[4]);
+            map.put("requester_name", row[5]);
+            map.put("delivery_status", row[6]);
+            map.put("delivery_notes", row[7]);
+            map.put("project_name", row[8]);
+            map.put("item_status", row[9]);
+            map.put("item_branch", row[10]);
+            map.put("item_source_branch", row[11]);
+            map.put("item_pull_request", row[12]);
+            map.put("item_notes", row[13]);
+            map.put("item_started_at", row[14]);
+            map.put("item_finished_at", row[15]);
             return map;
         }).collect(Collectors.toList());
 
@@ -752,6 +756,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 t.id as task_id,
                 t.code as task_code,
                 t.title as task_title,
+                t.task_type as task_type,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
                 d.status as delivery_status,
@@ -778,15 +783,16 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
-            map.put("subtasks_count", row[3]);
-            map.put("requester_name", row[4]);
-            map.put("delivery_status", row[5]);
-            map.put("delivery_notes", row[6]);
-            map.put("item_title", row[7]);
-            map.put("item_description", row[8]);
-            map.put("item_status", row[9]);
-            map.put("item_started_at", row[10]);
-            map.put("item_finished_at", row[11]);
+            map.put("task_type", row[3]);
+            map.put("subtasks_count", row[4]);
+            map.put("requester_name", row[5]);
+            map.put("delivery_status", row[6]);
+            map.put("delivery_notes", row[7]);
+            map.put("item_title", row[8]);
+            map.put("item_description", row[9]);
+            map.put("item_status", row[10]);
+            map.put("item_started_at", row[11]);
+            map.put("item_finished_at", row[12]);
             return map;
         }).collect(Collectors.toList());
 
@@ -924,30 +930,32 @@ public class DeliveryServiceImpl implements DeliveryService {
             for (int i = 0; i < row.length; i++) {
                 log.debug("Índice {}: {} (Tipo: {})", i, row[i], row[i] != null ? row[i].getClass().getSimpleName() : "null");
             }
-            
-            // Índices do resultado da query nativa:
-            // 0: task_id, 1: task_name, 2: task_code, 3: task_value, 4: created_at, 5: updated_at,
-            // 6: total_deliveries, 7: pending_count, 8: development_count, 9: delivered_count,
-            // 10: homologation_count, 11: approved_count, 12: rejected_count, 13: production_count, 14: delivery_status
-            
+
+            // Índices do resultado da query nativa (findDeliveryGroupByTaskIdOptimized):
+            // 0: delivery_id, 1: delivery_status, 2: task_id, 3: task_name, 4: task_code, 5: task_type,
+            // 6: task_value, 7: created_at, 8: updated_at, 9: total_items,
+            // 10: pending_count, 11: development_count, 12: delivered_count, 13: homologation_count,
+            // 14: approved_count, 15: rejected_count, 16: production_count
+
             return DeliveryGroupResponse.builder()
-                    .taskId(safeGetLong(row[0]))
-                    .taskName((String) row[1])
-                    .taskCode((String) row[2])
-                    .taskValue(row[3] != null ? new BigDecimal(row[3].toString()) : null)
-                    .createdAt(safeGetTimestamp(row[4]))
-                    .updatedAt(safeGetTimestamp(row[5]))
-                    .deliveryStatus((String) row[14])
+                    .taskId(safeGetLong(row[2]))
+                    .taskName((String) row[3])
+                    .taskCode((String) row[4])
+                    .taskType((String) row[5])
+                    .taskValue(row[6] != null ? new BigDecimal(row[6].toString()) : null)
+                    .createdAt(safeGetTimestamp(row[7]))
+                    .updatedAt(safeGetTimestamp(row[8]))
+                    .deliveryStatus((String) row[1])
                     .statusCounts(br.com.devquote.dto.response.DeliveryStatusCount.builder()
-                            .pending(safeGetInteger(row[7]))
-                            .development(safeGetInteger(row[8]))
-                            .delivered(safeGetInteger(row[9]))
-                            .homologation(safeGetInteger(row[10]))
-                            .approved(safeGetInteger(row[11]))
-                            .rejected(safeGetInteger(row[12]))
-                            .production(safeGetInteger(row[13]))
+                            .pending(safeGetInteger(row[10]))
+                            .development(safeGetInteger(row[11]))
+                            .delivered(safeGetInteger(row[12]))
+                            .homologation(safeGetInteger(row[13]))
+                            .approved(safeGetInteger(row[14]))
+                            .rejected(safeGetInteger(row[15]))
+                            .production(safeGetInteger(row[16]))
                             .build())
-                    .totalDeliveries(safeGetInteger(row[6]))
+                    .totalDeliveries(safeGetInteger(row[9]))
                     .build();
         } catch (Exception e) {
             log.error("Erro ao mapear resultado da query: {}", e.getMessage(), e);

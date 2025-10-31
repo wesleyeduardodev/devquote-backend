@@ -67,12 +67,13 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
      * Query otimizada para buscar delivery com itens agrupados por tarefa
      */
     @Query(value = """
-        SELECT 
+        SELECT
             d.id as delivery_id,
             d.status as delivery_status,
             t.id as task_id,
             t.title as task_name,
             t.code as task_code,
+            t.task_type as task_type,
             t.amount as task_value,
             t.created_at,
             t.updated_at,
@@ -88,7 +89,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         INNER JOIN delivery d ON d.task_id = t.id
         LEFT JOIN delivery_item di ON di.delivery_id = d.id
         WHERE t.id = :taskId
-        GROUP BY d.id, d.status, t.id, t.title, t.code, t.amount, t.created_at, t.updated_at
+        GROUP BY d.id, d.status, t.id, t.title, t.code, t.task_type, t.amount, t.created_at, t.updated_at
         """, nativeQuery = true)
     Object[] findDeliveryGroupByTaskIdOptimized(@Param("taskId") Long taskId);
 

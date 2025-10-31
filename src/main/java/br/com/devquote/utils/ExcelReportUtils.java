@@ -500,18 +500,17 @@ public class ExcelReportUtils {
     private String translateTaskType(String taskType) {
         if (taskType == null) return "";
         return switch (taskType.toUpperCase()) {
-            case "BUG" -> "Erro";
-            case "ENHANCEMENT" -> "Melhoria";
-            case "NEW_FEATURE" -> "Nova Funcionalidade";
-            case "FEATURE" -> "Funcionalidade";
-            case "REFACTOR" -> "Refatoração";
-            case "DOCUMENTATION" -> "Documentação";
-            case "MAINTENANCE" -> "Manutenção";
-            case "HOTFIX" -> "Correção Urgente";
-            case "RESEARCH" -> "Pesquisa";
-            case "TASK" -> "Tarefa";
+            // Tipos operacionais
+            case "BACKUP" -> "Backup";
+            case "DEPLOY" -> "Deploy";
+            case "LOGS" -> "Logs";
+            case "NEW_SERVER" -> "Novo Servidor";
             case "MONITORING" -> "Monitoramento";
             case "SUPPORT" -> "Suporte";
+            // Tipos de desenvolvimento
+            case "BUG" -> "Bug";
+            case "ENHANCEMENT" -> "Melhoria";
+            case "NEW_FEATURE" -> "Nova Funcionalidade";
             default -> taskType;
         };
     }
@@ -544,7 +543,7 @@ public class ExcelReportUtils {
         // Cabeçalhos reorganizados: Tarefa -> Entrega -> Item (sem IDs, valor e datas da entrega, script no final)
         String[] headers = {
             // Dados da Tarefa
-            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Qtd. Subtarefas", "Solicitante",
+            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Qtd. Subtarefas", "Solicitante",
             // Dados da Entrega
             "Status Geral da Entrega", "Observações da Entrega",
             // Dados do Item de Entrega
@@ -558,9 +557,9 @@ public class ExcelReportUtils {
             cell.setCellValue(headers[i]);
 
             // Aplicar cores diferentes por grupo
-            if (i <= 4) {
+            if (i <= 5) {
                 cell.setCellStyle(taskHeaderStyle); // Azul para tarefas
-            } else if (i >= 5 && i <= 6) {
+            } else if (i >= 6 && i <= 7) {
                 cell.setCellStyle(deliveryHeaderStyle); // Verde para entrega
             } else {
                 cell.setCellStyle(itemHeaderStyle); // Amarelo para itens
@@ -576,30 +575,32 @@ public class ExcelReportUtils {
             setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
             setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
             setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
-            setCellValue(row, 3, deliveryData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 4, deliveryData.get("requester_name"), dataStyle);
+            setTaskTypeCell(row, 3, deliveryData.get("task_type"), dataStyle);
+            setCellValue(row, 4, deliveryData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 5, deliveryData.get("requester_name"), dataStyle);
 
             // Dados da entrega
-            setDeliveryStatusCell(row, 5, deliveryData.get("delivery_status"), dataStyle);
-            setCellValue(row, 6, deliveryData.get("delivery_notes"), dataStyle);
+            setDeliveryStatusCell(row, 6, deliveryData.get("delivery_status"), dataStyle);
+            setCellValue(row, 7, deliveryData.get("delivery_notes"), dataStyle);
 
             // Dados do item
-            setCellValue(row, 7, deliveryData.get("project_name"), dataStyle);
-            setDeliveryStatusCell(row, 8, deliveryData.get("item_status"), dataStyle);
-            setCellValue(row, 9, deliveryData.get("item_branch"), dataStyle);
-            setCellValue(row, 10, deliveryData.get("item_source_branch"), dataStyle);
-            setCellValue(row, 11, deliveryData.get("item_pull_request"), dataStyle);
-            setCellValue(row, 12, deliveryData.get("item_notes"), dataStyle);
-            setCellValue(row, 13, deliveryData.get("item_started_at"), dateOnlyStyle);
-            setCellValue(row, 14, deliveryData.get("item_finished_at"), dateOnlyStyle);
+            setCellValue(row, 8, deliveryData.get("project_name"), dataStyle);
+            setDeliveryStatusCell(row, 9, deliveryData.get("item_status"), dataStyle);
+            setCellValue(row, 10, deliveryData.get("item_branch"), dataStyle);
+            setCellValue(row, 11, deliveryData.get("item_source_branch"), dataStyle);
+            setCellValue(row, 12, deliveryData.get("item_pull_request"), dataStyle);
+            setCellValue(row, 13, deliveryData.get("item_notes"), dataStyle);
+            setCellValue(row, 14, deliveryData.get("item_started_at"), dateOnlyStyle);
+            setCellValue(row, 15, deliveryData.get("item_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar largura das colunas (15 colunas no total)
+        // Ajustar largura das colunas (16 colunas no total)
         setColumnWidths(sheet, new int[]{
             // Dados da Tarefa
             2500,  // ID Tarefa
             3500,  // Código da Tarefa
             8000,  // Título da Tarefa (maior)
+            4000,  // Tipo de Tarefa
             3000,  // Qtd. Subtarefas
             6000,  // Solicitante
             // Dados da Entrega
@@ -658,7 +659,7 @@ public class ExcelReportUtils {
         // Cabeçalhos para relatório OPERACIONAL
         String[] headers = {
             // Dados da Tarefa
-            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Qtd. Subtarefas", "Solicitante",
+            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Qtd. Subtarefas", "Solicitante",
             // Dados da Entrega
             "Status Geral da Entrega", "Observações da Entrega",
             // Dados do Item Operacional
@@ -672,9 +673,9 @@ public class ExcelReportUtils {
             cell.setCellValue(headers[i]);
 
             // Aplicar cores diferentes por grupo
-            if (i <= 4) {
+            if (i <= 5) {
                 cell.setCellStyle(taskHeaderStyle); // Azul para tarefas
-            } else if (i >= 5 && i <= 6) {
+            } else if (i >= 6 && i <= 7) {
                 cell.setCellStyle(deliveryHeaderStyle); // Verde para entrega
             } else {
                 cell.setCellStyle(itemHeaderStyle); // Laranja para itens operacionais
@@ -690,27 +691,29 @@ public class ExcelReportUtils {
             setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
             setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
             setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
-            setCellValue(row, 3, deliveryData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 4, deliveryData.get("requester_name"), dataStyle);
+            setTaskTypeCell(row, 3, deliveryData.get("task_type"), dataStyle);
+            setCellValue(row, 4, deliveryData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 5, deliveryData.get("requester_name"), dataStyle);
 
             // Dados da entrega
-            setDeliveryStatusCell(row, 5, deliveryData.get("delivery_status"), dataStyle);
-            setCellValue(row, 6, deliveryData.get("delivery_notes"), dataStyle);
+            setDeliveryStatusCell(row, 6, deliveryData.get("delivery_status"), dataStyle);
+            setCellValue(row, 7, deliveryData.get("delivery_notes"), dataStyle);
 
             // Dados do item operacional
-            setCellValue(row, 7, deliveryData.get("item_title"), dataStyle);
-            setCellValue(row, 8, deliveryData.get("item_description"), dataStyle);
-            setOperationalItemStatusCell(row, 9, deliveryData.get("item_status"), dataStyle);
-            setCellValue(row, 10, deliveryData.get("item_started_at"), dateOnlyStyle);
-            setCellValue(row, 11, deliveryData.get("item_finished_at"), dateOnlyStyle);
+            setCellValue(row, 8, deliveryData.get("item_title"), dataStyle);
+            setCellValue(row, 9, deliveryData.get("item_description"), dataStyle);
+            setOperationalItemStatusCell(row, 10, deliveryData.get("item_status"), dataStyle);
+            setCellValue(row, 11, deliveryData.get("item_started_at"), dateOnlyStyle);
+            setCellValue(row, 12, deliveryData.get("item_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar largura das colunas (12 colunas no total)
+        // Ajustar largura das colunas (13 colunas no total)
         setColumnWidths(sheet, new int[]{
             // Dados da Tarefa
             2500,  // ID Tarefa
             3500,  // Código da Tarefa
             8000,  // Título da Tarefa (maior)
+            4000,  // Tipo de Tarefa
             3000,  // Qtd. Subtarefas
             6000,  // Solicitante
             // Dados da Entrega
