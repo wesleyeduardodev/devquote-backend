@@ -1,227 +1,144 @@
 # DevQuote Backend
 
-API REST para gestão de tarefas e entregas para desenvolvedores freelancers.
+## 🎯 Propósito
+API REST em Spring Boot para gestão completa de tarefas, entregas e faturamento de projetos de desenvolvimento de software. Sistema multi-perfil com controle granular de permissões.
 
----
+## 🛠️ Stack Tecnológica
+- **Java 21** + **Spring Boot 3.5.4**
+- **PostgreSQL** (produção) + **H2** (desenvolvimento)
+- **Spring Security** + **JWT** + **OAuth2**
+- **AWS S3** (armazenamento de arquivos)
+- **Redis** (cache distribuído)
+- **Prometheus** (métricas e monitoramento)
+- **SpringDoc OpenAPI** (documentação Swagger)
+- **Apache POI** (exportação Excel)
+- **Thymeleaf** (templates de email)
 
-## 🚀 Stack
-
-### Core
-- Java 21 + Spring Boot 3.5.4
-- Spring Data JPA + PostgreSQL 17
-- Maven 3.8+
-
-### Segurança
-- OAuth2 Authorization Server
-- JWT com refresh tokens
-- Spring Security (RBAC)
-
-### Recursos
-- SpringDoc OpenAPI / Swagger
-- JavaMailSender (notificações)
-- AWS S3 (anexos)
-- Docker
-
----
-
-## 📦 Arquitetura
-
+## 📁 Estrutura do Projeto
 ```
 src/main/java/br/com/devquote/
-├── adapter/              # Conversão Entity ↔ DTO
-├── configuration/        # Spring configs (Security, OpenAPI)
-├── controller/           # REST Controllers + docs
-├── dto/                  # Request/Response DTOs
-├── entity/               # Entidades JPA
-├── repository/           # JPA Repositories
-├── service/              # Lógica de negócio
-│   └── impl/
-└── security/             # @RequiresPermission, @RequiresProfile
+├── entity/              # 25 entidades JPA (User, Task, Delivery, BillingPeriod, etc)
+├── repository/          # Repositórios Spring Data JPA
+├── service/             # Interfaces + impl/ (lógica de negócio)
+├── controller/          # ~20 controllers REST + doc/ (OpenAPI)
+├── dto/                 # request/ + response/ (DTOs separados)
+├── adapter/             # Conversão Entity <-> DTO
+├── configuration/       # Configs Spring + security/ (JWT, OAuth2, CORS)
+├── enums/               # DeliveryStatus, FlowType, ProfileType, etc
+├── error/               # ApiExceptionHandler (tratamento global)
+└── utils/               # Utilitários
 ```
 
----
+## 🔑 Funcionalidades Principais
 
-## 🔧 Quick Start
+### Autenticação & Autorização
+- Login JWT (validade 24h) + refresh token
+- Sistema de perfis: **ADMIN** > **MANAGER** > **USER**
+- Permissões granulares por recurso e campo
+- OAuth2 Authorization Server
 
-### Requisitos
-- Java 21+
-- PostgreSQL 17
-- Maven 3.8+
+### Gestão de Tarefas
+- CRUD completo com filtros avançados e paginação
+- Subtarefas com valores individuais
+- Anexos (upload S3, download com URL pré-assinada)
+- Fluxos: **DESENVOLVIMENTO** e **OPERACIONAL**
+- Tarefas desvinculadas (sem faturamento/entrega)
+- Exportação Excel + relatórios completos
+- Envio de emails (financeiro e notificação)
 
-### Desenvolvimento Local
+### Sistema de Entregas
+- Status: PENDING → DEVELOPMENT → DELIVERED → HOMOLOGATION → APPROVED/REJECTED → PRODUCTION
+- **Itens de Desenvolvimento**: vinculados a projetos, branches, PRs
+- **Itens Operacionais**: tarefas operacionais independentes
+- Cálculo automático de status baseado nos itens
+- Anexos por entrega e por item
+- Exportação e relatórios
 
-```bash
-# Compilar
-./mvnw clean compile
+### Períodos de Faturamento
+- Criação por mês/ano (constraint único)
+- Vinculação de múltiplas tarefas ao período
+- Totalizadores automáticos (soma de valores)
+- Filtros por flowType (DESENVOLVIMENTO/OPERACIONAL)
+- Anexos (notas fiscais, comprovantes)
+- Exportação Excel + email de resumo
 
-# Executar
-./mvnw spring-boot:run
+### Dashboard
+- Estatísticas gerais (usuários, receita, tarefas, taxa conclusão)
+- Estatísticas por módulo (tarefas, entregas, projetos, solicitantes)
+- Gráficos de tarefas por período e entregas por status
+- Atividades recentes
 
-# Build produção
-./mvnw clean package -DskipTests
-```
-
-### Docker
-
-```bash
-# Desenvolvimento
-docker-compose up -d
-
-# Produção
-docker build -t devquote-backend .
-docker run -p 8080:8080 devquote-backend
-```
-
----
-
-## 📚 Documentação API
-
-- **Swagger UI:** `http://localhost:8080/swagger-ui/index.html`
-- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
-
-### Principais Endpoints
-
-#### Autenticação
-- `POST /api/auth/login` - Login
-- `POST /api/auth/register` - Cadastro
-- `POST /api/auth/refresh` - Renovar token
-- `GET /api/auth/me` - Usuário autenticado
-
-#### Recursos
-- `/api/projects` - Projetos
-- `/api/tasks` - Tarefas
-- `/api/subtasks` - Subtarefas
-- `/api/deliveries` - Entregas
-- `/api/delivery-items` - Itens de entrega
-- `/api/requesters` - Solicitantes
-- `/api/billing-periods` - Faturamento
-- `/api/dashboard` - Estatísticas
-
-#### Administração
-- `/api/users` - Usuários
-- `/api/profiles` - Perfis
-- `/api/permissions` - Permissões
-
----
+### Outros Módulos
+- **Projetos**: gestão de repositórios
+- **Solicitantes**: clientes/stakeholders
+- **Usuários**: gerenciamento completo (ADMIN only)
+- **Notificações**: configurações por tipo e canal (email, telefone)
 
 ## 🔒 Segurança
+- **Password**: BCrypt (força 10)
+- **Token**: JJWT (HS256) com secret base64
+- **CORS**: origens permitidas configuráveis
+- **SQL Injection**: JPA/Hibernate (prepared statements)
+- **Endpoints públicos**: apenas `/api/auth/login` e `/api/auth/register`
 
-### Autenticação OAuth2
-- Authorization Server integrado
-- Tokens JWT + refresh token
-- Client Credentials e Password Grant
+## 🗄️ Banco de Dados
+**25 entidades principais**:
+- **Core**: User, Profile, Permission, ResourcePermission, FieldPermission
+- **Negócio**: Task, SubTask, TaskAttachment, Requester, Project
+- **Entregas**: Delivery, DeliveryItem, DeliveryOperationalItem + Attachments
+- **Faturamento**: BillingPeriod, BillingPeriodTask, BillingPeriodAttachment
+- **Configurações**: NotificationConfig
 
-### Autorização (RBAC)
-- **Perfis:** Admin, User, Custom
-- **Recursos:** BILLING, TASKS, PROJECTS, DELIVERIES, USERS, REPORTS, SETTINGS
-- **Operações:** CREATE, READ, UPDATE, DELETE
-- **Controle granular** por campo
+**Relacionamentos-chave**:
+- User ←→ UserProfile ←→ Profile (many-to-many)
+- Task → SubTask[] (one-to-many)
+- Task ↔ Delivery (one-to-one)
+- Delivery → DeliveryItem[] + DeliveryOperationalItem[] (one-to-many)
+- BillingPeriod → BillingPeriodTask[] → Task (many-to-many)
 
----
-
-## 📊 Funcionalidades
-
-### Módulos
-- Dashboard com métricas
-- Gestão de projetos e tarefas
-- Sistema de entregas
-- Faturamento mensal
-- Notificações por email
-
-### Recursos Técnicos
-- Paginação e ordenação dinâmica
-- Filtros avançados
-- Soft delete
-- Auditoria (timestamps)
-- Tratamento global de exceções
-- Cache de consultas
-- Templates de email HTML
-
----
-
-## 🗄️ Redis Cache
-
-### Criar Container Redis (se necessário)
-
+## 🚀 Configuração
+Variáveis de ambiente necessárias (`.env.example`):
 ```bash
-docker run -d \
-  --name devquote-redis \
-  -p 6379:6379 \
-  -v devquote_redis_data:/data \
-  redis:7-alpine
-
-# Verificar se está rodando
-docker ps | grep devquote-redis
+APP_JWTSECRET=<base64-secret>
+AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_S3_BUCKET_NAME / AWS_S3_REGION
+MAIL_HOST / MAIL_PORT / MAIL_USERNAME / MAIL_PASSWORD
+DEVQUOTE_EMAIL_ENABLED / DEVQUOTE_EMAIL_FROM
 ```
 
-### Comandos Básicos
+Banco: `jdbc:postgresql://localhost:5434/devquote` (user: postgres, pass: root)
+Redis: `localhost:6379`
 
-```bash
-# Conectar no Redis
-docker exec -it devquote-redis redis-cli
+## 📊 Status Atual
 
-# Listar todas as chaves
-KEYS *
+### ✅ Completo e Funcional
+- Todos os módulos de negócio (100%)
+- Autenticação e autorização (100%)
+- Integrações externas (S3, Redis, Email, Prometheus)
+- Exportações e relatórios
+- Sistema de permissões granular
 
-# Ver conteúdo de uma chave
-GET "projects::1"
+### ⚠️ Pontos de Atenção
+- **Dashboard**: alguns dados estatísticos usam mock (TODOs identificados)
+  - Contagens mensais (tarefas, requesters)
+  - Gráficos de atividades (dados simulados)
+  - Sistema de auditoria não implementado
+- **Testes**: ausência total de testes automatizados
+- **Migrations**: usando `ddl-auto=update` (recomendado Flyway/Liquibase para prod)
 
-# Ver tempo de expiração (segundos)
-TTL "projects::1"
+### 📝 TODOs Pendentes
+1. Implementar contagens mensais reais no dashboard
+2. Substituir dados mock de gráficos por dados reais
+3. Criar sistema de auditoria/logs para atividades recentes
+4. Implementar testes unitários e de integração
 
-# Ver logs do Redis
-docker logs -f devquote-redis
+## 🔍 Endpoints Importantes
+- Swagger UI: `/swagger-ui.html`
+- Actuator: `/actuator/health`, `/actuator/metrics`, `/actuator/prometheus`
+- Total: **~100+ endpoints REST**
 
-# Ver informações do Redis
-docker exec -it devquote-redis redis-cli INFO
+## 💡 Contexto de Uso
+Sistema usado para gerenciar demandas de desenvolvimento, desde a solicitação até a entrega e faturamento. Suporta dois fluxos:
+1. **DESENVOLVIMENTO**: tarefas técnicas com itens vinculados a projetos/branches/PRs
+2. **OPERACIONAL**: tarefas operacionais sem vinculação técnica
 
-# Monitorar comandos em tempo real
-docker exec -it devquote-redis redis-cli MONITOR
-```
-
-**Cache configurado:**
-- TTL: 10 minutos
-- Método: `findById()` em `ProjectServiceImpl`
-
----
-
-## 📈 Monitoramento
-
-### Health Check
-```bash
-curl http://localhost:8080/actuator/health
-```
-
-### Métricas
-```bash
-curl http://localhost:8080/actuator/metrics
-```
-
----
-
-## 🧪 Testes
-
-```bash
-# Executar testes
-./mvnw test
-
-# Cobertura
-./mvnw test jacoco:report
-```
-
----
-
-## 🤝 Contribuindo
-
-### Padrão de Commits
-- `feat:` Nova funcionalidade
-- `fix:` Correção de bug
-- `docs:` Documentação
-- `refactor:` Refatoração
-- `test:` Testes
-
----
-
-## 📄 Licença
-
-Projeto privado e proprietário. Todos os direitos reservados.
+Permite rastreamento completo: Tarefa → Subtarefas → Entrega → Itens de Entrega → Período de Faturamento
