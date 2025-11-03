@@ -10,6 +10,7 @@ import br.com.devquote.service.SubTaskService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,24 @@ public class SubTaskServiceImpl implements SubTaskService {
 
     @Override
     public void delete(Long id) {
+        // Busca a subtarefa antes de deletar para obter a tarefa associada
+        SubTask subTask = subTaskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("SubTask not found"));
+
+        Task task = subTask.getTask();
+
+        // Deleta a subtarefa
         subTaskRepository.deleteById(id);
+
+        // Recalcula o valor total da tarefa (soma das subtarefas restantes)
+        BigDecimal newAmount = subTaskRepository.findAll().stream()
+                .filter(st -> st.getTask().getId().equals(task.getId()))
+                .map(SubTask::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Atualiza o valor da tarefa
+        task.setAmount(newAmount);
+        taskRepository.save(task);
     }
 
     @Override
@@ -65,6 +83,33 @@ public class SubTaskServiceImpl implements SubTaskService {
         if (ids == null || ids.isEmpty()) {
             return;
         }
+
+        // Busca todas as subtarefas antes de deletar para obter as tarefas associadas
+        List<SubTask> subTasks = subTaskRepository.findAllById(ids);
+
+        // Agrupa as subtarefas por tarefa
+        var taskIds = subTasks.stream()
+                .map(st -> st.getTask().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Deleta as subtarefas
         subTaskRepository.deleteAllById(ids);
+
+        // Recalcula o valor para cada tarefa afetada
+        for (Long taskId : taskIds) {
+            Task task = taskRepository.findById(taskId)
+                    .orElseThrow(() -> new RuntimeException("Task not found"));
+
+            // Recalcula o valor total (soma das subtarefas restantes)
+            BigDecimal newAmount = subTaskRepository.findAll().stream()
+                    .filter(st -> st.getTask().getId().equals(taskId))
+                    .map(SubTask::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // Atualiza o valor da tarefa
+            task.setAmount(newAmount);
+            taskRepository.save(task);
+        }
     }
 }
