@@ -25,7 +25,7 @@ public class OpenApiConfig {
                                 "🔖 Versão: 1.0.2\n" +
                                 "👨‍💻 Autor: Wesley Eduardo\n")
                         .version("1.0.0")
-                        .termsOfService("https://www.devquote.com.br/terms")
+                        .termsOfService("https://devquote.com.br/terms")
                         .contact(new Contact()
                                 .name("Suporte DevQuote")
                                 .email("wesleyeduardo.dev@gmail.com")
