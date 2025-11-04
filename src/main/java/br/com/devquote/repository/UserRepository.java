@@ -21,7 +21,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Boolean existsByEmail(String email);
 
-    // NOVO SISTEMA: Busca com perfis
     @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.userProfiles up LEFT JOIN FETCH up.profile WHERE u.email = :email AND u.active = true")
     Optional<User> findByEmailWithProfiles(String email);
 

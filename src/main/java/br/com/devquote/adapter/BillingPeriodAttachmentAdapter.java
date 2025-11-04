@@ -49,7 +49,6 @@ public class BillingPeriodAttachmentAdapter {
         try {
             return fileStorageStrategy.getFileUrl(filePath);
         } catch (Exception e) {
-            // Log error but don't fail the entire response
             return null;
         }
     }

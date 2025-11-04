@@ -1,10 +1,8 @@
 package br.com.devquote.dto.request;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -20,6 +18,5 @@ public class DeliveryRequest {
 
     private String notes;
 
-    // Lista de itens da entrega
-    private java.util.List<DeliveryItemRequest> items;
+    private List<DeliveryItemRequest> items;
 }

@@ -68,7 +68,6 @@ public class TaskServiceImpl implements TaskService {
         if (!tasks.isEmpty()) {
             List<Long> taskIds = tasks.stream().map(TaskResponse::getId).toList();
 
-            // Buscar informações de Billing e Delivery
             Map<Long, Boolean> taskInBillingMap = getTaskInBillingStatus(taskIds);
             Map<Long, Boolean> taskDeliveryMap = getTaskDeliveryStatus(taskIds);
 
@@ -76,8 +75,7 @@ public class TaskServiceImpl implements TaskService {
                 List<SubTask> subTasks = subTaskRepository.findByTaskId(dto.getId());
                 dto.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
 
-                // Adicionar informações de Billing e Delivery
-                dto.setHasQuote(false); // Não há mais quotes
+                dto.setHasQuote(false);
                 dto.setHasQuoteInBilling(taskInBillingMap.getOrDefault(dto.getId(), false));
                 dto.setHasDelivery(taskDeliveryMap.getOrDefault(dto.getId(), false));
             });
@@ -95,8 +93,7 @@ public class TaskServiceImpl implements TaskService {
         List<SubTask> subTasks = subTaskRepository.findByTaskId(response.getId());
         response.setSubTasks(SubTaskAdapter.toResponseDTOList(subTasks));
 
-        // Adicionar informações de Billing e Delivery para o item específico
-        response.setHasQuote(false); // Não há mais quotes
+        response.setHasQuote(false);
         response.setHasQuoteInBilling(billingPeriodTaskService.existsByTaskId(id));
         response.setHasDelivery(deliveryService.existsByTaskId(id));
 
@@ -147,7 +144,6 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException("Erro ao salvar tarefa: " + e.getMessage(), "TASK_SAVE_ERROR");
         }
 
-        // Criar entrega automaticamente para a nova tarefa
         ensureTaskHasDelivery(entity);
 
         return TaskAdapter.toResponseDTO(entity);
@@ -165,7 +161,6 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
         }
 
-        // Verificar se o código já existe em outra tarefa ANTES de tentar salvar
         if (taskRepository.existsByCodeAndIdNot(dto.getCode(), id)) {
             throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
         }
@@ -186,7 +181,6 @@ public class TaskServiceImpl implements TaskService {
             throw new BusinessException("Erro ao salvar tarefa: " + e.getMessage(), "TASK_SAVE_ERROR");
         }
 
-        // Verificar e criar entrega se não existir
         ensureTaskHasDelivery(entity);
 
         return TaskAdapter.toResponseDTO(entity);
@@ -196,7 +190,6 @@ public class TaskServiceImpl implements TaskService {
     public void delete(Long id) {
         Task entity = taskRepository.findById(id)
                 .map(task -> {
-                    // Inicializar relacionamentos lazy antes do envio assíncrono
                     if (task.getRequester() != null) {
                         task.getRequester().getName();
                         task.getRequester().getEmail();
@@ -215,18 +208,17 @@ public class TaskServiceImpl implements TaskService {
 
         validateTaskAccess(entity, "excluir");
 
-        // ESTRATÉGIA ROBUSTA: Tentar baixar anexos, se conseguir incluir no email, se não conseguir enviar só os dados da tarefa
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
-        boolean hasAttachments = false;
+
         
         try {
             List<TaskAttachment> attachments = taskAttachmentService.getTaskAttachmentsEntities(id);
             if (attachments != null && !attachments.isEmpty()) {
-                hasAttachments = true;
+
                 
                 for (TaskAttachment attachment : attachments) {
                     try {
-                        // Tentar baixar do S3
+
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
                             
@@ -236,7 +228,7 @@ public class TaskServiceImpl implements TaskService {
                         }
                     } catch (Exception e) {
                         log.error("Failed to download attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
-                        // Continua tentando outros anexos
+
                     }
                 }
             }
@@ -244,27 +236,6 @@ public class TaskServiceImpl implements TaskService {
             log.error("Error accessing attachments from database: {}", e.getMessage());
         }
 
-        // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
-        // DESABILITADO: Não enviar mais email na exclusão de tarefa
-        /*
-        try {
-            if (attachmentDataMap.isEmpty() && hasAttachments) {
-                // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
-                emailService.sendTaskDeletedNotification(entity);
-            } else if (!attachmentDataMap.isEmpty()) {
-                // Conseguiu baixar anexos - enviar email com anexos
-                emailService.sendTaskDeletedNotificationWithAttachmentData(entity, attachmentDataMap);
-            } else {
-                // Não tinha anexos - enviar email simples
-                emailService.sendTaskDeletedNotification(entity);
-            }
-        } catch (Exception e) {
-            log.error("FAILED to send deletion email for task ID: {} - Error: {}", id, e.getMessage());
-            // Não impede a exclusão da tarefa
-        }
-        */
-
-        // STEP 3/3 - DELETAR TAREFA E ANEXOS (sempre acontece, mesmo se email falhou)
         try {
             taskAttachmentService.deleteAllTaskAttachmentsAndFolder(id);
         } catch (Exception e) {
@@ -315,11 +286,9 @@ public class TaskServiceImpl implements TaskService {
 
         List<SubTask> persistedSubTasks = persistSubTasks(task, dto.getSubTasks());
 
-        // Processa o valor da tarefa conforme nova lógica
         processTaskAmount(task, persistedSubTasks);
         task = taskRepository.save(task);
 
-        // Criar entrega automaticamente para a nova tarefa
         ensureTaskHasDelivery(task);
 
         return buildTaskWithSubTasksResponse(task, persistedSubTasks);
@@ -368,11 +337,9 @@ public class TaskServiceImpl implements TaskService {
 
         List<SubTask> updated = upsertAndDeleteSubTasks(task, dto.getSubTasks());
 
-        // Processa o valor da tarefa conforme nova lógica
         processTaskAmount(task, updated);
         task = taskRepository.save(task);
 
-        // Verificar e criar entrega se não existir
         ensureTaskHasDelivery(task);
 
         return buildTaskWithSubTasksResponse(task, updated);
@@ -382,7 +349,7 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTaskWithSubTasks(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .map(entity -> {
-                    // Inicializar relacionamentos lazy antes do envio assíncrono
+
                     if (entity.getRequester() != null) {
                         entity.getRequester().getName();
                         entity.getRequester().getEmail();
@@ -405,18 +372,17 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("Cannot delete task. It is linked to a billing period.");
         }
 
-        // ESTRATÉGIA ROBUSTA: Tentar baixar anexos, se conseguir incluir no email, se não conseguir enviar só os dados da tarefa
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
-        boolean hasAttachments = false;
+
         
         try {
             List<TaskAttachment> attachments = taskAttachmentService.getTaskAttachmentsEntities(taskId);
             if (attachments != null && !attachments.isEmpty()) {
-                hasAttachments = true;
+
                 
                 for (TaskAttachment attachment : attachments) {
                     try {
-                        // Tentar baixar do S3
+
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
                             
@@ -426,7 +392,7 @@ public class TaskServiceImpl implements TaskService {
                         }
                     } catch (Exception e) {
                         log.error("Failed to download attachment {} from S3: {}", attachment.getOriginalFileName(), e.getMessage());
-                        // Continua tentando outros anexos
+
                     }
                 }
             }
@@ -434,27 +400,6 @@ public class TaskServiceImpl implements TaskService {
             log.error("Error accessing attachments from database: {}", e.getMessage());
         }
 
-        // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
-        // DESABILITADO: Não enviar mais email na exclusão de tarefa
-        /*
-        try {
-            if (attachmentDataMap.isEmpty() && hasAttachments) {
-                // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
-                emailService.sendTaskDeletedNotification(task);
-            } else if (!attachmentDataMap.isEmpty()) {
-                // Conseguiu baixar anexos - enviar email com anexos
-                emailService.sendTaskDeletedNotificationWithAttachmentData(task, attachmentDataMap);
-            } else {
-                // Não tinha anexos - enviar email simples
-                emailService.sendTaskDeletedNotification(task);
-            }
-        } catch (Exception e) {
-            log.error("FAILED to send deletion email for task ID: {} - Error: {}", taskId, e.getMessage());
-            // Não impede a exclusão da tarefa
-        }
-        */
-
-        // STEP 3/3 - DELETAR TAREFA E ANEXOS (sempre acontece, mesmo se email falhou)
         try {
             taskAttachmentService.deleteAllTaskAttachmentsAndFolder(taskId);
         } catch (Exception e) {
@@ -478,7 +423,6 @@ public class TaskServiceImpl implements TaskService {
                                                FlowType flowType,
                                                Pageable pageable) {
 
-        // Todos os usuários podem ver todas as tarefas
         Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
                 id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, pageable
         );
@@ -538,7 +482,6 @@ public class TaskServiceImpl implements TaskService {
         Map<Long, List<SubTask>> subTasksByTaskId = allSubTasks.stream()
                 .collect(Collectors.groupingBy(st -> st.getTask().getId()));
 
-        // Buscar informações de Billing e Delivery
         Map<Long, Boolean> taskInBillingMap = getTaskInBillingStatus(taskIds);
         Map<Long, Boolean> taskDeliveryMap = getTaskDeliveryStatus(taskIds);
 
@@ -546,8 +489,7 @@ public class TaskServiceImpl implements TaskService {
             List<SubTask> list = subTasksByTaskId.getOrDefault(dto.getId(), List.of());
             dto.setSubTasks(SubTaskAdapter.toResponseDTOList(list));
 
-            // Adicionar informações de Billing e Delivery
-            dto.setHasQuote(false); // Não há mais quotes
+            dto.setHasQuote(false);
             dto.setHasQuoteInBilling(taskInBillingMap.getOrDefault(dto.getId(), false));
             dto.setHasDelivery(taskDeliveryMap.getOrDefault(dto.getId(), false));
         });
@@ -595,24 +537,6 @@ public class TaskServiceImpl implements TaskService {
 
 
 
-    private BillingPeriod getOrCreateBillingPeriod(LocalDate baseDate) {
-        int year = baseDate.getYear();
-        int month = baseDate.getMonthValue();
-
-        BillingPeriod found = billingPeriodService.findByYearAndMonth(year, month);
-        if (found != null) return found;
-
-        LocalDate paymentDate = computeNextMonthPaymentDate(baseDate, billingProperties.getPaymentDay());
-
-        BillingPeriodRequest createDto = BillingPeriodRequest.builder()
-                .year(year)
-                .month(month)
-                .paymentDate(paymentDate)
-                .build();
-
-        BillingPeriodResponse created = billingPeriodService.create(createDto);
-        return BillingPeriodAdapter.toEntity(created);
-    }
 
     private LocalDate computeNextMonthPaymentDate(LocalDate base, int desiredDay) {
         LocalDate nextMonthFirst = base.plusMonths(1).withDayOfMonth(1);
@@ -620,23 +544,6 @@ public class TaskServiceImpl implements TaskService {
         return nextMonthFirst.withDayOfMonth(day);
     }
 
-    private void ensureTaskLinkedToBillingMonth(Long taskId, Long billingMonthId) {
-        if (billingPeriodTaskService.existsByTaskId(taskId)) {
-            // Verificar se já está no período correto
-            Optional<BillingPeriodTaskResponse> existingLink = billingPeriodTaskService.findByTaskId(taskId);
-            if (existingLink.isPresent() && existingLink.get().getBillingPeriodId().equals(billingMonthId)) {
-                return; // Já está vinculada ao período correto
-            }
-            // Se está em outro período, não fazer nada - deixar a validação do service tratar
-        }
-
-        BillingPeriodTaskRequest linkReq = BillingPeriodTaskRequest.builder()
-                .taskId(taskId)
-                .billingPeriodId(billingMonthId)
-                .build();
-
-        billingPeriodTaskService.create(linkReq);
-    }
 
     private TaskWithSubTasksResponse buildTaskWithSubTasksResponse(Task task, List<SubTask> subTasks) {
         return TaskWithSubTasksResponse.builder()
@@ -682,10 +589,6 @@ public class TaskServiceImpl implements TaskService {
         return upserted;
     }
 
-    private boolean isTrue(Boolean flag) {
-        return Boolean.TRUE.equals(flag);
-    }
-
     private void validateCreatePermission() {
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
@@ -706,12 +609,10 @@ public class TaskServiceImpl implements TaskService {
 
         var profiles = currentUser.getActiveProfileCodes();
 
-        // ADMIN tem acesso total
         if (profiles.contains("ADMIN")) {
             return;
         }
 
-        // MANAGER e USER podem acessar apenas suas próprias tarefas
         if (profiles.contains("MANAGER") || profiles.contains("USER")) {
             if (task.getCreatedBy() == null || !task.getCreatedBy().getId().equals(currentUser.getId())) {
                 throw new RuntimeException(String.format("Você não possui permissão para %s esta tarefa. Apenas o usuário que criou a tarefa pode %s.", action, action));
@@ -722,14 +623,10 @@ public class TaskServiceImpl implements TaskService {
         throw new RuntimeException("Usuário não possui permissão para acessar tarefas");
     }
 
-    /**
-     * Processa a tarefa conforme a nova lógica:
-     * - Se hasSubTasks = true: calcula amount como soma das subtarefas
-     * - Se hasSubTasks = false: usa amount diretamente informado
-     */
+
     private void processTaskAmount(Task task, List<SubTask> subTasks) {
         if (Boolean.TRUE.equals(task.getHasSubTasks())) {
-            // Calcula soma das subtarefas
+
             BigDecimal totalAmount = subTasks.stream()
                     .filter(Objects::nonNull)
                     .map(SubTask::getAmount)
@@ -737,14 +634,11 @@ public class TaskServiceImpl implements TaskService {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             task.setAmount(totalAmount);
         }
-        // Se hasSubTasks = false, mantém o amount já informado
+
     }
 
-    /**
-     * Valida se é possível desmarcar a flag hasSubTasks
-     */
     private void validateCanRemoveSubTasksFlag(Task task, boolean newHasSubTasks) {
-        // Se estava com subtarefas e agora quer desmarcar
+
         if (Boolean.TRUE.equals(task.getHasSubTasks()) && !newHasSubTasks) {
             List<SubTask> existingSubTasks = subTaskRepository.findByTaskId(task.getId());
             if (!existingSubTasks.isEmpty()) {
@@ -753,9 +647,7 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    /**
-     * Verifica quais tarefas estão vinculadas ao faturamento
-     */
+
     private Map<Long, Boolean> getTaskInBillingStatus(List<Long> taskIds) {
         return taskIds.stream()
                 .collect(Collectors.toMap(
@@ -764,9 +656,6 @@ public class TaskServiceImpl implements TaskService {
                 ));
     }
 
-    /**
-     * Verifica quais tarefas estão vinculadas a entregas
-     */
     private Map<Long, Boolean> getTaskDeliveryStatus(List<Long> taskIds) {
         return taskIds.stream()
                 .collect(Collectors.toMap(
@@ -779,7 +668,6 @@ public class TaskServiceImpl implements TaskService {
     public byte[] exportTasksToExcel(String flowType) throws IOException {
         log.debug("EXCEL EXPORT STARTED with flowType={}", flowType);
 
-        // Verificar perfil do usuário para controle de colunas de valor
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
             throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
@@ -789,13 +677,11 @@ public class TaskServiceImpl implements TaskService {
         boolean canViewAmounts = profiles.contains("ADMIN") || profiles.contains("MANAGER");
         log.debug("EXCEL EXPORT user={} canViewAmounts={}", currentUser.getUsername(), canViewAmounts);
 
-        // Construir filtro de flowType
         String whereClause = "";
         if (flowType != null && !flowType.equals("TODOS")) {
             whereClause = "WHERE t.flow_type = '" + flowType + "' ";
         }
 
-        // Consulta nativa SQL para obter todos os dados de tarefas e subtarefas
         String sql = """
             SELECT
                 t.id as task_id,
@@ -836,7 +722,6 @@ public class TaskServiceImpl implements TaskService {
         @SuppressWarnings("unchecked")
         List<Object[]> results = query.getResultList();
 
-        // Converter resultados para Map
         List<Map<String, Object>> data = results.stream().map(row -> {
             Map<String, Object> map = new java.util.HashMap<>();
             map.put("task_id", row[0]);
@@ -877,7 +762,6 @@ public class TaskServiceImpl implements TaskService {
     public byte[] exportGeneralReport() throws IOException {
         log.debug("GENERAL REPORT EXPORT STARTED");
 
-        // Query incluindo entregas e faturamento: Tarefas → Entregas → Faturamento
         String sql = """
             SELECT 
                 -- DADOS DA TAREFA
@@ -889,23 +773,19 @@ public class TaskServiceImpl implements TaskService {
                 t.amount as task_amount,
                 r.name as requester_name,
                 
-                -- METADADOS DA TAREFA
                 cb.username as created_by_name,
                 ub.username as updated_by_name,
                 t.server_origin as task_server_origin,
                 t.system_module as task_system_module,
                 
-                -- STATUS DE ENTREGA E FATURAMENTO
                 CASE WHEN EXISTS(SELECT 1 FROM delivery d2 WHERE d2.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_delivery,
                 CASE WHEN EXISTS(SELECT 1 FROM billing_period_task bpt WHERE bpt.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
                 
-                -- DADOS REMOVIDOS (não há mais orçamentos)
                 NULL as quote_id,
                 NULL as quote_status,
                 NULL as quote_amount,
                 NULL as quote_created_at,
                 
-                -- DADOS DE ENTREGAS (LEFT JOIN com nova arquitetura)
                 d.id as delivery_id,
                 CASE d.status 
                     WHEN 'PENDING' THEN 'Pendente'
@@ -924,7 +804,6 @@ public class TaskServiceImpl implements TaskService {
                 di.started_at as delivery_started_at,
                 di.finished_at as delivery_finished_at,
                 
-                -- DADOS DE FATURAMENTO
                 bp.year as billing_year,
                 bp.month as billing_month,
                 bp.status as billing_status
@@ -948,7 +827,6 @@ public class TaskServiceImpl implements TaskService {
         List<Map<String, Object>> data = results.stream().map(row -> {
             Map<String, Object> map = new HashMap<>();
 
-            // DADOS DA TAREFA (0-6) - datas removidas
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
@@ -957,33 +835,28 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_amount", row[5]);
             map.put("requester_name", row[6]);
 
-            // METADADOS DA TAREFA (7-10)
             map.put("created_by_name", row[7]);
             map.put("updated_by_name", row[8]);
             map.put("task_server_origin", row[9]);
             map.put("task_system_module", row[10]);
 
-            // STATUS DE ENTREGA E FATURAMENTO (11-12)
             map.put("has_delivery", row[11]);
             map.put("has_quote_in_billing", row[12]);
 
-            // DADOS REMOVIDOS - ORÇAMENTO (13-16)
             map.put("quote_id", row[13]);
             map.put("quote_status", row[14]);
             map.put("quote_amount", row[15]);
             map.put("quote_created_at", row[16]);
 
-            // DADOS DE ENTREGAS (17-25) - Pull Request reorganizado + notas + status traduzido
             map.put("delivery_id", row[17]);
-            map.put("delivery_status", row[18]); // Status já traduzido na query
+            map.put("delivery_status", row[18]);
             map.put("project_name", row[19]);
-            map.put("delivery_pull_request", row[20]); // Link da entrega
+            map.put("delivery_pull_request", row[20]);
             map.put("delivery_branch", row[21]);
-            map.put("delivery_notes", row[22]); // Nova coluna de notas
+            map.put("delivery_notes", row[22]);
             map.put("delivery_started_at", row[23]);
             map.put("delivery_finished_at", row[24]);
 
-            // DADOS DE FATURAMENTO (25-27) - No final
             map.put("billing_year", row[25]);
             map.put("billing_month", row[26]);
             map.put("billing_status", row[27]);
@@ -1002,7 +875,6 @@ public class TaskServiceImpl implements TaskService {
     public byte[] exportGeneralReportForUser() throws IOException {
         log.debug("GENERAL REPORT FOR USER EXPORT STARTED");
 
-        // Query sem dados de orçamento, faturamento e valor da tarefa
         String sql = """
             SELECT 
                 -- DADOS DA TAREFA (sem valor, sem datas)
@@ -1013,16 +885,13 @@ public class TaskServiceImpl implements TaskService {
                 t.priority as task_priority,
                 r.name as requester_name,
                 
-                -- METADADOS DA TAREFA
                 cb.username as created_by_name,
                 ub.username as updated_by_name,
                 t.server_origin as task_server_origin,
                 t.system_module as task_system_module,
                 
-                -- STATUS DE ENTREGA (sem faturamento para USER)
                 CASE WHEN EXISTS(SELECT 1 FROM delivery d2 WHERE d2.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_delivery,
                 
-                -- DADOS DE ENTREGAS (nova arquitetura com status traduzido)
                 d.id as delivery_id,
                 CASE d.status 
                     WHEN 'PENDING' THEN 'Pendente'
@@ -1058,7 +927,6 @@ public class TaskServiceImpl implements TaskService {
         List<Map<String, Object>> data = results.stream().map(row -> {
             Map<String, Object> map = new HashMap<>();
 
-            // DADOS DA TAREFA (0-5) - sem valor, sem datas
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
@@ -1066,22 +934,19 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_priority", row[4]);
             map.put("requester_name", row[5]);
 
-            // METADADOS DA TAREFA (6-9)
             map.put("created_by_name", row[6]);
             map.put("updated_by_name", row[7]);
             map.put("task_server_origin", row[8]);
             map.put("task_system_module", row[9]);
 
-            // STATUS DE ENTREGA (10) - sem faturamento para USER
             map.put("has_delivery", row[10]);
 
-            // DADOS DE ENTREGAS (11-19) - status já traduzido
             map.put("delivery_id", row[11]);
-            map.put("delivery_status", row[12]); // Status já traduzido na query
+            map.put("delivery_status", row[12]);
             map.put("project_name", row[13]);
             map.put("delivery_pull_request", row[14]);
             map.put("delivery_branch", row[15]);
-            map.put("delivery_notes", row[16]); // Nova coluna de notas
+            map.put("delivery_notes", row[16]);
             map.put("delivery_started_at", row[17]);
             map.put("delivery_finished_at", row[18]);
 
@@ -1100,12 +965,11 @@ public class TaskServiceImpl implements TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
-        // Inicializar relacionamentos lazy antes da chamada assíncrona
         task.getRequester().getName();
 
         try {
             emailService.sendFinancialNotificationAsync(task, additionalEmails);
-            // Marca como enviado
+
             task.setFinancialEmailSent(true);
             taskRepository.save(task);
         } catch (Exception e) {
@@ -1120,7 +984,7 @@ public class TaskServiceImpl implements TaskService {
 
         final Task task = taskRepository.findById(taskId)
                 .map(entity -> {
-                    // Inicializar relacionamentos lazy antes do envio assíncrono
+
                     if (entity.getRequester() != null) {
                         entity.getRequester().getName();
                         entity.getRequester().getEmail();
@@ -1137,10 +1001,8 @@ public class TaskServiceImpl implements TaskService {
                 })
                 .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com ID: " + taskId));
 
-        // Enviar email de notificação
         emailService.sendTaskUpdatedNotification(task, additionalEmails);
 
-        // Marcar email como enviado
         task.setTaskEmailSent(true);
         taskRepository.save(task);
     }
@@ -1164,9 +1026,6 @@ public class TaskServiceImpl implements TaskService {
         return generatedCode;
     }
 
-    /**
-     * Cria automaticamente uma entrega para a tarefa se ela não tiver uma
-     */
     private void ensureTaskHasDelivery(Task task) {
         if (!deliveryService.existsByTaskId(task.getId())) {
             log.debug("Creating automatic delivery for task ID: {}", task.getId());

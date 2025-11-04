@@ -64,23 +64,18 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
     public DeliveryItemResponse create(DeliveryItemRequest dto) {
         log.debug("Creating delivery item: {}", dto);
 
-        // Buscar delivery
         Delivery delivery = deliveryRepository.findById(dto.getDeliveryId())
                 .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + dto.getDeliveryId()));
 
-        // Buscar projeto
         Project project = projectRepository.findById(dto.getProjectId())
                 .orElseThrow(() -> new RuntimeException("Project not found with id: " + dto.getProjectId()));
 
-        // Criar item
         DeliveryItem item = DeliveryItemAdapter.toEntity(dto, delivery, project);
         item = deliveryItemRepository.save(item);
 
-        // Atualizar status da delivery automaticamente
         delivery.updateStatus();
-        delivery = deliveryRepository.save(delivery);
+        deliveryRepository.save(delivery);
 
-        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("DeliveryItem created with id: {}", item.getId());
         return DeliveryItemAdapter.toResponseDTO(item);
@@ -94,29 +89,23 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         DeliveryItem item = deliveryItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("DeliveryItem not found with id: " + id));
 
-        // Buscar delivery se mudou
         Delivery delivery = null;
         if (!item.getDelivery().getId().equals(dto.getDeliveryId())) {
             delivery = deliveryRepository.findById(dto.getDeliveryId())
                     .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + dto.getDeliveryId()));
         }
 
-        // Buscar projeto se mudou
         Project project = null;
         if (!item.getProject().getId().equals(dto.getProjectId())) {
             project = projectRepository.findById(dto.getProjectId())
                     .orElseThrow(() -> new RuntimeException("Project not found with id: " + dto.getProjectId()));
         }
 
-        // Atualizar item
         DeliveryItemAdapter.updateEntityFromDto(dto, item, delivery, project);
         item = deliveryItemRepository.save(item);
 
-        // Atualizar status da delivery automaticamente
         item.getDelivery().updateStatus();
-        Delivery updatedDelivery = deliveryRepository.save(item.getDelivery());
-
-        // Email automático removido - agora é manual via botão na listagem
+        deliveryRepository.save(item.getDelivery());
 
         log.debug("DeliveryItem updated with id: {}", item.getId());
         return DeliveryItemAdapter.toResponseDTO(item);
@@ -132,38 +121,29 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
 
         Long deliveryId = item.getDelivery().getId();
 
-        // 1. Deletar anexos do storage E do banco antes de deletar o item
         List<DeliveryItemAttachment> attachments = deliveryItemAttachmentRepository.findByDeliveryItemId(id);
         for (DeliveryItemAttachment attachment : attachments) {
             try {
-                // Deletar arquivo do storage
                 fileStorageStrategy.deleteFile(attachment.getFilePath());
                 log.info("File deleted from storage: {}", attachment.getFilePath());
             } catch (Exception e) {
                 log.warn("Could not delete file from storage: {} - {}", attachment.getFilePath(), e.getMessage());
             }
 
-            // Deletar registro do banco
             deliveryItemAttachmentRepository.delete(attachment);
             log.info("Attachment deleted from database: {}", attachment.getOriginalFileName());
         }
 
-        // 2. Remover o item da lista da delivery antes de deletar (evita erro de merge)
         Delivery delivery = item.getDelivery();
         delivery.removeItem(item);
 
-        // 3. Deletar o item
         deliveryItemRepository.delete(item);
 
-        // 4. Buscar a delivery novamente para garantir que está atualizada
         delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
 
-        // 5. Atualizar status da delivery automaticamente
         delivery.updateStatus();
-        delivery = deliveryRepository.save(delivery);
-
-        // Email automático removido - agora é manual via botão na listagem
+        deliveryRepository.save(delivery);
 
         log.info("Delivery item deleted successfully: {}", id);
     }
@@ -178,30 +158,24 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             throw new RuntimeException("Some delivery items not found");
         }
 
-        // Coletar IDs das deliveries afetadas para atualizar status
         var affectedDeliveryIds = items.stream()
                 .map(item -> item.getDelivery().getId())
                 .distinct()
                 .toList();
 
-        // Remover os itens das listas das deliveries antes de deletar
         items.forEach(item -> {
             Delivery delivery = item.getDelivery();
             delivery.getItems().remove(item);
         });
 
-        // Deletar todos os itens
         deliveryItemRepository.deleteAll(items);
 
-        // Buscar as deliveries novamente e atualizar status
         affectedDeliveryIds.forEach(deliveryId -> {
             Delivery delivery = deliveryRepository.findById(deliveryId)
                     .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
             delivery.updateStatus();
             deliveryRepository.save(delivery);
         });
-
-        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("Bulk deleted {} delivery items", ids.size());
     }
@@ -246,24 +220,13 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
     }
 
     @Override
-    public long countByTaskId(Long taskId) {
-        return deliveryItemRepository.countByTaskId(taskId);
-    }
-
-    @Override
-    public long countByTaskIdAndStatus(Long taskId, DeliveryStatus status) {
-        return deliveryItemRepository.countByTaskIdAndStatus(taskId, status);
-    }
-
-    @Override
     public Page<DeliveryItemResponse> findAllPaginated(Long id, Long deliveryId, Long taskId, String taskName,
                                                        String taskCode, String projectName, String branch,
                                                        String pullRequest, DeliveryStatus status, String startedAt,
                                                        String finishedAt, String createdAt, String updatedAt,
                                                        Pageable pageable) {
         log.debug("Finding delivery items paginated with filters");
-        
-        // 1. Buscar apenas IDs com paginação (eficiente, sem EntityGraph)
+
         Page<Long> idsPage = deliveryItemRepository.findIdsByOptionalFieldsPaginated(
                 id, deliveryId, taskId, taskName, taskCode, projectName, branch, pullRequest,
                 status, startedAt, finishedAt, createdAt, updatedAt, pageable
@@ -273,10 +236,8 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             return idsPage.map(deliveryItemId -> null);
         }
 
-        // 2. Buscar dados completos pelos IDs (com EntityGraph)
         List<DeliveryItem> deliveryItems = deliveryItemRepository.findByIdsWithEntityGraph(idsPage.getContent());
 
-        // 3. Manter a ordem original e criar PageImpl
         List<DeliveryItemResponse> responses = deliveryItems.stream()
                 .map(DeliveryItemAdapter::toResponseDTO)
                 .toList();
@@ -315,35 +276,28 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
     public List<DeliveryItemResponse> createMultipleItems(Long deliveryId, List<DeliveryItemRequest> items) {
         log.debug("Creating multiple delivery items for delivery: {}", deliveryId);
 
-        // Buscar delivery
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
 
         List<DeliveryItem> createdItems = new ArrayList<>();
 
         for (DeliveryItemRequest itemDto : items) {
-            // Validar que o deliveryId bate
             if (!deliveryId.equals(itemDto.getDeliveryId())) {
                 throw new RuntimeException("DeliveryId mismatch in item request");
             }
 
-            // Buscar projeto
             Project project = projectRepository.findById(itemDto.getProjectId())
                     .orElseThrow(() -> new RuntimeException("Project not found with id: " + itemDto.getProjectId()));
 
-            // Criar item
             DeliveryItem item = DeliveryItemAdapter.toEntity(itemDto, delivery, project);
             createdItems.add(item);
         }
 
-        // Salvar todos os itens
         createdItems = deliveryItemRepository.saveAll(createdItems);
 
-        // Atualizar status da delivery automaticamente
         delivery.updateStatus();
-        delivery = deliveryRepository.save(delivery);
+       deliveryRepository.save(delivery);
 
-        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("Created {} delivery items for delivery: {}", createdItems.size(), deliveryId);
         return DeliveryItemAdapter.toResponseDTOList(createdItems);
@@ -367,29 +321,24 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             DeliveryItem item = deliveryItemRepository.findById(itemId)
                     .orElseThrow(() -> new RuntimeException("DeliveryItem not found with id: " + itemId));
 
-            // Buscar delivery se mudou
             Delivery delivery = null;
             if (!item.getDelivery().getId().equals(itemDto.getDeliveryId())) {
                 delivery = deliveryRepository.findById(itemDto.getDeliveryId())
                         .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + itemDto.getDeliveryId()));
             }
 
-            // Buscar projeto se mudou
             Project project = null;
             if (!item.getProject().getId().equals(itemDto.getProjectId())) {
                 project = projectRepository.findById(itemDto.getProjectId())
                         .orElseThrow(() -> new RuntimeException("Project not found with id: " + itemDto.getProjectId()));
             }
 
-            // Atualizar item
             DeliveryItemAdapter.updateEntityFromDto(itemDto, item, delivery, project);
             updatedItems.add(item);
         }
 
-        // Salvar todas as alterações
         updatedItems = deliveryItemRepository.saveAll(updatedItems);
 
-        // Atualizar status das deliveries afetadas
         var affectedDeliveries = updatedItems.stream()
                 .map(DeliveryItem::getDelivery)
                 .distinct()
@@ -399,8 +348,6 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             delivery.updateStatus();
             deliveryRepository.save(delivery);
         });
-
-        // Email automático removido - agora é manual via botão na listagem
 
         log.debug("Updated {} delivery items", itemIds.size());
         return DeliveryItemAdapter.toResponseDTOList(updatedItems);
@@ -415,7 +362,6 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("DeliveryItems");
 
-            // Criar header
             Row headerRow = sheet.createRow(0);
             String[] headers = {"ID", "Delivery ID", "Task Name", "Task Code", "Project Name", 
                                "Status", "Branch", "Source Branch", "Pull Request", "Notes", 
@@ -432,7 +378,6 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Preencher dados
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
             
             IntStream.range(0, items.size()).forEach(i -> {
@@ -455,12 +400,10 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                 row.createCell(13).setCellValue(item.getUpdatedAt() != null ? item.getUpdatedAt().format(formatter) : "");
             });
 
-            // Auto-ajustar colunas
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
             }
 
-            // Converter para bytes
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 workbook.write(outputStream);
                 return outputStream.toByteArray();

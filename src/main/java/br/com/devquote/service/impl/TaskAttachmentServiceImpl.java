@@ -43,7 +43,7 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
                 responses.add(response);
             } catch (Exception e) {
                 log.error("Error uploading file {} for task {}: {}", file.getOriginalFilename(), taskId, e.getMessage());
-                // Continue with other files even if one fails
+
             }
         }
         
@@ -52,22 +52,18 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
 
     @Override
     public TaskAttachmentResponse uploadFile(Long taskId, MultipartFile file) {
-        // Validar se a tarefa existe
+
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Tarefa não encontrada com ID: " + taskId));
 
-        // Validar arquivo
         validateFile(file);
 
         try {
-            // Gerar nome único para o arquivo
             String fileName = generateFileName(file.getOriginalFilename());
             String filePath = buildFilePath(taskId, fileName);
 
-            // Fazer upload do arquivo
             String uploadedFilePath = fileStorageStrategy.uploadFile(file, filePath);
 
-            // Criar registro no banco
             TaskAttachment attachment = TaskAttachment.builder()
                     .task(task)
                     .fileName(fileName)
@@ -130,11 +126,9 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
         TaskAttachment attachment = taskAttachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new RuntimeException("Anexo não encontrado com ID: " + attachmentId));
 
-        // DELETE físico no banco
         taskAttachmentRepository.delete(attachment);
         log.info("Attachment deleted from database: {}", attachment.getOriginalFileName());
 
-        // Deletar arquivo do storage
         try {
             fileStorageStrategy.deleteFile(attachment.getFilePath());
             log.info("File deleted from storage: {}", attachment.getFilePath());
@@ -150,7 +144,7 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
                 deleteAttachment(attachmentId);
             } catch (Exception e) {
                 log.error("Error deleting attachment {}: {}", attachmentId, e.getMessage());
-                // Continue with other attachments
+
             }
         }
     }
@@ -158,12 +152,10 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
     @Override
     public void deleteAllTaskAttachments(Long taskId) {
         List<TaskAttachment> attachments = taskAttachmentRepository.findByTaskId(taskId);
-        
-        // DELETE físico de todos os anexos
+
         for (TaskAttachment attachment : attachments) {
             taskAttachmentRepository.delete(attachment);
-            
-            // Tentar deletar arquivo do storage
+
             try {
                 fileStorageStrategy.deleteFile(attachment.getFilePath());
                 log.info("File deleted from storage: {}", attachment.getFilePath());
@@ -178,17 +170,14 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
     @Override
     public void deleteAllTaskAttachmentsAndFolder(Long taskId) {
         log.info("Physically deleting all attachments and folder for task ID: {}", taskId);
-        
-        // Buscar todos os anexos da tarefa
+
         List<TaskAttachment> attachments = taskAttachmentRepository.findByTaskId(taskId);
-        
-        // Fazer DELETE físico de todos os anexos no banco
+
         if (!attachments.isEmpty()) {
             taskAttachmentRepository.deleteAll(attachments);
             log.info("Physically deleted {} attachments from database for task {}", attachments.size(), taskId);
         }
-        
-        // Excluir toda a pasta do storage S3
+
         String folderPath = "tasks/" + taskId + "/";
         try {
             boolean deleted = fileStorageStrategy.deleteFolder(folderPath);
@@ -207,20 +196,16 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
             throw new RuntimeException("Arquivo não pode estar vazio");
         }
 
-        // Validar tamanho máximo (10MB)
-        long maxSize = 10 * 1024 * 1024; // 10MB
+        long maxSize = 10 * 1024 * 1024;
         if (file.getSize() > maxSize) {
             throw new RuntimeException("Arquivo muito grande. Tamanho máximo: 10MB");
         }
 
-        // Validar tipos permitidos
         String contentType = file.getContentType();
         String originalFilename = file.getOriginalFilename();
-        
-        // Se o tipo MIME não for reconhecido, validar por extensão
+
         if (contentType == null || contentType.isEmpty() || contentType.equals("application/octet-stream") || !isAllowedContentType(contentType)) {
-            if (originalFilename != null && isAllowedByExtension(originalFilename)) {
-                // Arquivo permitido pela extensão
+            if (isAllowedByExtension(originalFilename)) {
                 return;
             }
             throw new RuntimeException("Tipo de arquivo não permitido: " + contentType + " (arquivo: " + originalFilename + ")");
@@ -229,28 +214,28 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
 
     private boolean isAllowedContentType(String contentType) {
         List<String> allowedTypes = List.of(
-            // Documentos
+
             "application/pdf",
-            "application/msword",  // Word .doc
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  // Word .docx
-            "application/vnd.ms-excel",  // Excel .xls
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Excel .xlsx
-            "application/vnd.ms-powerpoint",  // PowerPoint .ppt
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation",  // PowerPoint .pptx
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             "text/plain",
             "text/csv",
-            "application/json",  // JSON
-            // Imagens
+            "application/json",
+
             "image/jpeg",
             "image/png",
             "image/gif",
             "image/webp",
-            // Vídeos
+
             "video/mp4",
             "video/avi",
             "video/quicktime",
             "video/x-msvideo",
-            // Arquivos compactados
+
             "application/zip",
             "application/x-rar-compressed",
             "application/x-7z-compressed"

@@ -41,10 +41,10 @@ public class SecurityConfig {
             "/api/public/**",
             "/.well-known/**",
             "/oauth2/**",
-            "/error",              // evita loop em erros
-            "/actuator/health",    // health check público
-            "/actuator/prometheus", // métricas públicas para Grafana
-            "/actuator/metrics/**"  // métricas detalhadas
+            "/error",
+            "/actuator/health",
+            "/actuator/prometheus",
+            "/actuator/metrics/**"
     };
 
     private final UserDetailsService userDetailsService;
@@ -61,61 +61,30 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // Não queremos formLogin ou basic — evita redirecionar para /login
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
 
                 .authorizeHttpRequests(auth -> auth
-                        // Swagger público
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
-
-                        // Endpoints públicos (login/register/refresh etc.)
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-
-                        // H2 console (apenas para DEV)
                         .requestMatchers("/h2-console/**").permitAll()
-
-                        // Pré‑flight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Regras de domínio da aplicação — autenticado
                         .requestMatchers("/api/dashboard/**").authenticated()
                         .requestMatchers("/api/tasks/**").authenticated()
                         .requestMatchers("/api/projects/**").authenticated()
                         .requestMatchers("/api/quotes/**").authenticated()
                         .requestMatchers("/api/deliveries/**").authenticated()
                         .requestMatchers("/api/requesters/**").authenticated()
-
-                        // Admin com perfil específico
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
-
-                        // Demais rotas: autenticado
                         .anyRequest().authenticated()
                 )
 
-                // REMOVIDO OAuth2 Resource Server - Usamos apenas o AuthTokenFilter
-                // .oauth2ResourceServer(oauth2 -> oauth2
-                //         .jwt(jwt -> jwt.decoder(hs256Decoder()))
-                // )
-
-                // H2 precisa disso para exibir frames
                 .headers(h -> h.frameOptions(f -> f.disable()))
-
-                // UserDetails + Filtro custom de JWT
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-    // Removido - não precisamos mais do JwtDecoder do OAuth2
-    // private JwtDecoder hs256Decoder() {
-    //     byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-    //     SecretKey key = new SecretKeySpec(keyBytes, "HmacSHA256");
-    //     return NimbusJwtDecoder.withSecretKey(key)
-    //             .macAlgorithm(MacAlgorithm.HS256)
-    //             .build();
-    // }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -138,14 +107,13 @@ public class SecurityConfig {
             }
         }
         if (origins.isEmpty()) {
-            // Fallback seguro para dev
             origins.add("http://localhost:5173");
             origins.add("http://localhost:3000");
             origins.add("http://localhost:8080");
         }
 
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(origins); // Use origins exatas quando allowCredentials=true
+        configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));

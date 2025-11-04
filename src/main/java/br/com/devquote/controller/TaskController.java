@@ -71,7 +71,6 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        // Converter String para FlowType (null se TODOS ou null)
         FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
                 ? null
                 : FlowType.fromString(flowType);
@@ -108,7 +107,6 @@ public class TaskController implements TaskControllerDoc {
                 SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id")
         );
 
-        // Converter String para FlowType (null se TODOS ou null)
         FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
                 ? null
                 : FlowType.fromString(flowType);

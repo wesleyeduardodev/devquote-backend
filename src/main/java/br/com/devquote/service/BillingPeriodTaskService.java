@@ -17,14 +17,12 @@ public interface BillingPeriodTaskService {
     void delete(Long id);
     void deleteBulk(List<Long> ids);
 
-    List<BillingPeriodTaskResponse> findByBillingPeriod(Long billingPeriodId);
     List<BillingPeriodTaskResponse> findByBillingPeriodAndFlowType(Long billingPeriodId, FlowType flowType);
     Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable);
     Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable, FlowType flowType);
     List<BillingPeriodTaskResponse> bulkCreate(List<BillingPeriodTaskRequest> requests);
     void bulkUnlinkTasks(Long billingPeriodId, List<Long> taskIds);
-    
-    // Métodos de compatibilidade (deprecated)
+
     List<BillingPeriodTaskResponse> findTaskLinksByBillingPeriod(Long billingPeriodId);
     List<BillingPeriodTaskResponse> bulkLinkTasks(List<BillingPeriodTaskRequest> requests);
     Page<BillingPeriodTaskResponse> findTaskLinksPaginated(Long billingPeriodId, Pageable pageable);

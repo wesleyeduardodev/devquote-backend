@@ -54,7 +54,6 @@ public class AuthService {
             throw new RuntimeException("Error: Email is already in use!");
         }
 
-        // Create new user's account
         User user = User.builder()
                 .username(signUpRequest.getUsername())
                 .email(signUpRequest.getEmail())
@@ -68,7 +67,6 @@ public class AuthService {
 
         user = userRepository.save(user);
 
-        // Por padrão, todos os novos usuários recebem o perfil USER
         Profile userProfile = profileRepository.findByCode("USER")
                 .orElseThrow(() -> new RuntimeException("Profile USER not found"));
 
@@ -103,8 +101,7 @@ public class AuthService {
 
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
         log.info("LOGIN ATTEMPT user={}", loginRequest.getUsername());
-        
-        // Autenticar o usuário
+
         Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(
@@ -121,17 +118,14 @@ public class AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Gerar JWT token
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-        // Obter detalhes do usuário
         User userDetails = (User) authentication.getPrincipal();
 
-        // Obter roles (ADMIN, MANAGER, USER)
         Set<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .filter(auth -> auth.startsWith("ROLE_"))
-                .map(role -> role.substring(5)) // Remove "ROLE_" prefix
+                .map(role -> role.substring(5))
                 .collect(Collectors.toSet());
 
         return new JwtResponse(
@@ -150,19 +144,16 @@ public class AuthService {
         User currentUser = userRepository.findByUsernameWithProfiles(username)
                 .or(() -> userRepository.findByEmailWithProfiles(username))
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        // Verificar se o novo email já está em uso por outro usuário
+
         if (!currentUser.getEmail().equals(request.getEmail()) && 
             userRepository.existsByEmail(request.getEmail())) {
             log.warn("PROFILE UPDATE FAILED user={} email already exists: {}", username, request.getEmail());
             throw new RuntimeException("Email is already in use by another user!");
         }
-        
-        // Atualizar dados básicos (username não pode ser alterado)
+
         currentUser.setName(request.getName());
         currentUser.setEmail(request.getEmail());
-        
-        // Se uma nova senha foi fornecida, validar e atualizar
+
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             if (request.getPassword().length() < 6) {
                 log.warn("PROFILE UPDATE FAILED user={} password too short", username);

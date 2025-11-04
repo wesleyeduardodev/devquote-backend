@@ -43,7 +43,6 @@ public interface DeliveryService {
 
     DeliveryGroupResponse findGroupDetailsByTaskId(Long taskId);
 
-    // Novos métodos otimizados para performance
     Page<DeliveryGroupResponse> findAllGroupedByTaskOptimized(String taskName,
                                                               String taskCode,
                                                               String status,

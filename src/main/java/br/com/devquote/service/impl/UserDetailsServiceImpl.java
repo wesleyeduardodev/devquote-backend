@@ -22,15 +22,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("Carregando usuário: {}", username);
-        
-        // Busca usuário com perfis
+
         User user = userRepository.findByUsernameWithProfiles(username)
                 .or(() -> userRepository.findByEmailWithProfiles(username))
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
 
         log.debug("Usuário encontrado: {}, Perfis: {}", user.getUsername(), user.getActiveProfileCodes());
-        
-        // Retorna diretamente a entidade User (que implementa UserDetails)
+
         return user;
     }
 }

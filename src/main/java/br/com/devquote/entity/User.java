@@ -62,7 +62,6 @@ public class User implements UserDetails {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Relacionamento com o novo sistema de perfis
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<UserProfile> userProfiles;
 
@@ -82,16 +81,14 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
 
-        // NOVO SISTEMA: Authorities baseadas em perfis
         if (userProfiles != null) {
-            // ROLE_ para os perfis (ROLE_ADMIN, ROLE_MANAGER, ROLE_USER)
+
             var profileAuthorities = userProfiles.stream()
                     .filter(UserProfile::getActive)
                     .map(up -> new SimpleGrantedAuthority("ROLE_" + up.getProfile().getCode()))
                     .collect(Collectors.toSet());
             authorities.addAll(profileAuthorities);
 
-            // PROFILE_ para identificação específica de perfil
             var profileSpecificAuthorities = userProfiles.stream()
                     .filter(UserProfile::getActive)
                     .map(up -> new SimpleGrantedAuthority("PROFILE_" + up.getProfile().getCode()))
@@ -123,7 +120,6 @@ public class User implements UserDetails {
         return active != null ? active : true;
     }
 
-    // Método auxiliar para obter perfis ativos
     public Set<String> getActiveProfileCodes() {
         if (userProfiles == null) {
             return new HashSet<>();
@@ -135,12 +131,10 @@ public class User implements UserDetails {
                 .collect(Collectors.toSet());
     }
 
-    // Método auxiliar para verificar se tem um perfil específico
     public boolean hasProfile(String profileCode) {
         return getActiveProfileCodes().contains(profileCode);
     }
 
-    // Método auxiliar para verificar se é admin
     public boolean isAdmin() {
         return hasProfile("ADMIN");
     }

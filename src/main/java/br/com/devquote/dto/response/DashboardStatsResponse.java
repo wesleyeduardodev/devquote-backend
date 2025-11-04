@@ -1,39 +1,28 @@
 package br.com.devquote.dto.response;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class DashboardStatsResponse {
-    
-    // Estatísticas gerais
     private GeneralStats general;
-    
-    // Estatísticas por módulo (baseado nas permissões do usuário)
     private ModuleStats requesters;
     private ModuleStats tasks;
     private ModuleStats quotes;
     private ModuleStats projects;
     private ModuleStats deliveries;
     private ModuleStats billing;
-    
-    // Tendências e gráficos
     private List<ChartData> tasksChart;
     private List<ChartData> quotesChart;
     private List<StatusCount> tasksByStatus;
     private List<StatusCount> quotesByStatus;
     private List<StatusCount> deliveriesByStatus;
-    
-    // Atividade recente
     private List<RecentActivity> recentActivities;
     
     @Data
@@ -67,7 +56,7 @@ public class DashboardStatsResponse {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class ChartData {
-        private String label; // Data ou período
+        private String label;
         private BigDecimal value;
         private int count;
     }
@@ -87,7 +76,7 @@ public class DashboardStatsResponse {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class RecentActivity {
-        private String type; // TASK_CREATED, QUOTE_APPROVED, etc.
+        private String type;
         private String description;
         private String user;
         private String timestamp;

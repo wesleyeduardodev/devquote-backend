@@ -2,14 +2,12 @@ spring:
   application:
     name: devquote-backend
 
-  # Database Configuration (usa ENV quando existir; senão, defaults para DEV local)
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/devquote?sslmode=disable}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:root}
     driver-class-name: org.postgresql.Driver
 
-  # JPA Configuration
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
@@ -19,16 +17,13 @@ spring:
         format_sql: ${SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL:false}
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  # Jackson Configuration
   jackson:
     serialization:
       write-dates-as-timestamps: false
 
-  # Thymeleaf Configuration
   thymeleaf:
     cache: false
 
-  # Email Configuration - Todas as variáveis são obrigatórias
   mail:
     host: ${MAIL_HOST}
     port: ${MAIL_PORT}
@@ -43,17 +38,15 @@ spring:
           ssl:
             trust: ${MAIL_SMTP_SSL_TRUST:smtp.gmail.com}
 
-  # Servlet Configuration
   servlet:
     multipart:
       max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:10MB}
       max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:10MB}
 
-  # Redis Cache Configuration
   cache:
     type: redis
     redis:
-      time-to-live: 600000 # 10 minutos default (em ms)
+      time-to-live: 600000
       cache-null-values: false
   data:
     redis:
@@ -67,7 +60,6 @@ spring:
           max-idle: 8
           min-idle: 0
 
-  # OAuth2 Security (issuer pode ser sobrescrito por ENV)
   security:
     oauth2:
       authorizationserver:
@@ -76,16 +68,13 @@ spring:
         jwt:
           issuer-uri: ${SECURITY_ISSUER:http://localhost:8080}
 
-# Server Configuration
 server:
-  port: ${PORT:${SERVER_PORT:8080}}
+  port: ${PORT:${SERVER_PORT:8085}}
   error:
     include-message: ${SERVER_ERROR_INCLUDE_MESSAGE:always}
 
-# DevQuote Security
 devquote:
   cors:
-    # Pode sobrescrever por ENV separado por vírgulas (ex.: https://seu-front.com,https://admin.seu-front.com)
     allowed-origins: ${DEVQUOTE_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:4200,http://localhost:8080}
   security:
     default-roles:
@@ -99,14 +88,11 @@ devquote:
       enabled: ${DEVQUOTE_EMAIL_ENABLED}
       from: ${DEVQUOTE_EMAIL_FROM}
 
-# JWT Configuration (usa ENV em produção)
 app:
-  # Se APP_JWTSECRET não estiver definido, usa o valor base64 abaixo (DEV)
   jwtSecret: ${APP_JWTSECRET:ZGV2UXVvdGVTZWNyZXRLZXlGb3JKV1RUb2tlbkdlbmVyYXRpb25BbmRWYWxpZGF0aW9u}
   jwtExpirationMs: ${APP_JWTEXPIRATIONMS:86400000}
   jwtRefreshExpirationMs: ${APP_JWTREFRESHEXPIRATIONMS:2592000000}
 
-# AWS S3 Configuration
 aws:
   access-key-id: ${AWS_ACCESS_KEY_ID}
   secret-access-key: ${AWS_SECRET_ACCESS_KEY}
@@ -114,25 +100,18 @@ aws:
     bucket-name: ${AWS_S3_BUCKET_NAME}
     region: ${AWS_S3_REGION}
 
-# Logging - Otimizado para produção
 logging:
   pattern:
     console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr([%X{traceId:-}]){yellow} : %m%n"
   level:
-    # Aplicação principal - controlado por variável de ambiente
     br.com.devquote: ${LOG_LEVEL_APP:INFO}
-    # Spring Framework - apenas warnings em produção
     org.springframework: ${LOG_LEVEL_SPRING:WARN}
     org.springframework.web: ${LOG_LEVEL_WEB:WARN}
     org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
-    # Hibernate - apenas erros em produção
     org.hibernate: ${LOG_LEVEL_HIBERNATE:WARN}
     org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
-    # HTTP Client logs
     org.apache.http: WARN
-    # Suprimir warning de PageImpl serialization
     org.springframework.data.web.PageableHandlerMethodArgumentResolver: ERROR
-    # Root level
     root: ${LOG_LEVEL_ROOT:INFO}
   file:
     name: ${LOG_FILE:logs/application.log}
@@ -141,7 +120,6 @@ logging:
       max-file-size: ${LOG_MAX_FILE_SIZE:10MB}
       max-history: ${LOG_MAX_HISTORY:3}
 
-# Actuator & Prometheus Configuration
 management:
   endpoints:
     web:

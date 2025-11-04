@@ -66,8 +66,7 @@ public class UserManagementService {
                 .build();
 
         user = userRepository.save(user);
-        
-        // Atribuir perfis ao usuário
+
         if (request.getProfileCodes() != null && !request.getProfileCodes().isEmpty()) {
             for (String profileCode : request.getProfileCodes()) {
                 Profile profile = profileRepository.findByCode(profileCode)
@@ -92,25 +91,22 @@ public class UserManagementService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Verifica se está alterando o username
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
-            // Verifica se o novo username já existe
+
             if (userRepository.existsByUsername(request.getUsername())) {
                 throw new RuntimeException("Username já existe: " + request.getUsername());
             }
             user.setUsername(request.getUsername());
         }
 
-        // Verifica se está alterando o email
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
-            // Verifica se o novo email já existe
+
             if (userRepository.existsByEmail(request.getEmail())) {
                 throw new RuntimeException("Email já existe: " + request.getEmail());
             }
             user.setEmail(request.getEmail());
         }
 
-        // Atualiza o nome (usa name direto ou fallback para firstName + lastName para compatibilidade)
         if (request.getName() != null && !request.getName().trim().isEmpty()) {
             user.setName(request.getName());
         } else if (request.getFirstName() != null && request.getLastName() != null) {
@@ -120,9 +116,9 @@ public class UserManagementService {
         user.setActive(request.getEnabled());
 
         if (request.getProfileCodes() != null) {
-            // Remove todos os perfis atuais
+
             userProfileService.removeAllProfilesFromUser(user.getId());
-            // Adiciona os novos perfis
+
             for (String profileCode : request.getProfileCodes()) {
                 Profile profile = profileRepository.findByCode(profileCode)
                         .orElseThrow(() -> new RuntimeException("Profile not found: " + profileCode));
@@ -146,8 +142,7 @@ public class UserManagementService {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("User not found");
         }
-        
-        // Verifica se está tentando deletar o próprio usuário
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getName() != null) {
             User currentUser = userRepository.findByUsername(authentication.getName())
@@ -156,17 +151,14 @@ public class UserManagementService {
                 throw new RuntimeException("Você não pode excluir sua própria conta");
             }
         }
-        
-        // Remove todos os perfis do usuário antes de deletar
+
         userProfileService.removeAllProfilesFromUser(id);
-        
-        // Deleta o usuário
+
         userRepository.deleteById(id);
     }
     
     @Transactional
     public void deleteBulk(List<Long> ids) {
-        // Verifica se o usuário atual está na lista
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getName() != null) {
             User currentUser = userRepository.findByUsername(authentication.getName())
@@ -178,10 +170,7 @@ public class UserManagementService {
         
         for (Long id : ids) {
             if (userRepository.existsById(id)) {
-                // Remove todos os perfis e permissões do usuário antes de deletar
                 userProfileService.removeAllProfilesFromUser(id);
-                
-                // Deleta o usuário
                 userRepository.deleteById(id);
             }
         }
@@ -205,7 +194,7 @@ public class UserManagementService {
                 .name(user.getName())
                 .enabled(user.getActive())
                 .roles(profileCodes)
-                .permissions(profileCodes) // Por enquanto, usando os códigos dos perfis como permissions
+                .permissions(profileCodes)
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

@@ -94,14 +94,12 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(value = "files", required = false) List<MultipartFile> files) {
         
         try {
-            // Deserializar o JSON
+
             com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
             DeliveryRequest deliveryRequest = objectMapper.readValue(dtoJson, DeliveryRequest.class);
-            
-            // Criar entrega
+
             DeliveryResponse delivery = deliveryService.create(deliveryRequest);
-            
-            // Fazer upload dos arquivos se fornecidos
+
             if (files != null && !files.isEmpty()) {
                 deliveryAttachmentService.uploadFiles(delivery.getId(), files);
             }
@@ -201,7 +199,6 @@ public class DeliveryController implements DeliveryControllerDoc {
         return ResponseEntity.ok(groupDetails);
     }
 
-    // Novos endpoints otimizados para performance
     @GetMapping("/grouped/optimized")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<PagedResponse<DeliveryGroupResponse>> listGroupedByTaskOptimized(

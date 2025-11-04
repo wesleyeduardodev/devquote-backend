@@ -3,6 +3,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -36,9 +37,7 @@ public class DeliveryResponse {
 
     private String notes;
 
-    // Lista de itens da entrega
-    private java.util.List<DeliveryItemResponse> items;
+    private List<DeliveryItemResponse> items;
 
-    // Lista de itens operacionais da entrega
-    private java.util.List<DeliveryOperationalItemResponse> operationalItems;
+    private List<DeliveryOperationalItemResponse> operationalItems;
 }

@@ -26,7 +26,7 @@ public class Profile extends BaseEntity {
     private String description;
 
     @Column(nullable = false)
-    private Integer level; // 1=ADMIN, 2=MANAGER, 3=USER (menor número = maior privilégio)
+    private Integer level;
 
     @Column(nullable = false)
     @Builder.Default

@@ -48,7 +48,6 @@ public class ApiExceptionHandler {
                 .collect(Collectors.toList());
         extra.put("errors", errors);
 
-        // Log detalhado do erro de validação com stack trace
         log.error("VALIDATION_ERROR {} {} - Campos inválidos: {}", 
                 req.getMethod(), req.getRequestURI(), 
                 errors.stream()
@@ -95,7 +94,6 @@ public class ApiExceptionHandler {
                 .map(this::toViolationMap)
                 .collect(Collectors.toList());
 
-        // Log detalhado com violações
         log.error("CONSTRAINT_VIOLATION {} {} - Violações: {}", 
                 req.getMethod(), req.getRequestURI(), 
                 errors.stream()
@@ -150,7 +148,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ProblemDetail handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
-        // Log com detalhes do erro de parsing
+
         log.error("MALFORMED_REQUEST {} {} - Erro ao processar JSON/XML: {}", 
                 req.getMethod(), req.getRequestURI(), 
                 ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage(), ex);
@@ -178,7 +176,6 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     ProblemDetail handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest req) {
-        // Log com informações do recurso não encontrado
         log.warn("RESOURCE_NOT_FOUND {} {} - Tipo: {} - ID: {} - Mensagem: {}", 
                 req.getMethod(), req.getRequestURI(), 
                 ex.getResourceType(), ex.getResourceId(), ex.getMessage());
@@ -197,7 +194,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     ProblemDetail handleBusinessException(BusinessException ex, HttpServletRequest req) {
-        // Log com stack trace
+
         log.error("BUSINESS_ERROR {} {} - Código: {} - Mensagem: {}", 
                 req.getMethod(), req.getRequestURI(), ex.getErrorCode(), ex.getMessage(), ex);
         
@@ -214,7 +211,7 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     ProblemDetail handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest req) {
-        // Log com stack trace
+
         log.error("ILLEGAL_ARGUMENT {} {} - Mensagem: {}", 
                 req.getMethod(), req.getRequestURI(), ex.getMessage(), ex);
         
@@ -242,8 +239,7 @@ public class ApiExceptionHandler {
     ProblemDetail handleConflict(DataIntegrityViolationException ex, HttpServletRequest req) {
         String message = "Operação violou restrições de integridade do banco.";
         String rootCauseMessage = ex.getMostSpecificCause().getMessage();
-        
-        // Interpreta mensagens de erro comuns do PostgreSQL
+
         if (rootCauseMessage != null) {
             if (rootCauseMessage.contains("uk_task_unique_billing")) {
                 message = "Esta tarefa já está incluída em outro período de faturamento. Uma tarefa não pode estar em múltiplos períodos simultaneamente.";
@@ -255,8 +251,7 @@ public class ApiExceptionHandler {
                 message = "Campo obrigatório não foi informado.";
             }
         }
-        
-        // Log com stack trace completa
+
         log.error("DATA_INTEGRITY_ERROR {} {} - Causa: {}", 
                 req.getMethod(), req.getRequestURI(), rootCauseMessage, ex);
         
@@ -310,7 +305,6 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     ProblemDetail handleAccessDenied(AccessDeniedException ex, HttpServletRequest req) {
-        // Log de tentativa de acesso negado (importante para auditoria)
         log.warn("ACCESS_DENIED {} {} - User: {} - Message: {}", 
                 req.getMethod(), req.getRequestURI(), 
                 req.getUserPrincipal() != null ? req.getUserPrincipal().getName() : "anonymous",
@@ -328,7 +322,6 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     ProblemDetail handleGeneric(Exception ex, HttpServletRequest req) {
-        // Log crítico com stack trace completa para erros não esperados
         log.error("UNEXPECTED_ERROR {} {} - Tipo: {} - Mensagem: {}", 
                 req.getMethod(), req.getRequestURI(), 
                 ex.getClass().getSimpleName(), ex.getMessage(), ex);

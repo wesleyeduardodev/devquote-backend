@@ -31,7 +31,6 @@ public final class DeliveryItemAdapter {
                 .finishedAt(entity.getFinishedAt())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
-                // Dados da tarefa (via delivery)
                 .taskId(entity.getDelivery() != null && entity.getDelivery().getTask() != null ? 
                         entity.getDelivery().getTask().getId() : null)
                 .taskName(entity.getDelivery() != null && entity.getDelivery().getTask() != null ? 
@@ -62,13 +61,6 @@ public final class DeliveryItemAdapter {
                 .startedAt(dto.getStartedAt())
                 .finishedAt(dto.getFinishedAt())
                 .build();
-    }
-
-    public static List<DeliveryItem> toEntityList(List<DeliveryItemRequest> dtos, Delivery delivery) {
-        if (dtos == null) return null;
-        return dtos.stream()
-                .map(dto -> toEntity(dto, delivery, null)) // Project será definido no service
-                .collect(Collectors.toList());
     }
 
     public static void updateEntityFromDto(DeliveryItemRequest dto, DeliveryItem entity, Delivery delivery, Project project) {

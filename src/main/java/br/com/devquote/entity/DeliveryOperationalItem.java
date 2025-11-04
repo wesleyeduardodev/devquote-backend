@@ -43,13 +43,11 @@ public class DeliveryOperationalItem extends BaseEntity {
     @Builder.Default
     private List<DeliveryOperationalAttachment> attachments = new ArrayList<>();
 
-    // Método helper para adicionar anexo
     public void addAttachment(DeliveryOperationalAttachment attachment) {
         attachments.add(attachment);
         attachment.setDeliveryOperationalItem(this);
     }
 
-    // Método helper para remover anexo
     public void removeAttachment(DeliveryOperationalAttachment attachment) {
         attachments.remove(attachment);
         attachment.setDeliveryOperationalItem(null);

@@ -27,8 +27,6 @@ public class DeliveryOperationalController {
     private final DeliveryOperationalItemService operationalItemService;
     private final DeliveryOperationalAttachmentService attachmentService;
 
-    // ========== CRUD de Itens Operacionais ==========
-
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<DeliveryOperationalItemResponse> createItem(@RequestBody @Valid DeliveryOperationalItemRequest request) {
@@ -61,8 +59,6 @@ public class DeliveryOperationalController {
         operationalItemService.delete(id);
         return ResponseEntity.noContent().build();
     }
-
-    // ========== Anexos ==========
 
     @PostMapping("/{itemId}/attachments")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")

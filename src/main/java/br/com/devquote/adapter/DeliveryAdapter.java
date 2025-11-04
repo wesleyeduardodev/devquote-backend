@@ -94,10 +94,9 @@ public final class DeliveryAdapter {
                 .notes(dto.getNotes())
                 .build();
 
-        // Adicionar itens se fornecidos
         if (dto.getItems() != null && !dto.getItems().isEmpty()) {
             dto.getItems().forEach(itemDto -> {
-                var item = DeliveryItemAdapter.toEntity(itemDto, delivery, null); // Project será definido no service
+                var item = DeliveryItemAdapter.toEntity(itemDto, delivery, null);
                 delivery.addItem(item);
             });
         }
@@ -115,8 +114,5 @@ public final class DeliveryAdapter {
         }
 
         entity.setNotes(dto.getNotes());
-
-        // Atualizar itens será gerenciado separadamente no service
-        // pois envolve lógica mais complexa de CRUD dos DeliveryItems
     }
 }

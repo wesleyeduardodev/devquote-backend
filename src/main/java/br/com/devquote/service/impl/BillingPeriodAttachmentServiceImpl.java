@@ -41,7 +41,7 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
                 responses.add(response);
             } catch (Exception e) {
                 log.error("Error uploading file {} for billing period {}: {}", file.getOriginalFilename(), billingPeriodId, e.getMessage());
-                // Continue with other files even if one fails
+
             }
         }
 
@@ -50,28 +50,23 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
 
     @Override
     public BillingPeriodAttachmentResponse uploadFile(Long billingPeriodId, MultipartFile file) {
-        // Validation
+
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File cannot be null or empty");
         }
 
-        // Verify billing period exists
         BillingPeriod billingPeriod = billingPeriodRepository.findById(billingPeriodId)
                 .orElseThrow(() -> new IllegalArgumentException("BillingPeriod not found with id: " + billingPeriodId));
 
         try {
-            // Generate unique filename
             String originalFileName = file.getOriginalFilename();
             String extension = getFileExtension(originalFileName);
-            String fileName = UUID.randomUUID().toString() + extension;
+            String fileName = UUID.randomUUID() + extension;
 
-            // Define storage path: billing-periods/{billingPeriodId}/{fileName}
             String storagePath = "billing-periods/" + billingPeriodId + "/" + fileName;
 
-            // Store file
             String filePath = fileStorageStrategy.uploadFile(file, storagePath);
 
-            // Save attachment info in database
             BillingPeriodAttachment attachment = BillingPeriodAttachment.builder()
                     .billingPeriod(billingPeriod)
                     .fileName(fileName)
@@ -131,10 +126,9 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
                 .orElseThrow(() -> new RuntimeException("Attachment not found with id: " + attachmentId));
 
         try {
-            // Delete from storage
+
             fileStorageStrategy.deleteFile(attachment.getFilePath());
 
-            // Delete from database
             billingPeriodAttachmentRepository.delete(attachment);
 
             log.info("Attachment deleted successfully: {}", attachment.getOriginalFileName());
@@ -152,7 +146,7 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
                 deleteAttachment(attachmentId);
             } catch (Exception e) {
                 log.error("Error deleting attachment {}: {}", attachmentId, e.getMessage());
-                // Continue with other attachments
+
             }
         }
     }
@@ -162,7 +156,7 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
         List<BillingPeriodAttachment> attachments = billingPeriodAttachmentRepository.findByBillingPeriodId(billingPeriodId);
 
         for (BillingPeriodAttachment attachment : attachments) {
-            // Soft delete - mark as excluded
+
             attachment.setExcluded(true);
             billingPeriodAttachmentRepository.save(attachment);
         }
@@ -175,23 +169,20 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
         try {
             log.debug("Starting deletion of all attachments for billing period: {}", billingPeriodId);
 
-            // 1. Find all attachments first
             List<BillingPeriodAttachment> attachments = billingPeriodAttachmentRepository.findByBillingPeriodId(billingPeriodId);
             log.debug("Found {} attachments to delete for billing period: {}", attachments.size(), billingPeriodId);
 
             if (!attachments.isEmpty()) {
-                // 2. Delete files from S3 storage
+
                 String folderPath = "billing-periods/" + billingPeriodId + "/";
                 log.debug("Deleting folder from S3: {}", folderPath);
                 fileStorageStrategy.deleteFolder(folderPath);
                 log.debug("S3 folder deleted successfully");
 
-                // 3. Delete records from database
                 log.debug("Deleting {} attachment records from database", attachments.size());
                 billingPeriodAttachmentRepository.deleteAll(attachments);
                 log.debug("Database records deleted successfully");
 
-                // 4. Verify deletion
                 List<BillingPeriodAttachment> remainingAttachments = billingPeriodAttachmentRepository.findByBillingPeriodId(billingPeriodId);
                 if (!remainingAttachments.isEmpty()) {
                     throw new RuntimeException("Failed to delete all attachments. " + remainingAttachments.size() + " records still remain");

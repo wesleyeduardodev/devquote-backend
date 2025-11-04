@@ -41,17 +41,16 @@ public class UserProfileServiceImpl implements UserProfileService {
         Profile profile = profileRepository.findById(request.getProfileId())
                 .orElseThrow(() -> new RuntimeException("Perfil não encontrado"));
 
-        // Verifica se já existe a associação
         Optional<UserProfile> existing = userProfileRepository
                 .findByUserIdAndProfileId(request.getUserId(), request.getProfileId());
 
         if (existing.isPresent()) {
-            // Se existe mas está inativo, reativa
+
             UserProfile userProfile = existing.get();
             userProfile.setActive(request.getActive());
             userProfileRepository.save(userProfile);
         } else {
-            // Cria nova associação
+
             UserProfile userProfile = UserProfile.builder()
                     .user(user)
                     .profile(profile)

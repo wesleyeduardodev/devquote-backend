@@ -85,7 +85,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
                     .build();
 
             GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                    .signatureDuration(Duration.ofHours(1)) // URL válida por 1 hora
+                    .signatureDuration(Duration.ofHours(1))
                     .getObjectRequest(getObjectRequest)
                     .build();
 
@@ -136,12 +136,11 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
     @Override
     public boolean deleteFolder(String folderPath) {
         try {
-            // Garantir que o folderPath termina com "/"
+
             if (!folderPath.endsWith("/")) {
                 folderPath += "/";
             }
 
-            // Listar todos os objetos com o prefixo da pasta
             ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
                     .bucket(bucketName)
                     .prefix(folderPath)
@@ -154,12 +153,10 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
                 return true;
             }
 
-            // Preparar lista de objetos para exclusão em lote
             List<ObjectIdentifier> objectsToDelete = listResponse.contents().stream()
                     .map(s3Object -> ObjectIdentifier.builder().key(s3Object.key()).build())
                     .collect(java.util.stream.Collectors.toList());
 
-            // Excluir todos os objetos em lote
             Delete delete = Delete.builder()
                     .objects(objectsToDelete)
                     .quiet(false)
@@ -207,7 +204,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
     }
 
     private String buildKey(String path) {
-        // Remove barras duplas e garante que não comece com barra
+
         return path.replaceAll("//+", "/").replaceAll("^/+", "");
     }
 }

@@ -4,10 +4,7 @@ import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.dto.response.DeliveryGroupResponse;
 import br.com.devquote.dto.response.DeliveryStatusCount;
-import br.com.devquote.entity.Delivery;
-import br.com.devquote.entity.DeliveryOperationalAttachment;
-import br.com.devquote.entity.Project;
-import br.com.devquote.entity.Task;
+import br.com.devquote.entity.*;
 import br.com.devquote.enums.DeliveryStatus;
 import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.repository.ProjectRepository;
@@ -66,11 +63,11 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (entity.getTask() != null) {
             entity.getTask().getId();
         }
-        // Inicializar itens lazy se necessário
+
         if (entity.getItems() != null) {
             entity.getItems().size();
         }
-        // Inicializar itens operacionais lazy se necessário
+
         if (entity.getOperationalItems() != null) {
             entity.getOperationalItems().size();
         }
@@ -82,24 +79,20 @@ public class DeliveryServiceImpl implements DeliveryService {
     public DeliveryResponse create(DeliveryRequest dto) {
         Task task = taskRepository.findById(dto.getTaskId())
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-        
-        // Verificar se já existe delivery para essa tarefa (relacionamento 1:1)
+
         if (deliveryRepository.existsByTaskId(dto.getTaskId())) {
             throw new RuntimeException("Delivery already exists for this task");
         }
-        
-        // Criar delivery sem itens primeiro
+
         Delivery entity = Delivery.builder()
                 .task(task)
-                .flowType(task.getFlowType()) // Pega o flowType da tarefa
+                .flowType(task.getFlowType())
                 .status(dto.getStatus() != null ? br.com.devquote.enums.DeliveryStatus.fromString(dto.getStatus()) : br.com.devquote.enums.DeliveryStatus.PENDING)
                 .notes(dto.getNotes())
                 .build();
-        
-        // Salvar delivery primeiro para ter ID gerado
+
         entity = deliveryRepository.save(entity);
-        
-        // Adicionar itens se fornecidos, fazendo lookup do projeto
+
         if (dto.getItems() != null && !dto.getItems().isEmpty()) {
             final Delivery savedDelivery = entity;
             dto.getItems().forEach(itemDto -> {
@@ -120,12 +113,9 @@ public class DeliveryServiceImpl implements DeliveryService {
                 
                 savedDelivery.addItem(item);
             });
-            
-            // Salvar novamente com os itens
+
             entity = deliveryRepository.save(entity);
         }
-
-        // Email automático removido - agora é manual via botão na listagem
 
         return DeliveryAdapter.toResponseDTO(entity);
     }
@@ -136,18 +126,15 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
         Task task = taskRepository.findById(dto.getTaskId())
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-        
-        // Atualizar informações básicas da delivery
+
         entity.setTask(task);
         if (dto.getStatus() != null) {
             entity.setStatus(br.com.devquote.enums.DeliveryStatus.fromString(dto.getStatus()));
         }
         entity.setNotes(dto.getNotes());
-        
-        // Limpar itens existentes
+
         entity.getItems().clear();
-        
-        // Adicionar novos itens se fornecidos
+
         if (dto.getItems() != null && !dto.getItems().isEmpty()) {
             final Delivery deliveryEntity = entity;
             dto.getItems().forEach(itemDto -> {
@@ -169,11 +156,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 deliveryEntity.addItem(item);
             });
         }
-        
-        // Salvar delivery com os itens atualizados
-        entity = deliveryRepository.save(entity);
 
-        // Email automático removido - agora é manual via botão na listagem
+        entity = deliveryRepository.save(entity);
 
         return DeliveryAdapter.toResponseDTO(entity);
     }
@@ -182,20 +166,18 @@ public class DeliveryServiceImpl implements DeliveryService {
     public void delete(Long id) {
         Delivery entity = deliveryRepository.findById(id)
                 .map(d -> {
-                    // Inicializar relacionamentos lazy
                     if (d.getTask() != null) {
-                        d.getTask().getTitle(); // Inicializa Task
+                        d.getTask().getTitle();
                         if (d.getTask().getRequester() != null) {
-                            d.getTask().getRequester().getName(); // Inicializa Requester
+                            d.getTask().getRequester().getName();
                             d.getTask().getRequester().getEmail();
                         }
                     }
-                    // Na nova arquitetura, inicializar itens da delivery
                     if (d.getItems() != null) {
-                        d.getItems().size(); // Inicializa items
+                        d.getItems().size();
                         d.getItems().forEach(item -> {
                             if (item.getProject() != null) {
-                                item.getProject().getName(); // Inicializa Project dos items
+                                item.getProject().getName();
                             }
                         });
                     }
@@ -203,16 +185,12 @@ public class DeliveryServiceImpl implements DeliveryService {
                 })
                 .orElseThrow(() -> new RuntimeException("Delivery not found"));
 
-        // ESTRATÉGIA ROBUSTA: Tentar baixar anexos da entrega e dos itens para memória
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
-        boolean hasAttachments = false;
 
         try {
-            // Buscar anexos da entrega
-            List<br.com.devquote.entity.DeliveryAttachment> deliveryAttachments = deliveryAttachmentService.getDeliveryAttachmentsEntities(id);
+            List<DeliveryAttachment> deliveryAttachments = deliveryAttachmentService.getDeliveryAttachmentsEntities(id);
             if (deliveryAttachments != null && !deliveryAttachments.isEmpty()) {
-                hasAttachments = true;
-                for (br.com.devquote.entity.DeliveryAttachment attachment : deliveryAttachments) {
+                for (DeliveryAttachment attachment : deliveryAttachments) {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
@@ -227,10 +205,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 }
             }
 
-            // Buscar anexos dos itens de entrega
             List<br.com.devquote.entity.DeliveryItemAttachment> itemAttachments = deliveryItemAttachmentService.getDeliveryItemAttachmentsEntitiesByDeliveryId(id);
             if (itemAttachments != null && !itemAttachments.isEmpty()) {
-                hasAttachments = true;
                 for (br.com.devquote.entity.DeliveryItemAttachment attachment : itemAttachments) {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
@@ -246,10 +222,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 }
             }
 
-            // Buscar anexos dos itens operacionais
             List<DeliveryOperationalAttachment> operationalAttachments = deliveryOperationalAttachmentService.getOperationalAttachmentsEntitiesByDeliveryId(id);
             if (operationalAttachments != null && !operationalAttachments.isEmpty()) {
-                hasAttachments = true;
                 for (DeliveryOperationalAttachment attachment : operationalAttachments) {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
@@ -268,27 +242,6 @@ public class DeliveryServiceImpl implements DeliveryService {
             log.error("Error accessing attachments from database: {}", e.getMessage());
         }
 
-        // STEP 2/3 - ENVIAR EMAIL (com anexos se conseguiu baixar, sem anexos se não conseguiu)
-        // DESABILITADO: Não enviar mais email na exclusão de entrega
-        /*
-        try {
-            if (attachmentDataMap.isEmpty() && hasAttachments) {
-                // Tinha anexos mas não conseguiu baixar nenhum - enviar email simples
-                emailService.sendDeliveryDeletedNotification(entity);
-            } else if (!attachmentDataMap.isEmpty()) {
-                // Conseguiu baixar anexos - enviar email com anexos
-                emailService.sendDeliveryDeletedNotificationWithAttachmentData(entity, attachmentDataMap);
-            } else {
-                // Não tinha anexos - enviar email simples
-                emailService.sendDeliveryDeletedNotification(entity);
-            }
-        } catch (Exception e) {
-            log.error("FAILED to send deletion email for delivery ID: {} - Error: {}", id, e.getMessage());
-            // Não impede a exclusão da entrega
-        }
-        */
-        
-        // STEP 3/3 - DELETAR ENTREGA E ANEXOS (sempre acontece, mesmo se email falhou)
         try {
             deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(id);
             deliveryItemAttachmentService.deleteAllDeliveryItemAttachmentsByDeliveryId(id);
@@ -305,11 +258,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (ids == null || ids.isEmpty()) {
             return;
         }
-        
-        // Buscar todas as entregas antes de deletar para enviar notificações
-        List<Delivery> deliveriesToDelete = deliveryRepository.findAllById(ids);
-        
-        // Excluir anexos de todas as entregas
+
         for (Long deliveryId : ids) {
             try {
                 deliveryAttachmentService.deleteAllDeliveryAttachmentsAndFolder(deliveryId);
@@ -320,44 +269,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 log.warn("Failed to delete attachments for delivery {}: {}", deliveryId, e.getMessage());
             }
         }
-        
-        // Enviar notificação por email para cada entrega
-        // DESABILITADO: Não enviar mais email na exclusão de entrega
-        /*
-        for (Delivery delivery : deliveriesToDelete) {
-            try {
-                // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
-                Delivery deliveryWithRelations = deliveryRepository.findById(delivery.getId())
-                    .map(d -> {
-                        // Inicializar relacionamentos lazy
-                        if (d.getTask() != null) {
-                            d.getTask().getTitle(); // Inicializa Task
-                            if (d.getTask().getRequester() != null) {
-                                d.getTask().getRequester().getName(); // Inicializa Requester
-                                d.getTask().getRequester().getEmail();
-                            }
-                        }
-                        // Na nova arquitetura, inicializar itens da delivery
-                        if (d.getItems() != null) {
-                            d.getItems().size(); // Inicializa items
-                            d.getItems().forEach(item -> {
-                                if (item.getProject() != null) {
-                                    item.getProject().getName(); // Inicializa Project dos items
-                                }
-                            });
-                        }
-                        return d;
-                    })
-                    .orElse(delivery);
 
-                emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
-            } catch (Exception e) {
-                log.error("Failed to send email notification for delivery deletion ID: {}", delivery.getId(), e);
-            }
-        }
-        */
-        
-        // Deletar todas as entregas
         deliveryRepository.deleteAllById(ids);
     }
 
@@ -369,7 +281,6 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         log.debug("Starting deletion of deliveries for task ID: {}", taskId);
 
-        // Na nova arquitetura, buscar a delivery única da task antes de deletar
         Optional<Delivery> deliveryToDelete = deliveryRepository.findByTaskId(taskId);
 
         if (deliveryToDelete.isEmpty()) {
@@ -379,7 +290,6 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         log.debug("Found delivery to delete for task ID: {}", taskId);
 
-        // Excluir anexos da entrega e dos itens
         Delivery delivery = deliveryToDelete.get();
         Long deliveryId = delivery.getId();
         try {
@@ -391,46 +301,6 @@ public class DeliveryServiceImpl implements DeliveryService {
             log.warn("Failed to delete attachments for delivery {} (task {}): {}", deliveryId, taskId, e.getMessage());
         }
 
-        // Enviar notificação por email para a delivery antes da exclusão
-        // DESABILITADO: Não enviar mais email na exclusão de entrega
-        /*
-        {
-            try {
-                log.debug("Sending deletion notification for delivery ID: {}", delivery.getId());
-
-                // Fazer fetch explícito das entidades relacionadas antes do método assíncrono
-                Delivery deliveryWithRelations = deliveryRepository.findById(delivery.getId())
-                    .map(d -> {
-                        // Inicializar relacionamentos lazy
-                        if (d.getTask() != null) {
-                            d.getTask().getTitle(); // Inicializa Task
-                            if (d.getTask().getRequester() != null) {
-                                d.getTask().getRequester().getName(); // Inicializa Requester
-                                d.getTask().getRequester().getEmail();
-                            }
-                        }
-                        // Na nova arquitetura, inicializar itens da delivery
-                        if (d.getItems() != null) {
-                            d.getItems().size(); // Inicializa items
-                            d.getItems().forEach(item -> {
-                                if (item.getProject() != null) {
-                                    item.getProject().getName(); // Inicializa Project dos items
-                                }
-                            });
-                        }
-                        return d;
-                    })
-                    .orElse(delivery);
-
-                emailService.sendDeliveryDeletedNotification(deliveryWithRelations);
-
-            } catch (Exception e) {
-                log.error("Failed to send email notification for delivery deletion ID: {}", delivery.getId(), e);
-            }
-        }
-        */
-
-        // Deletar todas as deliveries da task
         deliveryRepository.deleteByTaskId(taskId);
         log.debug("Successfully deleted delivery for task ID: {}", taskId);
     }
@@ -445,10 +315,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                    String updatedAt,
                                                    Pageable pageable) {
 
-        // Converter status String para enum usando método auxiliar
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
 
-        // 1. Buscar apenas IDs com paginação (eficiente, sem JOIN FETCH)
         Page<Long> idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
                 id, taskName, taskCode, flowType, statusEnum, createdAt, updatedAt, pageable
         );
@@ -457,10 +325,8 @@ public class DeliveryServiceImpl implements DeliveryService {
             return idsPage.map(deliveryId -> null);
         }
 
-        // 2. Buscar dados completos pelos IDs (com EntityGraph)
         List<Delivery> deliveries = deliveryRepository.findByIdsWithEntityGraph(idsPage.getContent());
 
-        // 3. Manter a ordem original e criar PageImpl
         List<DeliveryResponse> responses = deliveries.stream()
                 .map(DeliveryAdapter::toResponseDTO)
                 .toList();
@@ -468,71 +334,39 @@ public class DeliveryServiceImpl implements DeliveryService {
         return new PageImpl<>(responses, pageable, idsPage.getTotalElements());
     }
 
-    /**
-     * Calcula o status geral das entregas baseado nos status individuais
-     */
-    private String calculateDeliveryStatus(List<Delivery> deliveries) {
-        if (deliveries.isEmpty()) {
-            return "PENDING";
-        }
-
-        // Considera APPROVED e PRODUCTION como entregas finalizadas
-        long completedCount = deliveries.stream()
-                .filter(d -> "APPROVED".equals(d.getStatus()) || "PRODUCTION".equals(d.getStatus()))
-                .count();
-
-        if (completedCount == deliveries.size()) {
-            return "COMPLETED"; // Todas aprovadas/em produção
-        } else if (completedCount > 0) {
-            return "IN_PROGRESS"; // Algumas finalizadas, outras não
-        } else {
-            return "PENDING"; // Nenhuma finalizada
-        }
-    }
-
-    /**
-     * Converte string de status para enum, suportando busca parcial
-     * @param statusString String do status (pode ser parcial)
-     * @return DeliveryStatus correspondente ou null se não encontrar
-     */
     private DeliveryStatus convertStatusStringToEnum(String statusString) {
         if (statusString == null || statusString.trim().isEmpty()) {
             return null;
         }
         
         String upperStatus = statusString.toUpperCase().trim();
-        
-        // Primeiro, tenta match exato
+
         try {
             return DeliveryStatus.valueOf(upperStatus);
         } catch (IllegalArgumentException ignored) {
-            // Não é um match exato, continua para busca parcial
         }
         
-        // Se não for match exato, procura por status que começa com o texto digitado
+
         for (DeliveryStatus deliveryStatus : DeliveryStatus.values()) {
             if (deliveryStatus.name().startsWith(upperStatus)) {
                 log.debug("Partial match found: '{}' matches '{}'", statusString, deliveryStatus);
                 return deliveryStatus;
             }
         }
-        
-        // Se ainda não encontrou, tenta match com labels em português
-        // Mapeamento de prefixos em português para enum
+
         Map<String, DeliveryStatus> portugueseMapping = new HashMap<>();
-        portugueseMapping.put("PEND", DeliveryStatus.PENDING);       // PENDente
-        portugueseMapping.put("DESEN", DeliveryStatus.DEVELOPMENT);  // DESENvolvimento
-        portugueseMapping.put("DESENV", DeliveryStatus.DEVELOPMENT); // DESENVolvimento
-        portugueseMapping.put("ENT", DeliveryStatus.DELIVERED);      // ENTregue
-        portugueseMapping.put("ENTREG", DeliveryStatus.DELIVERED);   // ENTREGue
-        portugueseMapping.put("HOM", DeliveryStatus.HOMOLOGATION);   // HOMologação
-        portugueseMapping.put("HOMO", DeliveryStatus.HOMOLOGATION);  // HOMOlogação
-        portugueseMapping.put("APR", DeliveryStatus.APPROVED);       // APRovado
-        portugueseMapping.put("APRO", DeliveryStatus.APPROVED);      // APROvado
-        portugueseMapping.put("REJ", DeliveryStatus.REJECTED);       // REJeitado
-        portugueseMapping.put("PROD", DeliveryStatus.PRODUCTION);    // PRODução
-        
-        // Verifica se algum dos mapeamentos corresponde
+        portugueseMapping.put("PEND", DeliveryStatus.PENDING);
+        portugueseMapping.put("DESEN", DeliveryStatus.DEVELOPMENT);
+        portugueseMapping.put("DESENV", DeliveryStatus.DEVELOPMENT);
+        portugueseMapping.put("ENT", DeliveryStatus.DELIVERED);
+        portugueseMapping.put("ENTREG", DeliveryStatus.DELIVERED);
+        portugueseMapping.put("HOM", DeliveryStatus.HOMOLOGATION);
+        portugueseMapping.put("HOMO", DeliveryStatus.HOMOLOGATION);
+        portugueseMapping.put("APR", DeliveryStatus.APPROVED);
+        portugueseMapping.put("APRO", DeliveryStatus.APPROVED);
+        portugueseMapping.put("REJ", DeliveryStatus.REJECTED);
+        portugueseMapping.put("PROD", DeliveryStatus.PRODUCTION);
+
         for (Map.Entry<String, DeliveryStatus> entry : portugueseMapping.entrySet()) {
             if (entry.getKey().startsWith(upperStatus) || upperStatus.startsWith(entry.getKey())) {
                 log.debug("Portuguese partial match found: '{}' matches '{}'", statusString, entry.getValue());
@@ -557,20 +391,16 @@ public class DeliveryServiceImpl implements DeliveryService {
         log.debug("findAllGroupedByTask - taskId: {}, taskName: {}, taskCode: {}, flowType: {}, status: {}, pageable: {}",
                 taskId, taskName, taskCode, flowType, status, pageable);
 
-        // Converter status String para enum usando método auxiliar
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
 
-        // Buscar deliveries com paginação usando estratégia de duas queries (sem EntityGraph + Pageable)
         Page<Long> idsPage;
         try {
             if (taskId != null || taskName != null || taskCode != null || flowType != null || statusEnum != null) {
-                // Se tem filtros, usa o método com filtros (apenas IDs)
                 log.debug("Using filtered query for IDs");
                 idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
                         taskId, taskName, taskCode, flowType, statusEnum, createdAt, updatedAt, pageable
                 );
             } else {
-                // Se não tem filtros, usa o método simples (apenas IDs)
                 log.debug("Using simple query for IDs");
                 idsPage = deliveryRepository.findAllOrderedByTaskIdDescPaginated(pageable);
             }
@@ -585,33 +415,26 @@ public class DeliveryServiceImpl implements DeliveryService {
             return idsPage.map(id -> null);
         }
 
-        // Buscar dados completos pelos IDs (com EntityGraph)
         List<Delivery> deliveries = deliveryRepository.findByIdsWithEntityGraph(idsPage.getContent());
 
-        // Converter para DeliveryGroupResponse de forma simples
         List<DeliveryGroupResponse> responses = deliveries.stream().map(delivery -> {
-            // Inicializar relacionamentos lazy de forma segura
             Task task = null;
             if (delivery.getTask() != null) {
                 task = delivery.getTask();
-                task.getId(); // Inicializa Task
+                task.getId();
             }
-            
-            // Calcular status e contagem de itens
+
             String calculatedStatus = "PENDING";
             int totalItems = 0;
 
-            // Inicializar e contar itens de desenvolvimento
             if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
                 totalItems += delivery.getItems().size();
             }
 
-            // Inicializar e contar itens operacionais
             if (delivery.getOperationalItems() != null && !delivery.getOperationalItems().isEmpty()) {
                 totalItems += delivery.getOperationalItems().size();
             }
 
-            // Atualizar status baseado em todos os itens (desenvolvimento + operacional)
             if (totalItems > 0) {
                 delivery.updateStatus();
                 calculatedStatus = delivery.getStatus().name();
@@ -623,15 +446,15 @@ public class DeliveryServiceImpl implements DeliveryService {
                     .taskCode(task != null ? task.getCode() : null)
                     .taskType(task != null ? task.getTaskType() : null)
                     .deliveryStatus(calculatedStatus)
-                    .calculatedDeliveryStatus(calculatedStatus) // Status calculado para exibição
-                    .totalItems(totalItems) // Quantidade de itens
+                    .calculatedDeliveryStatus(calculatedStatus)
+                    .totalItems(totalItems)
                     .taskValue(task != null ? task.getAmount() : null)
                     .createdAt(delivery.getCreatedAt())
                     .updatedAt(delivery.getUpdatedAt())
                     .totalDeliveries(1)
-                    .completedDeliveries(0) // Simplificado
-                    .pendingDeliveries(0)   // Simplificado
-                    .deliveries(List.of(DeliveryAdapter.toResponseDTO(delivery))) // Incluir a entrega real
+                    .completedDeliveries(0)
+                    .pendingDeliveries(0)
+                    .deliveries(List.of(DeliveryAdapter.toResponseDTO(delivery)))
                     .build();
         }).toList();
 
@@ -640,7 +463,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public DeliveryGroupResponse findGroupDetailsByTaskId(Long taskId) {
-        // Na nova arquitetura, cada task tem apenas uma delivery
+
         Optional<Delivery> deliveryOpt = deliveryRepository.findByTaskId(taskId);
 
         if (deliveryOpt.isEmpty()) {
@@ -648,22 +471,19 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
 
         Delivery delivery = deliveryOpt.get();
-        
-        // Inicializar lazy relationships
+
         if (delivery.getTask() != null) {
-            delivery.getTask().getId(); // Inicializa Task
+            delivery.getTask().getId();
         }
         if (delivery.getItems() != null) {
-            delivery.getItems().size(); // Inicializa Items
+            delivery.getItems().size();
         }
         
         Task task = delivery.getTask();
 
-        // Na nova arquitetura, retornar a única delivery como resposta
         DeliveryResponse deliveryResponse = DeliveryAdapter.toResponseDTO(delivery);
         List<DeliveryResponse> deliveryResponses = List.of(deliveryResponse);
 
-        // Calcular contadores por status baseado nos items da delivery (com verificação segura)
         long pendingCount = 0;
         long developmentCount = 0;
         long deliveredCount = 0;
@@ -681,9 +501,8 @@ public class DeliveryServiceImpl implements DeliveryService {
             rejectedCount = delivery.getItemsByStatus(br.com.devquote.enums.DeliveryStatus.REJECTED);
             productionCount = delivery.getItemsByStatus(br.com.devquote.enums.DeliveryStatus.PRODUCTION);
         }
-        
-        // Criar statusCounts
-        br.com.devquote.dto.response.DeliveryStatusCount statusCounts = br.com.devquote.dto.response.DeliveryStatusCount.builder()
+
+       DeliveryStatusCount statusCounts = DeliveryStatusCount.builder()
                 .pending((int) pendingCount)
                 .development((int) developmentCount)
                 .delivered((int) deliveredCount)
@@ -706,7 +525,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .statusCounts(statusCounts)
-                .totalDeliveries(1) // Sempre 1 na nova arquitetura
+                .totalDeliveries(1)
                 .completedDeliveries((int) completedCount)
                 .pendingDeliveries((int) totalPendingCount)
                 .deliveries(deliveryResponses)
@@ -725,7 +544,6 @@ public class DeliveryServiceImpl implements DeliveryService {
     private byte[] exportDevelopmentToExcel() throws IOException {
         log.debug("EXCEL EXPORT (Development Deliveries) STARTED");
 
-        // Query para entregas de DESENVOLVIMENTO (usa delivery_item)
         String sql = """
             SELECT
                 t.id as task_id,
@@ -784,7 +602,6 @@ public class DeliveryServiceImpl implements DeliveryService {
     private byte[] exportOperationalToExcel() throws IOException {
         log.debug("EXCEL EXPORT (Operational Deliveries) STARTED");
 
-        // Query para entregas OPERACIONAIS (usa delivery_operational_item)
         String sql = """
             SELECT
                 t.id as task_id,
@@ -841,8 +658,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     @Override
     public DeliveryStatusCount getGlobalStatistics() {
         log.debug("Executando query de estatísticas globais...");
-        
-        // Método de debug: contar manualmente primeiro
+
         List<Delivery> allDeliveries = deliveryRepository.findAll();
         log.debug("Total de deliveries no banco: {}", allDeliveries.size());
         
@@ -851,14 +667,12 @@ public class DeliveryServiceImpl implements DeliveryService {
             counts.put(delivery.getStatus(), counts.getOrDefault(delivery.getStatus(), 0) + 1);
         }
         log.debug("Contagem manual por status: {}", counts);
-        
-        // Agora executar a query original
+
         Object[] result = deliveryRepository.findGlobalDeliveryStatistics();
         log.debug("Resultado da query: {}", result != null ? Arrays.toString(result) : "null");
         
         if (result == null || result.length < 7) {
             log.debug("Query retornou dados insuficientes. Usando contagem manual.");
-            // Usar contagem manual como fallback
             return DeliveryStatusCount.builder()
                     .pending(counts.getOrDefault(DeliveryStatus.PENDING, 0))
                     .development(counts.getOrDefault(DeliveryStatus.DEVELOPMENT, 0))
@@ -912,64 +726,45 @@ public class DeliveryServiceImpl implements DeliveryService {
         log.debug("Status de {} entregas foram atualizados", updated);
     }
 
-    /**
-     * Método otimizado para buscar grupos de entregas com dados pré-calculados
-     * Melhora significativa de performance comparado ao método original
-     */
     public Page<DeliveryGroupResponse> findAllGroupedByTaskOptimized(String taskName, String taskCode,
                                                                      String status, String createdAt,
                                                                      String updatedAt, Pageable pageable) {
 
-        // Na nova arquitetura, usar o método não otimizado que já funciona
         return findAllGroupedByTask(null, taskName, taskCode, null, status, createdAt, updatedAt, pageable);
     }
 
-    /**
-     * Método otimizado para buscar detalhes de um grupo específico
-     */
+
     public DeliveryGroupResponse findGroupDetailsByTaskIdOptimized(Long taskId) {
         try {
-            // Buscar dados básicos do grupo otimizados
+
             Object[] groupData = deliveryRepository.findDeliveryGroupByTaskIdOptimized(taskId);
             if (groupData == null) {
                 throw new RuntimeException("No deliveries found for task ID: " + taskId);
             }
-            
-            // Na nova arquitetura, buscar a única delivery da task
+
             Optional<Delivery> deliveryOpt = deliveryRepository.findByTaskId(taskId);
             List<DeliveryResponse> deliveryResponses = deliveryOpt
                     .map(DeliveryAdapter::toResponseDTO)
                     .map(List::of)
                     .orElse(List.of());
-            
-            // Converter dados otimizados para DTO
+
             DeliveryGroupResponse response = mapRowToDeliveryGroupResponse(groupData);
             response.setDeliveries(deliveryResponses);
             
             return response;
         } catch (Exception e) {
-            // Fallback para método original se houver problema com otimizado
             log.warn("Erro ao buscar grupo otimizado para task ID {}, usando método tradicional: {}", taskId, e.getMessage());
             return findGroupDetailsByTaskId(taskId);
         }
     }
 
-    /**
-     * Método helper para converter Object[] do resultado da query nativa para DeliveryGroupResponse
-     */
+
     private DeliveryGroupResponse mapRowToDeliveryGroupResponse(Object[] row) {
         try {
-            // Log para debug
             log.debug("Mapeando resultado da query com {} elementos", row.length);
             for (int i = 0; i < row.length; i++) {
                 log.debug("Índice {}: {} (Tipo: {})", i, row[i], row[i] != null ? row[i].getClass().getSimpleName() : "null");
             }
-
-            // Índices do resultado da query nativa (findDeliveryGroupByTaskIdOptimized):
-            // 0: delivery_id, 1: delivery_status, 2: task_id, 3: task_name, 4: task_code, 5: task_type,
-            // 6: task_value, 7: created_at, 8: updated_at, 9: total_items,
-            // 10: pending_count, 11: development_count, 12: delivered_count, 13: homologation_count,
-            // 14: approved_count, 15: rejected_count, 16: production_count
 
             return DeliveryGroupResponse.builder()
                     .taskId(safeGetLong(row[2]))
@@ -1011,7 +806,6 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         final Delivery delivery = deliveryRepository.findById(id)
                 .map(entity -> {
-                    // Inicializar relacionamentos lazy antes do envio assíncrono
                     if (entity.getTask() != null) {
                         entity.getTask().getTitle();
                         entity.getTask().getCode();
@@ -1028,7 +822,6 @@ public class DeliveryServiceImpl implements DeliveryService {
                             }
                         });
                     }
-                    // Inicializar itens operacionais lazy
                     if (entity.getOperationalItems() != null) {
                         entity.getOperationalItems().forEach(item -> {
                             item.getStatus();
@@ -1040,15 +833,13 @@ public class DeliveryServiceImpl implements DeliveryService {
                 })
                 .orElseThrow(() -> new RuntimeException("Entrega não encontrada com ID: " + id));
 
-        // ESTRATÉGIA ROBUSTA: Tentar baixar anexos da entrega e dos itens, se conseguir incluir no email
         Map<String, byte[]> attachmentDataMap = new HashMap<>();
-        boolean hasAttachments = false;
 
         try {
-            // Buscar anexos da entrega
+
             List<br.com.devquote.entity.DeliveryAttachment> deliveryAttachments = deliveryAttachmentService.getDeliveryAttachmentsEntities(id);
             if (deliveryAttachments != null && !deliveryAttachments.isEmpty()) {
-                hasAttachments = true;
+
                 for (br.com.devquote.entity.DeliveryAttachment attachment : deliveryAttachments) {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
@@ -1064,11 +855,9 @@ public class DeliveryServiceImpl implements DeliveryService {
                 }
             }
 
-            // Buscar anexos dos itens de entrega
-            List<br.com.devquote.entity.DeliveryItemAttachment> itemAttachments = deliveryItemAttachmentService.getDeliveryItemAttachmentsEntitiesByDeliveryId(id);
+            List<DeliveryItemAttachment> itemAttachments = deliveryItemAttachmentService.getDeliveryItemAttachmentsEntitiesByDeliveryId(id);
             if (itemAttachments != null && !itemAttachments.isEmpty()) {
-                hasAttachments = true;
-                for (br.com.devquote.entity.DeliveryItemAttachment attachment : itemAttachments) {
+                for (DeliveryItemAttachment attachment : itemAttachments) {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
@@ -1083,10 +872,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 }
             }
 
-            // Buscar anexos dos itens operacionais
             List<DeliveryOperationalAttachment> operationalAttachments = deliveryOperationalAttachmentService.getOperationalAttachmentsEntitiesByDeliveryId(id);
             if (operationalAttachments != null && !operationalAttachments.isEmpty()) {
-                hasAttachments = true;
                 for (DeliveryOperationalAttachment attachment : operationalAttachments) {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
@@ -1105,21 +892,16 @@ public class DeliveryServiceImpl implements DeliveryService {
             log.error("Error accessing attachments from database: {}", e.getMessage());
         }
 
-        // Enviar email de notificação (com anexos se conseguiu baixar, sem anexos se não conseguiu)
         try {
             if (!attachmentDataMap.isEmpty()) {
-                // Conseguiu baixar anexos - enviar email com anexos
                 emailService.sendDeliveryUpdatedNotificationWithAttachmentData(delivery, attachmentDataMap, additionalEmails);
             } else {
-                // Não conseguiu baixar anexos ou não tinha anexos - enviar email simples
                 emailService.sendDeliveryUpdatedNotification(delivery, additionalEmails);
             }
         } catch (Exception e) {
             log.error("FAILED to send delivery email for delivery ID: {} - Error: {}", id, e.getMessage());
-            // Não impede a marcação como enviado
         }
-        
-        // Marcar email como enviado
+
         delivery.setDeliveryEmailSent(true);
         deliveryRepository.save(delivery);
     }
@@ -1154,10 +936,8 @@ public class DeliveryServiceImpl implements DeliveryService {
         Delivery entity = deliveryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Delivery not found with ID: " + id));
 
-        // Atualizar apenas o campo notes
         entity.setNotes(notes);
 
-        // Salvar apenas a entrega, sem mexer nos items
         entity = deliveryRepository.save(entity);
 
         return DeliveryAdapter.toResponseDTO(entity);

@@ -35,14 +35,10 @@ public class BillingPeriodController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String flowType) {
 
-        // Converter String para Enum FlowType
-        // Se for null, vazio ou "TODOS", não aplica filtro de flowType
         FlowType flowTypeEnum = (flowType == null || flowType.isEmpty() || flowType.equals("TODOS"))
             ? null
             : FlowType.fromString(flowType);
 
-        // SEMPRE usar findAllWithFilters() para calcular os totais corretamente
-        // Quando os parâmetros são null, não aplica o filtro e traz tudo
         return ResponseEntity.ok(billingPeriodService.findAllWithFilters(year, month, status, flowTypeEnum));
     }
 

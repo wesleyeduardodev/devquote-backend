@@ -121,7 +121,7 @@ public class DeliveryOperationalAttachmentServiceImpl implements DeliveryOperati
             throw new RuntimeException("Arquivo não pode estar vazio");
         }
 
-        long maxSize = 10 * 1024 * 1024; // 10MB
+        long maxSize = 10 * 1024 * 1024;
         if (file.getSize() > maxSize) {
             throw new RuntimeException("Arquivo muito grande. Tamanho máximo: 10MB");
         }
@@ -196,23 +196,22 @@ public class DeliveryOperationalAttachmentServiceImpl implements DeliveryOperati
 
     @Override
     public void deleteAllOperationalAttachmentsByDeliveryId(Long deliveryId) throws IOException {
-        // Buscar todos os itens operacionais da delivery
+
         List<DeliveryOperationalItem> operationalItems = operationalItemRepository.findByDeliveryId(deliveryId);
 
         for (DeliveryOperationalItem item : operationalItems) {
-            // Buscar todos os anexos deste item operacional
+
             List<DeliveryOperationalAttachment> attachments = attachmentRepository.findByDeliveryOperationalItemId(item.getId());
 
             for (DeliveryOperationalAttachment attachment : attachments) {
                 try {
-                    // Deletar arquivo do storage
+
                     fileStorageStrategy.deleteFile(attachment.getFilePath());
                     log.info("File deleted from storage: {}", attachment.getFilePath());
                 } catch (Exception e) {
                     log.warn("Could not delete file from storage: {} - {}", attachment.getFilePath(), e.getMessage());
                 }
 
-                // Deletar do banco de dados
                 attachmentRepository.delete(attachment);
                 log.info("Attachment deleted from database: {}", attachment.getOriginalName());
             }

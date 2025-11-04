@@ -55,7 +55,6 @@ public class NotificationConfigAdapter {
         entity.setNotificationType(dto.getNotificationType());
         entity.setUseRequesterContact(dto.getUseRequesterContact());
 
-        // Se usar contato do solicitante, limpar campos de contato da configuração
         if (Boolean.TRUE.equals(dto.getUseRequesterContact())) {
             entity.setPrimaryEmail(null);
             entity.setPrimaryPhone(null);

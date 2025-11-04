@@ -208,18 +208,16 @@ public class DeliveryItemAttachmentServiceImpl implements DeliveryItemAttachment
             throw new RuntimeException("Arquivo não pode estar vazio");
         }
 
-        long maxSize = 10 * 1024 * 1024; // 10MB
+        long maxSize = 10 * 1024 * 1024;
         if (file.getSize() > maxSize) {
             throw new RuntimeException("Arquivo muito grande. Tamanho máximo: 10MB");
         }
 
         String contentType = file.getContentType();
         String originalFilename = file.getOriginalFilename();
-        
-        // Se o tipo MIME não for reconhecido, validar por extensão
+
         if (contentType == null || contentType.isEmpty() || contentType.equals("application/octet-stream") || !isAllowedContentType(contentType)) {
             if (originalFilename != null && isAllowedByExtension(originalFilename)) {
-                // Arquivo permitido pela extensão
                 return;
             }
             throw new RuntimeException("Tipo de arquivo não permitido: " + contentType + " (arquivo: " + originalFilename + ")");
@@ -228,28 +226,28 @@ public class DeliveryItemAttachmentServiceImpl implements DeliveryItemAttachment
 
     private boolean isAllowedContentType(String contentType) {
         List<String> allowedTypes = List.of(
-            // Documentos
+
             "application/pdf",
-            "application/msword",  // Word .doc
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  // Word .docx
-            "application/vnd.ms-excel",  // Excel .xls
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  // Excel .xlsx
-            "application/vnd.ms-powerpoint",  // PowerPoint .ppt
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation",  // PowerPoint .pptx
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             "text/plain",
             "text/csv",
-            "application/json",  // JSON
-            // Imagens
+            "application/json",
+
             "image/jpeg",
             "image/png",
             "image/gif",
             "image/webp",
-            // Vídeos
+
             "video/mp4",
             "video/avi",
             "video/quicktime",
             "video/x-msvideo",
-            // Arquivos compactados
+
             "application/zip",
             "application/x-rar-compressed",
             "application/x-7z-compressed"

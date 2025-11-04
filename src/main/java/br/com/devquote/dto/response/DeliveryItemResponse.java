@@ -34,7 +34,6 @@ public class DeliveryItemResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
-    // Dados da tarefa relacionada (via delivery)
     private Long taskId;
     private String taskName;
     private String taskCode;

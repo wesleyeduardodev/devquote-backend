@@ -19,20 +19,16 @@ public class ExcelReportUtils {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Tarefas");
 
-        // Criar estilos
         CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
-        
-        // Estilos coloridos para cabeçalhos de tarefas e subtarefas
+
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle subtaskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
 
-        // Definir cabeçalhos baseado no perfil do usuário
         String[] headers;
         if (canViewAmounts) {
-            // ADMIN/MANAGER: Todas as colunas (sem Criado Por, Atualizado Por, Datas de Criação/Atualização)
             headers = new String[] {
                 "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
                 "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
@@ -42,7 +38,6 @@ public class ExcelReportUtils {
                 "Subtarefa Valor"
             };
         } else {
-            // USER: Remove colunas sensíveis (Valor da Tarefa, Tem Orçamento, Orçamento no Faturamento, Subtarefa Valor)
             headers = new String[] {
                 "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
                 "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
@@ -55,17 +50,14 @@ public class ExcelReportUtils {
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
-            
-            // Aplicar cores diferentes para colunas de tarefas vs subtarefas
+
             if (canViewAmounts) {
-                // ADMIN/MANAGER: colunas 0-15 são tarefas (azul), 16-19 são subtarefas (verde)
                 if (i <= 15) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
                     cell.setCellStyle(subtaskHeaderStyle);
                 }
             } else {
-                // USER: colunas 0-12 são tarefas (azul), 13-15 são subtarefas (verde)
                 if (i <= 12) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
@@ -74,13 +66,11 @@ public class ExcelReportUtils {
             }
         }
 
-        // Adicionar dados baseado no perfil
         int rowNum = 1;
         for (Map<String, Object> taskData : data) {
             Row row = sheet.createRow(rowNum++);
 
             if (canViewAmounts) {
-                // ADMIN/MANAGER: 20 colunas (sem Criado Por, Atualizado Por, Datas)
                 setCellValue(row, 0, taskData.get("task_id"), dataStyle);
                 setFlowTypeCell(row, 1, taskData.get("task_flow_type"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_code"), dataStyle);
@@ -102,7 +92,6 @@ public class ExcelReportUtils {
                 setCellValue(row, 18, taskData.get("subtask_description"), dataStyle);
                 setCellValue(row, 19, taskData.get("subtask_amount"), currencyStyle);
             } else {
-                // USER: 16 colunas (sem colunas sensíveis, Criado Por, Atualizado Por, Datas)
                 setCellValue(row, 0, taskData.get("task_id"), dataStyle);
                 setFlowTypeCell(row, 1, taskData.get("task_flow_type"), dataStyle);
                 setCellValue(row, 2, taskData.get("task_code"), dataStyle);
@@ -122,71 +111,31 @@ public class ExcelReportUtils {
             }
         }
 
-        // Ajustar largura das colunas baseado no conteúdo
         if (canViewAmounts) {
-            // ADMIN/MANAGER: 20 colunas
             setColumnWidths(sheet, new int[]{
-                2500,  // ID
-                4000,  // Fluxo
-                3500,  // Código
-                8000,  // Título (maior)
-                10000, // Descrição (maior)
-                3500,  // Tipo
-                3000,  // Prioridade
-                6000,  // Solicitante
-                4000,  // Origem do Servidor
-                4000,  // Módulo do Sistema
-                8000,  // Link (maior para URLs)
-                8000,  // Link da Reunião (maior para URLs)
-                3500,  // Valor da Tarefa
-                3000,  // Tem Subtarefas
-                3000,  // Tem Entrega
-                4000,  // Orçamento no Faturamento
-                2500,  // Subtarefa ID
-                8000,  // Subtarefa Título (maior)
-                10000, // Subtarefa Descrição (maior)
-                3500   // Subtarefa Valor
+                2500, 4000, 3500, 8000, 10000, 3500, 3000, 6000, 4000, 4000,
+                8000, 8000, 3500, 3000, 3000, 4000, 2500, 8000, 10000, 3500
             });
         } else {
-            // USER: 16 colunas (sem colunas de valores)
             setColumnWidths(sheet, new int[]{
-                2500,  // ID
-                4000,  // Fluxo
-                3500,  // Código
-                8000,  // Título (maior)
-                10000, // Descrição (maior)
-                3500,  // Tipo
-                3000,  // Prioridade
-                6000,  // Solicitante
-                4000,  // Origem do Servidor
-                4000,  // Módulo do Sistema
-                8000,  // Link (maior para URLs)
-                8000,  // Link da Reunião (maior para URLs)
-                3000,  // Tem Subtarefas
-                2500,  // Subtarefa ID
-                8000,  // Subtarefa Título (maior)
-                10000  // Subtarefa Descrição (maior)
+                2500, 4000, 3500, 8000, 10000, 3500, 3000, 6000, 4000, 4000,
+                8000, 8000, 3000, 2500, 8000, 10000
             });
         }
 
-        // Ajustar altura das linhas para acomodar texto longo
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
             if (row != null) {
-                row.setHeightInPoints(30); // Altura maior para linhas de dados
+                row.setHeightInPoints(30);
             }
         }
 
-        // Altura do cabeçalho
         headerRow.setHeightInPoints(35);
 
-        // Aplicar filtros
         sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
 
-        // Congelar primeira linha (cabeçalho)
         sheet.createFreezePane(0, 1);
 
-        // Converter para bytes
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         workbook.close();
@@ -198,13 +147,11 @@ public class ExcelReportUtils {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Orçamentos");
 
-        // Criar estilos
         CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
-        // Cabeçalhos completos (ADMIN/MANAGER)
         String[] headers = {
             "ID Orçamento", "Status do Orçamento", "ID Tarefa", "Código da Tarefa", "Título da Tarefa",
             "Valor Total da Tarefa", "Prioridade da Tarefa", "Solicitante",
@@ -218,7 +165,6 @@ public class ExcelReportUtils {
             cell.setCellStyle(headerStyle);
         }
 
-        // Adicionar dados (sempre versão completa)
         int rowNum = 1;
         for (Map<String, Object> quoteData : data) {
             Row row = sheet.createRow(rowNum++);
@@ -237,23 +183,10 @@ public class ExcelReportUtils {
             setCellValue(row, 11, quoteData.get("quote_updated_at"), dateStyle);
         }
 
-        // Ajustar largura das colunas (12 colunas)
         setColumnWidths(sheet, new int[]{
-            3000,  // ID Orçamento
-            3500,  // Status do Orçamento
-            2500,  // ID Tarefa
-            3500,  // Código da Tarefa
-            8000,  // Título da Tarefa (maior)
-            4000,  // Valor Total da Tarefa
-            3000,  // Prioridade da Tarefa
-            6000,  // Solicitante
-            4000,  // Vinculado ao Faturamento
-            4000,  // Valor Total do Orçamento
-            6000,  // Data de Criação
-            6000   // Data de Atualização
+            3000, 3500, 2500, 3500, 8000, 4000, 3000, 6000, 4000, 4000, 6000, 6000
         });
 
-        // Ajustar altura das linhas
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
             if (row != null) {
@@ -261,16 +194,12 @@ public class ExcelReportUtils {
             }
         }
 
-        // Altura do cabeçalho
         headerRow.setHeightInPoints(35);
 
-        // Aplicar filtros
         sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
 
-        // Congelar primeira linha (cabeçalho)
         sheet.createFreezePane(0, 1);
 
-        // Converter para bytes
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         workbook.close();
@@ -288,23 +217,19 @@ public class ExcelReportUtils {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
 
-        // Configurar fonte
         font.setBold(true);
         font.setColor(IndexedColors.WHITE.getIndex());
         font.setFontHeightInPoints((short) 12);
         style.setFont(font);
 
-        // Configurar fundo
         style.setFillForegroundColor(IndexedColors.GREY_50_PERCENT.getIndex());
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
-        // Configurar bordas
         style.setBorderTop(BorderStyle.THIN);
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
 
-        // Configurar alinhamento
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
         style.setWrapText(true);
@@ -315,15 +240,13 @@ public class ExcelReportUtils {
     private CellStyle createDataStyle(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();
 
-        // Configurar bordas
         style.setBorderTop(BorderStyle.THIN);
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
 
-        // Configurar alinhamento
-        style.setVerticalAlignment(VerticalAlignment.TOP); // Alinhamento superior para textos longos
-        style.setWrapText(true); // Quebra de linha automática
+        style.setVerticalAlignment(VerticalAlignment.TOP);
+        style.setWrapText(true);
 
         return style;
     }
@@ -361,18 +284,14 @@ public class ExcelReportUtils {
         } else if (value instanceof Number) {
             cell.setCellValue(((Number) value).doubleValue());
         } else if (value instanceof LocalDateTime) {
-            // Converter LocalDateTime para Date para garantir formatação correta
             LocalDateTime dateTime = (LocalDateTime) value;
             java.util.Date date = java.sql.Timestamp.valueOf(dateTime);
             cell.setCellValue(date);
         } else if (value instanceof java.sql.Timestamp) {
-            // Caso venha como Timestamp do banco
             cell.setCellValue((java.sql.Timestamp) value);
         } else if (value instanceof java.sql.Date) {
-            // Caso venha como Date do banco (para datas só)
             cell.setCellValue((java.sql.Date) value);
         } else if (value instanceof java.util.Date) {
-            // Caso venha como Date genérico
             cell.setCellValue((java.util.Date) value);
         } else if (value instanceof Boolean) {
             cell.setCellValue((Boolean) value ? "Sim" : "Não");
@@ -463,7 +382,6 @@ public class ExcelReportUtils {
             case "INACTIVE" -> "Inativa";
             case "PAUSED" -> "Pausada";
             case "REOPENED" -> "Reaberta";
-            // Status de Faturamento (conforme interface)
             case "PENDENTE" -> "Pendente";
             case "FATURADO" -> "Faturado";
             case "PAGO" -> "Pago";
@@ -513,14 +431,12 @@ public class ExcelReportUtils {
     private String translateTaskType(String taskType) {
         if (taskType == null) return "";
         return switch (taskType.toUpperCase()) {
-            // Tipos operacionais
             case "BACKUP" -> "Backup";
             case "DEPLOY" -> "Deploy";
             case "LOGS" -> "Logs";
             case "NEW_SERVER" -> "Novo Servidor";
             case "MONITORING" -> "Monitoramento";
             case "SUPPORT" -> "Suporte";
-            // Tipos de desenvolvimento
             case "BUG" -> "Bug";
             case "ENHANCEMENT" -> "Melhoria";
             case "NEW_FEATURE" -> "Nova Funcionalidade";
@@ -559,25 +475,19 @@ public class ExcelReportUtils {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Entregas");
 
-        // Criar estilos
         CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
         CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
-        
-        // Estilos coloridos para cabeçalhos agrupados
+
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_YELLOW.getIndex());
 
-        // Cabeçalhos reorganizados: Tarefa -> Entrega -> Item (sem IDs, valor e datas da entrega, script no final)
         String[] headers = {
-            // Dados da Tarefa
             "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Qtd. Subtarefas", "Solicitante",
-            // Dados da Entrega
             "Status Geral da Entrega", "Observações da Entrega",
-            // Dados do Item de Entrega
             "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
             "Pull Request", "Observações do Item", "Data Início", "Data Fim"
         };
@@ -587,22 +497,19 @@ public class ExcelReportUtils {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
 
-            // Aplicar cores diferentes por grupo
             if (i <= 5) {
-                cell.setCellStyle(taskHeaderStyle); // Azul para tarefas
+                cell.setCellStyle(taskHeaderStyle);
             } else if (i >= 6 && i <= 7) {
-                cell.setCellStyle(deliveryHeaderStyle); // Verde para entrega
+                cell.setCellStyle(deliveryHeaderStyle);
             } else {
-                cell.setCellStyle(itemHeaderStyle); // Amarelo para itens
+                cell.setCellStyle(itemHeaderStyle);
             }
         }
 
-        // Adicionar dados
         int rowNum = 1;
         for (Map<String, Object> deliveryData : data) {
             Row row = sheet.createRow(rowNum++);
 
-            // Dados da tarefa
             setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
             setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
             setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
@@ -610,11 +517,9 @@ public class ExcelReportUtils {
             setCellValue(row, 4, deliveryData.get("subtasks_count"), dataStyle);
             setCellValue(row, 5, deliveryData.get("requester_name"), dataStyle);
 
-            // Dados da entrega
             setDeliveryStatusCell(row, 6, deliveryData.get("delivery_status"), dataStyle);
             setCellValue(row, 7, deliveryData.get("delivery_notes"), dataStyle);
 
-            // Dados do item
             setCellValue(row, 8, deliveryData.get("project_name"), dataStyle);
             setDeliveryStatusCell(row, 9, deliveryData.get("item_status"), dataStyle);
             setCellValue(row, 10, deliveryData.get("item_branch"), dataStyle);
@@ -625,47 +530,23 @@ public class ExcelReportUtils {
             setCellValue(row, 15, deliveryData.get("item_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar largura das colunas (16 colunas no total)
         setColumnWidths(sheet, new int[]{
-            // Dados da Tarefa
-            2500,  // ID Tarefa
-            3500,  // Código da Tarefa
-            8000,  // Título da Tarefa (maior)
-            4000,  // Tipo de Tarefa
-            3000,  // Qtd. Subtarefas
-            6000,  // Solicitante
-            // Dados da Entrega
-            4000,  // Status Geral da Entrega
-            7000,  // Observações da Entrega
-            // Dados do Item de Entrega
-            6000,  // Projeto/Repositório
-            3500,  // Status do Item
-            5000,  // Branch
-            5000,  // Branch Origem
-            8000,  // Pull Request (maior para URLs)
-            6000,  // Observações do Item
-            4000,  // Data Início
-            4000   // Data Fim
+            2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 4000, 4000
         });
 
-        // Ajustar altura das linhas
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
             if (row != null) {
-                row.setHeightInPoints(35); // Altura maior para acomodar URLs
+                row.setHeightInPoints(35);
             }
         }
 
-        // Altura do cabeçalho
         headerRow.setHeightInPoints(40);
 
-        // Aplicar filtros
         sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
 
-        // Congelar primeira linha (cabeçalho)
         sheet.createFreezePane(0, 1);
 
-        // Converter para bytes
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         workbook.close();
@@ -677,23 +558,17 @@ public class ExcelReportUtils {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Entregas Operacionais");
 
-        // Criar estilos
         CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
 
-        // Estilos coloridos para cabeçalhos agrupados
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_ORANGE.getIndex());
 
-        // Cabeçalhos para relatório OPERACIONAL
         String[] headers = {
-            // Dados da Tarefa
             "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Qtd. Subtarefas", "Solicitante",
-            // Dados da Entrega
             "Status Geral da Entrega", "Observações da Entrega",
-            // Dados do Item Operacional
             "Título do Item", "Descrição do Item", "Status do Item",
             "Data Início", "Data Fim"
         };
@@ -703,22 +578,19 @@ public class ExcelReportUtils {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
 
-            // Aplicar cores diferentes por grupo
             if (i <= 5) {
-                cell.setCellStyle(taskHeaderStyle); // Azul para tarefas
+                cell.setCellStyle(taskHeaderStyle);
             } else if (i >= 6 && i <= 7) {
-                cell.setCellStyle(deliveryHeaderStyle); // Verde para entrega
+                cell.setCellStyle(deliveryHeaderStyle);
             } else {
-                cell.setCellStyle(itemHeaderStyle); // Laranja para itens operacionais
+                cell.setCellStyle(itemHeaderStyle);
             }
         }
 
-        // Adicionar dados
         int rowNum = 1;
         for (Map<String, Object> deliveryData : data) {
             Row row = sheet.createRow(rowNum++);
 
-            // Dados da tarefa
             setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
             setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
             setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
@@ -726,11 +598,9 @@ public class ExcelReportUtils {
             setCellValue(row, 4, deliveryData.get("subtasks_count"), dataStyle);
             setCellValue(row, 5, deliveryData.get("requester_name"), dataStyle);
 
-            // Dados da entrega
             setDeliveryStatusCell(row, 6, deliveryData.get("delivery_status"), dataStyle);
             setCellValue(row, 7, deliveryData.get("delivery_notes"), dataStyle);
 
-            // Dados do item operacional
             setCellValue(row, 8, deliveryData.get("item_title"), dataStyle);
             setCellValue(row, 9, deliveryData.get("item_description"), dataStyle);
             setOperationalItemStatusCell(row, 10, deliveryData.get("item_status"), dataStyle);
@@ -738,27 +608,10 @@ public class ExcelReportUtils {
             setCellValue(row, 12, deliveryData.get("item_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar largura das colunas (13 colunas no total)
         setColumnWidths(sheet, new int[]{
-            // Dados da Tarefa
-            2500,  // ID Tarefa
-            3500,  // Código da Tarefa
-            8000,  // Título da Tarefa (maior)
-            4000,  // Tipo de Tarefa
-            3000,  // Qtd. Subtarefas
-            6000,  // Solicitante
-            // Dados da Entrega
-            4000,  // Status Geral da Entrega
-            7000,  // Observações da Entrega
-            // Dados do Item Operacional
-            7000,  // Título do Item
-            9000,  // Descrição do Item (maior)
-            3500,  // Status do Item
-            4000,  // Data Início
-            4000   // Data Fim
+            2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 4000, 4000
         });
 
-        // Ajustar altura das linhas
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
             if (row != null) {
@@ -766,16 +619,12 @@ public class ExcelReportUtils {
             }
         }
 
-        // Altura do cabeçalho
         headerRow.setHeightInPoints(40);
 
-        // Aplicar filtros
         sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
 
-        // Congelar primeira linha (cabeçalho)
         sheet.createFreezePane(0, 1);
 
-        // Converter para bytes
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         workbook.close();
@@ -801,13 +650,11 @@ public class ExcelReportUtils {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Faturamento");
 
-        // Criar estilos
         CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
-        // Cabeçalhos: Faturamento -> Tarefa (com Fluxo e Tipo da Tarefa, sem orçamento e sem datas)
         String[] headers = {
             "Ano", "Mês", "Nome do Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa",
             "Fluxo", "Título da Tarefa", "Tipo da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas",
@@ -821,18 +668,15 @@ public class ExcelReportUtils {
             cell.setCellStyle(headerStyle);
         }
 
-        // Adicionar dados
         int rowNum = 1;
         for (Map<String, Object> billingData : data) {
             Row row = sheet.createRow(rowNum++);
 
-            // Dados do faturamento
             setCellValue(row, 0, billingData.get("billing_year"), dataStyle);
             setCellValue(row, 1, billingData.get("billing_month"), dataStyle);
             setMonthNameCell(row, 2, billingData.get("billing_month"), dataStyle);
             setStatusCell(row, 3, billingData.get("billing_status"), dataStyle);
 
-            // Dados da tarefa
             setCellValue(row, 4, billingData.get("task_id"), dataStyle);
             setCellValue(row, 5, billingData.get("task_code"), dataStyle);
             setFlowTypeCell(row, 6, billingData.get("task_flow_type"), dataStyle);
@@ -843,23 +687,10 @@ public class ExcelReportUtils {
             setCellValue(row, 11, billingData.get("requester_name"), dataStyle);
         }
 
-        // Ajustar largura das colunas (12 colunas)
         setColumnWidths(sheet, new int[]{
-            2500,  // Ano
-            2500,  // Mês
-            3500,  // Nome do Mês
-            4000,  // Status do Faturamento
-            2500,  // ID Tarefa
-            3500,  // Código da Tarefa
-            4000,  // Fluxo
-            8000,  // Título da Tarefa (maior)
-            4000,  // Tipo da Tarefa
-            4000,  // Valor da Tarefa
-            3000,  // Qtd. Subtarefas
-            6000   // Solicitante
+            2500, 2500, 3500, 4000, 2500, 3500, 4000, 8000, 4000, 4000, 3000, 6000
         });
 
-        // Ajustar altura das linhas
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
             if (row != null) {
@@ -867,16 +698,12 @@ public class ExcelReportUtils {
             }
         }
 
-        // Altura do cabeçalho
         headerRow.setHeightInPoints(35);
 
-        // Aplicar filtros
         sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
 
-        // Congelar primeira linha (cabeçalho)
         sheet.createFreezePane(0, 1);
 
-        // Converter para bytes
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         workbook.close();
@@ -888,66 +715,52 @@ public class ExcelReportUtils {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório Geral - Visão Completa");
 
-        // Criar estilos com cores neutras e discretas para diferentes seções
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.GREY_25_PERCENT.getIndex());
         CellStyle quoteHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LAVENDER.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle billingHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LEMON_CHIFFON.getIndex());
 
-        // Estilos para dados
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
         CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
-        // Headers organizados: Tarefas → Entregas → Faturamento
         String[] headers = {
-            // TAREFAS (Cinza) - 13 colunas (inclui metadados da tarefa + status de entrega e faturamento - sem datas)
-            "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Valor", "Solicitante", 
+            "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Valor", "Solicitante",
             "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
             "Tem Entrega", "Faturamento",
-            
-            // ENTREGAS (Azul Pálido) - 9 colunas - Pull Request reorganizado + notas
             "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Notas", "Início Entrega", "Fim Entrega",
-            
-            // FATURAMENTO (Limão) - 3 colunas - No final
             "Ano Faturamento", "Mês Faturamento", "Status Faturamento"
         };
 
         Row headerRow = sheet.createRow(0);
-        
-        // Aplicar cores nos headers por seção - Estrutura corrigida (24 colunas)
+
         int colIndex = 0;
-        
-        // TAREFAS + METADADOS + STATUS (0-12) - Cinza
+
         for (int i = 0; i < 13; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(taskHeaderStyle);
         }
-        
-        // ENTREGAS (13-20) - Azul Pálido
+
         for (int i = 13; i < 21; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(deliveryHeaderStyle);
         }
-        
-        // FATURAMENTO (21-23) - Limão (no final)
+
         for (int i = 21; i < 24; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(billingHeaderStyle);
         }
 
-        // Adicionar dados
         int rowNum = 1;
         for (Map<String, Object> taskData : data) {
             Row row = sheet.createRow(rowNum++);
 
             colIndex = 0;
-            
-            // DADOS DA TAREFA + METADADOS + STATUS (0-14)
+
             setCellValue(row, colIndex++, taskData.get("task_id"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_code"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_title"), dataStyle);
@@ -961,51 +774,40 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("task_system_module"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("has_delivery"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("has_quote_in_billing"), dataStyle);
-            
-            // DADOS DE ENTREGAS (15-23) - Pull Request reorganizado + notas
+
             setCellValue(row, colIndex++, taskData.get("delivery_id"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("delivery_status"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
-            setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle); // Link da entrega
+            setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
-            setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle); // Nova coluna de notas
+            setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
-            
-            // DADOS DE FATURAMENTO (21-23) - No final
+
             setCellValue(row, colIndex++, taskData.get("billing_year"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("billing_month"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("billing_status"), dataStyle);
         }
 
-        // Ajustar larguras das colunas (24 colunas total) - sem datas
         setColumnWidths(sheet, new int[]{
-            // TAREFAS + METADADOS + STATUS (13 colunas - removidas Data Criação e Data Atualização)
             2500, 3500, 10000, 12000, 3000, 4000, 6000, 4000, 4000, 4000, 4000, 3000, 4000,
-            // ENTREGAS (8 colunas) - Pull Request reorganizado + notas
             3000, 3500, 6000, 10000, 8000, 6000, 4000, 4000,
-            // FATURAMENTO (3 colunas) - No final
             2500, 2500, 4000
         });
 
-        // Ajustar altura das linhas
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
             if (row != null) {
-                row.setHeightInPoints(40); // Altura maior para acomodar conteúdo extenso
+                row.setHeightInPoints(40);
             }
         }
 
-        // Altura do cabeçalho
         headerRow.setHeightInPoints(45);
 
-        // Aplicar filtros
         sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
 
-        // Congelar primeira linha (cabeçalho)
         sheet.createFreezePane(0, 1);
 
-        // Converter para bytes
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         workbook.close();
@@ -1017,53 +819,42 @@ public class ExcelReportUtils {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório Geral - Visão User");
 
-        // Criar estilos com cores neutras para diferentes seções (sem dados financeiros)
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.GREY_25_PERCENT.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
 
-        // Estilos para dados
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
         CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
 
-        // Headers organizados: Tarefas → Entregas (sem Orçamentos e Faturamento)
         String[] headers = {
-            // TAREFAS (Cinza) - 11 colunas (SEM coluna Valor, sem datas, sem faturamento)
-            "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Solicitante", 
+            "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Solicitante",
             "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
             "Tem Entrega",
-            
-            // ENTREGAS (Azul Pálido) - 8 colunas
             "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Notas", "Início Entrega", "Fim Entrega"
         };
 
         Row headerRow = sheet.createRow(0);
-        
-        // Aplicar cores nos headers por seção - 19 colunas total
+
         int colIndex = 0;
-        
-        // TAREFAS (0-10) - Cinza - SEM Valor, sem datas, sem faturamento
+
         for (int i = 0; i < 11; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(taskHeaderStyle);
         }
-        
-        // ENTREGAS (11-18) - Azul Pálido
+
         for (int i = 11; i < 19; i++) {
             Cell cell = headerRow.createCell(colIndex++);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(deliveryHeaderStyle);
         }
 
-        // Adicionar dados
         int rowNum = 1;
         for (Map<String, Object> taskData : data) {
             Row row = sheet.createRow(rowNum++);
 
             colIndex = 0;
-            
-            // DADOS DA TAREFA (0-13) - SEM Valor + Status de entrega e faturamento
+
             setCellValue(row, colIndex++, taskData.get("task_id"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_code"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_title"), dataStyle);
@@ -1075,27 +866,22 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("task_server_origin"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("task_system_module"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("has_delivery"), dataStyle);
-            
-            // DADOS DE ENTREGAS (11-19)
+
             setCellValue(row, colIndex++, taskData.get("delivery_id"), dataStyle);
             setStatusCell(row, colIndex++, taskData.get("delivery_status"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("project_name"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
-            setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle); // Nova coluna de notas
+            setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
         }
 
-        // Ajustar larguras das colunas (20 colunas total - sem datas, sem faturamento)
         setColumnWidths(sheet, new int[]{
-            // TAREFAS (11 colunas) - SEM Valor, sem datas, sem faturamento
             2500, 3500, 10000, 12000, 3000, 6000, 4000, 4000, 4000, 4000, 3000,
-            // ENTREGAS (9 colunas)
             3000, 3500, 6000, 10000, 8000, 8000, 6000, 4000, 4000
         });
 
-        // Ajustar altura das linhas
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
             if (row != null) {
@@ -1103,16 +889,12 @@ public class ExcelReportUtils {
             }
         }
 
-        // Altura do cabeçalho
         headerRow.setHeightInPoints(45);
 
-        // Aplicar filtros
         sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
 
-        // Congelar primeira linha (cabeçalho)
         sheet.createFreezePane(0, 1);
 
-        // Converter para bytes
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         workbook.close();
@@ -1124,15 +906,13 @@ public class ExcelReportUtils {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setBold(true);
-        font.setColor(IndexedColors.BLACK.getIndex()); // Texto preto para melhor contraste
+        font.setColor(IndexedColors.BLACK.getIndex());
         font.setFontHeightInPoints((short) 11);
         style.setFont(font);
-        
-        // Fundo colorido suave
+
         style.setFillForegroundColor(colorIndex);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        
-        // Bordas
+
         style.setBorderTop(BorderStyle.THIN);
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
@@ -1141,11 +921,11 @@ public class ExcelReportUtils {
         style.setBottomBorderColor(IndexedColors.GREY_40_PERCENT.getIndex());
         style.setLeftBorderColor(IndexedColors.GREY_40_PERCENT.getIndex());
         style.setRightBorderColor(IndexedColors.GREY_40_PERCENT.getIndex());
-        
+
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
         style.setWrapText(true);
-        
+
         return style;
     }
 }

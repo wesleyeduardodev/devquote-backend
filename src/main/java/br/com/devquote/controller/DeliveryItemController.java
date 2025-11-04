@@ -177,8 +177,6 @@ public class DeliveryItemController {
         return ResponseEntity.noContent().build();
     }
 
-    // Endpoints específicos por relação
-    
     @GetMapping("/by-delivery/{deliveryId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @Operation(summary = "Get delivery items by delivery ID")
@@ -229,8 +227,6 @@ public class DeliveryItemController {
         return ResponseEntity.ok(items);
     }
 
-    // Endpoints para operações em lote
-
     @PostMapping("/delivery/{deliveryId}/bulk")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Create multiple delivery items for a delivery")
@@ -253,8 +249,6 @@ public class DeliveryItemController {
         return ResponseEntity.ok(updatedItems);
     }
 
-    // Endpoints para contadores
-
     @GetMapping("/count/by-delivery/{deliveryId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     @Operation(summary = "Count delivery items by delivery ID")
@@ -275,8 +269,6 @@ public class DeliveryItemController {
         long count = deliveryItemService.countByDeliveryIdAndStatus(deliveryId, status);
         return ResponseEntity.ok(count);
     }
-
-    // Export
 
     @GetMapping("/export/excel")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")

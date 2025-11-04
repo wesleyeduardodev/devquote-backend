@@ -21,16 +21,13 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     @Override
     Optional<Delivery> findById(Long id);
 
-    // Query para buscar apenas IDs com paginação (sem EntityGraph para evitar HHH90003004)
     @Query("SELECT d.id FROM Delivery d JOIN d.task t ORDER BY t.id DESC")
     Page<Long> findAllOrderedByTaskIdDescPaginated(Pageable pageable);
 
-    // Query para buscar dados completos pelos IDs (com EntityGraph)
     @EntityGraph(attributePaths = {"task", "items", "items.project"})
     @Query("SELECT d FROM Delivery d WHERE d.id IN :ids ORDER BY d.task.id DESC")
     List<Delivery> findByIdsWithEntityGraph(@Param("ids") List<Long> ids);
 
-    // Query para buscar apenas IDs filtrados com paginação (sem EntityGraph)
     @Query("""
         SELECT d.id
           FROM Delivery d
@@ -63,9 +60,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     @Query("DELETE FROM Delivery d WHERE d.task.id = :taskId")
     void deleteByTaskId(@Param("taskId") Long taskId);
 
-    /**
-     * Query otimizada para buscar delivery com itens agrupados por tarefa
-     */
+
     @Query(value = """
         SELECT
             d.id as delivery_id,
@@ -94,9 +89,6 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         """, nativeQuery = true)
     Object[] findDeliveryGroupByTaskIdOptimized(@Param("taskId") Long taskId);
 
-    /**
-     * Query para obter estatísticas globais de todas as entregas agrupadas por status da delivery (não dos itens)
-     */
     @Query(value = """
         SELECT 
             SUM(CASE WHEN d.status = 'PENDING' THEN 1 ELSE 0 END) as pending_count,

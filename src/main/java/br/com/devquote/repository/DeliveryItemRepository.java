@@ -42,13 +42,6 @@ public interface DeliveryItemRepository extends JpaRepository<DeliveryItem, Long
     @Query("SELECT COUNT(di) FROM DeliveryItem di WHERE di.delivery.id = :deliveryId AND di.status = :status")
     long countByDeliveryIdAndStatus(@Param("deliveryId") Long deliveryId, @Param("status") DeliveryStatus status);
 
-    @Query("SELECT COUNT(di) FROM DeliveryItem di WHERE di.delivery.task.id = :taskId")
-    long countByTaskId(@Param("taskId") Long taskId);
-
-    @Query("SELECT COUNT(di) FROM DeliveryItem di WHERE di.delivery.task.id = :taskId AND di.status = :status")
-    long countByTaskIdAndStatus(@Param("taskId") Long taskId, @Param("status") DeliveryStatus status);
-
-    // Query para buscar apenas IDs com paginação (sem EntityGraph para evitar HHH90003004)
     @Query("""
         SELECT di.id
           FROM DeliveryItem di
@@ -86,12 +79,10 @@ public interface DeliveryItemRepository extends JpaRepository<DeliveryItem, Long
             Pageable pageable
     );
 
-    // Query para buscar dados completos pelos IDs (com EntityGraph)
     @EntityGraph(attributePaths = {"delivery", "delivery.task", "project"})
     @Query("SELECT di FROM DeliveryItem di WHERE di.id IN :ids")
     List<DeliveryItem> findByIdsWithEntityGraph(@Param("ids") List<Long> ids);
 
-    // Busca otimizada para múltiplos itens de uma tarefa específica
     @Query(value = """
         SELECT 
             di.id,

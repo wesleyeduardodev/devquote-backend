@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -38,6 +39,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
 import jakarta.annotation.PostConstruct;
 
 @Slf4j
@@ -146,7 +149,6 @@ public class EmailServiceImpl implements EmailService {
         try {
             log.info("🗑️📧 Building task deletion notification for task ID: {}", task.getId());
 
-            // Debug task data
             log.debug("🗑️📧 TASK DATA - Requester: {}, Email: {}", 
                     task.getRequester() != null ? task.getRequester().getName() : "null",
                     task.getRequester() != null ? task.getRequester().getEmail() : "null");
@@ -212,11 +214,8 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    /**
-     * Envio de email de dados da tarefa usando NotificationConfig
-     */
+
     private void sendTaskDataEmailWithNotificationConfig(Task task, String subject, String htmlContent, List<String> additionalEmails) {
-        // Buscar configuração de notificação para DADOS DA TAREFA + EMAIL
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_DADOS_TAREFA, NotificationType.EMAIL);
 
         if (config == null) {
@@ -227,28 +226,22 @@ public class EmailServiceImpl implements EmailService {
         List<String> toEmails = new ArrayList<>();
         List<String> ccEmails = new ArrayList<>();
 
-        // Determinar destinatário principal
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
-            // Usar email do solicitante se disponível
             if (task.getRequester() != null && task.getRequester().getEmail() != null
                 && !task.getRequester().getEmail().trim().isEmpty()) {
                 toEmails.add(task.getRequester().getEmail());
             }
         } else {
-            // Usar email da configuração se disponível
             if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
                 toEmails.add(config.getPrimaryEmail());
             }
         }
 
-        // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
         }
 
-        // Adicionar emails extras fornecidos pelo usuário
         if (additionalEmails != null && !additionalEmails.isEmpty()) {
-            // Validar e adicionar apenas emails válidos
             additionalEmails.stream()
                     .filter(email -> email != null && !email.trim().isEmpty())
                     .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
@@ -258,14 +251,12 @@ public class EmailServiceImpl implements EmailService {
                     additionalEmails.size(), task.getId());
         }
 
-        // Validar se há pelo menos um destinatário
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for task data notification. Task ID: {}, Config ID: {}",
                 task.getId(), config.getId());
             return;
         }
 
-        // Carregar anexos da tarefa
         List<TaskAttachment> taskAttachments = null;
         try {
             log.info("📎 LOADING attachments for TASK DATA notification - task ID: {}", task.getId());
@@ -287,7 +278,6 @@ public class EmailServiceImpl implements EmailService {
                 toEmails, ccEmails.isEmpty() ? "none" : ccEmails,
                 taskAttachments != null ? taskAttachments.size() : 0);
 
-        // Enviar para cada destinatário principal
         for (String toEmail : toEmails) {
             try {
                 String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
@@ -312,7 +302,6 @@ public class EmailServiceImpl implements EmailService {
         String mainRecipient = null;
         String ccRecipient = null;
 
-        // Definir destinatário principal (solicitante)
         if (task.getRequester() != null && task.getRequester().getEmail() != null
             && !task.getRequester().getEmail().trim().isEmpty()) {
             mainRecipient = task.getRequester().getEmail();
@@ -324,9 +313,7 @@ public class EmailServiceImpl implements EmailService {
                     task.getRequester() != null ? task.getRequester().getName() : "null");
         }
 
-        // Definir destinatário em cópia (você)
         if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
             if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
                 mainRecipient = emailProperties.getFrom();
                 ccRecipient = null;
@@ -339,14 +326,12 @@ public class EmailServiceImpl implements EmailService {
             log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
         }
 
-        // Verificar se há destinatário principal
         if (mainRecipient == null) {
             log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {} ({} action). Email will NOT be sent!",
                     task.getId(), action);
             return;
         }
 
-        // Carregar anexos da tarefa (entidades para envio por email)
         List<TaskAttachment> taskAttachments = null;
         try {
             log.info("📎 LOADING attachments for task ID: {} (action: {})", task.getId(), action.toUpperCase());
@@ -364,10 +349,9 @@ public class EmailServiceImpl implements EmailService {
             }
         } catch (Exception e) {
             log.error("📎 ❌ FAILED to load attachments for task ID: {} (action: {}) - Error: {}", task.getId(), action.toUpperCase(), e.getMessage(), e);
-            taskAttachments = null; // Continua sem anexos se houver erro
+            taskAttachments = null;
         }
 
-        // Enviar email único com CC e anexos
         try {
             log.info("📧 Sending TASK {} notification - To: {}, CC: {}, Attachments: {}",
                     action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
@@ -406,7 +390,6 @@ public class EmailServiceImpl implements EmailService {
         String mainRecipient = null;
         String ccRecipient = null;
 
-        // Definir destinatário principal (solicitante)
         if (task.getRequester() != null && task.getRequester().getEmail() != null
             && !task.getRequester().getEmail().trim().isEmpty()) {
             mainRecipient = task.getRequester().getEmail();
@@ -418,9 +401,7 @@ public class EmailServiceImpl implements EmailService {
                     task.getRequester() != null ? task.getRequester().getName() : "null");
         }
 
-        // Definir destinatário em cópia (você)
         if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
             if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
                 mainRecipient = emailProperties.getFrom();
                 ccRecipient = null;
@@ -433,14 +414,12 @@ public class EmailServiceImpl implements EmailService {
             log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
         }
 
-        // Verificar se há destinatário principal
         if (mainRecipient == null) {
             log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {} ({} action). Email will NOT be sent!",
                     task.getId(), action);
             return;
         }
 
-        // Usar anexos pré-carregados (não buscar no banco/S3)
         List<TaskAttachment> taskAttachments = preLoadedAttachments;
         if (taskAttachments != null && !taskAttachments.isEmpty()) {
             log.info("📎 ✅ Using {} PRE-LOADED attachment(s) for task ID: {} - Files: {}", 
@@ -454,7 +433,6 @@ public class EmailServiceImpl implements EmailService {
             log.info("📎 No PRE-LOADED attachments for task ID: {} (action: {})", task.getId(), action.toUpperCase());
         }
 
-        // Enviar email único com CC e anexos pré-carregados
         try {
             log.info("📧 Sending TASK {} notification WITH PRE-LOADED ATTACHMENTS - To: {}, CC: {}, Attachments: {}",
                     action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
@@ -488,7 +466,6 @@ public class EmailServiceImpl implements EmailService {
         String mainRecipient = null;
         String ccRecipient = null;
 
-        // Definir destinatário principal (solicitante)
         if (task.getRequester() != null && task.getRequester().getEmail() != null
             && !task.getRequester().getEmail().trim().isEmpty()) {
             mainRecipient = task.getRequester().getEmail();
@@ -500,9 +477,8 @@ public class EmailServiceImpl implements EmailService {
                     task.getRequester() != null ? task.getRequester().getName() : "null");
         }
 
-        // Definir destinatário em cópia (você)
         if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
+
             if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
                 mainRecipient = emailProperties.getFrom();
                 ccRecipient = null;
@@ -515,13 +491,11 @@ public class EmailServiceImpl implements EmailService {
             log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
         }
 
-        // Verificar se há destinatário principal
         if (mainRecipient == null) {
             log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {}. Email will NOT be sent!", task.getId());
             return;
         }
 
-        // Enviar email com anexos em memória
         try {
             log.info("📧 Sending TASK DELETION notification WITH IN-MEMORY ATTACHMENTS - To: {}, CC: {}, Attachments: {}",
                     mainRecipient, ccRecipient != null ? ccRecipient : "none",
@@ -553,10 +527,8 @@ public class EmailServiceImpl implements EmailService {
             helper.setTo(to);
 
             if (cc != null && !cc.trim().isEmpty()) {
-                // Se contém vírgula, divide em array para múltiplos destinatários
                 if (cc.contains(",")) {
                     String[] ccArray = cc.split(",");
-                    // Remove espaços em branco de cada email
                     for (int i = 0; i < ccArray.length; i++) {
                         ccArray[i] = ccArray[i].trim();
                     }
@@ -569,15 +541,13 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
 
-            // Adicionar anexos que já estão em memória
             if (attachmentDataMap != null && !attachmentDataMap.isEmpty()) {
                 log.debug("📎 Adding {} IN-MEMORY attachments to email", attachmentDataMap.size());
                 for (Map.Entry<String, byte[]> entry : attachmentDataMap.entrySet()) {
                     try {
                         String fileName = entry.getKey();
                         byte[] fileData = entry.getValue();
-                        
-                        // Criar InputStreamSource com dados em memória
+
                         org.springframework.core.io.InputStreamSource inputStreamSource = new org.springframework.core.io.InputStreamSource() {
                             @Override
                             public java.io.InputStream getInputStream() throws java.io.IOException {
@@ -590,7 +560,6 @@ public class EmailServiceImpl implements EmailService {
                         
                     } catch (Exception e) {
                         log.warn("📎 ❌ Failed to attach IN-MEMORY file: {} - Error: {}", entry.getKey(), e.getMessage());
-                        // Continua o processamento mesmo se um anexo falhar
                     }
                 }
             }
@@ -611,13 +580,11 @@ public class EmailServiceImpl implements EmailService {
     private String buildTaskCreatedEmailContent(Task task) {
         Context context = new Context();
 
-        // Dados principais da tarefa
         context.setVariable("task", task);
         context.setVariable("taskId", task.getId());
         context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
         context.setVariable("taskTitle", convertLineBreaksToHtml(task.getTitle()));
         context.setVariable("taskDescription", convertLineBreaksToHtml(task.getDescription()));
-        // Task status removed
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
         context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
@@ -629,35 +596,33 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
 
-        // Dados do solicitante
         context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
         context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
         context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
 
-        // Buscar subtarefas da tarefa e traduzir status
-        java.util.List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
+        List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
 
-        // Criar lista com dados das subtarefas já traduzidos
-        java.util.List<java.util.Map<String, String>> subTasksTranslated = null;
+        List<Map<String, String>> subTasksTranslated = null;
         if (subTasks != null) {
             subTasksTranslated = subTasks.stream().map(subtask -> {
-                java.util.Map<String, String> subtaskMap = new java.util.HashMap<>();
+               Map<String, String> subtaskMap = new HashMap<>();
                 subtaskMap.put("title", convertLineBreaksToHtml(subtask.getTitle()));
                 subtaskMap.put("description", convertLineBreaksToHtml(subtask.getDescription()));
-                // Subtask status removed
                 return subtaskMap;
-            }).collect(java.util.stream.Collectors.toList());
+            }).collect(Collectors.toList());
         }
 
         context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
         context.setVariable("subTasks", subTasksTranslated);
 
-        // Função para traduzir status e obter classes CSS (disponível no template)
         context.setVariable("translateStatus", new Object() {
+
             public String translate(String status) {
                 return translateStatus(status);
             }
+
         });
+
         context.setVariable("getStatusCssClass", new Object() {
             public String getCssClass(String status) {
                 return getStatusCssClass(status);
@@ -675,13 +640,12 @@ public class EmailServiceImpl implements EmailService {
     private String buildTaskUpdatedEmailContent(Task task) {
         Context context = new Context();
 
-        // Dados principais da tarefa
         context.setVariable("task", task);
         context.setVariable("taskId", task.getId());
         context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
         context.setVariable("taskTitle", convertLineBreaksToHtml(task.getTitle()));
         context.setVariable("taskDescription", convertLineBreaksToHtml(task.getDescription()));
-        // Task status removed
+
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
         context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
@@ -693,30 +657,25 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
 
-        // Dados do solicitante
         context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
         context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
         context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
 
-        // Buscar subtarefas da tarefa e traduzir status
-        java.util.List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
+       List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
 
-        // Criar lista com dados das subtarefas já traduzidos
-        java.util.List<java.util.Map<String, String>> subTasksTranslated = null;
+        List<Map<String, String>> subTasksTranslated = null;
         if (subTasks != null) {
             subTasksTranslated = subTasks.stream().map(subtask -> {
-                java.util.Map<String, String> subtaskMap = new java.util.HashMap<>();
+               Map<String, String> subtaskMap = new HashMap<>();
                 subtaskMap.put("title", convertLineBreaksToHtml(subtask.getTitle()));
                 subtaskMap.put("description", convertLineBreaksToHtml(subtask.getDescription()));
-                // Subtask status removed
                 return subtaskMap;
-            }).collect(java.util.stream.Collectors.toList());
+            }).collect(Collectors.toList());
         }
 
         context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
         context.setVariable("subTasks", subTasksTranslated);
 
-        // Função para traduzir status e obter classes CSS (disponível no template)
         context.setVariable("translateStatus", new Object() {
             public String translate(String status) {
                 return translateStatus(status);
@@ -739,13 +698,12 @@ public class EmailServiceImpl implements EmailService {
     private String buildTaskDeletedEmailContent(Task task) {
         Context context = new Context();
 
-        // Dados principais da tarefa
         context.setVariable("task", task);
         context.setVariable("taskId", task.getId());
         context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
         context.setVariable("taskTitle", convertLineBreaksToHtml(task.getTitle()));
         context.setVariable("taskDescription", convertLineBreaksToHtml(task.getDescription()));
-        // Task status removed
+
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
         context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
@@ -757,30 +715,25 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
         context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
 
-        // Dados do solicitante
         context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
         context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
         context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
 
-        // Buscar subtarefas da tarefa e traduzir status
-        java.util.List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
+       List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
 
-        // Criar lista com dados das subtarefas já traduzidos
-        java.util.List<java.util.Map<String, String>> subTasksTranslated = null;
+      List<Map<String, String>> subTasksTranslated = null;
         if (subTasks != null) {
             subTasksTranslated = subTasks.stream().map(subtask -> {
-                java.util.Map<String, String> subtaskMap = new java.util.HashMap<>();
+              Map<String, String> subtaskMap = new HashMap<>();
                 subtaskMap.put("title", convertLineBreaksToHtml(subtask.getTitle()));
                 subtaskMap.put("description", convertLineBreaksToHtml(subtask.getDescription()));
-                // Subtask status removed
                 return subtaskMap;
-            }).collect(java.util.stream.Collectors.toList());
+            }).collect(Collectors.toList());
         }
 
         context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
         context.setVariable("subTasks", subTasksTranslated);
 
-        // Função para traduzir status e obter classes CSS (disponível no template)
         context.setVariable("translateStatus", new Object() {
             public String translate(String status) {
                 return translateStatus(status);
@@ -870,29 +823,26 @@ public class EmailServiceImpl implements EmailService {
         List<String> toEmails = new ArrayList<>();
         List<String> ccEmails = new ArrayList<>();
 
-        // Determinar destinatário principal
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
-            // Usar email do solicitante se disponível
+
             if (delivery.getTask() != null && delivery.getTask().getRequester() != null
                 && delivery.getTask().getRequester().getEmail() != null
                 && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
                 toEmails.add(delivery.getTask().getRequester().getEmail());
             }
         } else {
-            // Usar email da configuração se disponível
+
             if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
                 toEmails.add(config.getPrimaryEmail());
             }
         }
 
-        // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
         }
 
-        // Adicionar emails extras fornecidos pelo usuário
         if (additionalEmails != null && !additionalEmails.isEmpty()) {
-            // Validar e adicionar apenas emails válidos
+
             additionalEmails.stream()
                     .filter(email -> email != null && !email.trim().isEmpty())
                     .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
@@ -902,7 +852,6 @@ public class EmailServiceImpl implements EmailService {
                     additionalEmails.size(), delivery.getId());
         }
 
-        // Validar se há pelo menos um destinatário
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for delivery notification. Delivery ID: {}, Config ID: {}",
                 delivery.getId(), config.getId());
@@ -912,7 +861,6 @@ public class EmailServiceImpl implements EmailService {
         log.debug("📧 Sending DELIVERY notification with config - To: {}, CC: {}",
                 toEmails, ccEmails.isEmpty() ? "none" : ccEmails);
 
-        // Enviar para cada destinatário principal (delivery não tem anexos como tasks)
         for (String toEmail : toEmails) {
             try {
                 String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
@@ -939,7 +887,6 @@ public class EmailServiceImpl implements EmailService {
         String mainRecipient = null;
         String ccRecipient = null;
 
-        // Definir destinatário principal (solicitante através da Task)
         if (delivery.getTask() != null
             && delivery.getTask().getRequester() != null
             && delivery.getTask().getRequester().getEmail() != null
@@ -956,9 +903,8 @@ public class EmailServiceImpl implements EmailService {
                         : "No task");
         }
 
-        // Definir destinatário em cópia (você)
         if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-            // Se solicitante não existe ou tem o mesmo email, você vira destinatário principal
+
             if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
                 mainRecipient = emailProperties.getFrom();
                 ccRecipient = null;
@@ -971,14 +917,12 @@ public class EmailServiceImpl implements EmailService {
             log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
         }
 
-        // Verificar se há destinatário principal
         if (mainRecipient == null) {
             log.error("📧 ❌ NO VALID RECIPIENTS found for delivery ID: {} ({} action). Email will NOT be sent!",
                     delivery.getId(), action);
             return;
         }
 
-        // Enviar email único com CC
         try {
             log.debug("📧 Sending DELIVERY {} notification - To: {}, CC: {}",
                     action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
@@ -997,7 +941,6 @@ public class EmailServiceImpl implements EmailService {
     private String buildDeliveryCreatedEmailContent(Delivery delivery) {
         Context context = new Context();
 
-        // Reutilizar a mesma lógica de construção de contexto
         buildDeliveryEmailContext(context, delivery);
 
         return templateEngine.process("email/delivery-created", context);
@@ -1006,7 +949,6 @@ public class EmailServiceImpl implements EmailService {
     private String buildDeliveryUpdatedEmailContent(Delivery delivery) {
         Context context = new Context();
 
-        // Reutilizar a mesma lógica de construção de contexto
         buildDeliveryEmailContext(context, delivery);
 
         return templateEngine.process("email/delivery-updated", context);
@@ -1015,24 +957,21 @@ public class EmailServiceImpl implements EmailService {
     private String buildDeliveryDeletedEmailContent(Delivery delivery) {
         Context context = new Context();
 
-        // Reutilizar a mesma lógica de construção de contexto
         buildDeliveryEmailContext(context, delivery);
 
         return templateEngine.process("email/delivery-deleted", context);
     }
 
     private void buildDeliveryEmailContext(Context context, Delivery delivery) {
-        // Dados principais da entrega
+
         context.setVariable("delivery", delivery);
         context.setVariable("deliveryId", delivery.getId());
         context.setVariable("deliveryStatus", translateDeliveryStatus(delivery.getStatus()));
         context.setVariable("createdAt", delivery.getCreatedAt().format(DATE_FORMATTER));
         context.setVariable("notes", delivery.getNotes() != null ? delivery.getNotes() : "");
 
-        // Dados dos itens da entrega (nova arquitetura)
         var allTranslatedItems = new java.util.ArrayList<java.util.HashMap<String, Object>>();
 
-        // Itens de desenvolvimento
         if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
             var devItems = delivery.getItems().stream()
                 .map(item -> {
@@ -1051,7 +990,6 @@ public class EmailServiceImpl implements EmailService {
             allTranslatedItems.addAll(devItems);
         }
 
-        // Itens operacionais
         if (delivery.getOperationalItems() != null && !delivery.getOperationalItems().isEmpty()) {
             var opItems = delivery.getOperationalItems().stream()
                 .map(item -> {
@@ -1078,7 +1016,7 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("deliveryItems", allTranslatedItems);
             context.setVariable("hasMultipleItems", allTranslatedItems.size() >= 1);
         } else {
-            // Valores padrão se não houver itens
+
             context.setVariable("deliveryBranch", "");
             context.setVariable("deliverySourceBranch", "");
             context.setVariable("deliveryPullRequest", "");
@@ -1090,7 +1028,6 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("hasMultipleItems", false);
         }
 
-        // Dados do orçamento/tarefa
         if (delivery.getTask() != null) {
             context.setVariable("quoteCode", delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "");
             context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
@@ -1140,23 +1077,19 @@ public class EmailServiceImpl implements EmailService {
     private String translateTaskType(String taskType) {
         if (taskType == null || taskType.isEmpty()) return "";
         return switch (taskType.toUpperCase()) {
-            // Tipos operacionais
+
             case "BACKUP" -> "Backup";
             case "DEPLOY" -> "Deploy";
             case "LOGS" -> "Logs";
             case "NEW_SERVER" -> "Novo Servidor";
             case "MONITORING" -> "Monitoramento";
             case "SUPPORT" -> "Suporte";
-            // Tipos de desenvolvimento
+
             case "BUG" -> "Bug";
             case "ENHANCEMENT" -> "Melhoria";
             case "NEW_FEATURE" -> "Nova Funcionalidade";
             default -> taskType;
         };
-    }
-
-    private void sendEmail(String to, String subject, String htmlContent) {
-        sendEmailWithCC(to, null, subject, htmlContent);
     }
 
     private void sendEmailWithCC(String to, String cc, String subject, String htmlContent) {
@@ -1177,10 +1110,10 @@ public class EmailServiceImpl implements EmailService {
             helper.setTo(to);
 
             if (cc != null && !cc.trim().isEmpty()) {
-                // Se contém vírgula, divide em array para múltiplos destinatários
+
                 if (cc.contains(",")) {
                     String[] ccArray = cc.split(",");
-                    // Remove espaços em branco de cada email
+
                     for (int i = 0; i < ccArray.length; i++) {
                         ccArray[i] = ccArray[i].trim();
                     }
@@ -1193,25 +1126,17 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
 
-            // Adicionar anexos se disponíveis
             if (attachments != null && !attachments.isEmpty()) {
                 log.debug("Adding {} attachments to email", attachments.size());
                 for (TaskAttachment attachment : attachments) {
                     try {
-                        // Criar InputStreamSource que acessa diretamente o S3 sem buscar no banco
-                        // (necessário pois em emails de exclusão, o anexo já pode ter sido deletado do banco)
-                        org.springframework.core.io.InputStreamSource inputStreamSource = new org.springframework.core.io.InputStreamSource() {
-                            @Override
-                            public java.io.InputStream getInputStream() throws java.io.IOException {
-                                return fileStorageStrategy.getFileStream(attachment.getFilePath());
-                            }
-                        };
+
+                        org.springframework.core.io.InputStreamSource inputStreamSource = () -> fileStorageStrategy.getFileStream(attachment.getFilePath());
                         
                         helper.addAttachment(attachment.getOriginalFileName(), inputStreamSource);
                         log.debug("Attached file: {} ({})", attachment.getOriginalFileName(), attachment.getContentType());
                     } catch (Exception e) {
                         log.warn("Failed to attach file: {} - {}", attachment.getOriginalFileName(), e.getMessage());
-                        // Continua o processamento mesmo se um anexo falhar
                     }
                 }
             }
@@ -1246,12 +1171,10 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
 
-            // Adicionar anexos pré-carregados (baixar dados em memória ANTES de acessar)
             if (attachments != null && !attachments.isEmpty()) {
                 log.debug("📎 Pre-loading {} attachments data from S3 into memory", attachments.size());
                 for (TaskAttachment attachment : attachments) {
                     try {
-                        // Baixar dados do S3 para memória ANTES de tentar anexar ao email
                         log.debug("📎 Pre-loading attachment data: {} from path: {}", attachment.getOriginalFileName(), attachment.getFilePath());
                         
                         byte[] attachmentData;
@@ -1263,14 +1186,8 @@ public class EmailServiceImpl implements EmailService {
                             
                             log.debug("📎 Successfully loaded {} bytes for attachment: {}", attachmentData.length, attachment.getOriginalFileName());
                         }
-                        
-                        // Criar InputStreamSource com dados em memória
-                        org.springframework.core.io.InputStreamSource inputStreamSource = new org.springframework.core.io.InputStreamSource() {
-                            @Override
-                            public java.io.InputStream getInputStream() throws java.io.IOException {
-                                return new java.io.ByteArrayInputStream(attachmentData);
-                            }
-                        };
+
+                        org.springframework.core.io.InputStreamSource inputStreamSource = () -> new java.io.ByteArrayInputStream(attachmentData);
                         
                         helper.addAttachment(attachment.getOriginalFileName(), inputStreamSource);
                         log.debug("📎 ✅ Successfully attached pre-loaded file: {} ({} bytes)", attachment.getOriginalFileName(), attachmentData.length);
@@ -1278,7 +1195,6 @@ public class EmailServiceImpl implements EmailService {
                     } catch (Exception e) {
                         log.warn("📎 ❌ Failed to pre-load attachment: {} from path: {} - Error: {}", 
                                 attachment.getOriginalFileName(), attachment.getFilePath(), e.getMessage());
-                        // Continua o processamento mesmo se um anexo falhar
                     }
                 }
             }
@@ -1375,7 +1291,6 @@ public class EmailServiceImpl implements EmailService {
         try {
             Context context = new Context();
 
-            // Dados principais da tarefa (mesmo padrão de buildTaskUpdatedEmailContent)
             context.setVariable("task", task);
             context.setVariable("taskId", task.getId());
             context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
@@ -1392,24 +1307,19 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
             context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
 
-            // Dados do solicitante
             context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
             context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
             context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
 
-            // Task status removed
             context.setVariable("priorityTranslation", translatePriority(task.getPriority()));
 
-            // Buscar subtarefas via repository se necessário
             if (task.getHasSubTasks()) {
                 List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
 
-                // Criar lista com dados das subtarefas já traduzidos
                 List<java.util.Map<String, Object>> subTasksTranslated = subTasks.stream().map(subtask -> {
                     java.util.Map<String, Object> subtaskMap = new java.util.HashMap<>();
                     subtaskMap.put("title", convertLineBreaksToHtml(subtask.getTitle()));
                     subtaskMap.put("description", convertLineBreaksToHtml(subtask.getDescription()));
-                    // Subtask status removed
                     subtaskMap.put("amount", subtask.getAmount());
                     return subtaskMap;
                 }).collect(java.util.stream.Collectors.toList());
@@ -1417,8 +1327,7 @@ public class EmailServiceImpl implements EmailService {
                 context.setVariable("subTasks", subTasksTranslated);
             }
 
-            // Usar valor total da tarefa (já calculado) ou 0 se nulo
-            java.math.BigDecimal totalAmount = task.getAmount() != null ? task.getAmount() : java.math.BigDecimal.ZERO;
+            BigDecimal totalAmount = task.getAmount() != null ? task.getAmount() : BigDecimal.ZERO;
             context.setVariable("totalAmount", totalAmount);
 
             String htmlContent = templateEngine.process("email/financial-notification", context);
@@ -1444,28 +1353,22 @@ public class EmailServiceImpl implements EmailService {
         List<String> toEmails = new ArrayList<>();
         List<String> ccEmails = new ArrayList<>();
 
-        // Determinar destinatário principal
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
-            // Usar email do solicitante se disponível
             if (task.getRequester() != null && task.getRequester().getEmail() != null
                 && !task.getRequester().getEmail().trim().isEmpty()) {
                 toEmails.add(task.getRequester().getEmail());
             }
         } else {
-            // Usar email da configuração se disponível
             if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
                 toEmails.add(config.getPrimaryEmail());
             }
         }
 
-        // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
         }
 
-        // Adicionar emails extras fornecidos pelo usuário
         if (additionalEmails != null && !additionalEmails.isEmpty()) {
-            // Validar e adicionar apenas emails válidos
             additionalEmails.stream()
                     .filter(email -> email != null && !email.trim().isEmpty())
                     .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
@@ -1475,15 +1378,13 @@ public class EmailServiceImpl implements EmailService {
                     additionalEmails.size(), task.getId());
         }
 
-        // Validar se há pelo menos um destinatário
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for financial notification. Task ID: {}, Config ID: {}",
                 task.getId(), config.getId());
             return;
         }
 
-        // Carregar anexos da tarefa
-        List<TaskAttachment> taskAttachments = null;
+        List<TaskAttachment> taskAttachments;
         try {
             log.info("📎 LOADING attachments for FINANCIAL notification - task ID: {}", task.getId());
             taskAttachments = taskAttachmentService.getTaskAttachmentsEntities(task.getId());
@@ -1504,7 +1405,6 @@ public class EmailServiceImpl implements EmailService {
                 toEmails, ccEmails.isEmpty() ? "none" : ccEmails,
                 taskAttachments != null ? taskAttachments.size() : 0);
 
-        // Enviar para cada destinatário principal
         for (String toEmail : toEmails) {
             try {
                 String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
@@ -1529,18 +1429,14 @@ public class EmailServiceImpl implements EmailService {
             Context context = new Context();
             context.setVariable("billingPeriod", billingPeriod);
 
-            // Array com nomes dos meses em português
             String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
                                    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
             String monthName = monthNames[billingPeriod.getMonth() - 1];
 
-            // Formato: "julho/2025"
             context.setVariable("monthYear", String.format("%s/%d", monthName, billingPeriod.getYear()));
 
-            // Formato: "Medição julho de 2025"
             context.setVariable("measurementPeriod", String.format("Medição %s de %d", monthName, billingPeriod.getYear()));
 
-            // Formatar data de pagamento
             if (billingPeriod.getPaymentDate() != null) {
                 java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 context.setVariable("paymentDate", billingPeriod.getPaymentDate().format(formatter));
@@ -1548,24 +1444,22 @@ public class EmailServiceImpl implements EmailService {
                 context.setVariable("paymentDate", null);
             }
 
-            // Buscar tarefas vinculadas ao período de faturamento com filtro de fluxo
             List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodIdAndFlowType(
                 billingPeriod.getId(),
                 flowType
             );
 
-            // Processar tarefas e calcular totais
             List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
             java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
 
             for (Object[] taskData : billingTasks) {
                 java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
-                taskMap.put("code", taskData[1]); // task_code
-                taskMap.put("title", taskData[2]); // task_title
-                taskMap.put("amount", taskData[4]); // task_amount
-                taskMap.put("requesterName", taskData[5]); // requester_name
-                taskMap.put("flowType", taskData[7]); // task_flow_type
-                taskMap.put("taskType", taskData[8]); // task_type
+                taskMap.put("code", taskData[1]);
+                taskMap.put("title", taskData[2]);
+                taskMap.put("amount", taskData[4]);
+                taskMap.put("requesterName", taskData[5]);
+                taskMap.put("flowType", taskData[7]);
+                taskMap.put("taskType", taskData[8]);
                 tasksData.add(taskMap);
 
                 if (taskData[4] != null) {
@@ -1600,27 +1494,23 @@ public class EmailServiceImpl implements EmailService {
         List<String> toEmails = new ArrayList<>();
         List<String> ccEmails = new ArrayList<>();
 
-        // Determinar destinatário principal - Faturamento não tem solicitante específico
-        // então só usamos a configuração de email principal
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
             log.warn("Billing period cannot use requester contact - no requester associated. BillingPeriod ID: {}, Config ID: {}",
                 billingPeriod.getId(), config.getId());
             return;
         } else {
-            // Usar email da configuração se disponível
+
             if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
                 toEmails.add(config.getPrimaryEmail());
             }
         }
 
-        // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
         }
 
-        // Adicionar emails extras fornecidos pelo usuário
         if (additionalEmails != null && !additionalEmails.isEmpty()) {
-            // Validar e adicionar apenas emails válidos
+
             additionalEmails.stream()
                     .filter(email -> email != null && !email.trim().isEmpty())
                     .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
@@ -1630,7 +1520,6 @@ public class EmailServiceImpl implements EmailService {
                     additionalEmails.size(), billingPeriod.getId());
         }
 
-        // Validar se há pelo menos um destinatário
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for billing notification. BillingPeriod ID: {}, Config ID: {}",
                 billingPeriod.getId(), config.getId());
@@ -1640,7 +1529,6 @@ public class EmailServiceImpl implements EmailService {
         log.debug("📧 Sending BILLING notification with config - To: {}, CC: {}",
                 toEmails, ccEmails.isEmpty() ? "none" : ccEmails);
 
-        // Enviar para cada destinatário principal (billing não tem anexos)
         for (String toEmail : toEmails) {
             try {
                 String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
@@ -1708,29 +1596,26 @@ public class EmailServiceImpl implements EmailService {
         List<String> toEmails = new ArrayList<>();
         List<String> ccEmails = new ArrayList<>();
 
-        // Determinar destinatário principal
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
-            // Usar email do solicitante se disponível
+
             if (delivery.getTask() != null && delivery.getTask().getRequester() != null
                 && delivery.getTask().getRequester().getEmail() != null
                 && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
                 toEmails.add(delivery.getTask().getRequester().getEmail());
             }
         } else {
-            // Usar email da configuração se disponível
+
             if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
                 toEmails.add(config.getPrimaryEmail());
             }
         }
 
-        // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
         }
 
-        // Adicionar emails extras fornecidos pelo usuário
         if (additionalEmails != null && !additionalEmails.isEmpty()) {
-            // Validar e adicionar apenas emails válidos
+
             additionalEmails.stream()
                     .filter(email -> email != null && !email.trim().isEmpty())
                     .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
@@ -1740,7 +1625,6 @@ public class EmailServiceImpl implements EmailService {
                     additionalEmails.size(), delivery.getId());
         }
 
-        // Validar se há pelo menos um destinatário
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for delivery notification with attachments. Delivery ID: {}, Config ID: {}",
                 delivery.getId(), config.getId());
@@ -1750,7 +1634,6 @@ public class EmailServiceImpl implements EmailService {
         log.debug("📧 Sending DELIVERY {} notification WITH IN-MEMORY ATTACHMENTS with config - To: {}, CC: {}",
                 action.toUpperCase(), toEmails, ccEmails.isEmpty() ? "none" : ccEmails);
 
-        // Enviar para cada destinatário principal com anexos
         for (String toEmail : toEmails) {
             try {
                 String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
@@ -1772,23 +1655,19 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            // Array com nomes dos meses em português
+
             String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
                                    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
             String monthName = monthNames[billingPeriod.getMonth() - 1];
-            String subject = String.format("💰 Medição %s de %d - DevQuote", monthName, billingPeriod.getYear());
+            String subject = String.format("Medição %s de %d - DevQuote", monthName, billingPeriod.getYear());
 
-            // Criar contexto e HTML usando a mesma lógica do método existente
             Context context = new Context();
             context.setVariable("billingPeriod", billingPeriod);
 
-            // Formato: "julho/2025"
             context.setVariable("monthYear", String.format("%s/%d", monthName, billingPeriod.getYear()));
 
-            // Formato: "Medição julho de 2025"
             context.setVariable("measurementPeriod", String.format("Medição %s de %d", monthName, billingPeriod.getYear()));
 
-            // Formatar data de pagamento
             if (billingPeriod.getPaymentDate() != null) {
                 java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 context.setVariable("paymentDate", billingPeriod.getPaymentDate().format(formatter));
@@ -1796,24 +1675,22 @@ public class EmailServiceImpl implements EmailService {
                 context.setVariable("paymentDate", null);
             }
 
-            // Buscar tarefas vinculadas ao período de faturamento com filtro de fluxo
             List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodIdAndFlowType(
                 billingPeriod.getId(),
                 flowType
             );
 
-            // Processar tarefas e calcular totais
             List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
             java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
 
             for (Object[] taskData : billingTasks) {
                 java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
-                taskMap.put("code", taskData[1]); // task_code
-                taskMap.put("title", taskData[2]); // task_title
-                taskMap.put("amount", taskData[4]); // task_amount
-                taskMap.put("requesterName", taskData[5]); // requester_name
-                taskMap.put("flowType", taskData[7]); // task_flow_type
-                taskMap.put("taskType", taskData[8]); // task_type
+                taskMap.put("code", taskData[1]);
+                taskMap.put("title", taskData[2]);
+                taskMap.put("amount", taskData[4]);
+                taskMap.put("requesterName", taskData[5]);
+                taskMap.put("flowType", taskData[7]);
+                taskMap.put("taskType", taskData[8]);
                 tasksData.add(taskMap);
 
                 if (taskData[4] != null) {
@@ -1846,26 +1723,23 @@ public class EmailServiceImpl implements EmailService {
         List<String> toEmails = new ArrayList<>();
         List<String> ccEmails = new ArrayList<>();
 
-        // Determinar destinatário principal - Faturamento não tem solicitante específico
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
             log.warn("Billing period cannot use requester contact - no requester associated. BillingPeriod ID: {}, Config ID: {}",
                 billingPeriod.getId(), config.getId());
             return;
         } else {
-            // Usar email da configuração se disponível
+
             if (config.getPrimaryEmail() != null && !config.getPrimaryEmail().trim().isEmpty()) {
                 toEmails.add(config.getPrimaryEmail());
             }
         }
 
-        // Adicionar emails em cópia da configuração
         if (config.getCopyEmailsList() != null && !config.getCopyEmailsList().isEmpty()) {
             ccEmails.addAll(config.getCopyEmailsList());
         }
 
-        // Adicionar emails extras fornecidos pelo usuário
         if (additionalEmails != null && !additionalEmails.isEmpty()) {
-            // Validar e adicionar apenas emails válidos
+
             additionalEmails.stream()
                     .filter(email -> email != null && !email.trim().isEmpty())
                     .filter(email -> email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"))
@@ -1875,14 +1749,12 @@ public class EmailServiceImpl implements EmailService {
                     additionalEmails.size(), billingPeriod.getId());
         }
 
-        // Validar se há pelo menos um destinatário
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for billing notification with attachments. BillingPeriod ID: {}, Config ID: {}",
                 billingPeriod.getId(), config.getId());
             return;
         }
 
-        // Enviar para cada destinatário principal com anexos
         for (String toEmail : toEmails) {
             try {
                 String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
@@ -1904,7 +1776,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            // Array com nomes dos meses em português
+
             String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
                                    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
             String monthName = monthNames[billingPeriod.getMonth() - 1];
@@ -1929,7 +1801,7 @@ public class EmailServiceImpl implements EmailService {
         }
 
         try {
-            // Array com nomes dos meses em português
+
             String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
                                    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
             String monthName = monthNames[billingPeriod.getMonth() - 1];
@@ -1947,37 +1819,32 @@ public class EmailServiceImpl implements EmailService {
     
     private String buildBillingPeriodDeletedEmailContent(BillingPeriod billingPeriod) {
         Context context = new Context();
-        
-        // Array com nomes dos meses em português
+
         String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
                                "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
         String monthName = monthNames[billingPeriod.getMonth() - 1];
-        
-        // Dados do período
+
         context.setVariable("periodId", billingPeriod.getId());
         context.setVariable("month", billingPeriod.getMonth());
         context.setVariable("monthName", monthName);
         context.setVariable("year", billingPeriod.getYear());
-        
-        // Formatação da data de pagamento
+
         if (billingPeriod.getPaymentDate() != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             context.setVariable("paymentDate", billingPeriod.getPaymentDate().format(formatter));
         }
-        
-        // Buscar tarefas vinculadas ao período de faturamento para calcular totais
+
         List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodId(billingPeriod.getId());
 
-        // Processar tarefas e calcular totais
         List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
         java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
         for (Object[] taskData : billingTasks) {
             java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
-            taskMap.put("code", taskData[1]); // task_code
-            taskMap.put("title", taskData[2]); // task_title
-            taskMap.put("amount", currencyFormat.format(taskData[4])); // task_amount formatado
+            taskMap.put("code", taskData[1]);
+            taskMap.put("title", taskData[2]);
+            taskMap.put("amount", currencyFormat.format(taskData[4]));
             tasksData.add(taskMap);
 
             if (taskData[4] != null) {
@@ -1989,19 +1856,14 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("totalAmount", currencyFormat.format(totalAmount));
         context.setVariable("taskCount", billingTasks.size());
         context.setVariable("hasTasks", !billingTasks.isEmpty());
-        
-        // Data/hora atual para registro
+
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         context.setVariable("deletedAt", LocalDateTime.now().format(dateTimeFormatter));
         
         return templateEngine.process("email/billing-period-deleted", context);
     }
 
-    /**
-     * Converte quebras de linha em tags <br> para renderização HTML
-     * @param text o texto a ser convertido
-     * @return o texto com quebras de linha convertidas ou string vazia se null
-     */
+
     private String convertLineBreaksToHtml(String text) {
         if (text == null || text.trim().isEmpty()) {
             return "";

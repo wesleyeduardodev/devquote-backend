@@ -70,7 +70,6 @@ public class BillingPeriodTaskController {
             @PathVariable Long billingPeriodId,
             @RequestParam(required = false) String flowType) {
 
-        // Converter String para Enum FlowType
         FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
             ? null
             : FlowType.fromString(flowType);
@@ -91,7 +90,6 @@ public class BillingPeriodTaskController {
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        // Converter String para Enum FlowType
         FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
             ? null
             : FlowType.fromString(flowType);

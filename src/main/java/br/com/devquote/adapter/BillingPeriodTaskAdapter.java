@@ -32,7 +32,6 @@ public class BillingPeriodTaskAdapter {
                 .updatedAt(entity.getUpdatedAt())
                 .build();
 
-        // Adicionar dados da tarefa se disponível
         if (entity.getTask() != null) {
             Task task = entity.getTask();
             response.setTask(TaskAdapter.toResponseDTO(task));
