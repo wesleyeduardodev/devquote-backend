@@ -1,11 +1,9 @@
 package br.com.devquote.dto.request;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-
 import java.time.LocalDate;
 
 @Data

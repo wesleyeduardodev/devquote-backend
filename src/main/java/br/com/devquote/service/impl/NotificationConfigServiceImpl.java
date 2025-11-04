@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.NotificationConfigAdapter;
 import br.com.devquote.dto.request.NotificationConfigRequest;
 import br.com.devquote.dto.response.NotificationConfigResponse;
@@ -13,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
 

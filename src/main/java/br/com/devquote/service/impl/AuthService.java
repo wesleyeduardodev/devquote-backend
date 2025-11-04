@@ -1,6 +1,4 @@
 package br.com.devquote.service.impl;
-
-
 import br.com.devquote.configuration.security.JwtUtils;
 import br.com.devquote.dto.UserInfoDto;
 import br.com.devquote.dto.request.LoginRequest;
@@ -24,7 +22,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.Set;
 import java.util.stream.Collectors;
 

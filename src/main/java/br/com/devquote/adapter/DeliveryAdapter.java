@@ -1,5 +1,4 @@
 package br.com.devquote.adapter;
-
 import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
 import br.com.devquote.dto.response.DeliveryOperationalItemResponse;
@@ -8,7 +7,6 @@ import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Task;
 import br.com.devquote.enums.DeliveryStatus;
 import lombok.experimental.UtilityClass;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,13 +73,6 @@ public final class DeliveryAdapter {
                                 })
                                 .collect(Collectors.toList()) : null)
                 .build();
-    }
-
-    public static List<DeliveryResponse> toResponseDTOList(List<Delivery> entities) {
-        if (entities == null) return null;
-        return entities.stream()
-                .map(DeliveryAdapter::toResponseDTO)
-                .collect(Collectors.toList());
     }
 
     public static Delivery toEntity(DeliveryRequest dto, Task task) {

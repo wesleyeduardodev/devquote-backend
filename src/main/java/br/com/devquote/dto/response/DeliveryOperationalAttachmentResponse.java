@@ -1,7 +1,5 @@
 package br.com.devquote.dto.response;
-
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Data

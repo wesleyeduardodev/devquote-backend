@@ -31,7 +31,6 @@ public class TaskWithSubTasksUpdateRequest {
     @Size(max = 500, message = "meetingLink must be at most 500 characters")
     private String meetingLink;
 
-
     @Builder.Default
     private Boolean createQuote = Boolean.FALSE;
 

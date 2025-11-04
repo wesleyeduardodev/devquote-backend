@@ -1,5 +1,4 @@
 package br.com.devquote.dto.request;
-
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

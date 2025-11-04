@@ -1,5 +1,4 @@
 package br.com.devquote.controller;
-
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.dto.request.NotificationConfigRequest;
 import br.com.devquote.dto.response.NotificationConfigResponse;
@@ -19,7 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Set;
 

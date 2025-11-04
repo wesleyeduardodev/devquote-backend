@@ -1,5 +1,4 @@
 package br.com.devquote.repository;
-
 import br.com.devquote.entity.BillingPeriodTask;
 import br.com.devquote.enums.FlowType;
 import org.springframework.data.domain.Page;
@@ -9,7 +8,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -55,8 +53,6 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
     @Query("DELETE FROM BillingPeriodTask bpt WHERE bpt.billingPeriod.id = :billingPeriodId")
     void deleteByBillingPeriodId(@Param("billingPeriodId") Long billingPeriodId);
 
-    boolean existsByBillingPeriodIdAndTaskId(Long billingPeriodId, Long taskId);
-    
     boolean existsByTaskId(Long taskId);
     
     Optional<BillingPeriodTask> findByTaskId(Long taskId);

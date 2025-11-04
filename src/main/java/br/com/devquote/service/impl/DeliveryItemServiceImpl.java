@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.DeliveryItemAdapter;
 import br.com.devquote.dto.request.DeliveryItemRequest;
 import br.com.devquote.dto.response.DeliveryItemResponse;
@@ -24,7 +23,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -41,7 +39,6 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
     private final DeliveryItemAttachmentRepository deliveryItemAttachmentRepository;
     private final DeliveryRepository deliveryRepository;
     private final ProjectRepository projectRepository;
-    private final EmailService emailService;
     private final FileStorageStrategy fileStorageStrategy;
 
     @Override

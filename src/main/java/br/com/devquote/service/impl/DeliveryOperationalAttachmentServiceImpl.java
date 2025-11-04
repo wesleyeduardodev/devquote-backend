@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.DeliveryOperationalAttachmentAdapter;
 import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
 import br.com.devquote.entity.DeliveryOperationalAttachment;
@@ -15,7 +14,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -187,7 +185,7 @@ public class DeliveryOperationalAttachmentServiceImpl implements DeliveryOperati
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        return UUID.randomUUID().toString() + extension;
+        return UUID.randomUUID() + extension;
     }
 
     private String buildFilePath(Long deliveryId, Long operationalItemId, String fileName) {

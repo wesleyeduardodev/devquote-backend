@@ -1,5 +1,4 @@
 package br.com.devquote.dto.request;
-
 import br.com.devquote.enums.NotificationConfigType;
 import br.com.devquote.enums.NotificationType;
 import jakarta.validation.constraints.Email;
@@ -8,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.List;
 
 @Data

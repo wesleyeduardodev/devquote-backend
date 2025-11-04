@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.BillingPeriodTaskAdapter;
 import br.com.devquote.dto.request.BillingPeriodTaskRequest;
 import br.com.devquote.dto.response.BillingPeriodTaskResponse;
@@ -17,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -97,13 +95,6 @@ public class BillingPeriodTaskServiceImpl implements BillingPeriodTaskService {
     @Override
     public void delete(Long id) {
         billingPeriodTaskRepository.deleteById(id);
-    }
-
-    @Override
-    public List<BillingPeriodTaskResponse> findTaskLinksByBillingPeriod(Long taskBillingMonthId) {
-        return billingPeriodTaskRepository.findByBillingPeriodId(taskBillingMonthId).stream()
-                .map(BillingPeriodTaskAdapter::toResponseDTO)
-                .collect(Collectors.toList());
     }
 
     @Override

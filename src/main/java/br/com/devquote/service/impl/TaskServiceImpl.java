@@ -1,14 +1,10 @@
 package br.com.devquote.service.impl;
-import br.com.devquote.adapter.BillingPeriodAdapter;
 import br.com.devquote.adapter.SubTaskAdapter;
 import br.com.devquote.adapter.TaskAdapter;
 import br.com.devquote.enums.FlowType;
 import br.com.devquote.error.BusinessException;
 import br.com.devquote.error.ResourceNotFoundException;
-import br.com.devquote.configuration.BillingProperties;
 import br.com.devquote.dto.request.*;
-import br.com.devquote.dto.response.BillingPeriodResponse;
-import br.com.devquote.dto.response.BillingPeriodTaskResponse;
 import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.entity.*;
@@ -35,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -48,9 +43,7 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final RequesterRepository requesterRepository;
     private final SubTaskRepository subTaskRepository;
-    private final BillingPeriodService billingPeriodService;
     private final BillingPeriodTaskService billingPeriodTaskService;
-    private final BillingProperties billingProperties;
     private final SecurityUtils securityUtils;
     private final EntityManager entityManager;
     private final ExcelReportUtils excelReportUtils;
@@ -535,16 +528,6 @@ public class TaskServiceImpl implements TaskService {
                 .toList();
     }
 
-
-
-
-    private LocalDate computeNextMonthPaymentDate(LocalDate base, int desiredDay) {
-        LocalDate nextMonthFirst = base.plusMonths(1).withDayOfMonth(1);
-        int day = Math.min(Math.max(desiredDay, 1), nextMonthFirst.lengthOfMonth());
-        return nextMonthFirst.withDayOfMonth(day);
-    }
-
-
     private TaskWithSubTasksResponse buildTaskWithSubTasksResponse(Task task, List<SubTask> subTasks) {
         return TaskWithSubTasksResponse.builder()
                 .id(task.getId())
@@ -652,7 +635,7 @@ public class TaskServiceImpl implements TaskService {
         return taskIds.stream()
                 .collect(Collectors.toMap(
                         taskId -> taskId,
-                        taskId -> billingPeriodTaskService.existsByTaskId(taskId)
+                        billingPeriodTaskService::existsByTaskId
                 ));
     }
 
@@ -660,7 +643,7 @@ public class TaskServiceImpl implements TaskService {
         return taskIds.stream()
                 .collect(Collectors.toMap(
                         taskId -> taskId,
-                        taskId -> deliveryService.existsByTaskId(taskId)
+                        deliveryService::existsByTaskId
                 ));
     }
 
@@ -877,7 +860,7 @@ public class TaskServiceImpl implements TaskService {
 
         String sql = """
             SELECT 
-                -- DADOS DA TAREFA (sem valor, sem datas)
+              
                 t.id as task_id,
                 t.code as task_code,
                 t.title as task_title,

@@ -1,5 +1,4 @@
 package br.com.devquote.adapter;
-
 import br.com.devquote.dto.request.DeliveryItemRequest;
 import br.com.devquote.dto.response.DeliveryItemResponse;
 import br.com.devquote.entity.Delivery;
@@ -7,7 +6,6 @@ import br.com.devquote.entity.DeliveryItem;
 import br.com.devquote.entity.Project;
 import br.com.devquote.enums.DeliveryStatus;
 import lombok.experimental.UtilityClass;
-
 import java.util.List;
 import java.util.stream.Collectors;
 

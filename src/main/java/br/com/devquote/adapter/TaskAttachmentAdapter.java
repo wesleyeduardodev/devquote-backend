@@ -1,11 +1,9 @@
 package br.com.devquote.adapter;
-
 import br.com.devquote.dto.response.TaskAttachmentResponse;
 import br.com.devquote.entity.TaskAttachment;
 import br.com.devquote.service.storage.FileStorageStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 @Component

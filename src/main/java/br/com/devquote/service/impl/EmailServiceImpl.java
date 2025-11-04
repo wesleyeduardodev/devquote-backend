@@ -1,8 +1,6 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.configuration.EmailProperties;
 import br.com.devquote.entity.BillingPeriod;
-import br.com.devquote.entity.BillingPeriodTask;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.NotificationConfig;
 import br.com.devquote.entity.SubTask;
@@ -21,26 +19,19 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-
 import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-
 import jakarta.annotation.PostConstruct;
 
 @Slf4j
@@ -67,29 +58,6 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendTaskCreatedNotification(Task task) {
-        if (!emailProperties.isEnabled()) {
-            log.debug("Email notifications are disabled");
-            return;
-        }
-
-        try {
-            log.debug("Sending task created notification for task ID: {}", task.getId());
-
-            String subject = String.format("DevQuote - Nova tarefa criada: [%s] - %s",
-                task.getCode() != null ? task.getCode() : task.getId(),
-                task.getTitle() != null ? task.getTitle() : "Sem título");
-            String htmlContent = buildTaskCreatedEmailContent(task);
-
-            sendToMultipleRecipients(task, subject, htmlContent, "created");
-
-        } catch (Exception e) {
-            log.error("Failed to send task created notification for task ID: {}", task.getId(), e);
-        }
-    }
-
-    @Override
-    @Async("emailTaskExecutor")
     public void sendTaskUpdatedNotification(Task task, List<String> additionalEmails) {
         if (!emailProperties.isEnabled()) {
             log.debug("Email notifications are disabled");
@@ -100,8 +68,8 @@ public class EmailServiceImpl implements EmailService {
             log.debug("Sending task updated notification for task ID: {}", task.getId());
 
             String subject = String.format("DevQuote - Dados da Tarefa: [%s] - %s",
-                task.getCode() != null ? task.getCode() : task.getId(),
-                task.getTitle() != null ? task.getTitle() : "Sem título");
+                    task.getCode() != null ? task.getCode() : task.getId(),
+                    task.getTitle() != null ? task.getTitle() : "Sem título");
             String htmlContent = buildTaskUpdatedEmailContent(task);
 
             sendTaskDataEmailWithNotificationConfig(task, subject, htmlContent, additionalEmails);
@@ -111,100 +79,6 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    @Override
-    @Async("emailTaskExecutor")
-    public void sendTaskDeletedNotification(Task task) {
-        if (!emailProperties.isEnabled()) {
-            log.warn("Email notifications are disabled. Skipping task deletion notification for task ID: {}", task.getId());
-            return;
-        }
-
-        try {
-            String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s",
-                task.getCode() != null ? task.getCode() : task.getId(),
-                task.getTitle() != null ? task.getTitle() : "Sem título");
-
-            String htmlContent = buildTaskDeletedEmailContent(task);
-
-            sendTaskDataEmailWithNotificationConfig(task, subject, htmlContent, new ArrayList<>());
-
-        } catch (Exception e) {
-            log.error("Failed to send task deleted notification for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
-        }
-    }
-
-    @Override
-    @Async("emailTaskExecutor")
-    public void sendTaskDeletedNotificationWithAttachments(Task task, List<TaskAttachment> preLoadedAttachments) {
-        log.info("🗑️📧 TASK DELETION EMAIL SERVICE WITH PRE-LOADED ATTACHMENTS called for task ID: {}, Code: {}, Title: {}", 
-                task.getId(), task.getCode(), task.getTitle());
-        
-        if (!emailProperties.isEnabled()) {
-            log.warn("🗑️📧 ❌ EMAIL NOTIFICATIONS ARE DISABLED - task deletion email will NOT be sent");
-            return;
-        }
-
-        log.info("🗑️📧 EMAIL NOTIFICATIONS ENABLED - proceeding with task deletion email WITH PRE-LOADED ATTACHMENTS");
-
-        try {
-            log.info("🗑️📧 Building task deletion notification for task ID: {}", task.getId());
-
-            log.debug("🗑️📧 TASK DATA - Requester: {}, Email: {}", 
-                    task.getRequester() != null ? task.getRequester().getName() : "null",
-                    task.getRequester() != null ? task.getRequester().getEmail() : "null");
-
-            String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s",
-                task.getCode() != null ? task.getCode() : task.getId(),
-                task.getTitle() != null ? task.getTitle() : "Sem título");
-            
-            log.info("🗑️📧 EMAIL SUBJECT: {}", subject);
-            
-            String htmlContent = buildTaskDeletedEmailContent(task);
-            log.info("🗑️📧 HTML CONTENT BUILT - length: {} characters", htmlContent.length());
-
-            log.info("🗑️📧 CALLING sendToMultipleRecipientsWithPreLoadedAttachments for DELETED task...");
-            sendToMultipleRecipientsWithPreLoadedAttachments(task, subject, htmlContent, "deleted", preLoadedAttachments);
-            log.info("🗑️📧 ✅ sendToMultipleRecipientsWithPreLoadedAttachments completed for DELETED task ID: {}", task.getId());
-
-        } catch (Exception e) {
-            log.error("🗑️📧 ❌ CRITICAL ERROR - Failed to send task deleted notification WITH PRE-LOADED ATTACHMENTS for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
-        }
-    }
-
-    @Override
-    @Async("emailTaskExecutor")
-    public void sendTaskDeletedNotificationWithAttachmentData(Task task, Map<String, byte[]> attachmentDataMap) {
-        log.info("🗑️📧 TASK DELETION EMAIL WITH IN-MEMORY ATTACHMENTS called for task ID: {}, Code: {}, Title: {} - {} attachments", 
-                task.getId(), task.getCode(), task.getTitle(), attachmentDataMap != null ? attachmentDataMap.size() : 0);
-        
-        if (!emailProperties.isEnabled()) {
-            log.warn("🗑️📧 ❌ EMAIL NOTIFICATIONS ARE DISABLED - task deletion email will NOT be sent");
-            return;
-        }
-
-        log.info("🗑️📧 EMAIL NOTIFICATIONS ENABLED - proceeding with task deletion email WITH IN-MEMORY ATTACHMENTS");
-
-        try {
-            String subject = String.format("DevQuote - Tarefa excluída: [%s] - %s",
-                task.getCode() != null ? task.getCode() : task.getId(),
-                task.getTitle() != null ? task.getTitle() : "Sem título");
-            
-            log.info("🗑️📧 EMAIL SUBJECT: {}", subject);
-            
-            String htmlContent = buildTaskDeletedEmailContent(task);
-            log.info("🗑️📧 HTML CONTENT BUILT - length: {} characters", htmlContent.length());
-
-            sendToMultipleRecipientsWithInMemoryAttachments(task, subject, htmlContent, attachmentDataMap);
-            log.info("🗑️📧 ✅ Task deletion notification with in-memory attachments sent successfully for task ID: {}", task.getId());
-
-        } catch (Exception e) {
-            log.error("🗑️📧 ❌ CRITICAL ERROR - Failed to send task deleted notification WITH IN-MEMORY ATTACHMENTS for task ID: {} - Error: {}", task.getId(), e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Busca configuração de notificação específica para um tipo
-     */
     private NotificationConfig findNotificationConfig(NotificationConfigType configType, NotificationType notificationType) {
         try {
             return notificationConfigService.findEntityByConfigTypeAndNotificationType(configType, notificationType);
@@ -228,7 +102,7 @@ public class EmailServiceImpl implements EmailService {
 
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
             if (task.getRequester() != null && task.getRequester().getEmail() != null
-                && !task.getRequester().getEmail().trim().isEmpty()) {
+                    && !task.getRequester().getEmail().trim().isEmpty()) {
                 toEmails.add(task.getRequester().getEmail());
             }
         } else {
@@ -253,11 +127,11 @@ public class EmailServiceImpl implements EmailService {
 
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for task data notification. Task ID: {}, Config ID: {}",
-                task.getId(), config.getId());
+                    task.getId(), config.getId());
             return;
         }
 
-        List<TaskAttachment> taskAttachments = null;
+        List<TaskAttachment> taskAttachments;
         try {
             log.info("📎 LOADING attachments for TASK DATA notification - task ID: {}", task.getId());
             taskAttachments = taskAttachmentService.getTaskAttachmentsEntities(task.getId());
@@ -270,7 +144,7 @@ public class EmailServiceImpl implements EmailService {
             }
         } catch (Exception e) {
             log.error("📎 ❌ FAILED to load attachments for TASK DATA notification - task ID: {} - Error: {}",
-                task.getId(), e.getMessage(), e);
+                    task.getId(), e.getMessage(), e);
             taskAttachments = null;
         }
 
@@ -285,231 +159,8 @@ public class EmailServiceImpl implements EmailService {
                 log.debug("Task data notification sent successfully for task ID: {} to {}", task.getId(), toEmail);
             } catch (Exception e) {
                 log.error("Failed to send task data notification for task ID: {} to {}: {}",
-                    task.getId(), toEmail, e.getMessage(), e);
+                        task.getId(), toEmail, e.getMessage(), e);
             }
-        }
-    }
-
-
-    private void sendToMultipleRecipients(Task task, String subject, String htmlContent, String action) {
-        log.info("📧 Starting TASK {} email notification process for: Task ID={}, Code={}, Title={}",
-                action.toUpperCase(), task.getId(), task.getCode(), task.getTitle());
-        
-        if ("deleted".equalsIgnoreCase(action)) {
-            log.info("🗑️📧 DELETION EMAIL FLOW - Processing task deletion email for task ID: {}", task.getId());
-        }
-
-        String mainRecipient = null;
-        String ccRecipient = null;
-
-        if (task.getRequester() != null && task.getRequester().getEmail() != null
-            && !task.getRequester().getEmail().trim().isEmpty()) {
-            mainRecipient = task.getRequester().getEmail();
-            log.debug("📧 Main recipient (requester): {} <{}>",
-                    task.getRequester().getName(), task.getRequester().getEmail());
-        } else {
-            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {}. Requester: {}",
-                    task.getId(),
-                    task.getRequester() != null ? task.getRequester().getName() : "null");
-        }
-
-        if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
-                mainRecipient = emailProperties.getFrom();
-                ccRecipient = null;
-                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
-            } else {
-                ccRecipient = emailProperties.getFrom();
-                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
-            }
-        } else {
-            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
-        }
-
-        if (mainRecipient == null) {
-            log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {} ({} action). Email will NOT be sent!",
-                    task.getId(), action);
-            return;
-        }
-
-        List<TaskAttachment> taskAttachments = null;
-        try {
-            log.info("📎 LOADING attachments for task ID: {} (action: {})", task.getId(), action.toUpperCase());
-            taskAttachments = taskAttachmentService.getTaskAttachmentsEntities(task.getId());
-            if (taskAttachments != null && !taskAttachments.isEmpty()) {
-                log.info("📎 ✅ Found {} attachment(s) for task ID: {} - Files: {}", 
-                        taskAttachments.size(), task.getId(), 
-                        taskAttachments.stream().map(TaskAttachment::getOriginalFileName).toList());
-                
-                if ("deleted".equalsIgnoreCase(action)) {
-                    log.info("🗑️📎 DELETION EMAIL - Will include {} attachments in deletion notification", taskAttachments.size());
-                }
-            } else {
-                log.info("📎 No attachments found for task ID: {} (action: {})", task.getId(), action.toUpperCase());
-            }
-        } catch (Exception e) {
-            log.error("📎 ❌ FAILED to load attachments for task ID: {} (action: {}) - Error: {}", task.getId(), action.toUpperCase(), e.getMessage(), e);
-            taskAttachments = null;
-        }
-
-        try {
-            log.info("📧 Sending TASK {} notification - To: {}, CC: {}, Attachments: {}",
-                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
-                    taskAttachments != null ? taskAttachments.size() : 0);
-
-            if ("deleted".equalsIgnoreCase(action)) {
-                log.info("🗑️📧 CALLING sendEmailWithAttachments for DELETION email to: {} with {} attachments", 
-                        mainRecipient, taskAttachments != null ? taskAttachments.size() : 0);
-            }
-
-            sendEmailWithAttachments(mainRecipient, ccRecipient, subject, htmlContent, taskAttachments);
-
-            if ("deleted".equalsIgnoreCase(action)) {
-                log.info("🗑️📧 ✅ DELETION EMAIL SENT successfully for task ID: {} to: {}", task.getId(), mainRecipient);
-            }
-
-            log.info("📧 ✅ TASK {} notification sent successfully for task ID: {} to: {} (cc: {}, attachments: {})",
-                    action.toUpperCase(), task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
-                    taskAttachments != null ? taskAttachments.size() : 0);
-        } catch (Exception e) {
-            log.error("📧 ❌ FAILED to send {} notification for task ID: {} to: {} (cc: {}) - Error: {}",
-                    action, task.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private void sendToMultipleRecipientsWithPreLoadedAttachments(Task task, String subject, String htmlContent, String action, List<TaskAttachment> preLoadedAttachments) {
-        log.info("📧 Starting TASK {} email notification process WITH PRE-LOADED ATTACHMENTS for: Task ID={}, Code={}, Title={}",
-                action.toUpperCase(), task.getId(), task.getCode(), task.getTitle());
-        
-        if ("deleted".equalsIgnoreCase(action)) {
-            log.info("🗑️📧 DELETION EMAIL FLOW WITH PRE-LOADED ATTACHMENTS - Processing task deletion email for task ID: {} with {} attachments", 
-                    task.getId(), preLoadedAttachments != null ? preLoadedAttachments.size() : 0);
-        }
-
-        String mainRecipient = null;
-        String ccRecipient = null;
-
-        if (task.getRequester() != null && task.getRequester().getEmail() != null
-            && !task.getRequester().getEmail().trim().isEmpty()) {
-            mainRecipient = task.getRequester().getEmail();
-            log.debug("📧 Main recipient (requester): {} <{}>",
-                    task.getRequester().getName(), task.getRequester().getEmail());
-        } else {
-            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {}. Requester: {}",
-                    task.getId(),
-                    task.getRequester() != null ? task.getRequester().getName() : "null");
-        }
-
-        if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
-                mainRecipient = emailProperties.getFrom();
-                ccRecipient = null;
-                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
-            } else {
-                ccRecipient = emailProperties.getFrom();
-                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
-            }
-        } else {
-            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
-        }
-
-        if (mainRecipient == null) {
-            log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {} ({} action). Email will NOT be sent!",
-                    task.getId(), action);
-            return;
-        }
-
-        List<TaskAttachment> taskAttachments = preLoadedAttachments;
-        if (taskAttachments != null && !taskAttachments.isEmpty()) {
-            log.info("📎 ✅ Using {} PRE-LOADED attachment(s) for task ID: {} - Files: {}", 
-                    taskAttachments.size(), task.getId(), 
-                    taskAttachments.stream().map(TaskAttachment::getOriginalFileName).toList());
-            
-            if ("deleted".equalsIgnoreCase(action)) {
-                log.info("🗑️📎 DELETION EMAIL - Will include {} PRE-LOADED attachments in deletion notification", taskAttachments.size());
-            }
-        } else {
-            log.info("📎 No PRE-LOADED attachments for task ID: {} (action: {})", task.getId(), action.toUpperCase());
-        }
-
-        try {
-            log.info("📧 Sending TASK {} notification WITH PRE-LOADED ATTACHMENTS - To: {}, CC: {}, Attachments: {}",
-                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
-                    taskAttachments != null ? taskAttachments.size() : 0);
-
-            if ("deleted".equalsIgnoreCase(action)) {
-                log.info("🗑️📧 CALLING sendEmailWithPreLoadedAttachments for DELETION email WITH PRE-LOADED ATTACHMENTS to: {} with {} attachments", 
-                        mainRecipient, taskAttachments != null ? taskAttachments.size() : 0);
-            }
-
-            sendEmailWithPreLoadedAttachments(mainRecipient, ccRecipient, subject, htmlContent, taskAttachments);
-
-            if ("deleted".equalsIgnoreCase(action)) {
-                log.info("🗑️📧 ✅ DELETION EMAIL WITH PRE-LOADED ATTACHMENTS SENT successfully for task ID: {} to: {}", task.getId(), mainRecipient);
-            }
-
-            log.info("📧 ✅ TASK {} notification WITH PRE-LOADED ATTACHMENTS sent successfully for task ID: {} to: {} (cc: {}, attachments: {})",
-                    action.toUpperCase(), task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
-                    taskAttachments != null ? taskAttachments.size() : 0);
-        } catch (Exception e) {
-            log.error("📧 ❌ FAILED to send {} notification WITH PRE-LOADED ATTACHMENTS for task ID: {} to: {} (cc: {}) - Error: {}",
-                    action, task.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private void sendToMultipleRecipientsWithInMemoryAttachments(Task task, String subject, String htmlContent, Map<String, byte[]> attachmentDataMap) {
-        log.info("📧 Starting TASK DELETION email notification process WITH IN-MEMORY ATTACHMENTS for: Task ID={}, Code={}, Title={} - {} attachments",
-                task.getId(), task.getCode(), task.getTitle(), attachmentDataMap != null ? attachmentDataMap.size() : 0);
-
-        String mainRecipient = null;
-        String ccRecipient = null;
-
-        if (task.getRequester() != null && task.getRequester().getEmail() != null
-            && !task.getRequester().getEmail().trim().isEmpty()) {
-            mainRecipient = task.getRequester().getEmail();
-            log.debug("📧 Main recipient (requester): {} <{}>",
-                    task.getRequester().getName(), task.getRequester().getEmail());
-        } else {
-            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for task ID: {}. Requester: {}",
-                    task.getId(),
-                    task.getRequester() != null ? task.getRequester().getName() : "null");
-        }
-
-        if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-
-            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
-                mainRecipient = emailProperties.getFrom();
-                ccRecipient = null;
-                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
-            } else {
-                ccRecipient = emailProperties.getFrom();
-                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
-            }
-        } else {
-            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
-        }
-
-        if (mainRecipient == null) {
-            log.error("📧 ❌ NO VALID RECIPIENTS found for task ID: {}. Email will NOT be sent!", task.getId());
-            return;
-        }
-
-        try {
-            log.info("📧 Sending TASK DELETION notification WITH IN-MEMORY ATTACHMENTS - To: {}, CC: {}, Attachments: {}",
-                    mainRecipient, ccRecipient != null ? ccRecipient : "none",
-                    attachmentDataMap != null ? attachmentDataMap.size() : 0);
-
-            sendEmailWithInMemoryAttachments(mainRecipient, ccRecipient, subject, htmlContent, attachmentDataMap);
-
-            log.info("📧 ✅ TASK DELETION notification WITH IN-MEMORY ATTACHMENTS sent successfully for task ID: {} to: {} (cc: {}, attachments: {})",
-                    task.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none",
-                    attachmentDataMap != null ? attachmentDataMap.size() : 0);
-        } catch (Exception e) {
-            log.error("📧 ❌ FAILED to send DELETION notification WITH IN-MEMORY ATTACHMENTS for task ID: {} to: {} (cc: {}) - Error: {}",
-                    task.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
-            throw e;
         }
     }
 
@@ -554,10 +205,10 @@ public class EmailServiceImpl implements EmailService {
                                 return new java.io.ByteArrayInputStream(fileData);
                             }
                         };
-                        
+
                         helper.addAttachment(fileName, inputStreamSource);
                         log.debug("📎 ✅ Successfully attached IN-MEMORY file: {} ({} bytes)", fileName, fileData.length);
-                        
+
                     } catch (Exception e) {
                         log.warn("📎 ❌ Failed to attach IN-MEMORY file: {} - Error: {}", entry.getKey(), e.getMessage());
                     }
@@ -575,66 +226,6 @@ public class EmailServiceImpl implements EmailService {
             log.error("📧 ❌ GENERAL EXCEPTION - Failed to send email with IN-MEMORY attachments to: {} (cc: {}) - Error: {}", to, cc, e.getMessage(), e);
             throw new RuntimeException("Failed to send email with in-memory attachments", e);
         }
-    }
-
-    private String buildTaskCreatedEmailContent(Task task) {
-        Context context = new Context();
-
-        context.setVariable("task", task);
-        context.setVariable("taskId", task.getId());
-        context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
-        context.setVariable("taskTitle", convertLineBreaksToHtml(task.getTitle()));
-        context.setVariable("taskDescription", convertLineBreaksToHtml(task.getDescription()));
-        context.setVariable("taskPriority", translatePriority(task.getPriority()));
-        context.setVariable("taskType", translateTaskType(task.getTaskType()));
-        context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
-        context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
-        context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
-        context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
-        context.setVariable("taskMeetingLink", task.getMeetingLink() != null ? task.getMeetingLink() : "");
-        context.setVariable("taskNotes", "");
-        context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
-        context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
-
-        context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
-        context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
-        context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
-
-        List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
-
-        List<Map<String, String>> subTasksTranslated = null;
-        if (subTasks != null) {
-            subTasksTranslated = subTasks.stream().map(subtask -> {
-               Map<String, String> subtaskMap = new HashMap<>();
-                subtaskMap.put("title", convertLineBreaksToHtml(subtask.getTitle()));
-                subtaskMap.put("description", convertLineBreaksToHtml(subtask.getDescription()));
-                return subtaskMap;
-            }).collect(Collectors.toList());
-        }
-
-        context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
-        context.setVariable("subTasks", subTasksTranslated);
-
-        context.setVariable("translateStatus", new Object() {
-
-            public String translate(String status) {
-                return translateStatus(status);
-            }
-
-        });
-
-        context.setVariable("getStatusCssClass", new Object() {
-            public String getCssClass(String status) {
-                return getStatusCssClass(status);
-            }
-        });
-        context.setVariable("getPriorityCssClass", new Object() {
-            public String getCssClass(String priority) {
-                return getPriorityCssClass(priority);
-            }
-        });
-
-        return templateEngine.process("email/task-created", context);
     }
 
     private String buildTaskUpdatedEmailContent(Task task) {
@@ -661,12 +252,12 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
         context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
 
-       List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
+        List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
 
         List<Map<String, String>> subTasksTranslated = null;
         if (subTasks != null) {
             subTasksTranslated = subTasks.stream().map(subtask -> {
-               Map<String, String> subtaskMap = new HashMap<>();
+                Map<String, String> subtaskMap = new HashMap<>();
                 subtaskMap.put("title", convertLineBreaksToHtml(subtask.getTitle()));
                 subtaskMap.put("description", convertLineBreaksToHtml(subtask.getDescription()));
                 return subtaskMap;
@@ -695,85 +286,6 @@ public class EmailServiceImpl implements EmailService {
         return templateEngine.process("email/task-updated", context);
     }
 
-    private String buildTaskDeletedEmailContent(Task task) {
-        Context context = new Context();
-
-        context.setVariable("task", task);
-        context.setVariable("taskId", task.getId());
-        context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
-        context.setVariable("taskTitle", convertLineBreaksToHtml(task.getTitle()));
-        context.setVariable("taskDescription", convertLineBreaksToHtml(task.getDescription()));
-
-        context.setVariable("taskPriority", translatePriority(task.getPriority()));
-        context.setVariable("taskType", translateTaskType(task.getTaskType()));
-        context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
-        context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
-        context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
-        context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
-        context.setVariable("taskMeetingLink", task.getMeetingLink() != null ? task.getMeetingLink() : "");
-        context.setVariable("taskNotes", "");
-        context.setVariable("createdBy", task.getCreatedBy() != null ? task.getCreatedBy().getUsername() : "Sistema");
-        context.setVariable("createdAt", task.getCreatedAt().format(DATE_FORMATTER));
-
-        context.setVariable("requesterName", task.getRequester() != null ? task.getRequester().getName() : "");
-        context.setVariable("requesterEmail", task.getRequester() != null && task.getRequester().getEmail() != null ? task.getRequester().getEmail() : "");
-        context.setVariable("requesterPhone", task.getRequester() != null && task.getRequester().getPhone() != null ? task.getRequester().getPhone() : "");
-
-       List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
-
-      List<Map<String, String>> subTasksTranslated = null;
-        if (subTasks != null) {
-            subTasksTranslated = subTasks.stream().map(subtask -> {
-              Map<String, String> subtaskMap = new HashMap<>();
-                subtaskMap.put("title", convertLineBreaksToHtml(subtask.getTitle()));
-                subtaskMap.put("description", convertLineBreaksToHtml(subtask.getDescription()));
-                return subtaskMap;
-            }).collect(Collectors.toList());
-        }
-
-        context.setVariable("hasSubTasks", subTasks != null && !subTasks.isEmpty());
-        context.setVariable("subTasks", subTasksTranslated);
-
-        context.setVariable("translateStatus", new Object() {
-            public String translate(String status) {
-                return translateStatus(status);
-            }
-        });
-        context.setVariable("getStatusCssClass", new Object() {
-            public String getCssClass(String status) {
-                return getStatusCssClass(status);
-            }
-        });
-        context.setVariable("getPriorityCssClass", new Object() {
-            public String getCssClass(String priority) {
-                return getPriorityCssClass(priority);
-            }
-        });
-
-        return templateEngine.process("email/task-deleted", context);
-    }
-
-    @Override
-    @Async("emailTaskExecutor")
-    public void sendDeliveryCreatedNotification(Delivery delivery) {
-        if (!emailProperties.isEnabled()) {
-            log.debug("Email notifications are disabled");
-            return;
-        }
-
-        try {
-            log.debug("Sending delivery created notification for delivery ID: {}", delivery.getId());
-
-            String subject = String.format("DevQuote - Nova entrega criada: #%d", delivery.getId());
-            String htmlContent = buildDeliveryCreatedEmailContent(delivery);
-
-            sendToMultipleRecipientsForDelivery(delivery, subject, htmlContent, "created");
-
-        } catch (Exception e) {
-            log.error("Failed to send delivery created notification for delivery ID: {}", delivery.getId(), e);
-        }
-    }
-
     @Override
     @Async("emailTaskExecutor")
     public void sendDeliveryUpdatedNotification(Delivery delivery, List<String> additionalEmails) {
@@ -793,25 +305,6 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    @Override
-    @Async("emailTaskExecutor")
-    public void sendDeliveryDeletedNotification(Delivery delivery) {
-        if (!emailProperties.isEnabled()) {
-            log.debug("Email notifications are disabled");
-            return;
-        }
-
-        try {
-            String subject = String.format("DevQuote - Entrega excluída: #%d", delivery.getId());
-            String htmlContent = buildDeliveryDeletedEmailContent(delivery);
-
-            sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent, new ArrayList<>());
-
-        } catch (Exception e) {
-            log.error("Failed to send delivery deleted notification for delivery ID: {}", delivery.getId(), e);
-        }
-    }
-
     private void sendDeliveryEmailWithNotificationConfig(Delivery delivery, String subject, String htmlContent, List<String> additionalEmails) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ENTREGA, NotificationType.EMAIL);
 
@@ -826,8 +319,8 @@ public class EmailServiceImpl implements EmailService {
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
 
             if (delivery.getTask() != null && delivery.getTask().getRequester() != null
-                && delivery.getTask().getRequester().getEmail() != null
-                && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
+                    && delivery.getTask().getRequester().getEmail() != null
+                    && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
                 toEmails.add(delivery.getTask().getRequester().getEmail());
             }
         } else {
@@ -854,7 +347,7 @@ public class EmailServiceImpl implements EmailService {
 
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for delivery notification. Delivery ID: {}, Config ID: {}",
-                delivery.getId(), config.getId());
+                    delivery.getId(), config.getId());
             return;
         }
 
@@ -868,82 +361,9 @@ public class EmailServiceImpl implements EmailService {
                 log.debug("Delivery notification sent successfully for delivery ID: {} to {}", delivery.getId(), toEmail);
             } catch (Exception e) {
                 log.error("Failed to send delivery notification for delivery ID: {} to {}: {}",
-                    delivery.getId(), toEmail, e.getMessage(), e);
+                        delivery.getId(), toEmail, e.getMessage(), e);
             }
         }
-    }
-
-    private void sendToMultipleRecipientsForDelivery(Delivery delivery, String subject, String htmlContent, String action) {
-        String taskInfo = "Unknown";
-        if (delivery.getTask() != null) {
-            taskInfo = String.format("Task ID=%d, Code=%s",
-                    delivery.getTask().getId(),
-                    delivery.getTask().getCode());
-        }
-
-        log.debug("📧 Starting DELIVERY {} email notification process for: Delivery ID={}, Status={}, {}",
-                action.toUpperCase(), delivery.getId(), delivery.getStatus(), taskInfo);
-
-        String mainRecipient = null;
-        String ccRecipient = null;
-
-        if (delivery.getTask() != null
-            && delivery.getTask().getRequester() != null
-            && delivery.getTask().getRequester().getEmail() != null
-            && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
-            mainRecipient = delivery.getTask().getRequester().getEmail();
-            String requesterName = delivery.getTask().getRequester().getName();
-            log.debug("📧 Main recipient (requester): {} <{}>",
-                    requesterName, mainRecipient);
-        } else {
-            log.warn("📧 ⚠️ Requester email NOT AVAILABLE for delivery ID: {}. Task chain: {}",
-                    delivery.getId(),
-                    delivery.getTask() != null ?
-                        (delivery.getTask().getRequester() != null ? "Requester has no email" : "No requester")
-                        : "No task");
-        }
-
-        if (emailProperties.getFrom() != null && !emailProperties.getFrom().trim().isEmpty()) {
-
-            if (mainRecipient == null || mainRecipient.equals(emailProperties.getFrom())) {
-                mainRecipient = emailProperties.getFrom();
-                ccRecipient = null;
-                log.debug("📧 Sender becomes main recipient: {}", emailProperties.getFrom());
-            } else {
-                ccRecipient = emailProperties.getFrom();
-                log.debug("📧 CC recipient (sender): {}", emailProperties.getFrom());
-            }
-        } else {
-            log.error("📧 ❌ SENDER EMAIL NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable");
-        }
-
-        if (mainRecipient == null) {
-            log.error("📧 ❌ NO VALID RECIPIENTS found for delivery ID: {} ({} action). Email will NOT be sent!",
-                    delivery.getId(), action);
-            return;
-        }
-
-        try {
-            log.debug("📧 Sending DELIVERY {} notification - To: {}, CC: {}",
-                    action.toUpperCase(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
-
-            sendEmailWithCC(mainRecipient, ccRecipient, subject, htmlContent);
-
-            log.debug("📧 ✅ DELIVERY {} notification sent successfully for delivery ID: {} to: {} (cc: {})",
-                    action.toUpperCase(), delivery.getId(), mainRecipient, ccRecipient != null ? ccRecipient : "none");
-        } catch (Exception e) {
-            log.error("📧 ❌ FAILED to send delivery {} notification for delivery ID: {} to: {} (cc: {}) - Error: {}",
-                    action, delivery.getId(), mainRecipient, ccRecipient, e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private String buildDeliveryCreatedEmailContent(Delivery delivery) {
-        Context context = new Context();
-
-        buildDeliveryEmailContext(context, delivery);
-
-        return templateEngine.process("email/delivery-created", context);
     }
 
     private String buildDeliveryUpdatedEmailContent(Delivery delivery) {
@@ -952,14 +372,6 @@ public class EmailServiceImpl implements EmailService {
         buildDeliveryEmailContext(context, delivery);
 
         return templateEngine.process("email/delivery-updated", context);
-    }
-
-    private String buildDeliveryDeletedEmailContent(Delivery delivery) {
-        Context context = new Context();
-
-        buildDeliveryEmailContext(context, delivery);
-
-        return templateEngine.process("email/delivery-deleted", context);
     }
 
     private void buildDeliveryEmailContext(Context context, Delivery delivery) {
@@ -974,34 +386,34 @@ public class EmailServiceImpl implements EmailService {
 
         if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
             var devItems = delivery.getItems().stream()
-                .map(item -> {
-                    var map = new java.util.HashMap<String, Object>();
-                    map.put("project", item.getProject());
-                    map.put("status", translateDeliveryStatus(item.getStatus()));
-                    map.put("branch", item.getBranch());
-                    map.put("sourceBranch", item.getSourceBranch());
-                    map.put("pullRequest", item.getPullRequest());
-                    map.put("notes", item.getNotes());
-                    map.put("startedAt", item.getStartedAt());
-                    map.put("finishedAt", item.getFinishedAt());
-                    return map;
-                })
-                .toList();
+                    .map(item -> {
+                        var map = new java.util.HashMap<String, Object>();
+                        map.put("project", item.getProject());
+                        map.put("status", translateDeliveryStatus(item.getStatus()));
+                        map.put("branch", item.getBranch());
+                        map.put("sourceBranch", item.getSourceBranch());
+                        map.put("pullRequest", item.getPullRequest());
+                        map.put("notes", item.getNotes());
+                        map.put("startedAt", item.getStartedAt());
+                        map.put("finishedAt", item.getFinishedAt());
+                        return map;
+                    })
+                    .toList();
             allTranslatedItems.addAll(devItems);
         }
 
         if (delivery.getOperationalItems() != null && !delivery.getOperationalItems().isEmpty()) {
             var opItems = delivery.getOperationalItems().stream()
-                .map(item -> {
-                    var map = new java.util.HashMap<String, Object>();
-                    map.put("title", item.getTitle());
-                    map.put("description", item.getDescription());
-                    map.put("status", translateOperationalItemStatus(item.getStatus()));
-                    map.put("startedAt", item.getStartedAt());
-                    map.put("finishedAt", item.getFinishedAt());
-                    return map;
-                })
-                .toList();
+                    .map(item -> {
+                        var map = new java.util.HashMap<String, Object>();
+                        map.put("title", item.getTitle());
+                        map.put("description", item.getDescription());
+                        map.put("status", translateOperationalItemStatus(item.getStatus()));
+                        map.put("startedAt", item.getStartedAt());
+                        map.put("finishedAt", item.getFinishedAt());
+                        return map;
+                    })
+                    .toList();
             allTranslatedItems.addAll(opItems);
         }
 
@@ -1092,10 +504,6 @@ public class EmailServiceImpl implements EmailService {
         };
     }
 
-    private void sendEmailWithCC(String to, String cc, String subject, String htmlContent) {
-        sendEmailWithAttachments(to, cc, subject, htmlContent, null);
-    }
-
     private void sendEmailWithAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments) {
         log.info("📧 SENDWITHATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}",
                 to, cc != null ? cc : "none", subject, attachments != null ? attachments.size() : 0);
@@ -1132,7 +540,7 @@ public class EmailServiceImpl implements EmailService {
                     try {
 
                         org.springframework.core.io.InputStreamSource inputStreamSource = () -> fileStorageStrategy.getFileStream(attachment.getFilePath());
-                        
+
                         helper.addAttachment(attachment.getOriginalFileName(), inputStreamSource);
                         log.debug("Attached file: {} ({})", attachment.getOriginalFileName(), attachment.getContentType());
                     } catch (Exception e) {
@@ -1148,67 +556,6 @@ public class EmailServiceImpl implements EmailService {
         } catch (MessagingException e) {
             log.error("📧 ❌ MESSAGING EXCEPTION - Failed to send email to: {} (cc: {}) - Error: {}", to, cc, e.getMessage(), e);
             throw new RuntimeException("Failed to send email", e);
-        }
-    }
-
-    private void sendEmailWithPreLoadedAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments) {
-        log.info("📧 SENDWITHPRELOADEDATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}", 
-                to, cc != null ? cc : "none", subject, attachments != null ? attachments.size() : 0);
-        
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            log.debug("📧 Setting email headers - From: {}, To: {}, Subject: {}", emailProperties.getFrom(), to, subject);
-            
-            helper.setFrom(emailProperties.getFrom());
-            helper.setTo(to);
-
-            if (cc != null && !cc.trim().isEmpty()) {
-                helper.setCc(cc);
-            }
-
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-
-            if (attachments != null && !attachments.isEmpty()) {
-                log.debug("📎 Pre-loading {} attachments data from S3 into memory", attachments.size());
-                for (TaskAttachment attachment : attachments) {
-                    try {
-                        log.debug("📎 Pre-loading attachment data: {} from path: {}", attachment.getOriginalFileName(), attachment.getFilePath());
-                        
-                        byte[] attachmentData;
-                        try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
-                             java.io.ByteArrayOutputStream byteArrayOutputStream = new java.io.ByteArrayOutputStream()) {
-                            
-                            inputStream.transferTo(byteArrayOutputStream);
-                            attachmentData = byteArrayOutputStream.toByteArray();
-                            
-                            log.debug("📎 Successfully loaded {} bytes for attachment: {}", attachmentData.length, attachment.getOriginalFileName());
-                        }
-
-                        org.springframework.core.io.InputStreamSource inputStreamSource = () -> new java.io.ByteArrayInputStream(attachmentData);
-                        
-                        helper.addAttachment(attachment.getOriginalFileName(), inputStreamSource);
-                        log.debug("📎 ✅ Successfully attached pre-loaded file: {} ({} bytes)", attachment.getOriginalFileName(), attachmentData.length);
-                        
-                    } catch (Exception e) {
-                        log.warn("📎 ❌ Failed to pre-load attachment: {} from path: {} - Error: {}", 
-                                attachment.getOriginalFileName(), attachment.getFilePath(), e.getMessage());
-                    }
-                }
-            }
-
-            log.info("📧 CALLING mailSender.send() - Final step to send email with PRE-LOADED attachments to: {}", to);
-            mailSender.send(message);
-            log.info("📧 ✅ EMAIL WITH PRE-LOADED ATTACHMENTS SENT successfully via mailSender to: {}", to);
-
-        } catch (MessagingException e) {
-            log.error("📧 ❌ MESSAGING EXCEPTION - Failed to send email with PRE-LOADED attachments to: {} (cc: {}) - Error: {}", to, cc, e.getMessage(), e);
-            throw new RuntimeException("Failed to send email with pre-loaded attachments", e);
-        } catch (Exception e) {
-            log.error("📧 ❌ GENERAL EXCEPTION - Failed to send email with PRE-LOADED attachments to: {} (cc: {}) - Error: {}", to, cc, e.getMessage(), e);
-            throw new RuntimeException("Failed to send email with pre-loaded attachments", e);
         }
     }
 
@@ -1337,7 +684,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Unexpected error while sending financial notification for task ID: {}: {}",
-                task.getId(), e.getMessage(), e);
+                    task.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to send financial notification email", e);
         }
     }
@@ -1355,7 +702,7 @@ public class EmailServiceImpl implements EmailService {
 
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
             if (task.getRequester() != null && task.getRequester().getEmail() != null
-                && !task.getRequester().getEmail().trim().isEmpty()) {
+                    && !task.getRequester().getEmail().trim().isEmpty()) {
                 toEmails.add(task.getRequester().getEmail());
             }
         } else {
@@ -1380,7 +727,7 @@ public class EmailServiceImpl implements EmailService {
 
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for financial notification. Task ID: {}, Config ID: {}",
-                task.getId(), config.getId());
+                    task.getId(), config.getId());
             return;
         }
 
@@ -1397,7 +744,7 @@ public class EmailServiceImpl implements EmailService {
             }
         } catch (Exception e) {
             log.error("📎 ❌ FAILED to load attachments for FINANCIAL notification - task ID: {} - Error: {}",
-                task.getId(), e.getMessage(), e);
+                    task.getId(), e.getMessage(), e);
             taskAttachments = null;
         }
 
@@ -1412,7 +759,7 @@ public class EmailServiceImpl implements EmailService {
                 log.debug("Financial notification sent successfully for task ID: {} to {}", task.getId(), toEmail);
             } catch (Exception e) {
                 log.error("Failed to send financial notification for task ID: {} to {}: {}",
-                    task.getId(), toEmail, e.getMessage(), e);
+                        task.getId(), toEmail, e.getMessage(), e);
             }
         }
     }
@@ -1430,7 +777,7 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("billingPeriod", billingPeriod);
 
             String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
-                                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
+                    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
             String monthName = monthNames[billingPeriod.getMonth() - 1];
 
             context.setVariable("monthYear", String.format("%s/%d", monthName, billingPeriod.getYear()));
@@ -1445,8 +792,8 @@ public class EmailServiceImpl implements EmailService {
             }
 
             List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodIdAndFlowType(
-                billingPeriod.getId(),
-                flowType
+                    billingPeriod.getId(),
+                    flowType
             );
 
             List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
@@ -1478,7 +825,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Unexpected error while sending billing period notification for period ID: {}: {}",
-                billingPeriod.getId(), e.getMessage(), e);
+                    billingPeriod.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to send billing period notification email", e);
         }
     }
@@ -1496,7 +843,7 @@ public class EmailServiceImpl implements EmailService {
 
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
             log.warn("Billing period cannot use requester contact - no requester associated. BillingPeriod ID: {}, Config ID: {}",
-                billingPeriod.getId(), config.getId());
+                    billingPeriod.getId(), config.getId());
             return;
         } else {
 
@@ -1522,7 +869,7 @@ public class EmailServiceImpl implements EmailService {
 
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for billing notification. BillingPeriod ID: {}, Config ID: {}",
-                billingPeriod.getId(), config.getId());
+                    billingPeriod.getId(), config.getId());
             return;
         }
 
@@ -1536,30 +883,8 @@ public class EmailServiceImpl implements EmailService {
                 log.debug("Billing notification sent successfully for period ID: {} to {}", billingPeriod.getId(), toEmail);
             } catch (Exception e) {
                 log.error("Failed to send billing notification for period ID: {} to {}: {}",
-                    billingPeriod.getId(), toEmail, e.getMessage(), e);
+                        billingPeriod.getId(), toEmail, e.getMessage(), e);
             }
-        }
-    }
-
-    @Override
-    @Async("emailTaskExecutor")
-    public void sendDeliveryDeletedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap) {
-        if (delivery == null) {
-            log.warn("Cannot send delivery deleted notification with attachments: delivery is null");
-            return;
-        }
-
-        try {
-            String subject = String.format("🗑️ Dados da Entrega Excluída - %s",
-                    delivery.getTask() != null && delivery.getTask().getCode() != null ? 
-                            delivery.getTask().getCode() : "Código não disponível");
-
-            String htmlContent = buildDeliveryDeletedEmailContent(delivery);
-
-            sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(delivery, subject, htmlContent, "deleted", attachmentDataMap, new ArrayList<>());
-
-        } catch (Exception e) {
-            log.error("Failed to send delivery deleted notification with attachments for delivery ID: {}", delivery.getId(), e);
         }
     }
 
@@ -1584,7 +909,7 @@ public class EmailServiceImpl implements EmailService {
             log.error("Failed to send delivery updated notification with attachments for delivery ID: {}", delivery.getId(), e);
         }
     }
-    
+
     private void sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(Delivery delivery, String subject, String htmlContent, String action, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ENTREGA, NotificationType.EMAIL);
 
@@ -1599,8 +924,8 @@ public class EmailServiceImpl implements EmailService {
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
 
             if (delivery.getTask() != null && delivery.getTask().getRequester() != null
-                && delivery.getTask().getRequester().getEmail() != null
-                && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
+                    && delivery.getTask().getRequester().getEmail() != null
+                    && !delivery.getTask().getRequester().getEmail().trim().isEmpty()) {
                 toEmails.add(delivery.getTask().getRequester().getEmail());
             }
         } else {
@@ -1627,7 +952,7 @@ public class EmailServiceImpl implements EmailService {
 
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for delivery notification with attachments. Delivery ID: {}, Config ID: {}",
-                delivery.getId(), config.getId());
+                    delivery.getId(), config.getId());
             return;
         }
 
@@ -1641,11 +966,11 @@ public class EmailServiceImpl implements EmailService {
                 log.debug("Delivery notification with attachments sent successfully for delivery ID: {} to {}", delivery.getId(), toEmail);
             } catch (Exception e) {
                 log.error("Failed to send delivery notification with attachments for delivery ID: {} to {}: {}",
-                    delivery.getId(), toEmail, e.getMessage(), e);
+                        delivery.getId(), toEmail, e.getMessage(), e);
             }
         }
     }
-    
+
     @Override
     @Async("emailTaskExecutor")
     public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails, String flowType) {
@@ -1657,7 +982,7 @@ public class EmailServiceImpl implements EmailService {
         try {
 
             String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
-                                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
+                    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
             String monthName = monthNames[billingPeriod.getMonth() - 1];
             String subject = String.format("Medição %s de %d - DevQuote", monthName, billingPeriod.getYear());
 
@@ -1676,8 +1001,8 @@ public class EmailServiceImpl implements EmailService {
             }
 
             List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodIdAndFlowType(
-                billingPeriod.getId(),
-                flowType
+                    billingPeriod.getId(),
+                    flowType
             );
 
             List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
@@ -1708,7 +1033,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Failed to send billing period notification with attachments for period ID: {}",
-                billingPeriod.getId(), e);
+                    billingPeriod.getId(), e);
         }
     }
 
@@ -1725,7 +1050,7 @@ public class EmailServiceImpl implements EmailService {
 
         if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
             log.warn("Billing period cannot use requester contact - no requester associated. BillingPeriod ID: {}, Config ID: {}",
-                billingPeriod.getId(), config.getId());
+                    billingPeriod.getId(), config.getId());
             return;
         } else {
 
@@ -1751,7 +1076,7 @@ public class EmailServiceImpl implements EmailService {
 
         if (toEmails.isEmpty()) {
             log.warn("No valid recipients found for billing notification with attachments. BillingPeriod ID: {}, Config ID: {}",
-                billingPeriod.getId(), config.getId());
+                    billingPeriod.getId(), config.getId());
             return;
         }
 
@@ -1762,107 +1087,10 @@ public class EmailServiceImpl implements EmailService {
                 log.debug("Billing notification with attachments sent successfully for period ID: {} to {}", billingPeriod.getId(), toEmail);
             } catch (Exception e) {
                 log.error("Failed to send billing notification with attachments for period ID: {} to {}: {}",
-                    billingPeriod.getId(), toEmail, e.getMessage(), e);
+                        billingPeriod.getId(), toEmail, e.getMessage(), e);
             }
         }
     }
-    
-    @Override
-    @Async("emailTaskExecutor")
-    public void sendBillingPeriodDeletedNotification(BillingPeriod billingPeriod) {
-        if (billingPeriod == null) {
-            log.warn("Cannot send billing period deleted notification: billingPeriod is null");
-            return;
-        }
-
-        try {
-
-            String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
-                                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
-            String monthName = monthNames[billingPeriod.getMonth() - 1];
-            String subject = String.format("🗑️ Período de Faturamento Excluído - %s de %d", monthName, billingPeriod.getYear());
-
-            String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
-
-            sendBillingEmailWithNotificationConfig(billingPeriod, subject, htmlContent, new ArrayList<>());
-
-        } catch (Exception e) {
-            log.error("Failed to send billing period deleted notification for period ID: {}",
-                billingPeriod.getId(), e);
-        }
-    }
-    
-    @Override
-    @Async("emailTaskExecutor")
-    public void sendBillingPeriodDeletedNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap) {
-        if (billingPeriod == null) {
-            log.warn("Cannot send billing period deleted notification with attachments: billingPeriod is null");
-            return;
-        }
-
-        try {
-
-            String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
-                                   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
-            String monthName = monthNames[billingPeriod.getMonth() - 1];
-            String subject = String.format("🗑️ Período de Faturamento Excluído - %s de %d", monthName, billingPeriod.getYear());
-
-            String htmlContent = buildBillingPeriodDeletedEmailContent(billingPeriod);
-
-            sendBillingEmailWithAttachmentsUsingNotificationConfig(billingPeriod, subject, htmlContent, attachmentDataMap, new ArrayList<>());
-
-        } catch (Exception e) {
-            log.error("Failed to send billing period deleted notification with attachments for period ID: {}", 
-                billingPeriod.getId(), e);
-        }
-    }
-    
-    private String buildBillingPeriodDeletedEmailContent(BillingPeriod billingPeriod) {
-        Context context = new Context();
-
-        String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
-                               "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
-        String monthName = monthNames[billingPeriod.getMonth() - 1];
-
-        context.setVariable("periodId", billingPeriod.getId());
-        context.setVariable("month", billingPeriod.getMonth());
-        context.setVariable("monthName", monthName);
-        context.setVariable("year", billingPeriod.getYear());
-
-        if (billingPeriod.getPaymentDate() != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            context.setVariable("paymentDate", billingPeriod.getPaymentDate().format(formatter));
-        }
-
-        List<Object[]> billingTasks = billingPeriodTaskRepository.findTasksWithDetailsByBillingPeriodId(billingPeriod.getId());
-
-        List<java.util.Map<String, Object>> tasksData = new java.util.ArrayList<>();
-        java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
-        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
-
-        for (Object[] taskData : billingTasks) {
-            java.util.Map<String, Object> taskMap = new java.util.HashMap<>();
-            taskMap.put("code", taskData[1]);
-            taskMap.put("title", taskData[2]);
-            taskMap.put("amount", currencyFormat.format(taskData[4]));
-            tasksData.add(taskMap);
-
-            if (taskData[4] != null) {
-                totalAmount = totalAmount.add((java.math.BigDecimal) taskData[4]);
-            }
-        }
-
-        context.setVariable("tasks", tasksData);
-        context.setVariable("totalAmount", currencyFormat.format(totalAmount));
-        context.setVariable("taskCount", billingTasks.size());
-        context.setVariable("hasTasks", !billingTasks.isEmpty());
-
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        context.setVariable("deletedAt", LocalDateTime.now().format(dateTimeFormatter));
-        
-        return templateEngine.process("email/billing-period-deleted", context);
-    }
-
 
     private String convertLineBreaksToHtml(String text) {
         if (text == null || text.trim().isEmpty()) {

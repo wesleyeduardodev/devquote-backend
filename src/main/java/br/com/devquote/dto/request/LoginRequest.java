@@ -1,5 +1,4 @@
 package br.com.devquote.dto.request;
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 

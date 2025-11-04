@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.BillingPeriodAdapter;
 import br.com.devquote.dto.request.BillingPeriodRequest;
 import br.com.devquote.dto.response.BillingPeriodResponse;
@@ -21,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -76,20 +74,18 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
         @SuppressWarnings("unchecked")
         List<Object[]> results = query.getResultList();
         
-        return results.stream().map(row -> {
-            return BillingPeriodResponse.builder()
-                .id(((Number) row[0]).longValue())
-                .month((Integer) row[1])
-                .year((Integer) row[2])
-                .paymentDate(row[3] != null ? ((java.sql.Date) row[3]).toLocalDate() : null)
-                .status((String) row[4])
-                .billingEmailSent(row[5] != null ? (Boolean) row[5] : false)
-                .createdAt(row[6] != null ? ((java.sql.Timestamp) row[6]).toLocalDateTime() : null)
-                .updatedAt(row[7] != null ? ((java.sql.Timestamp) row[7]).toLocalDateTime() : null)
-                .totalAmount(new java.math.BigDecimal(row[8].toString()))
-                .taskCount(((Number) row[9]).longValue())
-                .build();
-        }).collect(Collectors.toList());
+        return results.stream().map(row -> BillingPeriodResponse.builder()
+            .id(((Number) row[0]).longValue())
+            .month((Integer) row[1])
+            .year((Integer) row[2])
+            .paymentDate(row[3] != null ? ((java.sql.Date) row[3]).toLocalDate() : null)
+            .status((String) row[4])
+            .billingEmailSent(row[5] != null ? (Boolean) row[5] : false)
+            .createdAt(row[6] != null ? ((java.sql.Timestamp) row[6]).toLocalDateTime() : null)
+            .updatedAt(row[7] != null ? ((java.sql.Timestamp) row[7]).toLocalDateTime() : null)
+            .totalAmount(new BigDecimal(row[8].toString()))
+            .taskCount(((Number) row[9]).longValue())
+            .build()).collect(Collectors.toList());
     }
 
     @Override
@@ -192,12 +188,6 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             return;
         }
         billingPeriodRepository.deleteAllById(ids);
-    }
-
-    @Override
-    public BillingPeriod findByYearAndMonth(Integer year, Integer month) {
-        Optional<BillingPeriod> billingMonth = billingPeriodRepository.findByYearAndMonth(year, month);
-        return billingMonth.orElse(null);
     }
 
     @Override
@@ -319,9 +309,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     @Override
     public void deleteWithAllLinkedTasks(Long id) {
         log.debug("BILLING_PERIOD DELETE_WITH_TASKS id={}", id);
-
         delete(id);
-        
         log.debug("BILLING_PERIOD DELETE_WITH_TASKS id={} - completed successfully using robust deletion pattern", id);
     }
 

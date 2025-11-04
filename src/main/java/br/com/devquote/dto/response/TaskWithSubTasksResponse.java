@@ -25,7 +25,6 @@ public class TaskWithSubTasksResponse {
 
     private String meetingLink;
 
-
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

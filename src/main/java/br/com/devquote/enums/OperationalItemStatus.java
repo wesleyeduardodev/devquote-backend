@@ -1,5 +1,4 @@
 package br.com.devquote.enums;
-
 import lombok.Getter;
 
 @Getter

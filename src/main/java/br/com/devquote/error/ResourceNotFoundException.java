@@ -1,8 +1,5 @@
 package br.com.devquote.error;
 
-/**
- * Exceção para recursos não encontrados
- */
 public class ResourceNotFoundException extends RuntimeException {
     private final String resourceType;
     private final String resourceId;

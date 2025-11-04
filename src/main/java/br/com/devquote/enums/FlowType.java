@@ -1,6 +1,9 @@
 package br.com.devquote.enums;
+import lombok.Getter;
 
+@Getter
 public enum FlowType {
+
     DESENVOLVIMENTO("Desenvolvimento"),
     OPERACIONAL("Operacional");
 
@@ -8,10 +11,6 @@ public enum FlowType {
 
     FlowType(String displayName) {
         this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
     }
 
     public static FlowType fromString(String flowType) {

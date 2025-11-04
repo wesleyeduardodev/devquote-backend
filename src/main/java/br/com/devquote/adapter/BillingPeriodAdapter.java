@@ -1,5 +1,4 @@
 package br.com.devquote.adapter;
-
 import br.com.devquote.dto.request.BillingPeriodRequest;
 import br.com.devquote.dto.response.BillingPeriodResponse;
 import br.com.devquote.entity.BillingPeriod;
@@ -46,7 +45,7 @@ public class BillingPeriodAdapter {
         entity.setPaymentDate(dto.getPaymentDate());
         entity.setStatus(dto.getStatus());
     }
-    
+
     public static BillingPeriod toEntity(BillingPeriodResponse response) {
         if (response == null) {
             return null;

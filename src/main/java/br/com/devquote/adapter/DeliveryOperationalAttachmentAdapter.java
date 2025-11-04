@@ -1,9 +1,7 @@
 package br.com.devquote.adapter;
-
 import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
 import br.com.devquote.entity.DeliveryOperationalAttachment;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.stream.Collectors;
 

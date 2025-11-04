@@ -1,5 +1,4 @@
 package br.com.devquote.adapter;
-
 import br.com.devquote.dto.request.NotificationConfigRequest;
 import br.com.devquote.dto.response.NotificationConfigResponse;
 import br.com.devquote.entity.NotificationConfig;

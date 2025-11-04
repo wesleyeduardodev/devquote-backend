@@ -34,7 +34,6 @@ public class TaskWithSubTasksCreateRequest {
     @Size(max = 500, message = "meetingLink must be at most 500 characters")
     private String meetingLink;
 
-
     @Builder.Default
     private Boolean hasSubTasks = false;
 
@@ -56,7 +55,6 @@ public class TaskWithSubTasksCreateRequest {
 
     @Valid
     private List<@Valid SubTaskRequest> subTasks;
-
 
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)

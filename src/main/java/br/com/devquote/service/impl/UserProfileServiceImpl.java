@@ -23,17 +23,6 @@ public class UserProfileServiceImpl implements UserProfileService {
     private final UserRepository userRepository;
 
     @Override
-    public void deleteProfile(Long id) {
-        Profile profile = profileRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Perfil não encontrado"));
-        List<UserProfile> userProfiles = userProfileRepository.findActiveByProfileId(id);
-        if (!userProfiles.isEmpty()) {
-            throw new RuntimeException("Não é possível excluir perfil que está sendo usado por usuários");
-        }
-        profileRepository.delete(profile);
-    }
-
-    @Override
     public void assignProfileToUser(UserProfileRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));

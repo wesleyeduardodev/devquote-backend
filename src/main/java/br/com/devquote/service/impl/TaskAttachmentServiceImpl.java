@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.TaskAttachmentAdapter;
 import br.com.devquote.dto.response.TaskAttachmentResponse;
 import br.com.devquote.entity.Task;
@@ -15,7 +14,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,7 +44,6 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
 
             }
         }
-        
         return responses;
     }
 
@@ -266,7 +263,7 @@ public class TaskAttachmentServiceImpl implements TaskAttachmentService {
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        return UUID.randomUUID().toString() + extension;
+        return UUID.randomUUID() + extension;
     }
 
     private String buildFilePath(Long taskId, String fileName) {

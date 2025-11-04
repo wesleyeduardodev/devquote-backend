@@ -1,5 +1,4 @@
 package br.com.devquote.dto.response;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

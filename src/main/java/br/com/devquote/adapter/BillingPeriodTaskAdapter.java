@@ -1,5 +1,4 @@
 package br.com.devquote.adapter;
-
 import br.com.devquote.dto.request.BillingPeriodTaskRequest;
 import br.com.devquote.dto.response.BillingPeriodTaskResponse;
 import br.com.devquote.entity.BillingPeriod;

@@ -1,9 +1,8 @@
 package br.com.devquote.service;
-
 import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
+import br.com.devquote.entity.DeliveryOperationalAttachment;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -21,8 +20,5 @@ public interface DeliveryOperationalAttachmentService {
 
     void deleteAllOperationalAttachmentsByDeliveryId(Long deliveryId) throws IOException;
 
-    /**
-     * Busca anexos operacionais como entidades por delivery ID (para uso interno com emails)
-     */
-    List<br.com.devquote.entity.DeliveryOperationalAttachment> getOperationalAttachmentsEntitiesByDeliveryId(Long deliveryId);
+    List<DeliveryOperationalAttachment> getOperationalAttachmentsEntitiesByDeliveryId(Long deliveryId);
 }

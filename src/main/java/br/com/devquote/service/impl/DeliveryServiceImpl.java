@@ -87,7 +87,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         Delivery entity = Delivery.builder()
                 .task(task)
                 .flowType(task.getFlowType())
-                .status(dto.getStatus() != null ? br.com.devquote.enums.DeliveryStatus.fromString(dto.getStatus()) : br.com.devquote.enums.DeliveryStatus.PENDING)
+                .status(dto.getStatus() != null ? DeliveryStatus.fromString(dto.getStatus()) : DeliveryStatus.PENDING)
                 .notes(dto.getNotes())
                 .build();
 
@@ -99,10 +99,10 @@ public class DeliveryServiceImpl implements DeliveryService {
                 Project project = projectRepository.findById(itemDto.getProjectId())
                         .orElseThrow(() -> new RuntimeException("Project not found with ID: " + itemDto.getProjectId()));
                 
-                var item = br.com.devquote.entity.DeliveryItem.builder()
+                var item = DeliveryItem.builder()
                         .delivery(savedDelivery)
                         .project(project)
-                        .status(itemDto.getStatus() != null ? br.com.devquote.enums.DeliveryStatus.fromString(itemDto.getStatus()) : br.com.devquote.enums.DeliveryStatus.PENDING)
+                        .status(itemDto.getStatus() != null ? DeliveryStatus.fromString(itemDto.getStatus()) : DeliveryStatus.PENDING)
                         .branch(itemDto.getBranch())
                         .sourceBranch(itemDto.getSourceBranch())
                         .pullRequest(itemDto.getPullRequest())
@@ -129,7 +129,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         entity.setTask(task);
         if (dto.getStatus() != null) {
-            entity.setStatus(br.com.devquote.enums.DeliveryStatus.fromString(dto.getStatus()));
+            entity.setStatus(DeliveryStatus.fromString(dto.getStatus()));
         }
         entity.setNotes(dto.getNotes());
 
@@ -141,10 +141,10 @@ public class DeliveryServiceImpl implements DeliveryService {
                 Project project = projectRepository.findById(itemDto.getProjectId())
                         .orElseThrow(() -> new RuntimeException("Project not found with ID: " + itemDto.getProjectId()));
                 
-                var item = br.com.devquote.entity.DeliveryItem.builder()
+                var item = DeliveryItem.builder()
                         .delivery(deliveryEntity)
                         .project(project)
-                        .status(itemDto.getStatus() != null ? br.com.devquote.enums.DeliveryStatus.fromString(itemDto.getStatus()) : br.com.devquote.enums.DeliveryStatus.PENDING)
+                        .status(itemDto.getStatus() != null ? DeliveryStatus.fromString(itemDto.getStatus()) : DeliveryStatus.PENDING)
                         .branch(itemDto.getBranch())
                         .sourceBranch(itemDto.getSourceBranch())
                         .pullRequest(itemDto.getPullRequest())
@@ -164,7 +164,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public void delete(Long id) {
-        Delivery entity = deliveryRepository.findById(id)
+        deliveryRepository.findById(id)
                 .map(d -> {
                     if (d.getTask() != null) {
                         d.getTask().getTitle();
@@ -205,9 +205,9 @@ public class DeliveryServiceImpl implements DeliveryService {
                 }
             }
 
-            List<br.com.devquote.entity.DeliveryItemAttachment> itemAttachments = deliveryItemAttachmentService.getDeliveryItemAttachmentsEntitiesByDeliveryId(id);
+            List<DeliveryItemAttachment> itemAttachments = deliveryItemAttachmentService.getDeliveryItemAttachmentsEntitiesByDeliveryId(id);
             if (itemAttachments != null && !itemAttachments.isEmpty()) {
-                for (br.com.devquote.entity.DeliveryItemAttachment attachment : itemAttachments) {
+                for (DeliveryItemAttachment attachment : itemAttachments) {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
@@ -493,13 +493,13 @@ public class DeliveryServiceImpl implements DeliveryService {
         long productionCount = 0;
         
         if (delivery.getItems() != null) {
-            pendingCount = delivery.getItemsByStatus(br.com.devquote.enums.DeliveryStatus.PENDING);
-            developmentCount = delivery.getItemsByStatus(br.com.devquote.enums.DeliveryStatus.DEVELOPMENT);
-            deliveredCount = delivery.getItemsByStatus(br.com.devquote.enums.DeliveryStatus.DELIVERED);
-            homologationCount = delivery.getItemsByStatus(br.com.devquote.enums.DeliveryStatus.HOMOLOGATION);
-            approvedCount = delivery.getItemsByStatus(br.com.devquote.enums.DeliveryStatus.APPROVED);
-            rejectedCount = delivery.getItemsByStatus(br.com.devquote.enums.DeliveryStatus.REJECTED);
-            productionCount = delivery.getItemsByStatus(br.com.devquote.enums.DeliveryStatus.PRODUCTION);
+            pendingCount = delivery.getItemsByStatus(DeliveryStatus.PENDING);
+            developmentCount = delivery.getItemsByStatus(DeliveryStatus.DEVELOPMENT);
+            deliveredCount = delivery.getItemsByStatus(DeliveryStatus.DELIVERED);
+            homologationCount = delivery.getItemsByStatus(DeliveryStatus.HOMOLOGATION);
+            approvedCount = delivery.getItemsByStatus(DeliveryStatus.APPROVED);
+            rejectedCount = delivery.getItemsByStatus(DeliveryStatus.REJECTED);
+            productionCount = delivery.getItemsByStatus(DeliveryStatus.PRODUCTION);
         }
 
        DeliveryStatusCount statusCounts = DeliveryStatusCount.builder()
@@ -775,7 +775,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     .createdAt(safeGetTimestamp(row[7]))
                     .updatedAt(safeGetTimestamp(row[8]))
                     .deliveryStatus((String) row[1])
-                    .statusCounts(br.com.devquote.dto.response.DeliveryStatusCount.builder()
+                    .statusCounts(DeliveryStatusCount.builder()
                             .pending(safeGetInteger(row[10]))
                             .development(safeGetInteger(row[11]))
                             .delivered(safeGetInteger(row[12]))
@@ -837,10 +837,10 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         try {
 
-            List<br.com.devquote.entity.DeliveryAttachment> deliveryAttachments = deliveryAttachmentService.getDeliveryAttachmentsEntities(id);
+            List<DeliveryAttachment> deliveryAttachments = deliveryAttachmentService.getDeliveryAttachmentsEntities(id);
             if (deliveryAttachments != null && !deliveryAttachments.isEmpty()) {
 
-                for (br.com.devquote.entity.DeliveryAttachment attachment : deliveryAttachments) {
+                for (DeliveryAttachment attachment : deliveryAttachments) {
                     try {
                         try (java.io.InputStream inputStream = fileStorageStrategy.getFileStream(attachment.getFilePath());
                              java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {

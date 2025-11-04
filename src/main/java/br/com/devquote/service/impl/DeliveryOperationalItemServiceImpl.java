@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.dto.request.DeliveryOperationalItemRequest;
 import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
 import br.com.devquote.dto.response.DeliveryOperationalItemResponse;
@@ -17,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -123,12 +121,6 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
         deliveryRepository.save(delivery);
 
         log.info("Operational item deleted successfully: {}", id);
-    }
-
-    @Override
-    @Transactional
-    public void deleteByDeliveryId(Long deliveryId) {
-        operationalItemRepository.deleteByDeliveryId(deliveryId);
     }
 
     private DeliveryOperationalItemResponse toResponse(DeliveryOperationalItem item) {

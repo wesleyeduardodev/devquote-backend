@@ -1,8 +1,6 @@
 package br.com.devquote.dto.response;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 

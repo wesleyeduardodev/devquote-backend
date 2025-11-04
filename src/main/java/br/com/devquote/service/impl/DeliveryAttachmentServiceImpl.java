@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.DeliveryAttachmentAdapter;
 import br.com.devquote.dto.response.DeliveryAttachmentResponse;
 import br.com.devquote.entity.Delivery;
@@ -15,7 +14,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -196,8 +194,7 @@ public class DeliveryAttachmentServiceImpl implements DeliveryAttachmentService 
         String originalFilename = file.getOriginalFilename();
 
         if (contentType == null || contentType.isEmpty() || contentType.equals("application/octet-stream") || !isAllowedContentType(contentType)) {
-            if (originalFilename != null && isAllowedByExtension(originalFilename)) {
-
+            if (isAllowedByExtension(originalFilename)) {
                 return;
             }
             throw new RuntimeException("Tipo de arquivo não permitido: " + contentType + " (arquivo: " + originalFilename + ")");
@@ -258,7 +255,7 @@ public class DeliveryAttachmentServiceImpl implements DeliveryAttachmentService 
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        return UUID.randomUUID().toString() + extension;
+        return UUID.randomUUID() + extension;
     }
 
     private String buildFilePath(Long deliveryId, String fileName) {

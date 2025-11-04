@@ -1,5 +1,4 @@
 package br.com.devquote.entity;
-
 import br.com.devquote.enums.DeliveryStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

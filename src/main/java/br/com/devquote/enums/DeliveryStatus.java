@@ -1,6 +1,9 @@
 package br.com.devquote.enums;
+import lombok.Getter;
 
+@Getter
 public enum DeliveryStatus {
+
     PENDING("Pendente"),
     DEVELOPMENT("Desenvolvimento"),
     DELIVERED("Entregue"),
@@ -13,10 +16,6 @@ public enum DeliveryStatus {
 
     DeliveryStatus(String displayName) {
         this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
     }
 
     public static DeliveryStatus fromString(String status) {

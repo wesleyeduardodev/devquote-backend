@@ -1,8 +1,5 @@
 package br.com.devquote.error;
 
-/**
- * Exceção para erros de regras de negócio
- */
 public class BusinessException extends RuntimeException {
     private final String errorCode;
 

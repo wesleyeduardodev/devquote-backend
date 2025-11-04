@@ -1,11 +1,9 @@
 package br.com.devquote.adapter;
-
 import br.com.devquote.dto.response.BillingPeriodAttachmentResponse;
 import br.com.devquote.entity.BillingPeriodAttachment;
 import br.com.devquote.service.storage.FileStorageStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 @Component

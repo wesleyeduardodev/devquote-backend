@@ -5,9 +5,14 @@ import java.util.List;
 
 public interface SubTaskService {
     List<SubTaskResponse> findAll();
+
     SubTaskResponse findById(Long id);
+
     SubTaskResponse create(SubTaskRequest dto);
+
     SubTaskResponse update(Long id, SubTaskRequest dto);
+
     void delete(Long id);
+
     void deleteBulk(List<Long> ids);
 }

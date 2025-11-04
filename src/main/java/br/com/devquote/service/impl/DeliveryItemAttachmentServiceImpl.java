@@ -1,5 +1,4 @@
 package br.com.devquote.service.impl;
-
 import br.com.devquote.adapter.DeliveryItemAttachmentAdapter;
 import br.com.devquote.dto.response.DeliveryItemAttachmentResponse;
 import br.com.devquote.entity.DeliveryItem;
@@ -15,7 +14,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -176,33 +174,6 @@ public class DeliveryItemAttachmentServiceImpl implements DeliveryItemAttachment
         log.info("Deleted {} item attachments from database for delivery {}", attachments.size(), deliveryId);
     }
 
-    @Override
-    public void deleteAllDeliveryItemAttachmentsAndFolder(Long deliveryItemId) {
-        log.info("Physically deleting all attachments and folder for delivery item ID: {}", deliveryItemId);
-        
-        DeliveryItem deliveryItem = deliveryItemRepository.findById(deliveryItemId)
-                .orElseThrow(() -> new RuntimeException("Item de entrega não encontrado"));
-        
-        List<DeliveryItemAttachment> attachments = deliveryItemAttachmentRepository.findByDeliveryItemId(deliveryItemId);
-        
-        if (!attachments.isEmpty()) {
-            deliveryItemAttachmentRepository.deleteAll(attachments);
-            log.info("Physically deleted {} attachments from database for delivery item {}", attachments.size(), deliveryItemId);
-        }
-        
-        String folderPath = "deliveries/" + deliveryItem.getDelivery().getId() + "/items/" + deliveryItemId + "/attachments/";
-        try {
-            boolean deleted = fileStorageStrategy.deleteFolder(folderPath);
-            if (deleted) {
-                log.info("Successfully deleted delivery item folder from storage: {}", folderPath);
-            } else {
-                log.warn("Failed to delete delivery item folder from storage: {}", folderPath);
-            }
-        } catch (Exception e) {
-            log.error("Error deleting delivery item folder from storage: {} - {}", folderPath, e.getMessage());
-        }
-    }
-
     private void validateFile(MultipartFile file) {
         if (file.isEmpty()) {
             throw new RuntimeException("Arquivo não pode estar vazio");
@@ -217,7 +188,7 @@ public class DeliveryItemAttachmentServiceImpl implements DeliveryItemAttachment
         String originalFilename = file.getOriginalFilename();
 
         if (contentType == null || contentType.isEmpty() || contentType.equals("application/octet-stream") || !isAllowedContentType(contentType)) {
-            if (originalFilename != null && isAllowedByExtension(originalFilename)) {
+            if (isAllowedByExtension(originalFilename)) {
                 return;
             }
             throw new RuntimeException("Tipo de arquivo não permitido: " + contentType + " (arquivo: " + originalFilename + ")");
@@ -278,7 +249,7 @@ public class DeliveryItemAttachmentServiceImpl implements DeliveryItemAttachment
         if (originalFilename != null && originalFilename.contains(".")) {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        return UUID.randomUUID().toString() + extension;
+        return UUID.randomUUID() + extension;
     }
 
     private String buildFilePath(Long deliveryId, Long deliveryItemId, String fileName) {

@@ -1,5 +1,4 @@
 package br.com.devquote.controller;
-
 import br.com.devquote.entity.Profile;
 import br.com.devquote.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +9,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController

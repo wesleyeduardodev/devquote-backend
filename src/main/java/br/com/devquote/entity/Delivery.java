@@ -177,15 +177,6 @@ public class Delivery {
         }
     }
 
-    public void addOperationalItem(DeliveryOperationalItem item) {
-        if (operationalItems == null) {
-            operationalItems = new ArrayList<>();
-        }
-        operationalItems.add(item);
-        item.setDelivery(this);
-        updateStatus();
-    }
-
     public void removeOperationalItem(DeliveryOperationalItem item) {
         if (operationalItems != null) {
             operationalItems.remove(item);

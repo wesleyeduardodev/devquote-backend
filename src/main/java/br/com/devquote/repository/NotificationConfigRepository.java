@@ -1,5 +1,4 @@
 package br.com.devquote.repository;
-
 import br.com.devquote.entity.NotificationConfig;
 import br.com.devquote.enums.NotificationConfigType;
 import br.com.devquote.enums.NotificationType;
@@ -9,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
 @Repository

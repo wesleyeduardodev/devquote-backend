@@ -29,7 +29,7 @@ public class OpenApiConfig {
                         .contact(new Contact()
                                 .name("Suporte DevQuote")
                                 .email("wesleyeduardo.dev@gmail.com")
-                                .url("https://www.devquote.com.br"))
+                                .url("https://devquote.com.br"))
                         .license(new License()
                                 .name("MIT License")
                                 .url("https://opensource.org/licenses/MIT")))

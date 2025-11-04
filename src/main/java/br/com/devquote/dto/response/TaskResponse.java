@@ -1,5 +1,4 @@
 package br.com.devquote.dto.response;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +30,6 @@ public class TaskResponse {
     private String link;
 
     private String meetingLink;
-
 
     private LocalDateTime createdAt;
 

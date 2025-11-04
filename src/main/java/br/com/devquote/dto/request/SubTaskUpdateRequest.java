@@ -23,6 +23,5 @@ public class SubTaskUpdateRequest {
     @Digits(integer = 8, fraction = 2)
     private BigDecimal amount;
 
-
     private boolean excluded;
 }

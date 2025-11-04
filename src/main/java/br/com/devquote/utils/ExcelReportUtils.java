@@ -1,14 +1,10 @@
 package br.com.devquote.utils;
-
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -16,33 +12,35 @@ import java.util.Map;
 public class ExcelReportUtils {
 
     public byte[] generateTasksReport(List<Map<String, Object>> data, boolean canViewAmounts) throws IOException {
+
         Workbook workbook = new XSSFWorkbook();
+
         Sheet sheet = workbook.createSheet("Relatório de Tarefas");
 
-        CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dataStyle = createDataStyle(workbook);
-        CellStyle dateStyle = createDateStyle(workbook);
+
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
+
         CellStyle subtaskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
 
         String[] headers;
         if (canViewAmounts) {
-            headers = new String[] {
-                "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
-                "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
-                "Link", "Link da Reunião", "Valor da Tarefa", "Tem Subtarefas",
-                "Tem Entrega", "Orçamento no Faturamento",
-                "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição",
-                "Subtarefa Valor"
+            headers = new String[]{
+                    "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
+                    "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
+                    "Link", "Link da Reunião", "Valor da Tarefa", "Tem Subtarefas",
+                    "Tem Entrega", "Orçamento no Faturamento",
+                    "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição",
+                    "Subtarefa Valor"
             };
         } else {
-            headers = new String[] {
-                "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
-                "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
-                "Link", "Link da Reunião", "Tem Subtarefas",
-                "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição"
+            headers = new String[]{
+                    "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
+                    "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
+                    "Link", "Link da Reunião", "Tem Subtarefas",
+                    "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição"
             };
         }
 
@@ -113,79 +111,15 @@ public class ExcelReportUtils {
 
         if (canViewAmounts) {
             setColumnWidths(sheet, new int[]{
-                2500, 4000, 3500, 8000, 10000, 3500, 3000, 6000, 4000, 4000,
-                8000, 8000, 3500, 3000, 3000, 4000, 2500, 8000, 10000, 3500
+                    2500, 4000, 3500, 8000, 10000, 3500, 3000, 6000, 4000, 4000,
+                    8000, 8000, 3500, 3000, 3000, 4000, 2500, 8000, 10000, 3500
             });
         } else {
             setColumnWidths(sheet, new int[]{
-                2500, 4000, 3500, 8000, 10000, 3500, 3000, 6000, 4000, 4000,
-                8000, 8000, 3000, 2500, 8000, 10000
+                    2500, 4000, 3500, 8000, 10000, 3500, 3000, 6000, 4000, 4000,
+                    8000, 8000, 3000, 2500, 8000, 10000
             });
         }
-
-        for (int i = 1; i <= data.size(); i++) {
-            Row row = sheet.getRow(i);
-            if (row != null) {
-                row.setHeightInPoints(30);
-            }
-        }
-
-        headerRow.setHeightInPoints(35);
-
-        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
-
-        sheet.createFreezePane(0, 1);
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        workbook.write(outputStream);
-        workbook.close();
-
-        return outputStream.toByteArray();
-    }
-
-    public byte[] generateQuotesReport(List<Map<String, Object>> data, boolean canViewAmounts) throws IOException {
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("Relatório de Orçamentos");
-
-        CellStyle headerStyle = createHeaderStyle(workbook);
-        CellStyle dataStyle = createDataStyle(workbook);
-        CellStyle dateStyle = createDateStyle(workbook);
-        CellStyle currencyStyle = createCurrencyStyle(workbook);
-
-        String[] headers = {
-            "ID Orçamento", "Status do Orçamento", "ID Tarefa", "Código da Tarefa", "Título da Tarefa",
-            "Valor Total da Tarefa", "Prioridade da Tarefa", "Solicitante",
-            "Vinculado ao Faturamento", "Valor Total do Orçamento", "Data de Criação", "Data de Atualização"
-        };
-
-        Row headerRow = sheet.createRow(0);
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-            cell.setCellStyle(headerStyle);
-        }
-
-        int rowNum = 1;
-        for (Map<String, Object> quoteData : data) {
-            Row row = sheet.createRow(rowNum++);
-
-            setCellValue(row, 0, quoteData.get("quote_id"), dataStyle);
-            setStatusCell(row, 1, quoteData.get("quote_status"), dataStyle);
-            setCellValue(row, 2, quoteData.get("task_id"), dataStyle);
-            setCellValue(row, 3, quoteData.get("task_code"), dataStyle);
-            setCellValue(row, 4, quoteData.get("task_title"), dataStyle);
-            setCellValue(row, 5, quoteData.get("task_amount"), currencyStyle);
-            setPriorityCell(row, 6, quoteData.get("task_priority"), dataStyle);
-            setCellValue(row, 7, quoteData.get("requester_name"), dataStyle);
-            setCellValue(row, 8, quoteData.get("has_billing"), dataStyle);
-            setCellValue(row, 9, quoteData.get("quote_total_amount"), currencyStyle);
-            setCellValue(row, 10, quoteData.get("quote_created_at"), dateStyle);
-            setCellValue(row, 11, quoteData.get("quote_updated_at"), dateStyle);
-        }
-
-        setColumnWidths(sheet, new int[]{
-            3000, 3500, 2500, 3500, 8000, 4000, 3000, 6000, 4000, 4000, 6000, 6000
-        });
 
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
@@ -475,21 +409,17 @@ public class ExcelReportUtils {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Entregas");
 
-        CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dataStyle = createDataStyle(workbook);
-        CellStyle dateStyle = createDateStyle(workbook);
         CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
-        CellStyle currencyStyle = createCurrencyStyle(workbook);
-
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_YELLOW.getIndex());
 
         String[] headers = {
-            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Qtd. Subtarefas", "Solicitante",
-            "Status Geral da Entrega", "Observações da Entrega",
-            "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
-            "Pull Request", "Observações do Item", "Data Início", "Data Fim"
+                "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Qtd. Subtarefas", "Solicitante",
+                "Status Geral da Entrega", "Observações da Entrega",
+                "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
+                "Pull Request", "Observações do Item", "Data Início", "Data Fim"
         };
 
         Row headerRow = sheet.createRow(0);
@@ -531,7 +461,7 @@ public class ExcelReportUtils {
         }
 
         setColumnWidths(sheet, new int[]{
-            2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 4000, 4000
+                2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 4000, 4000
         });
 
         for (int i = 1; i <= data.size(); i++) {
@@ -558,19 +488,17 @@ public class ExcelReportUtils {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Entregas Operacionais");
 
-        CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
-
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_ORANGE.getIndex());
 
         String[] headers = {
-            "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Qtd. Subtarefas", "Solicitante",
-            "Status Geral da Entrega", "Observações da Entrega",
-            "Título do Item", "Descrição do Item", "Status do Item",
-            "Data Início", "Data Fim"
+                "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Qtd. Subtarefas", "Solicitante",
+                "Status Geral da Entrega", "Observações da Entrega",
+                "Título do Item", "Descrição do Item", "Status do Item",
+                "Data Início", "Data Fim"
         };
 
         Row headerRow = sheet.createRow(0);
@@ -609,7 +537,7 @@ public class ExcelReportUtils {
         }
 
         setColumnWidths(sheet, new int[]{
-            2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 4000, 4000
+                2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 4000, 4000
         });
 
         for (int i = 1; i <= data.size(); i++) {
@@ -652,13 +580,12 @@ public class ExcelReportUtils {
 
         CellStyle headerStyle = createHeaderStyle(workbook);
         CellStyle dataStyle = createDataStyle(workbook);
-        CellStyle dateStyle = createDateStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
         String[] headers = {
-            "Ano", "Mês", "Nome do Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa",
-            "Fluxo", "Título da Tarefa", "Tipo da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas",
-            "Solicitante"
+                "Ano", "Mês", "Nome do Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa",
+                "Fluxo", "Título da Tarefa", "Tipo da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas",
+                "Solicitante"
         };
 
         Row headerRow = sheet.createRow(0);
@@ -688,7 +615,7 @@ public class ExcelReportUtils {
         }
 
         setColumnWidths(sheet, new int[]{
-            2500, 2500, 3500, 4000, 2500, 3500, 4000, 8000, 4000, 4000, 3000, 6000
+                2500, 2500, 3500, 4000, 2500, 3500, 4000, 8000, 4000, 4000, 3000, 6000
         });
 
         for (int i = 1; i <= data.size(); i++) {
@@ -716,21 +643,19 @@ public class ExcelReportUtils {
         Sheet sheet = workbook.createSheet("Relatório Geral - Visão Completa");
 
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.GREY_25_PERCENT.getIndex());
-        CellStyle quoteHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LAVENDER.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle billingHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LEMON_CHIFFON.getIndex());
 
         CellStyle dataStyle = createDataStyle(workbook);
-        CellStyle dateStyle = createDateStyle(workbook);
         CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
         String[] headers = {
-            "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Valor", "Solicitante",
-            "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
-            "Tem Entrega", "Faturamento",
-            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Notas", "Início Entrega", "Fim Entrega",
-            "Ano Faturamento", "Mês Faturamento", "Status Faturamento"
+                "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Valor", "Solicitante",
+                "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
+                "Tem Entrega", "Faturamento",
+                "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Notas", "Início Entrega", "Fim Entrega",
+                "Ano Faturamento", "Mês Faturamento", "Status Faturamento"
         };
 
         Row headerRow = sheet.createRow(0);
@@ -790,9 +715,9 @@ public class ExcelReportUtils {
         }
 
         setColumnWidths(sheet, new int[]{
-            2500, 3500, 10000, 12000, 3000, 4000, 6000, 4000, 4000, 4000, 4000, 3000, 4000,
-            3000, 3500, 6000, 10000, 8000, 6000, 4000, 4000,
-            2500, 2500, 4000
+                2500, 3500, 10000, 12000, 3000, 4000, 6000, 4000, 4000, 4000, 4000, 3000, 4000,
+                3000, 3500, 6000, 10000, 8000, 6000, 4000, 4000,
+                2500, 2500, 4000
         });
 
         for (int i = 1; i <= data.size(); i++) {
@@ -827,10 +752,10 @@ public class ExcelReportUtils {
         CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
 
         String[] headers = {
-            "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Solicitante",
-            "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
-            "Tem Entrega",
-            "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Notas", "Início Entrega", "Fim Entrega"
+                "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Solicitante",
+                "Criado Por", "Atualizado Por", "Sistema Origem", "Módulo",
+                "Tem Entrega",
+                "ID Entrega", "Status Entrega", "Projeto", "Link da entrega (Pull Request)", "Branch", "Notas", "Início Entrega", "Fim Entrega"
         };
 
         Row headerRow = sheet.createRow(0);
@@ -878,8 +803,8 @@ public class ExcelReportUtils {
         }
 
         setColumnWidths(sheet, new int[]{
-            2500, 3500, 10000, 12000, 3000, 6000, 4000, 4000, 4000, 4000, 3000,
-            3000, 3500, 6000, 10000, 8000, 8000, 6000, 4000, 4000
+                2500, 3500, 10000, 12000, 3000, 6000, 4000, 4000, 4000, 4000, 3000,
+                3000, 3500, 6000, 10000, 8000, 8000, 6000, 4000, 4000
         });
 
         for (int i = 1; i <= data.size(); i++) {
