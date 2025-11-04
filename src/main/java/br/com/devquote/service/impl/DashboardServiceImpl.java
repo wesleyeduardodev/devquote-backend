@@ -1,13 +1,11 @@
 package br.com.devquote.service.impl;
 
 import br.com.devquote.dto.response.DashboardStatsResponse;
-import br.com.devquote.dto.response.UserPermissionResponse;
 import br.com.devquote.entity.User;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.enums.DeliveryStatus;
 import br.com.devquote.repository.*;
 import br.com.devquote.service.DashboardService;
-import br.com.devquote.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -33,7 +31,6 @@ public class DashboardServiceImpl implements DashboardService {
     private final ProjectRepository projectRepository;
     private final DeliveryRepository deliveryRepository;
     private final RequesterRepository requesterRepository;
-    private final PermissionService permissionService;
 
     @Override
     public DashboardStatsResponse getDashboardStats(Authentication authentication) {

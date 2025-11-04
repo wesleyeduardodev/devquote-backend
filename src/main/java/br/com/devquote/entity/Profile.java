@@ -1,5 +1,6 @@
 package br.com.devquote.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,11 +33,6 @@ public class Profile extends BaseEntity {
     private Boolean active = true;
 
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<UserProfile> userProfiles;
-
-    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<ResourcePermission> resourcePermissions;
-
-    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<FieldPermission> fieldPermissions;
 }

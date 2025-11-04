@@ -76,13 +76,6 @@ public class UserManagementController {
         return ResponseEntity.ok(user);
     }
 
-    @PutMapping("/{id}/permissions")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<UserDto> updateUserPermissions(@PathVariable Long id, @RequestBody UpdatePermissionsDto request) {
-        UserDto user = userManagementService.updateUserPermissions(id, request);
-        return ResponseEntity.ok(user);
-    }
-
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
@@ -95,13 +88,6 @@ public class UserManagementController {
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         userManagementService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/permissions")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<List<PermissionDto>> getAllPermissions() {
-        List<PermissionDto> permissions = userManagementService.getAllPermissions();
-        return ResponseEntity.ok(permissions);
     }
 
     @PostMapping("/{id}/reset-password")

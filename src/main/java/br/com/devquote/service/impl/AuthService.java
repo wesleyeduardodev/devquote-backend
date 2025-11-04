@@ -3,7 +3,6 @@ package br.com.devquote.service.impl;
 
 import br.com.devquote.configuration.security.JwtUtils;
 import br.com.devquote.dto.UserInfoDto;
-import br.com.devquote.dto.response.UserPermissionResponse;
 import br.com.devquote.dto.request.LoginRequest;
 import br.com.devquote.dto.request.RegisterRequest;
 import br.com.devquote.dto.request.UpdateProfileRequest;
@@ -14,7 +13,6 @@ import br.com.devquote.entity.Profile;
 import br.com.devquote.entity.User;
 import br.com.devquote.repository.ProfileRepository;
 import br.com.devquote.repository.UserRepository;
-import br.com.devquote.service.PermissionService;
 import br.com.devquote.service.UserProfileService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +36,6 @@ public class AuthService {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final UserProfileService userProfileService;
-    private final PermissionService permissionService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
@@ -95,41 +92,13 @@ public class AuthService {
 
         Set<String> profiles = currentUser.getActiveProfileCodes();
 
-        Set<String> permissions = currentUser.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .filter(auth -> auth.startsWith("PROFILE_"))
-                .map(authority -> authority.replace("PROFILE_", ""))
-                .collect(Collectors.toSet());
-
         return UserInfoDto.builder()
                 .id(currentUser.getId())
                 .username(currentUser.getUsername())
                 .email(currentUser.getEmail())
                 .name(currentUser.getName())
                 .roles(profiles)
-                .permissions(permissions)
                 .build();
-    }
-
-    public UserPermissionResponse getUserPermissions(Authentication authentication) {
-        String username = authentication.getName();
-        User currentUser = userRepository.findByUsernameWithProfiles(username)
-                .or(() -> userRepository.findByEmailWithProfiles(username))
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Usar o PermissionService para obter permissões detalhadas - já retorna UserPermissionResponse
-        return permissionService.getUserPermissions(currentUser.getId());
-    }
-
-    public Set<String> getAllowedScreens(Authentication authentication) {
-        String username = authentication.getName();
-        User currentUser = userRepository.findByUsernameWithProfiles(username)
-                .or(() -> userRepository.findByEmailWithProfiles(username))
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Usar o PermissionService para obter telas permitidas
-        var userPermissions = permissionService.getUserPermissions(currentUser.getId());
-        return userPermissions.getResourcePermissions().keySet();
     }
 
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
@@ -158,38 +127,18 @@ public class AuthService {
         // Obter detalhes do usuário
         User userDetails = (User) authentication.getPrincipal();
 
-        // Obter roles e permissions do novo sistema
+        // Obter roles (ADMIN, MANAGER, USER)
         Set<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .filter(auth -> auth.startsWith("ROLE_"))
                 .map(role -> role.substring(5)) // Remove "ROLE_" prefix
                 .collect(Collectors.toSet());
 
-        Set<String> permissions = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .filter(auth -> auth.startsWith("PROFILE_"))
-                .map(perm -> perm.substring(8)) // Remove "PROFILE_" prefix
-                .collect(Collectors.toSet());
-        
-        // Se não encontrou no novo sistema, tenta o sistema antigo (compatibilidade)
-        if (permissions.isEmpty()) {
-            permissions = userDetails.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .filter(auth -> auth.startsWith("SCOPE_"))
-                    .map(perm -> perm.substring(6)) // Remove "SCOPE_" prefix
-                    .collect(Collectors.toSet());
-        }
-
-        // Obter telas permitidas para o usuário
-        Set<String> allowedScreens = getAllowedScreens(authentication);
-        
         return new JwtResponse(
                 jwt,
                 userDetails.getUsername(),
                 userDetails.getEmail(),
-                roles,
-                permissions,
-                allowedScreens
+                roles
         );
     }
     

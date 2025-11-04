@@ -11,5 +11,4 @@ public class UserInfoDto {
     private String email;
     private String name;
     private Set<String> roles;
-    private Set<String> permissions;
 }

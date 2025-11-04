@@ -5,7 +5,6 @@ import br.com.devquote.dto.request.RegisterRequest;
 import br.com.devquote.dto.request.UpdateProfileRequest;
 import br.com.devquote.dto.response.JwtResponse;
 import br.com.devquote.dto.response.MessageResponse;
-import br.com.devquote.dto.response.UserPermissionResponse;
 import br.com.devquote.service.impl.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -48,18 +46,6 @@ public class AuthController {
     public ResponseEntity<UserInfoDto> getCurrentUser(Authentication authentication) {
         UserInfoDto userInfo = authService.getCurrentUser(authentication);
         return ResponseEntity.ok(userInfo);
-    }
-
-    @GetMapping("/permissions")
-    public ResponseEntity<UserPermissionResponse> getUserPermissions(Authentication authentication) {
-        UserPermissionResponse permissions = authService.getUserPermissions(authentication);
-        return ResponseEntity.ok(permissions);
-    }
-
-    @GetMapping("/screens")
-    public ResponseEntity<Set<String>> getAllowedScreens(Authentication authentication) {
-        Set<String> allowedScreens = authService.getAllowedScreens(authentication);
-        return ResponseEntity.ok(allowedScreens);
     }
 
     @PostMapping("/logout")
