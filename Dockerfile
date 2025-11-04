@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM maven:3.9-eclipse-temurin-21 AS build
+FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /workspace
 COPY pom.xml .
 # Download dependencies (better layer caching)
@@ -9,7 +9,7 @@ COPY src ./src
 RUN mvn -q -e -DskipTests package
 
 # ---- Runtime stage ----
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 # Use the fat jar built above
 COPY --from=build /workspace/target/*SNAPSHOT.jar /app/app.jar
