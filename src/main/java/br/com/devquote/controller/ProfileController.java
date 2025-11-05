@@ -1,4 +1,6 @@
 package br.com.devquote.controller;
+
+import br.com.devquote.controller.doc.ProfileControllerDoc;
 import br.com.devquote.entity.Profile;
 import br.com.devquote.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/profiles")
 @RequiredArgsConstructor
-public class ProfileController {
+public class ProfileController implements ProfileControllerDoc {
 
     private final ProfileRepository profileRepository;
 

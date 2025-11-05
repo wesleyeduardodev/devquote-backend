@@ -1,4 +1,6 @@
 package br.com.devquote.controller;
+
+import br.com.devquote.controller.doc.DashboardControllerDoc;
 import br.com.devquote.dto.response.DashboardStatsResponse;
 import br.com.devquote.service.DashboardService;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor
-public class DashboardController {
+public class DashboardController implements DashboardControllerDoc {
 
     private final DashboardService dashboardService;
 

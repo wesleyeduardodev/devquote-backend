@@ -1,5 +1,7 @@
 package br.com.devquote.controller;
+
 import br.com.devquote.adapter.PageAdapter;
+import br.com.devquote.controller.doc.NotificationConfigControllerDoc;
 import br.com.devquote.dto.request.NotificationConfigRequest;
 import br.com.devquote.dto.response.NotificationConfigResponse;
 import br.com.devquote.dto.response.PagedResponse;
@@ -25,7 +27,7 @@ import java.util.Set;
 @RequestMapping("/api/notification-configs")
 @Validated
 @RequiredArgsConstructor
-public class NotificationConfigController {
+public class NotificationConfigController implements NotificationConfigControllerDoc {
 
     private final NotificationConfigService notificationConfigService;
 

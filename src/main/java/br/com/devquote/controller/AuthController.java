@@ -1,4 +1,5 @@
 package br.com.devquote.controller;
+import br.com.devquote.controller.doc.AuthControllerDoc;
 import br.com.devquote.dto.*;
 import br.com.devquote.dto.request.LoginRequest;
 import br.com.devquote.dto.request.RegisterRequest;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthControllerDoc {
 
     private final AuthService authService;
 

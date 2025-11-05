@@ -1,4 +1,6 @@
 package br.com.devquote.controller;
+
+import br.com.devquote.controller.doc.BillingPeriodAttachmentControllerDoc;
 import br.com.devquote.dto.response.BillingPeriodAttachmentResponse;
 import br.com.devquote.service.BillingPeriodAttachmentService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ import java.util.List;
 @RequestMapping("/api/billing-period-attachments")
 @RequiredArgsConstructor
 @Slf4j
-public class BillingPeriodAttachmentController {
+public class BillingPeriodAttachmentController implements BillingPeriodAttachmentControllerDoc {
 
     private final BillingPeriodAttachmentService billingPeriodAttachmentService;
 

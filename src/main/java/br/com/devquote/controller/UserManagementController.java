@@ -1,5 +1,7 @@
 package br.com.devquote.controller;
+
 import br.com.devquote.adapter.PageAdapter;
+import br.com.devquote.controller.doc.UserManagementControllerDoc;
 import br.com.devquote.dto.*;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.service.impl.UserManagementService;
@@ -19,7 +21,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
-public class UserManagementController {
+public class UserManagementController implements UserManagementControllerDoc {
 
     private final UserManagementService userManagementService;
     

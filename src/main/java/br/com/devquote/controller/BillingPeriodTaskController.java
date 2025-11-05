@@ -1,4 +1,6 @@
 package br.com.devquote.controller;
+
+import br.com.devquote.controller.doc.BillingPeriodTaskControllerDoc;
 import br.com.devquote.dto.request.BillingPeriodTaskRequest;
 import br.com.devquote.dto.response.BillingPeriodTaskResponse;
 import br.com.devquote.enums.FlowType;
@@ -20,7 +22,7 @@ import java.util.List;
 @RequestMapping("/api/billing-period-tasks")
 @Validated
 @RequiredArgsConstructor
-public class BillingPeriodTaskController {
+public class BillingPeriodTaskController implements BillingPeriodTaskControllerDoc {
 
     private final BillingPeriodTaskService billingPeriodTaskService;
 

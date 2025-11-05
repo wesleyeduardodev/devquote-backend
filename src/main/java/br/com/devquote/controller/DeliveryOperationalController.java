@@ -1,4 +1,6 @@
 package br.com.devquote.controller;
+
+import br.com.devquote.controller.doc.DeliveryOperationalControllerDoc;
 import br.com.devquote.dto.request.DeliveryOperationalItemRequest;
 import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
 import br.com.devquote.dto.response.DeliveryOperationalItemResponse;
@@ -20,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/delivery-operational")
 @RequiredArgsConstructor
-public class DeliveryOperationalController {
+public class DeliveryOperationalController implements DeliveryOperationalControllerDoc {
 
     private final DeliveryOperationalItemService operationalItemService;
     private final DeliveryOperationalAttachmentService attachmentService;
