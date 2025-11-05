@@ -1,0 +1,156 @@
+name: Build and Deploy Backend with Kustomize
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - 'Dockerfile'
+      - '.github/workflows/docker-build-kustomize.yaml'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE: wesleyeduardodev/devquote-backend
+  INFRA_REPO: wesleyeduardodev/devquote-infra
+  JAVA_VERSION: '21'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout backend code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+
+      - name: Build with Maven
+        run: ./mvnw clean package -DskipTests
+
+      - name: Extract version from pom.xml
+        id: version
+        run: |
+          VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Generate image tags
+        id: tags
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=sha-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "Generated tag: sha-${SHORT_SHA}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:${{ steps.tags.outputs.IMAGE_TAG }}
+            ${{ env.DOCKER_IMAGE }}:latest
+            ${{ env.DOCKER_IMAGE }}:${{ steps.version.outputs.VERSION }}
+          labels: |
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Image digest
+        if: github.event_name != 'pull_request'
+        run: echo "Image pushed successfully with SHA tag ${{ steps.tags.outputs.IMAGE_TAG }}"
+
+      # ============================================
+      # 🔥 KUSTOMIZE: Atualizar repo de infra
+      # ============================================
+      - name: Setup Kustomize
+        if: github.event_name != 'pull_request'
+        uses: imranismail/setup-kustomize@v2
+        with:
+          kustomize-version: "5.0.0"
+
+      - name: Update Kubernetes manifests in infra repo
+        if: github.event_name != 'pull_request'
+        run: |
+          # Configurar Git
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+
+          # Clonar repositório de infraestrutura
+          echo "Cloning infra repository..."
+          git clone https://${{ secrets.GH_PAT }}@github.com/${{ env.INFRA_REPO }}.git infra-repo
+          cd infra-repo
+
+          # Ir para o overlay de produção
+          cd overlays/production
+
+          # Atualizar tag da imagem do backend usando Kustomize
+          echo "Updating backend image tag to ${{ steps.tags.outputs.IMAGE_TAG }}..."
+          kustomize edit set image \
+            wesleyeduardodev/devquote-backend=wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}
+
+          # Verificar mudanças
+          echo "Changes made to kustomization.yaml:"
+          cat kustomization.yaml
+
+          # Commit e push
+          cd ../..
+          git add overlays/production/kustomization.yaml
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🚀 Update backend image to ${{ steps.tags.outputs.IMAGE_TAG }}
+
+Automated update from backend CI/CD pipeline
+
+- Commit: ${{ github.sha }}
+- Version: ${{ steps.version.outputs.VERSION }}
+- Image: ${{ env.DOCKER_IMAGE }}:${{ steps.tags.outputs.IMAGE_TAG }}"
+
+            echo "Pushing changes to infra repository..."
+            git push
+
+            echo "✅ Infrastructure repository updated successfully!"
+            echo "Argo CD will automatically sync the changes to the cluster."
+          fi
+
+      - name: Deployment summary
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "### 🎉 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Component:** Backend" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tag:** \`${{ steps.tags.outputs.IMAGE_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ steps.version.outputs.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ steps.tags.outputs.SHORT_SHA }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Docker image pushed to Docker Hub" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Infra repo updated with new image tag" >> $GITHUB_STEP_SUMMARY
+          echo "- ⏳ Waiting for Argo CD to sync (auto-sync enabled)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Argo CD:** https://devquote.com.br/argocd" >> $GITHUB_STEP_SUMMARY
