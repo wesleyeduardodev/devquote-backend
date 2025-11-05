@@ -60,14 +60,6 @@ spring:
           max-idle: 8
           min-idle: 0
 
-  security:
-    oauth2:
-      authorizationserver:
-        issuer: ${SECURITY_ISSUER:http://localhost:8080}
-      resourceserver:
-        jwt:
-          issuer-uri: ${SECURITY_ISSUER:http://localhost:8080}
-
 server:
   port: ${PORT:${SERVER_PORT:8080}}
   error:
@@ -76,11 +68,6 @@ server:
 devquote:
   cors:
     allowed-origins: ${DEVQUOTE_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:4200,http://localhost:8080}
-  security:
-    default-roles:
-      - USER
-    admin-emails:
-      - ${DEVQUOTE_ADMIN_EMAIL:admin@devquote.com}
   notification:
     email:
       enabled: ${DEVQUOTE_EMAIL_ENABLED}
@@ -89,7 +76,6 @@ devquote:
 app:
   jwtSecret: ${APP_JWTSECRET:ZGV2UXVvdGVTZWNyZXRLZXlGb3JKV1RUb2tlbkdlbmVyYXRpb25BbmRWYWxpZGF0aW9u}
   jwtExpirationMs: ${APP_JWTEXPIRATIONMS:86400000}
-  jwtRefreshExpirationMs: ${APP_JWTREFRESHEXPIRATIONMS:2592000000}
 
 aws:
   access-key-id: ${AWS_ACCESS_KEY_ID}
@@ -113,10 +99,6 @@ logging:
     root: ${LOG_LEVEL_ROOT:INFO}
   file:
     name: ${LOG_FILE:logs/application.log}
-  logback:
-    rollingpolicy:
-      max-file-size: ${LOG_MAX_FILE_SIZE:10MB}
-      max-history: ${LOG_MAX_HISTORY:3}
 
 management:
   endpoints:

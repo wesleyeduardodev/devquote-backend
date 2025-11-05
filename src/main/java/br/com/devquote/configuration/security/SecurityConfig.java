@@ -40,7 +40,6 @@ public class SecurityConfig {
             "/api/auth/**",
             "/api/public/**",
             "/.well-known/**",
-            "/oauth2/**",
             "/error",
             "/actuator/health",
             "/actuator/prometheus",
