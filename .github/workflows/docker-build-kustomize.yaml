@@ -104,21 +104,16 @@ jobs:
           git clone https://${{ secrets.GH_PAT }}@github.com/${{ env.INFRA_REPO }}.git infra-repo
           cd infra-repo
 
-          # Ir para o overlay de produção
-          cd overlays/production
-
-          # Atualizar tag da imagem do backend usando Kustomize
+          # Atualizar tag da imagem do backend diretamente no deployment
           echo "Updating backend image tag to ${{ steps.tags.outputs.IMAGE_TAG }}..."
-          kustomize edit set image \
-            wesleyeduardodev/devquote-backend=wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}
+          sed -i "s|image: wesleyeduardodev/devquote-backend:.*|image: wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}|g" k8s/backend/deployment.yaml
 
           # Verificar mudanças
-          echo "Changes made to kustomization.yaml:"
-          cat kustomization.yaml
+          echo "Changes made to k8s/backend/deployment.yaml:"
+          git diff k8s/backend/deployment.yaml
 
           # Commit e push
-          cd ../..
-          git add overlays/production/kustomization.yaml
+          git add k8s/backend/deployment.yaml
 
           if git diff --staged --quiet; then
             echo "No changes to commit"
