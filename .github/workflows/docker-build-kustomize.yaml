@@ -118,17 +118,9 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "🚀 Update backend image to ${{ steps.tags.outputs.IMAGE_TAG }}
-
-Automated update from backend CI/CD pipeline
-
-- Commit: ${{ github.sha }}
-- Version: ${{ steps.version.outputs.VERSION }}
-- Image: ${{ env.DOCKER_IMAGE }}:${{ steps.tags.outputs.IMAGE_TAG }}"
-
+            git commit -m "🚀 Update backend to ${{ steps.tags.outputs.IMAGE_TAG }} (commit: ${{ github.sha }})"
             echo "Pushing changes to infra repository..."
             git push
-
             echo "✅ Infrastructure repository updated successfully!"
             echo "Argo CD will automatically sync the changes to the cluster."
           fi
