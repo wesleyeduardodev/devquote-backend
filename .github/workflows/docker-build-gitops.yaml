@@ -109,10 +109,10 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "🚀 Update backend to ${{ steps.tags.outputs.IMAGE_TAG }} (commit: ${{ github.sha }})"
+            git commit -m "Update backend to ${{ steps.tags.outputs.IMAGE_TAG }} (commit: ${{ github.sha }})"
             echo "Pushing changes to infra repository..."
             git push
-            echo "✅ Infrastructure repository updated successfully!"
+            echo "Infrastructure repository updated successfully!"
             echo "Argo CD will automatically sync the changes to the cluster."
           fi
 
@@ -127,8 +127,8 @@ jobs:
           echo "**Commit:** \`${{ steps.tags.outputs.SHORT_SHA }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Docker image pushed to Docker Hub" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Infra repo updated with new image tag" >> $GITHUB_STEP_SUMMARY
-          echo "- ⏳ Waiting for Argo CD to sync (auto-sync enabled)" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker image pushed to Docker Hub" >> $GITHUB_STEP_SUMMARY
+          echo "- Infra repo updated with new image tag" >> $GITHUB_STEP_SUMMARY
+          echo "- Waiting for Argo CD to sync (auto-sync enabled)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Argo CD:** https://devquote.com.br/argocd" >> $GITHUB_STEP_SUMMARY
