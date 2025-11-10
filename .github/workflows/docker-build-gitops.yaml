@@ -1,4 +1,4 @@
-name: Build and Deploy Backend with Kustomize
+name: Build and Deploy Backend (GitOps)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - 'src/**'
       - 'pom.xml'
       - 'Dockerfile'
-      - '.github/workflows/docker-build-kustomize.yaml'
+      - '.github/workflows/docker-build-gitops.yaml'
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
@@ -82,15 +82,6 @@ jobs:
       - name: Image digest
         if: github.event_name != 'pull_request'
         run: echo "Image pushed successfully with SHA tag ${{ steps.tags.outputs.IMAGE_TAG }}"
-
-      # ============================================
-      # 🔥 KUSTOMIZE: Atualizar repo de infra
-      # ============================================
-      - name: Setup Kustomize
-        if: github.event_name != 'pull_request'
-        uses: imranismail/setup-kustomize@v2
-        with:
-          kustomize-version: "5.0.0"
 
       - name: Update Kubernetes manifests in infra repo
         if: github.event_name != 'pull_request'
