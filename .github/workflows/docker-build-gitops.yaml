@@ -132,3 +132,30 @@ jobs:
           echo "- Waiting for Argo CD to sync (auto-sync enabled)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Argo CD:** https://devquote.com.br/argocd" >> $GITHUB_STEP_SUMMARY
+
+      - name: Send failure notification email
+        if: failure() && github.event_name != 'pull_request'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "[DevQuote] ❌ Deploy BACKEND falhou - ${{ github.repository }}"
+          to: wesleyeduardo.dev@gmail.com
+          from: DevQuote CI/CD <noreply@devquote.com.br>
+          body: |
+            ⚠️ FALHA NO DEPLOY DO BACKEND
+
+            📦 Repositório: ${{ github.repository }}
+            🔀 Branch: ${{ github.ref_name }}
+            👤 Autor: ${{ github.actor }}
+            📝 Commit: ${{ github.sha }}
+            💬 Mensagem: ${{ github.event.head_commit.message }}
+
+            🔗 Ver detalhes: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Por favor, verifique os logs e corrija o problema.
+
+            ---
+            DevQuote - Sistema de Gestão de Projetos
