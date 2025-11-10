@@ -4,7 +4,7 @@
 API REST em Spring Boot para gestão completa de tarefas, entregas e faturamento de projetos de desenvolvimento de software. Sistema multi-perfil com controle granular de permissões.
 
 ## 🛠️ Stack Tecnológica
-- **Java 21** + **Spring Boot 3.5.4**
+- **Java 17** + **Spring Boot 3.5.4**
 - **PostgreSQL** (produção) + **H2** (desenvolvimento)
 - **Spring Security** + **JWT** + **OAuth2**
 - **AWS S3** (armazenamento de arquivos)
