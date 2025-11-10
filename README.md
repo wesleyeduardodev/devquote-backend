@@ -142,3 +142,4 @@ Sistema usado para gerenciar demandas de desenvolvimento, desde a solicitação 
 2. **OPERACIONAL**: tarefas operacionais sem vinculação técnica
 
 Permite rastreamento completo: Tarefa → Subtarefas → Entrega → Itens de Entrega → Período de Faturamento
+// Test deploy with new simple workflow
