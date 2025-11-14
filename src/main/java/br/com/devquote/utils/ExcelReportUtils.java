@@ -368,6 +368,7 @@ public class ExcelReportUtils {
             case "BACKUP" -> "Backup";
             case "DEPLOY" -> "Deploy";
             case "LOGS" -> "Logs";
+            case "DATABASE_APPLICATION" -> "Aplicação de Banco";
             case "NEW_SERVER" -> "Novo Servidor";
             case "MONITORING" -> "Monitoramento";
             case "SUPPORT" -> "Suporte";
