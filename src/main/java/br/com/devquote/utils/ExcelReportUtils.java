@@ -411,7 +411,7 @@ public class ExcelReportUtils {
         Sheet sheet = workbook.createSheet("Relatório de Entregas");
 
         CellStyle dataStyle = createDataStyle(workbook);
-        CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
+        CellStyle dateStyle = createDateStyle(workbook);
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_YELLOW.getIndex());
@@ -457,12 +457,12 @@ public class ExcelReportUtils {
             setCellValue(row, 11, deliveryData.get("item_source_branch"), dataStyle);
             setCellValue(row, 12, deliveryData.get("item_pull_request"), dataStyle);
             setCellValue(row, 13, deliveryData.get("item_notes"), dataStyle);
-            setCellValue(row, 14, deliveryData.get("item_started_at"), dateOnlyStyle);
-            setCellValue(row, 15, deliveryData.get("item_finished_at"), dateOnlyStyle);
+            setCellValue(row, 14, deliveryData.get("item_started_at"), dateStyle);
+            setCellValue(row, 15, deliveryData.get("item_finished_at"), dateStyle);
         }
 
         setColumnWidths(sheet, new int[]{
-                2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 4000, 4000
+                2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 6500, 6500
         });
 
         for (int i = 1; i <= data.size(); i++) {
@@ -490,7 +490,7 @@ public class ExcelReportUtils {
         Sheet sheet = workbook.createSheet("Relatório de Entregas Operacionais");
 
         CellStyle dataStyle = createDataStyle(workbook);
-        CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
+        CellStyle dateStyle = createDateStyle(workbook);
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_ORANGE.getIndex());
@@ -533,12 +533,12 @@ public class ExcelReportUtils {
             setCellValue(row, 8, deliveryData.get("item_title"), dataStyle);
             setCellValue(row, 9, deliveryData.get("item_description"), dataStyle);
             setOperationalItemStatusCell(row, 10, deliveryData.get("item_status"), dataStyle);
-            setCellValue(row, 11, deliveryData.get("item_started_at"), dateOnlyStyle);
-            setCellValue(row, 12, deliveryData.get("item_finished_at"), dateOnlyStyle);
+            setCellValue(row, 11, deliveryData.get("item_started_at"), dateStyle);
+            setCellValue(row, 12, deliveryData.get("item_finished_at"), dateStyle);
         }
 
         setColumnWidths(sheet, new int[]{
-                2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 4000, 4000
+                2500, 3500, 8000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 6500, 6500
         });
 
         for (int i = 1; i <= data.size(); i++) {
@@ -648,7 +648,7 @@ public class ExcelReportUtils {
         CellStyle billingHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LEMON_CHIFFON.getIndex());
 
         CellStyle dataStyle = createDataStyle(workbook);
-        CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
+        CellStyle dateStyle = createDateStyle(workbook);
         CellStyle currencyStyle = createCurrencyStyle(workbook);
 
         String[] headers = {
@@ -707,8 +707,8 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle);
-            setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
-            setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateStyle);
 
             setCellValue(row, colIndex++, taskData.get("billing_year"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("billing_month"), dataStyle);
@@ -717,7 +717,7 @@ public class ExcelReportUtils {
 
         setColumnWidths(sheet, new int[]{
                 2500, 3500, 10000, 12000, 3000, 4000, 6000, 4000, 4000, 4000, 4000, 3000, 4000,
-                3000, 3500, 6000, 10000, 8000, 6000, 4000, 4000,
+                3000, 3500, 6000, 10000, 8000, 6000, 6500, 6500,
                 2500, 2500, 4000
         });
 
@@ -750,7 +750,6 @@ public class ExcelReportUtils {
 
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
-        CellStyle dateOnlyStyle = createDateOnlyStyle(workbook);
 
         String[] headers = {
                 "ID Tarefa", "Código", "Título", "Descrição", "Prioridade", "Solicitante",
@@ -799,13 +798,13 @@ public class ExcelReportUtils {
             setCellValue(row, colIndex++, taskData.get("delivery_pull_request"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_branch"), dataStyle);
             setCellValue(row, colIndex++, taskData.get("delivery_notes"), dataStyle);
-            setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateOnlyStyle);
-            setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateOnlyStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_started_at"), dateStyle);
+            setCellValue(row, colIndex++, taskData.get("delivery_finished_at"), dateStyle);
         }
 
         setColumnWidths(sheet, new int[]{
                 2500, 3500, 10000, 12000, 3000, 6000, 4000, 4000, 4000, 4000, 3000,
-                3000, 3500, 6000, 10000, 8000, 8000, 6000, 4000, 4000
+                3000, 3500, 6000, 10000, 8000, 8000, 6000, 6500, 6500
         });
 
         for (int i = 1; i <= data.size(); i++) {
