@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "delivery_item")
@@ -42,8 +42,8 @@ public class DeliveryItem extends BaseEntity {
     private String notes;
 
     @Column(name = "started_at")
-    private LocalDate startedAt;
+    private LocalDateTime startedAt;
 
     @Column(name = "finished_at")
-    private LocalDate finishedAt;
+    private LocalDateTime finishedAt;
 }

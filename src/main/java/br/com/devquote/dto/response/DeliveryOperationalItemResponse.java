@@ -1,6 +1,6 @@
 package br.com.devquote.dto.response;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,9 +15,16 @@ public class DeliveryOperationalItemResponse {
     private String title;
     private String description;
     private String status;
-    private LocalDate startedAt;
-    private LocalDate finishedAt;
+
+    private LocalDateTime startedAt;
+
+    private LocalDateTime finishedAt;
+
     private List<DeliveryOperationalAttachmentResponse> attachments;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 }

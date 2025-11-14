@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,10 +32,10 @@ public class DeliveryOperationalItem extends BaseEntity {
     private OperationalItemStatus status;
 
     @Column(name = "started_at")
-    private LocalDate startedAt;
+    private LocalDateTime startedAt;
 
     @Column(name = "finished_at")
-    private LocalDate finishedAt;
+    private LocalDateTime finishedAt;
 
     @OneToMany(mappedBy = "deliveryOperationalItem", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
