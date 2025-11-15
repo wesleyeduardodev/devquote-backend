@@ -829,6 +829,7 @@ public class EmailServiceImpl implements EmailService {
         message.append("Título: ").append(task.getTitle() != null ? task.getTitle() : "N/A").append("\n");
         message.append("Tipo de Fluxo: ").append(translateFlowType(task.getFlowType())).append("\n");
         message.append("Tipo da Tarefa: ").append(translateTaskType(task.getTaskType())).append("\n");
+        message.append("Solicitante: ").append(task.getRequester() != null ? task.getRequester().getName() : "N/A").append("\n");
 
         if (task.getHasSubTasks()) {
             List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
