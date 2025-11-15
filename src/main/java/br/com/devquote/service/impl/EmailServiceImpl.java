@@ -13,6 +13,7 @@ import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.service.EmailService;
 import br.com.devquote.service.NotificationConfigService;
 import br.com.devquote.service.TaskAttachmentService;
+import br.com.devquote.service.WhatsAppService;
 import br.com.devquote.service.storage.FileStorageStrategy;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -26,10 +27,12 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import jakarta.annotation.PostConstruct;
@@ -48,6 +51,7 @@ public class EmailServiceImpl implements EmailService {
     private final TaskAttachmentService taskAttachmentService;
     private final FileStorageStrategy fileStorageStrategy;
     private final NotificationConfigService notificationConfigService;
+    private final WhatsAppService whatsAppService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -690,6 +694,16 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Override
+    public void sendFinancialNotificationWhatsApp(Task task, List<String> additionalWhatsAppRecipients) {
+        try {
+            sendFinancialWhatsAppWithNotificationConfig(task, additionalWhatsAppRecipients);
+        } catch (Exception e) {
+            log.error("Unexpected error while sending financial WhatsApp notification for task ID: {}: {}",
+                    task.getId(), e.getMessage(), e);
+        }
+    }
+
     private void sendFinancialEmailWithNotificationConfig(Task task, String subject, String htmlContent, List<String> additionalEmails) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ORCAMENTO_TAREFA, NotificationType.EMAIL);
 
@@ -761,6 +775,68 @@ public class EmailServiceImpl implements EmailService {
             } catch (Exception e) {
                 log.error("Failed to send financial notification for task ID: {} to {}: {}",
                         task.getId(), toEmail, e.getMessage(), e);
+            }
+        }
+    }
+
+    private void sendFinancialWhatsAppWithNotificationConfig(Task task, List<String> additionalWhatsAppRecipients) {
+        NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ORCAMENTO_TAREFA, NotificationType.WHATSAPP);
+
+        if (config == null) {
+            log.warn("No notification config found for NOTIFICACAO_ORCAMENTO_TAREFA + WHATSAPP. Task ID: {}", task.getId());
+            return;
+        }
+
+        List<String> recipients = new ArrayList<>();
+
+        if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
+            if (task.getRequester() != null && task.getRequester().getPhone() != null
+                    && !task.getRequester().getPhone().trim().isEmpty()) {
+                recipients.add(task.getRequester().getPhone());
+            }
+        } else {
+            if (config.getPrimaryPhone() != null && !config.getPrimaryPhone().trim().isEmpty()) {
+                recipients.add(config.getPrimaryPhone());
+            }
+        }
+
+        if (config.getPhoneNumbersList() != null && !config.getPhoneNumbersList().isEmpty()) {
+            recipients.addAll(config.getPhoneNumbersList());
+        }
+
+        if (additionalWhatsAppRecipients != null && !additionalWhatsAppRecipients.isEmpty()) {
+            additionalWhatsAppRecipients.stream()
+                    .filter(recipient -> recipient != null && !recipient.trim().isEmpty())
+                    .forEach(recipients::add);
+
+            log.info("Added {} additional WhatsApp recipient(s) for task ID: {}",
+                    additionalWhatsAppRecipients.size(), task.getId());
+        }
+
+        if (recipients.isEmpty()) {
+            log.warn("No valid WhatsApp recipients found for financial notification. Task ID: {}, Config ID: {}",
+                    task.getId(), config.getId());
+            return;
+        }
+
+        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        BigDecimal totalAmount = task.getAmount() != null ? task.getAmount() : BigDecimal.ZERO;
+        String formattedAmount = currencyFormatter.format(totalAmount);
+
+        String taskCode = task.getCode() != null ? task.getCode() : "Sem código";
+        String taskTitle = task.getTitle() != null ? task.getTitle() : "Sem título";
+
+        String message = taskCode + " - " + taskTitle + "\nValor: " + formattedAmount;
+
+        log.debug("📱 Sending FINANCIAL WhatsApp notification - Recipients: {}", recipients);
+
+        for (String recipient : recipients) {
+            try {
+                whatsAppService.sendMessage(recipient, message);
+                log.debug("Financial WhatsApp notification sent successfully for task ID: {} to {}", task.getId(), recipient);
+            } catch (Exception e) {
+                log.error("Failed to send financial WhatsApp notification for task ID: {} to {}: {}",
+                        task.getId(), recipient, e.getMessage(), e);
             }
         }
     }

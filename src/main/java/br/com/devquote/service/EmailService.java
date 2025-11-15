@@ -15,6 +15,8 @@ public interface EmailService {
 
     void sendFinancialNotificationAsync(Task task, List<String> additionalEmails);
 
+    void sendFinancialNotificationWhatsApp(Task task, List<String> additionalWhatsAppRecipients);
+
     void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails, String flowType);
 
     void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails, String flowType);

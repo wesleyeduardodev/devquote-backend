@@ -199,7 +199,12 @@ public class TaskController implements TaskControllerDoc {
         List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
                 ? request.getAdditionalEmails()
                 : new ArrayList<>();
-        taskService.sendFinancialEmail(id, additionalEmails);
+
+        List<String> additionalWhatsAppRecipients = request != null && request.getAdditionalWhatsAppRecipients() != null
+                ? request.getAdditionalWhatsAppRecipients()
+                : new ArrayList<>();
+
+        taskService.sendFinancialEmail(id, additionalEmails, additionalWhatsAppRecipients);
         return ResponseEntity.ok().build();
     }
 

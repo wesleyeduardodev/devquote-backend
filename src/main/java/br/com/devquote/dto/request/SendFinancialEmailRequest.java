@@ -9,5 +9,6 @@ import java.util.List;
 @AllArgsConstructor
 public class SendFinancialEmailRequest {
     private List<String> additionalEmails;
+    private List<String> additionalWhatsAppRecipients;
     private String flowType;
 }

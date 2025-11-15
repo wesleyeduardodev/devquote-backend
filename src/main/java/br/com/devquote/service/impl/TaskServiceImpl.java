@@ -944,7 +944,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void sendFinancialEmail(Long taskId, List<String> additionalEmails) {
+    public void sendFinancialEmail(Long taskId, List<String> additionalEmails, List<String> additionalWhatsAppRecipients) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
@@ -958,6 +958,12 @@ public class TaskServiceImpl implements TaskService {
         } catch (Exception e) {
             log.error("Failed to send financial email notification for task {}: {}", taskId, e.getMessage(), e);
             throw new RuntimeException("Failed to send financial email notification");
+        }
+
+        try {
+            emailService.sendFinancialNotificationWhatsApp(task, additionalWhatsAppRecipients);
+        } catch (Exception e) {
+            log.error("Failed to send financial WhatsApp notification for task {}: {}", taskId, e.getMessage(), e);
         }
     }
 
