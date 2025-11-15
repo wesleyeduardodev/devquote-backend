@@ -823,29 +823,29 @@ public class EmailServiceImpl implements EmailService {
         BigDecimal totalAmount = task.getAmount() != null ? task.getAmount() : BigDecimal.ZERO;
 
         StringBuilder message = new StringBuilder();
-        message.append("Notificação Automática de Orçamento - DevQuote\n\n");
-        message.append("📋 Dados da Tarefa\n\n");
-        message.append("Código: ").append(task.getCode() != null ? task.getCode() : "N/A").append("\n");
-        message.append("Título: ").append(task.getTitle() != null ? task.getTitle() : "N/A").append("\n");
-        message.append("Tipo de Fluxo: ").append(translateFlowType(task.getFlowType())).append("\n");
-        message.append("Tipo da Tarefa: ").append(translateTaskType(task.getTaskType())).append("\n");
-        message.append("Solicitante: ").append(task.getRequester() != null ? task.getRequester().getName() : "N/A").append("\n");
+        message.append("*Notificação Automática de Orçamento - DevQuote*\n\n");
+        message.append("*📋 Dados da Tarefa*\n\n");
+        message.append("*Código:* ").append(task.getCode() != null ? task.getCode() : "N/A").append("\n");
+        message.append("*Título:* ").append(task.getTitle() != null ? task.getTitle() : "N/A").append("\n");
+        message.append("*Tipo de Fluxo:* ").append(translateFlowType(task.getFlowType())).append("\n");
+        message.append("*Tipo da Tarefa:* ").append(translateTaskType(task.getTaskType())).append("\n");
+        message.append("*Solicitante:* ").append(task.getRequester() != null ? task.getRequester().getName() : "N/A").append("\n");
 
         if (task.getHasSubTasks()) {
             List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
 
             if (subTasks != null && !subTasks.isEmpty()) {
-                message.append("\n📋 Dados das Subtarefas\n\n");
+                message.append("\n*📋 Dados das Subtarefas*\n\n");
 
                 for (SubTask subTask : subTasks) {
-                    message.append("Título: ").append(subTask.getTitle() != null ? subTask.getTitle() : "N/A").append("\n");
+                    message.append("*Título:* ").append(subTask.getTitle() != null ? subTask.getTitle() : "N/A").append("\n");
                     BigDecimal subTaskAmount = subTask.getAmount() != null ? subTask.getAmount() : BigDecimal.ZERO;
-                    message.append("Valor: ").append(currencyFormatter.format(subTaskAmount)).append("\n\n");
+                    message.append("*Valor:* ").append(currencyFormatter.format(subTaskAmount)).append("\n\n");
                 }
             }
         }
 
-        message.append("Valor Total: ").append(currencyFormatter.format(totalAmount)).append("\n\n");
+        message.append("*Valor Total: ").append(currencyFormatter.format(totalAmount)).append("*\n\n");
         message.append("Para mais detalhes das regras e anexos verifique seu email ou acesse o sistema com seu usuário e senha.\n\n");
         message.append("https://devquote.com.br");
 
