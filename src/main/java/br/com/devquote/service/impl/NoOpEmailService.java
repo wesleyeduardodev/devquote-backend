@@ -55,6 +55,20 @@ public class NoOpEmailService implements EmailService {
     }
 
     @Override
+    public void sendDeliveryNotificationWhatsApp(Delivery delivery, List<String> additionalWhatsAppRecipients) {
+        log.debug("📱 [WHATSAPP] Would send DELIVERY WhatsApp notification for: Delivery ID={}, Status={}",
+                delivery.getId(), delivery.getStatus());
+        if (delivery.getTask() != null && delivery.getTask().getRequester() != null) {
+            log.debug("📱 [WHATSAPP] Would send to requester phone: {}",
+                    delivery.getTask().getRequester().getPhone());
+        }
+        if (additionalWhatsAppRecipients != null && !additionalWhatsAppRecipients.isEmpty()) {
+            log.debug("📱 [WHATSAPP] Would include {} additional WhatsApp recipient(s): {}",
+                    additionalWhatsAppRecipients.size(), additionalWhatsAppRecipients);
+        }
+    }
+
+    @Override
     public void sendFinancialNotificationAsync(Task task, List<String> additionalEmails) {
         log.debug("📧 [EMAIL DISABLED] Would send FINANCIAL notification for: Task ID={}, Code={}, Title={}",
                 task.getId(), task.getCode(), task.getTitle());

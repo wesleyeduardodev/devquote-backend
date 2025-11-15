@@ -802,7 +802,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     
     @Override
     @Transactional
-    public void sendDeliveryEmail(Long id, List<String> additionalEmails) {
+    public void sendDeliveryEmail(Long id, List<String> additionalEmails, List<String> additionalWhatsAppRecipients) {
 
         final Delivery delivery = deliveryRepository.findById(id)
                 .map(entity -> {
@@ -900,6 +900,12 @@ public class DeliveryServiceImpl implements DeliveryService {
             }
         } catch (Exception e) {
             log.error("FAILED to send delivery email for delivery ID: {} - Error: {}", id, e.getMessage());
+        }
+
+        try {
+            emailService.sendDeliveryNotificationWhatsApp(delivery, additionalWhatsAppRecipients);
+        } catch (Exception e) {
+            log.error("Failed to send delivery WhatsApp notification for delivery {}: {}", id, e.getMessage(), e);
         }
 
         delivery.setDeliveryEmailSent(true);

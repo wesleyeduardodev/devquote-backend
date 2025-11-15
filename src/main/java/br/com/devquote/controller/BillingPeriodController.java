@@ -86,10 +86,10 @@ public class BillingPeriodController implements BillingPeriodControllerDoc {
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String status) {
-        
+
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
-        
+
         return ResponseEntity.ok(billingPeriodService.findAllPaginated(
             month, year, status, pageable));
     }
@@ -133,7 +133,7 @@ public class BillingPeriodController implements BillingPeriodControllerDoc {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<BillingPeriodResponse> updateStatus(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestParam String status) {
         return ResponseEntity.ok(billingPeriodService.updateStatus(id, status));
     }
@@ -143,7 +143,7 @@ public class BillingPeriodController implements BillingPeriodControllerDoc {
     public ResponseEntity<Void> sendBillingEmail(
             @PathVariable Long id,
             @RequestBody(required = false) br.com.devquote.dto.request.SendFinancialEmailRequest request) {
-        java.util.List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
+        List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
                 ? request.getAdditionalEmails()
                 : new java.util.ArrayList<>();
         String flowType = request != null ? request.getFlowType() : null;

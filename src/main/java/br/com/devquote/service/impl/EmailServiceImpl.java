@@ -865,6 +865,132 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public void sendDeliveryNotificationWhatsApp(Delivery delivery, List<String> additionalWhatsAppRecipients) {
+        try {
+            sendDeliveryWhatsAppWithNotificationConfig(delivery, additionalWhatsAppRecipients);
+        } catch (Exception e) {
+            log.error("Unexpected error while sending delivery WhatsApp notification for delivery ID: {}: {}",
+                    delivery.getId(), e.getMessage(), e);
+        }
+    }
+
+    private void sendDeliveryWhatsAppWithNotificationConfig(Delivery delivery, List<String> additionalWhatsAppRecipients) {
+        NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ENTREGA, NotificationType.WHATSAPP);
+
+        if (config == null) {
+            log.warn("No notification config found for NOTIFICACAO_ENTREGA + WHATSAPP. Delivery ID: {}", delivery.getId());
+            return;
+        }
+
+        List<String> recipients = new ArrayList<>();
+
+        if (Boolean.TRUE.equals(config.getUseRequesterContact())) {
+            if (delivery.getTask() != null && delivery.getTask().getRequester() != null
+                    && delivery.getTask().getRequester().getPhone() != null
+                    && !delivery.getTask().getRequester().getPhone().trim().isEmpty()) {
+                recipients.add(delivery.getTask().getRequester().getPhone());
+            }
+        } else {
+            if (config.getPrimaryPhone() != null && !config.getPrimaryPhone().trim().isEmpty()) {
+                recipients.add(config.getPrimaryPhone());
+            }
+        }
+
+        if (config.getPhoneNumbersList() != null && !config.getPhoneNumbersList().isEmpty()) {
+            recipients.addAll(config.getPhoneNumbersList());
+        }
+
+        if (additionalWhatsAppRecipients != null && !additionalWhatsAppRecipients.isEmpty()) {
+            additionalWhatsAppRecipients.stream()
+                    .filter(recipient -> recipient != null && !recipient.trim().isEmpty())
+                    .forEach(recipients::add);
+
+            log.info("Added {} additional WhatsApp recipient(s) for delivery ID: {}",
+                    additionalWhatsAppRecipients.size(), delivery.getId());
+        }
+
+        if (recipients.isEmpty()) {
+            log.warn("No valid WhatsApp recipients found for delivery notification. Delivery ID: {}, Config ID: {}",
+                    delivery.getId(), config.getId());
+            return;
+        }
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        StringBuilder message = new StringBuilder();
+        message.append("*Notificação Automática de Entrega - DevQuote*\n\n");
+        message.append("*📋 Dados da Tarefa*\n\n");
+        message.append("*Código:* ").append(delivery.getTask() != null && delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "N/A").append("\n");
+        message.append("*Título:* ").append(delivery.getTask() != null && delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "N/A").append("\n");
+        message.append("*Tipo de Fluxo:* ").append(delivery.getTask() != null ? translateFlowType(delivery.getTask().getFlowType()) : "N/A").append("\n");
+        message.append("*Tipo da Tarefa:* ").append(delivery.getTask() != null ? translateTaskType(delivery.getTask().getTaskType()) : "N/A").append("\n");
+        message.append("*Solicitante:* ").append(delivery.getTask() != null && delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "N/A").append("\n");
+
+        if (delivery.getNotes() != null && !delivery.getNotes().trim().isEmpty()) {
+            message.append("*Observações:* ").append(delivery.getNotes()).append("\n");
+        }
+
+        if (delivery.getFlowType() == br.com.devquote.enums.FlowType.DESENVOLVIMENTO) {
+            if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
+                message.append("\n*📋 Itens de Entrega*\n\n");
+
+                for (br.com.devquote.entity.DeliveryItem item : delivery.getItems()) {
+                    message.append("*Projeto:* ").append(item.getProject() != null ? item.getProject().getName() : "N/A").append("\n");
+
+                    if (item.getPullRequest() != null && !item.getPullRequest().trim().isEmpty()) {
+                        message.append("*Link Entrega:* ").append(item.getPullRequest()).append("\n");
+                    }
+
+                    if (item.getStartedAt() != null) {
+                        message.append("*Data de Início:* ").append(item.getStartedAt().format(dateFormatter)).append("\n");
+                    }
+
+                    if (item.getFinishedAt() != null) {
+                        message.append("*Data de Conclusão:* ").append(item.getFinishedAt().format(dateFormatter)).append("\n");
+                    }
+
+                    message.append("\n");
+                }
+            }
+        } else {
+            if (delivery.getOperationalItems() != null && !delivery.getOperationalItems().isEmpty()) {
+                message.append("\n*📋 Itens de Entrega*\n\n");
+
+                for (br.com.devquote.entity.DeliveryOperationalItem item : delivery.getOperationalItems()) {
+                    message.append("*Título:* ").append(item.getTitle() != null ? item.getTitle() : "N/A").append("\n");
+
+                    if (item.getStartedAt() != null) {
+                        message.append("*Data de Início:* ").append(item.getStartedAt().format(dateFormatter)).append("\n");
+                    }
+
+                    if (item.getFinishedAt() != null) {
+                        message.append("*Data de Conclusão:* ").append(item.getFinishedAt().format(dateFormatter)).append("\n");
+                    }
+
+                    message.append("\n");
+                }
+            }
+        }
+
+        message.append("Para mais detalhes da entrega verifique seu email ou acesse o sistema com seu usuário e senha.\n\n");
+        message.append("https://devquote.com.br");
+
+        String finalMessage = message.toString();
+
+        log.debug("📱 Sending DELIVERY WhatsApp notification - Recipients: {}", recipients);
+
+        for (String recipient : recipients) {
+            try {
+                whatsAppService.sendMessage(recipient, finalMessage);
+                log.debug("Delivery WhatsApp notification sent successfully for delivery ID: {} to {}", delivery.getId(), recipient);
+            } catch (Exception e) {
+                log.error("Failed to send delivery WhatsApp notification for delivery ID: {} to {}: {}",
+                        delivery.getId(), recipient, e.getMessage(), e);
+            }
+        }
+    }
+
+    @Override
     @Async
     public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails, String flowType) {
         if (!emailProperties.isEnabled()) {

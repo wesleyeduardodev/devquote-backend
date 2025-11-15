@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -92,7 +93,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     public ResponseEntity<DeliveryResponse> createWithFiles(
             @RequestParam("dto") String dtoJson,
             @RequestParam(value = "files", required = false) List<MultipartFile> files) {
-        
+
         try {
 
             com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -103,9 +104,9 @@ public class DeliveryController implements DeliveryControllerDoc {
             if (files != null && !files.isEmpty()) {
                 deliveryAttachmentService.uploadFiles(delivery.getId(), files);
             }
-            
+
             return new ResponseEntity<>(delivery, HttpStatus.CREATED);
-            
+
         } catch (Exception e) {
             throw new RuntimeException("Erro ao criar entrega com anexos: " + e.getMessage(), e);
         }
@@ -140,7 +141,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         deliveryService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
     }
-    
+
     @DeleteMapping("/task/{taskId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<Void> deleteByTaskId(@PathVariable Long taskId) {
@@ -255,16 +256,16 @@ public class DeliveryController implements DeliveryControllerDoc {
     public ResponseEntity<byte[]> exportDeliveriesToExcel(
             @RequestParam(required = false) String flowType) throws IOException {
         byte[] excelData = deliveryService.exportToExcel(flowType);
-        
-        String filename = "relatorio_entregas_" + 
-                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) + 
+
+        String filename = "relatorio_entregas_" +
+                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) +
                          ".xlsx";
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentDispositionFormData("attachment", filename);
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-        
+
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
 
@@ -275,14 +276,19 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestBody(required = false) br.com.devquote.dto.request.SendFinancialEmailRequest request
     ) {
         try {
-            java.util.List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
+            List<String> additionalEmails = request != null && request.getAdditionalEmails() != null
                     ? request.getAdditionalEmails()
-                    : new java.util.ArrayList<>();
-            deliveryService.sendDeliveryEmail(id, additionalEmails);
-            return ResponseEntity.ok("Email de entrega enviado com sucesso!");
+                    : new ArrayList<>();
+
+           List<String> additionalWhatsAppRecipients = request != null && request.getAdditionalWhatsAppRecipients() != null
+                    ? request.getAdditionalWhatsAppRecipients()
+                    : new ArrayList<>();
+
+            deliveryService.sendDeliveryEmail(id, additionalEmails, additionalWhatsAppRecipients);
+            return ResponseEntity.ok("Notificação de entrega enviada com sucesso!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Falha ao enviar email: " + e.getMessage());
+                    .body("Falha ao enviar notificação: " + e.getMessage());
         }
     }
 }
