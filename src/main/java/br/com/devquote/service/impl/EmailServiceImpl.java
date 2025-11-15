@@ -821,18 +821,40 @@ public class EmailServiceImpl implements EmailService {
 
         NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
         BigDecimal totalAmount = task.getAmount() != null ? task.getAmount() : BigDecimal.ZERO;
-        String formattedAmount = currencyFormatter.format(totalAmount);
 
-        String taskCode = task.getCode() != null ? task.getCode() : "Sem código";
-        String taskTitle = task.getTitle() != null ? task.getTitle() : "Sem título";
+        StringBuilder message = new StringBuilder();
+        message.append("Notificação Automática de Orçamento - DevQuote\n\n");
+        message.append("📋 Dados da Tarefa\n\n");
+        message.append("Código: ").append(task.getCode() != null ? task.getCode() : "N/A").append("\n");
+        message.append("Título: ").append(task.getTitle() != null ? task.getTitle() : "N/A").append("\n");
+        message.append("Tipo de Fluxo: ").append(translateFlowType(task.getFlowType())).append("\n");
+        message.append("Tipo da Tarefa: ").append(translateTaskType(task.getTaskType())).append("\n");
 
-        String message = taskCode + " - " + taskTitle + "\nValor: " + formattedAmount;
+        if (task.getHasSubTasks()) {
+            List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
+
+            if (subTasks != null && !subTasks.isEmpty()) {
+                message.append("\n📋 Dados das Subtarefas\n\n");
+
+                for (SubTask subTask : subTasks) {
+                    message.append("Título: ").append(subTask.getTitle() != null ? subTask.getTitle() : "N/A").append("\n");
+                    BigDecimal subTaskAmount = subTask.getAmount() != null ? subTask.getAmount() : BigDecimal.ZERO;
+                    message.append("Valor: ").append(currencyFormatter.format(subTaskAmount)).append("\n\n");
+                }
+            }
+        }
+
+        message.append("Valor Total: ").append(currencyFormatter.format(totalAmount)).append("\n\n");
+        message.append("Para mais detalhes das regras e anexos verifique seu email ou acesse o sistema com seu usuário e senha.\n\n");
+        message.append("https://devquote.com.br");
+
+        String finalMessage = message.toString();
 
         log.debug("📱 Sending FINANCIAL WhatsApp notification - Recipients: {}", recipients);
 
         for (String recipient : recipients) {
             try {
-                whatsAppService.sendMessage(recipient, message);
+                whatsAppService.sendMessage(recipient, finalMessage);
                 log.debug("Financial WhatsApp notification sent successfully for task ID: {} to {}", task.getId(), recipient);
             } catch (Exception e) {
                 log.error("Failed to send financial WhatsApp notification for task ID: {} to {}: {}",
