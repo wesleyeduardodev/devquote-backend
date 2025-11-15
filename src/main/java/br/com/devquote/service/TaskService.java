@@ -72,7 +72,7 @@ public interface TaskService {
     
     byte[] exportGeneralReportForUser() throws IOException;
 
-    void sendFinancialEmail(Long taskId, List<String> additionalEmails, List<String> additionalWhatsAppRecipients);
+    void sendFinancialEmail(Long taskId, List<String> additionalEmails, List<String> additionalWhatsAppRecipients, boolean sendEmail, boolean sendWhatsApp);
 
     void sendTaskEmail(Long taskId, List<String> additionalEmails);
 }

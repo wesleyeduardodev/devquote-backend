@@ -944,26 +944,30 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void sendFinancialEmail(Long taskId, List<String> additionalEmails, List<String> additionalWhatsAppRecipients) {
+    public void sendFinancialEmail(Long taskId, List<String> additionalEmails, List<String> additionalWhatsAppRecipients, boolean sendEmail, boolean sendWhatsApp) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
 
         task.getRequester().getName();
 
-        try {
-            emailService.sendFinancialNotificationAsync(task, additionalEmails);
+        if (sendEmail) {
+            try {
+                emailService.sendFinancialNotificationAsync(task, additionalEmails);
 
-            task.setFinancialEmailSent(true);
-            taskRepository.save(task);
-        } catch (Exception e) {
-            log.error("Failed to send financial email notification for task {}: {}", taskId, e.getMessage(), e);
-            throw new RuntimeException("Failed to send financial email notification");
+                task.setFinancialEmailSent(true);
+                taskRepository.save(task);
+            } catch (Exception e) {
+                log.error("Failed to send financial email notification for task {}: {}", taskId, e.getMessage(), e);
+                throw new RuntimeException("Failed to send financial email notification");
+            }
         }
 
-        try {
-            emailService.sendFinancialNotificationWhatsApp(task, additionalWhatsAppRecipients);
-        } catch (Exception e) {
-            log.error("Failed to send financial WhatsApp notification for task {}: {}", taskId, e.getMessage(), e);
+        if (sendWhatsApp) {
+            try {
+                emailService.sendFinancialNotificationWhatsApp(task, additionalWhatsAppRecipients);
+            } catch (Exception e) {
+                log.error("Failed to send financial WhatsApp notification for task {}: {}", taskId, e.getMessage(), e);
+            }
         }
     }
 

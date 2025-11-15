@@ -11,4 +11,6 @@ public class SendFinancialEmailRequest {
     private List<String> additionalEmails;
     private List<String> additionalWhatsAppRecipients;
     private String flowType;
+    private Boolean sendEmail;
+    private Boolean sendWhatsApp;
 }

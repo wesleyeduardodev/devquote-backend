@@ -204,7 +204,15 @@ public class TaskController implements TaskControllerDoc {
                 ? request.getAdditionalWhatsAppRecipients()
                 : new ArrayList<>();
 
-        taskService.sendFinancialEmail(id, additionalEmails, additionalWhatsAppRecipients);
+        boolean sendEmail = request != null && request.getSendEmail() != null
+                ? request.getSendEmail()
+                : true;
+
+        boolean sendWhatsApp = request != null && request.getSendWhatsApp() != null
+                ? request.getSendWhatsApp()
+                : true;
+
+        taskService.sendFinancialEmail(id, additionalEmails, additionalWhatsAppRecipients, sendEmail, sendWhatsApp);
         return ResponseEntity.ok().build();
     }
 
