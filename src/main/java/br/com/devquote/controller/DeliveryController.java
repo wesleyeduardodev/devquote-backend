@@ -284,7 +284,15 @@ public class DeliveryController implements DeliveryControllerDoc {
                     ? request.getAdditionalWhatsAppRecipients()
                     : new ArrayList<>();
 
-            deliveryService.sendDeliveryEmail(id, additionalEmails, additionalWhatsAppRecipients);
+            boolean sendEmail = request != null && request.getSendEmail() != null
+                    ? request.getSendEmail()
+                    : true;
+
+            boolean sendWhatsApp = request != null && request.getSendWhatsApp() != null
+                    ? request.getSendWhatsApp()
+                    : true;
+
+            deliveryService.sendDeliveryEmail(id, additionalEmails, additionalWhatsAppRecipients, sendEmail, sendWhatsApp);
             return ResponseEntity.ok("Notificação de entrega enviada com sucesso!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

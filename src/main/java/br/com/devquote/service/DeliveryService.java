@@ -63,7 +63,7 @@ public interface DeliveryService {
     
     DeliveryResponse findByTaskId(Long taskId);
 
-    void sendDeliveryEmail(Long id, List<String> additionalEmails, List<String> additionalWhatsAppRecipients);
+    void sendDeliveryEmail(Long id, List<String> additionalEmails, List<String> additionalWhatsAppRecipients, boolean sendEmail, boolean sendWhatsApp);
 
     DeliveryResponse updateNotes(Long id, String notes);
 }
