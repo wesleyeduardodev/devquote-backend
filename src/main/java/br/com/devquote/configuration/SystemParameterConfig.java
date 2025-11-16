@@ -30,10 +30,6 @@ public class SystemParameterConfig {
             String username = systemParameterService.getString("MAIL_USERNAME");
             String password = systemParameterService.getString("MAIL_PASSWORD");
 
-            log.info("🔑 DEBUG MAIL_PASSWORD - Tamanho: {}, Primeiros 4 chars: {}",
-                    password != null ? password.length() : 0,
-                    password != null && password.length() >= 4 ? password.substring(0, 4) + "****" : "NULL");
-
             mailSender.setHost(host);
             mailSender.setPort(port);
             mailSender.setUsername(username);
