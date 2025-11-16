@@ -1,10 +1,8 @@
 package br.com.devquote.service;
-
 import br.com.devquote.dto.request.SystemParameterRequest;
 import br.com.devquote.dto.response.SystemParameterResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 import java.util.List;
 
 public interface SystemParameterService {
@@ -38,19 +36,11 @@ public interface SystemParameterService {
 
     String getString(String name, String defaultValue);
 
-    Boolean getBoolean(String name);
-
     Boolean getBoolean(String name, Boolean defaultValue);
 
     Integer getInteger(String name);
 
-    Integer getInteger(String name, Integer defaultValue);
-
-    Long getLong(String name);
-
     Long getLong(String name, Long defaultValue);
 
     List<String> getList(String name);
-
-    List<String> getList(String name, List<String> defaultValue);
 }

@@ -210,12 +210,6 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     }
 
     @Override
-    public Boolean getBoolean(String name) {
-        String value = getValue(name);
-        return Boolean.parseBoolean(value);
-    }
-
-    @Override
     public Boolean getBoolean(String name, Boolean defaultValue) {
         try {
             String value = getValue(name);
@@ -233,30 +227,6 @@ public class SystemParameterServiceImpl implements SystemParameterService {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             throw new BusinessException("Parâmetro '" + name + "' não é um número inteiro válido: " + value, "INVALID_INTEGER_PARAMETER");
-        }
-    }
-
-    @Override
-    public Integer getInteger(String name, Integer defaultValue) {
-        try {
-            String value = getValue(name);
-            return Integer.parseInt(value);
-        } catch (ResourceNotFoundException e) {
-            log.warn("Parâmetro '{}' não encontrado. Usando valor padrão: '{}'", name, defaultValue);
-            return defaultValue;
-        } catch (NumberFormatException e) {
-            log.error("Parâmetro '{}' não é um número inteiro válido. Usando valor padrão: '{}'", name, defaultValue);
-            return defaultValue;
-        }
-    }
-
-    @Override
-    public Long getLong(String name) {
-        String value = getValue(name);
-        try {
-            return Long.parseLong(value);
-        } catch (NumberFormatException e) {
-            throw new BusinessException("Parâmetro '" + name + "' não é um número long válido: " + value, "INVALID_LONG_PARAMETER");
         }
     }
 
@@ -294,18 +264,5 @@ public class SystemParameterServiceImpl implements SystemParameterService {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<String> getList(String name, List<String> defaultValue) {
-        try {
-            return getList(name);
-        } catch (ResourceNotFoundException e) {
-            log.warn("Parâmetro '{}' não encontrado. Usando valor padrão: '{}'", name, defaultValue);
-            return defaultValue;
-        } catch (BusinessException e) {
-            log.error("Erro ao processar parâmetro '{}'. Usando valor padrão: '{}'", name, defaultValue);
-            return defaultValue;
-        }
     }
 }
