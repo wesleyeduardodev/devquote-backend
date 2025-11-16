@@ -36,6 +36,7 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     private final br.com.devquote.utils.EncryptionUtil encryptionUtil;
 
     @Override
+    @Cacheable(value = "systemParameters", key = "'all'")
     public List<SystemParameterResponse> findAll() {
         return systemParameterRepository.findAllOrderedById().stream()
                 .map(entity -> {
@@ -49,6 +50,7 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     }
 
     @Override
+    @Cacheable(value = "systemParameters", key = "'id:' + #id")
     public SystemParameterResponse findById(Long id) {
         SystemParameter entity = systemParameterRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Parâmetro", id));
@@ -60,6 +62,7 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     }
 
     @Override
+    @Cacheable(value = "systemParameters", key = "'name:' + #name")
     public SystemParameterResponse findByName(String name) {
         SystemParameter entity = systemParameterRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Parâmetro com nome: " + name));
@@ -71,7 +74,6 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     }
 
     @Override
-    @CacheEvict(value = "systemParameters", key = "#dto.name")
     public SystemParameterResponse create(SystemParameterRequest dto) {
         if (systemParameterRepository.existsByName(dto.getName())) {
             throw new BusinessException(
@@ -107,7 +109,6 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     }
 
     @Override
-    @CacheEvict(value = "systemParameters", key = "#dto.name")
     public SystemParameterResponse update(Long id, SystemParameterRequest dto) {
         SystemParameter entity = systemParameterRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Parâmetro", id));
@@ -146,7 +147,6 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     }
 
     @Override
-    @CacheEvict(value = "systemParameters", allEntries = true)
     public void delete(Long id) {
         SystemParameter entity = systemParameterRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Parâmetro", id));
@@ -154,7 +154,6 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     }
 
     @Override
-    @CacheEvict(value = "systemParameters", allEntries = true)
     public void deleteBulk(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return;

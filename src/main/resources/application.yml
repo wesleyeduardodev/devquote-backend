@@ -4,6 +4,8 @@ spring:
 
   jackson:
     time-zone: America/Sao_Paulo
+    serialization:
+      write-dates-as-timestamps: false
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/devquote?sslmode=disable}
@@ -20,10 +22,6 @@ spring:
         format_sql: ${SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL:false}
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-
   thymeleaf:
     cache: false
 
@@ -34,9 +32,6 @@ spring:
 
   cache:
     type: redis
-    redis:
-      time-to-live: 600000
-      cache-null-values: false
   data:
     redis:
       host: ${REDIS_HOST:localhost}

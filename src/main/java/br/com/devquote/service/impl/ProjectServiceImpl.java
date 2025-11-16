@@ -31,14 +31,10 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    @Cacheable(value = "projects", key = "#id")
     public ProjectResponse findById(Long id) {
-        log.warn("🔍 REDIS CACHE MISS - Buscando projeto ID {} do BANCO", id);
         Project entity = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
-        ProjectResponse response = ProjectAdapter.toResponseDTO(entity);
-        log.warn("🔍 REDIS - Salvando projeto ID {} no cache", id);
-        return response;
+        return ProjectAdapter.toResponseDTO(entity);
     }
 
     @Override
