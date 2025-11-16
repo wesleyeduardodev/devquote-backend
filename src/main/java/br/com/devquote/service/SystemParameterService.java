@@ -31,4 +31,26 @@ public interface SystemParameterService {
             String updatedAt,
             Pageable pageable
     );
+
+    String getValue(String name);
+
+    String getString(String name);
+
+    String getString(String name, String defaultValue);
+
+    Boolean getBoolean(String name);
+
+    Boolean getBoolean(String name, Boolean defaultValue);
+
+    Integer getInteger(String name);
+
+    Integer getInteger(String name, Integer defaultValue);
+
+    Long getLong(String name);
+
+    Long getLong(String name, Long defaultValue);
+
+    List<String> getList(String name);
+
+    List<String> getList(String name, List<String> defaultValue);
 }

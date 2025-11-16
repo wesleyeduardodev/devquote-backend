@@ -1,8 +1,10 @@
 package br.com.devquote.configuration.security;
 import br.com.devquote.entity.User;
+import br.com.devquote.service.SystemParameterService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,17 +14,19 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
+@RequiredArgsConstructor
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+
+    private final SystemParameterService systemParameterService;
 
     @Value("${app.jwtSecret:devQuoteSecretKey}")
     private String jwtSecret;
 
-    @Value("${app.jwtExpirationMs:86400000}")
-    private int jwtExpirationMs;
-
     public String generateJwtToken(Authentication authentication) {
         User userPrincipal = (User) authentication.getPrincipal();
+
+        Long jwtExpirationMs = systemParameterService.getLong("APP_JWTEXPIRATIONMS", 86400000L);
 
         return Jwts.builder()
                 .setSubject(userPrincipal.getUsername())

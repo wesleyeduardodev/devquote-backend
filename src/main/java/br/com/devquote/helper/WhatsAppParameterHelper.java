@@ -13,19 +13,19 @@ public class WhatsAppParameterHelper {
     private final SystemParameterService systemParameterService;
 
     public String getBaseUrl() {
-        return getParameterValue("base-url-whatsapp-api");
+        return getParameterValue("BASE_URL_WHATSAPP_API");
     }
 
     public String getMessageUrl() {
-        return getParameterValue("url-mensagem-whatsapp-api");
+        return getParameterValue("URL_MENSAGEM_WHATSAPP_API");
     }
 
     public String getInstance() {
-        return getParameterValue("instancia-whatsapp-api");
+        return getParameterValue("INSTANCIA_WHATSAPP_API");
     }
 
     public String getApiKey() {
-        return getParameterValue("api-key-whatsapp-api");
+        return getParameterValue("API_KEY_WHATSAPP_API");
     }
 
     public String buildFullUrl() {

@@ -1,29 +1,47 @@
 package br.com.devquote.configuration;
+import br.com.devquote.service.SystemParameterService;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 
 @Slf4j
 @Data
 @Component
-@ConfigurationProperties(prefix = "devquote.notification.email")
+@RequiredArgsConstructor
 public class EmailProperties {
+
+    private final SystemParameterService systemParameterService;
+
     private boolean enabled;
     private String from;
 
     @PostConstruct
-    public void logConfiguration() {
-        if (enabled) {
-            log.debug("Email notifications: ENABLED");
-            log.debug("Email from address: {}", from != null ? from : "NOT CONFIGURED");
-            if (from == null || from.trim().isEmpty()) {
-                log.error("EMAIL FROM ADDRESS IS NOT CONFIGURED! Set DEVQUOTE_EMAIL_FROM environment variable.");
+    public void loadFromSystemParameters() {
+        try {
+            this.enabled = systemParameterService.getBoolean("DEVQUOTE_EMAIL_ENABLED", false);
+            this.from = systemParameterService.getString("DEVQUOTE_EMAIL_FROM", "noreply@devquote.com.br");
+
+            if (enabled) {
+                log.info("Email notifications: ENABLED (loaded from system_parameter)");
+                log.info("Email from address: {}", from);
+            } else {
+                log.info("Email notifications: DISABLED (loaded from system_parameter)");
             }
-        } else {
-            log.debug("Email notifications: DISABLED");
-            log.debug("Reason: DEVQUOTE_EMAIL_ENABLED is set to false or not configured");
+        } catch (Exception e) {
+            log.error("Erro ao carregar configurações de email do system_parameter: {}", e.getMessage());
+            log.warn("Usando valores padrão: enabled=false, from=noreply@devquote.com.br");
+            this.enabled = false;
+            this.from = "noreply@devquote.com.br";
         }
+    }
+
+    public boolean isEnabled() {
+        return systemParameterService.getBoolean("DEVQUOTE_EMAIL_ENABLED", false);
+    }
+
+    public String getFrom() {
+        return systemParameterService.getString("DEVQUOTE_EMAIL_FROM", "noreply@devquote.com.br");
     }
 }

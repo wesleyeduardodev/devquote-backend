@@ -1,4 +1,5 @@
 package br.com.devquote.service.storage;
+import br.com.devquote.service.SystemParameterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,20 +24,23 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
+    private final SystemParameterService systemParameterService;
 
-    @Value("${aws.s3.bucket-name}")
     private String bucketName;
-
-    @Value("${aws.s3.region}")
     private String region;
 
     public S3FileStorageStrategy(
             @Value("${aws.access-key-id}") String accessKey,
             @Value("${aws.secret-access-key}") String secretKey,
-            @Value("${aws.s3.region}") String region) {
+            SystemParameterService systemParameterService) {
+
+        this.systemParameterService = systemParameterService;
+
+        this.bucketName = systemParameterService.getString("AWS_S3_BUCKET_NAME", "devquote-storage");
+        this.region = systemParameterService.getString("AWS_S3_REGION", "us-east-1");
 
         AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
-        
+
         this.s3Client = S3Client.builder()
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
