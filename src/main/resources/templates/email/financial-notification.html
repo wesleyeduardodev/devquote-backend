@@ -267,10 +267,6 @@
                         <div class="info-label">Título:</div>
                         <div class="info-value" th:utext="${taskTitle}">Título da tarefa</div>
                     </div>
-                    <div class="info-row" th:if="${taskDescription != null and !#strings.isEmpty(taskDescription)}">
-                        <div class="info-label">Descrição:</div>
-                        <div class="info-value" th:utext="${taskDescription}">Descrição da tarefa</div>
-                    </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskPriority)}">
                         <div class="info-label">Prioridade:</div>
                         <div class="info-value">
@@ -284,6 +280,14 @@
                     <div class="info-row" th:if="${!#strings.isEmpty(taskType)}">
                         <div class="info-label">Tipo da Tarefa:</div>
                         <div class="info-value" th:text="${taskType}">Nova Funcionalidade</div>
+                    </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(requesterName)}">
+                        <div class="info-label">Solicitante:</div>
+                        <div class="info-value" th:text="${requesterName}">Nome do Solicitante</div>
+                    </div>
+                    <div class="info-row" th:if="${taskFlowType == 'OPERACIONAL' and taskDescription != null and !#strings.isEmpty(taskDescription)}">
+                        <div class="info-label">Descrição:</div>
+                        <div class="info-value" th:utext="${taskDescription}">Descrição da tarefa</div>
                     </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskSystemModule)}">
                         <div class="info-label">Módulo do Sistema:</div>

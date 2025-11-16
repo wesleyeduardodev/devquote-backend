@@ -6,6 +6,7 @@ import br.com.devquote.entity.NotificationConfig;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
 import br.com.devquote.entity.TaskAttachment;
+import br.com.devquote.enums.FlowType;
 import br.com.devquote.enums.NotificationConfigType;
 import br.com.devquote.enums.NotificationType;
 import br.com.devquote.repository.BillingPeriodTaskRepository;
@@ -831,6 +832,11 @@ public class EmailServiceImpl implements EmailService {
         message.append("*Tipo da Tarefa:* ").append(translateTaskType(task.getTaskType())).append("\n");
         message.append("*Solicitante:* ").append(task.getRequester() != null ? task.getRequester().getName() : "N/A").append("\n");
 
+        if (task.getFlowType() == FlowType.OPERACIONAL && task.getDescription() != null && !task.getDescription().trim().isEmpty()) {
+            message.append("\n*Descrição:*\n\n");
+            message.append(task.getDescription()).append("\n");
+        }
+
         if (task.getHasSubTasks()) {
             List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
 
@@ -927,7 +933,8 @@ public class EmailServiceImpl implements EmailService {
         message.append("*Solicitante:* ").append(delivery.getTask() != null && delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "N/A").append("\n");
 
         if (delivery.getNotes() != null && !delivery.getNotes().trim().isEmpty()) {
-            message.append("*Observações:* ").append(delivery.getNotes()).append("\n");
+            message.append("\n*Observações:*\n");
+            message.append(delivery.getNotes()).append("\n");
         }
 
         if (delivery.getFlowType() == br.com.devquote.enums.FlowType.DESENVOLVIMENTO) {
