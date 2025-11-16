@@ -33,11 +33,18 @@ public class SystemParameterServiceImpl implements SystemParameterService {
 
     private final SystemParameterRepository systemParameterRepository;
     private final ObjectMapper objectMapper;
+    private final br.com.devquote.utils.EncryptionUtil encryptionUtil;
 
     @Override
     public List<SystemParameterResponse> findAll() {
         return systemParameterRepository.findAllOrderedById().stream()
-                .map(SystemParameterAdapter::toResponseDTO)
+                .map(entity -> {
+                    SystemParameterResponse response = SystemParameterAdapter.toResponseDTO(entity);
+                    if (Boolean.TRUE.equals(entity.getIsEncrypted()) && response.getValue() != null) {
+                        response.setValue(encryptionUtil.decrypt(response.getValue()));
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -45,14 +52,22 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     public SystemParameterResponse findById(Long id) {
         SystemParameter entity = systemParameterRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Parâmetro", id));
-        return SystemParameterAdapter.toResponseDTO(entity);
+        SystemParameterResponse response = SystemParameterAdapter.toResponseDTO(entity);
+        if (Boolean.TRUE.equals(entity.getIsEncrypted()) && response.getValue() != null) {
+            response.setValue(encryptionUtil.decrypt(response.getValue()));
+        }
+        return response;
     }
 
     @Override
     public SystemParameterResponse findByName(String name) {
         SystemParameter entity = systemParameterRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Parâmetro com nome: " + name));
-        return SystemParameterAdapter.toResponseDTO(entity);
+        SystemParameterResponse response = SystemParameterAdapter.toResponseDTO(entity);
+        if (Boolean.TRUE.equals(entity.getIsEncrypted()) && response.getValue() != null) {
+            response.setValue(encryptionUtil.decrypt(response.getValue()));
+        }
+        return response;
     }
 
     @Override
@@ -67,6 +82,10 @@ public class SystemParameterServiceImpl implements SystemParameterService {
 
         SystemParameter entity = SystemParameterAdapter.toEntity(dto);
 
+        if (Boolean.TRUE.equals(entity.getIsEncrypted()) && entity.getValue() != null) {
+            entity.setValue(encryptionUtil.encrypt(entity.getValue()));
+        }
+
         try {
             entity = systemParameterRepository.save(entity);
         } catch (DataIntegrityViolationException e) {
@@ -80,7 +99,11 @@ public class SystemParameterServiceImpl implements SystemParameterService {
             throw new BusinessException("Erro ao salvar parâmetro: " + e.getMessage(), "PARAMETER_SAVE_ERROR");
         }
 
-        return SystemParameterAdapter.toResponseDTO(entity);
+        SystemParameterResponse response = SystemParameterAdapter.toResponseDTO(entity);
+        if (Boolean.TRUE.equals(entity.getIsEncrypted()) && response.getValue() != null) {
+            response.setValue(encryptionUtil.decrypt(response.getValue()));
+        }
+        return response;
     }
 
     @Override
@@ -98,6 +121,10 @@ public class SystemParameterServiceImpl implements SystemParameterService {
 
         SystemParameterAdapter.updateEntityFromDto(dto, entity);
 
+        if (Boolean.TRUE.equals(entity.getIsEncrypted()) && entity.getValue() != null) {
+            entity.setValue(encryptionUtil.encrypt(entity.getValue()));
+        }
+
         try {
             entity = systemParameterRepository.save(entity);
         } catch (DataIntegrityViolationException e) {
@@ -111,7 +138,11 @@ public class SystemParameterServiceImpl implements SystemParameterService {
             throw new BusinessException("Erro ao atualizar parâmetro: " + e.getMessage(), "PARAMETER_UPDATE_ERROR");
         }
 
-        return SystemParameterAdapter.toResponseDTO(entity);
+        SystemParameterResponse response = SystemParameterAdapter.toResponseDTO(entity);
+        if (Boolean.TRUE.equals(entity.getIsEncrypted()) && response.getValue() != null) {
+            response.setValue(encryptionUtil.decrypt(response.getValue()));
+        }
+        return response;
     }
 
     @Override
@@ -143,7 +174,13 @@ public class SystemParameterServiceImpl implements SystemParameterService {
         Page<SystemParameter> page = systemParameterRepository.findByOptionalFieldsPaginated(
                 id, name, description, createdAt, updatedAt, pageable
         );
-        return page.map(SystemParameterAdapter::toResponseDTO);
+        return page.map(entity -> {
+            SystemParameterResponse response = SystemParameterAdapter.toResponseDTO(entity);
+            if (Boolean.TRUE.equals(entity.getIsEncrypted()) && response.getValue() != null) {
+                response.setValue(encryptionUtil.decrypt(response.getValue()));
+            }
+            return response;
+        });
     }
 
     @Override
@@ -151,7 +188,11 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     public String getValue(String name) {
         SystemParameter parameter = systemParameterRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Parâmetro com nome: " + name));
-        return parameter.getValue();
+        String value = parameter.getValue();
+        if (Boolean.TRUE.equals(parameter.getIsEncrypted()) && value != null) {
+            value = encryptionUtil.decrypt(value);
+        }
+        return value;
     }
 
     @Override

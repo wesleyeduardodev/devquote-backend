@@ -15,6 +15,7 @@ public class SystemParameterResponse {
     private String name;
     private String value;
     private String description;
+    private Boolean isEncrypted;
     private String createdAt;
     private String updatedAt;
 }

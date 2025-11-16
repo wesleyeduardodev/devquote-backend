@@ -21,4 +21,6 @@ public class SystemParameterRequest {
 
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
+
+    private Boolean isEncrypted = false;
 }

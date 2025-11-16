@@ -22,4 +22,7 @@ public class SystemParameter extends BaseEntity {
 
     @Column(name = "description", length = 255)
     private String description;
+
+    @Column(name = "is_encrypted", nullable = false)
+    private Boolean isEncrypted = false;
 }

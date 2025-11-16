@@ -24,9 +24,6 @@ spring:
   thymeleaf:
     cache: false
 
-  mail:
-    password: ${MAIL_PASSWORD}
-
   servlet:
     multipart:
       max-file-size: 10MB
@@ -53,17 +50,6 @@ server:
   port: ${PORT:${SERVER_PORT:8080}}
   error:
     include-message: always
-
-devquote:
-  email:
-    password: ${MAIL_PASSWORD}
-
-app:
-  jwtSecret: ${APP_JWTSECRET:ZGV2UXVvdGVTZWNyZXRLZXlGb3JKV1RUb2tlbkdlbmVyYXRpb25BbmRWYWxpZGF0aW9u}
-
-aws:
-  access-key-id: ${AWS_ACCESS_KEY_ID}
-  secret-access-key: ${AWS_SECRET_ACCESS_KEY}
 
 logging:
   pattern:

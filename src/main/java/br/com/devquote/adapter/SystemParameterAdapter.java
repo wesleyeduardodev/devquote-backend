@@ -20,6 +20,7 @@ public class SystemParameterAdapter {
                 .name(entity.getName())
                 .value(entity.getValue())
                 .description(entity.getDescription())
+                .isEncrypted(entity.getIsEncrypted())
                 .createdAt(entity.getCreatedAt() != null ? entity.getCreatedAt().format(FORMATTER) : null)
                 .updatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().format(FORMATTER) : null)
                 .build();
@@ -34,6 +35,7 @@ public class SystemParameterAdapter {
                 .name(dto.getName())
                 .value(dto.getValue())
                 .description(dto.getDescription())
+                .isEncrypted(dto.getIsEncrypted() != null ? dto.getIsEncrypted() : false)
                 .build();
     }
 
@@ -45,5 +47,6 @@ public class SystemParameterAdapter {
         entity.setName(dto.getName());
         entity.setValue(dto.getValue());
         entity.setDescription(dto.getDescription());
+        entity.setIsEncrypted(dto.getIsEncrypted() != null ? dto.getIsEncrypted() : false);
     }
 }
