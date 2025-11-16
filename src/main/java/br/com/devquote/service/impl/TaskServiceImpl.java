@@ -1022,13 +1022,16 @@ public class TaskServiceImpl implements TaskService {
     private void ensureTaskHasDelivery(Task task) {
         if (!deliveryService.existsByTaskId(task.getId())) {
             log.debug("Creating automatic delivery for task ID: {}", task.getId());
-            
-            DeliveryRequest deliveryRequest = DeliveryRequest.builder()
+
+            DeliveryRequest.DeliveryRequestBuilder builder = DeliveryRequest.builder()
                     .taskId(task.getId())
-                    .status("PENDING")
-                    .build();
-            
-            deliveryService.create(deliveryRequest);
+                    .status("PENDING");
+
+            if (task.getFlowType() == FlowType.OPERACIONAL) {
+                builder.notes(task.getDescription());
+            }
+
+            deliveryService.create(builder.build());
             log.debug("Automatic delivery created for task ID: {}", task.getId());
         }
     }
