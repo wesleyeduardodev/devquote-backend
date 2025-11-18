@@ -51,7 +51,7 @@ server:
 
 logging:
   pattern:
-    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr([%X{traceId:-}]){yellow} : %m%n"
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr([trace:%X{traceId:-} span:%X{spanId:-}]){yellow} : %m%n"
   level:
     br.com.devquote: ${LOG_LEVEL_APP:INFO}
     org.springframework: ${LOG_LEVEL_SPRING:WARN}
@@ -84,3 +84,11 @@ management:
     tags:
       application: ${spring.application.name}
       environment: ${SPRING_PROFILES_ACTIVE:dev}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+      timeout: 10s
+      compression: gzip
