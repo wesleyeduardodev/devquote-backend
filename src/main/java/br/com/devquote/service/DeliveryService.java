@@ -59,7 +59,7 @@ public interface DeliveryService {
 
     void updateAllDeliveryStatuses();
 
-    byte[] exportToExcel(String flowType) throws IOException;
+    byte[] exportToExcel(String flowType, boolean canViewAmounts) throws IOException;
     
     DeliveryResponse findByTaskId(Long taskId);
 

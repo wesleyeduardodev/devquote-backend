@@ -254,8 +254,9 @@ public class DeliveryController implements DeliveryControllerDoc {
     @GetMapping("/export/excel")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<byte[]> exportDeliveriesToExcel(
-            @RequestParam(required = false) String flowType) throws IOException {
-        byte[] excelData = deliveryService.exportToExcel(flowType);
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false, defaultValue = "false") boolean canViewAmounts) throws IOException {
+        byte[] excelData = deliveryService.exportToExcel(flowType, canViewAmounts);
 
         String filename = "relatorio_entregas_" +
                          LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) +

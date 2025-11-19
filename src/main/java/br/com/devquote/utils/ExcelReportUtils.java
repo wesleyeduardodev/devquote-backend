@@ -431,34 +431,55 @@ public class ExcelReportUtils {
         };
     }
 
-    public byte[] generateDeliveriesReport(List<Map<String, Object>> data) throws IOException {
+    public byte[] generateDeliveriesReport(List<Map<String, Object>> data, boolean canViewAmounts) throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Entregas");
 
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
+        CellStyle currencyStyle = createCurrencyStyle(workbook);
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_YELLOW.getIndex());
 
-        String[] headers = {
-                "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
-                "Status Geral da Entrega", "Observações da Entrega",
-                "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
-                "Pull Request", "Observações do Item", "Data Início", "Data Fim"
-        };
+        String[] headers;
+        if (canViewAmounts) {
+            headers = new String[]{
+                    "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Valor da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
+                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
+                    "Pull Request", "Observações do Item", "Data Início", "Data Fim"
+            };
+        } else {
+            headers = new String[]{
+                    "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
+                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
+                    "Pull Request", "Observações do Item", "Data Início", "Data Fim"
+            };
+        }
 
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
 
-            if (i <= 6) {
-                cell.setCellStyle(taskHeaderStyle);
-            } else if (i >= 7 && i <= 8) {
-                cell.setCellStyle(deliveryHeaderStyle);
+            if (canViewAmounts) {
+                if (i <= 7) {
+                    cell.setCellStyle(taskHeaderStyle);
+                } else if (i >= 8 && i <= 9) {
+                    cell.setCellStyle(deliveryHeaderStyle);
+                } else {
+                    cell.setCellStyle(itemHeaderStyle);
+                }
             } else {
-                cell.setCellStyle(itemHeaderStyle);
+                if (i <= 6) {
+                    cell.setCellStyle(taskHeaderStyle);
+                } else if (i >= 7 && i <= 8) {
+                    cell.setCellStyle(deliveryHeaderStyle);
+                } else {
+                    cell.setCellStyle(itemHeaderStyle);
+                }
             }
         }
 
@@ -466,30 +487,59 @@ public class ExcelReportUtils {
         for (Map<String, Object> deliveryData : data) {
             Row row = sheet.createRow(rowNum++);
 
-            setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
-            setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
-            setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
-            setTaskTypeCell(row, 3, deliveryData.get("task_type"), dataStyle);
-            setCellValue(row, 4, deliveryData.get("task_environment"), dataStyle);
-            setCellValue(row, 5, deliveryData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 6, deliveryData.get("requester_name"), dataStyle);
+            if (canViewAmounts) {
+                setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
+                setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
+                setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
+                setCellValue(row, 3, deliveryData.get("task_amount"), currencyStyle);
+                setTaskTypeCell(row, 4, deliveryData.get("task_type"), dataStyle);
+                setCellValue(row, 5, deliveryData.get("task_environment"), dataStyle);
+                setCellValue(row, 6, deliveryData.get("subtasks_count"), dataStyle);
+                setCellValue(row, 7, deliveryData.get("requester_name"), dataStyle);
 
-            setDeliveryStatusCell(row, 7, deliveryData.get("delivery_status"), dataStyle);
-            setCellValue(row, 8, deliveryData.get("delivery_notes"), dataStyle);
+                setDeliveryStatusCell(row, 8, deliveryData.get("delivery_status"), dataStyle);
+                setCellValue(row, 9, deliveryData.get("delivery_notes"), dataStyle);
 
-            setCellValue(row, 9, deliveryData.get("project_name"), dataStyle);
-            setDeliveryStatusCell(row, 10, deliveryData.get("item_status"), dataStyle);
-            setCellValue(row, 11, deliveryData.get("item_branch"), dataStyle);
-            setCellValue(row, 12, deliveryData.get("item_source_branch"), dataStyle);
-            setCellValue(row, 13, deliveryData.get("item_pull_request"), dataStyle);
-            setCellValue(row, 14, deliveryData.get("item_notes"), dataStyle);
-            setCellValue(row, 15, deliveryData.get("item_started_at"), dateStyle);
-            setCellValue(row, 16, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 10, deliveryData.get("project_name"), dataStyle);
+                setDeliveryStatusCell(row, 11, deliveryData.get("item_status"), dataStyle);
+                setCellValue(row, 12, deliveryData.get("item_branch"), dataStyle);
+                setCellValue(row, 13, deliveryData.get("item_source_branch"), dataStyle);
+                setCellValue(row, 14, deliveryData.get("item_pull_request"), dataStyle);
+                setCellValue(row, 15, deliveryData.get("item_notes"), dataStyle);
+                setCellValue(row, 16, deliveryData.get("item_started_at"), dateStyle);
+                setCellValue(row, 17, deliveryData.get("item_finished_at"), dateStyle);
+            } else {
+                setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
+                setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
+                setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
+                setTaskTypeCell(row, 3, deliveryData.get("task_type"), dataStyle);
+                setCellValue(row, 4, deliveryData.get("task_environment"), dataStyle);
+                setCellValue(row, 5, deliveryData.get("subtasks_count"), dataStyle);
+                setCellValue(row, 6, deliveryData.get("requester_name"), dataStyle);
+
+                setDeliveryStatusCell(row, 7, deliveryData.get("delivery_status"), dataStyle);
+                setCellValue(row, 8, deliveryData.get("delivery_notes"), dataStyle);
+
+                setCellValue(row, 9, deliveryData.get("project_name"), dataStyle);
+                setDeliveryStatusCell(row, 10, deliveryData.get("item_status"), dataStyle);
+                setCellValue(row, 11, deliveryData.get("item_branch"), dataStyle);
+                setCellValue(row, 12, deliveryData.get("item_source_branch"), dataStyle);
+                setCellValue(row, 13, deliveryData.get("item_pull_request"), dataStyle);
+                setCellValue(row, 14, deliveryData.get("item_notes"), dataStyle);
+                setCellValue(row, 15, deliveryData.get("item_started_at"), dateStyle);
+                setCellValue(row, 16, deliveryData.get("item_finished_at"), dateStyle);
+            }
         }
 
-        setColumnWidths(sheet, new int[]{
-                2500, 3500, 8000, 4000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 6500, 6500
-        });
+        if (canViewAmounts) {
+            setColumnWidths(sheet, new int[]{
+                    2500, 3500, 8000, 3500, 4000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 6500, 6500
+            });
+        } else {
+            setColumnWidths(sheet, new int[]{
+                    2500, 3500, 8000, 4000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 6500, 6500
+            });
+        }
 
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);
@@ -511,34 +561,55 @@ public class ExcelReportUtils {
         return outputStream.toByteArray();
     }
 
-    public byte[] generateOperationalDeliveriesReport(List<Map<String, Object>> data) throws IOException {
+    public byte[] generateOperationalDeliveriesReport(List<Map<String, Object>> data, boolean canViewAmounts) throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Entregas Operacionais");
 
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
+        CellStyle currencyStyle = createCurrencyStyle(workbook);
         CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
         CellStyle deliveryHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_GREEN.getIndex());
         CellStyle itemHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.LIGHT_ORANGE.getIndex());
 
-        String[] headers = {
-                "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
-                "Status Geral da Entrega", "Observações da Entrega",
-                "Título do Item", "Descrição do Item", "Status do Item",
-                "Data Início", "Data Fim"
-        };
+        String[] headers;
+        if (canViewAmounts) {
+            headers = new String[]{
+                    "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Valor da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
+                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Título do Item", "Descrição do Item", "Status do Item",
+                    "Data Início", "Data Fim"
+            };
+        } else {
+            headers = new String[]{
+                    "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
+                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Título do Item", "Descrição do Item", "Status do Item",
+                    "Data Início", "Data Fim"
+            };
+        }
 
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
 
-            if (i <= 6) {
-                cell.setCellStyle(taskHeaderStyle);
-            } else if (i >= 7 && i <= 8) {
-                cell.setCellStyle(deliveryHeaderStyle);
+            if (canViewAmounts) {
+                if (i <= 7) {
+                    cell.setCellStyle(taskHeaderStyle);
+                } else if (i >= 8 && i <= 9) {
+                    cell.setCellStyle(deliveryHeaderStyle);
+                } else {
+                    cell.setCellStyle(itemHeaderStyle);
+                }
             } else {
-                cell.setCellStyle(itemHeaderStyle);
+                if (i <= 6) {
+                    cell.setCellStyle(taskHeaderStyle);
+                } else if (i >= 7 && i <= 8) {
+                    cell.setCellStyle(deliveryHeaderStyle);
+                } else {
+                    cell.setCellStyle(itemHeaderStyle);
+                }
             }
         }
 
@@ -546,27 +617,53 @@ public class ExcelReportUtils {
         for (Map<String, Object> deliveryData : data) {
             Row row = sheet.createRow(rowNum++);
 
-            setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
-            setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
-            setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
-            setTaskTypeCell(row, 3, deliveryData.get("task_type"), dataStyle);
-            setCellValue(row, 4, deliveryData.get("task_environment"), dataStyle);
-            setCellValue(row, 5, deliveryData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 6, deliveryData.get("requester_name"), dataStyle);
+            if (canViewAmounts) {
+                setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
+                setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
+                setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
+                setCellValue(row, 3, deliveryData.get("task_amount"), currencyStyle);
+                setTaskTypeCell(row, 4, deliveryData.get("task_type"), dataStyle);
+                setCellValue(row, 5, deliveryData.get("task_environment"), dataStyle);
+                setCellValue(row, 6, deliveryData.get("subtasks_count"), dataStyle);
+                setCellValue(row, 7, deliveryData.get("requester_name"), dataStyle);
 
-            setDeliveryStatusCell(row, 7, deliveryData.get("delivery_status"), dataStyle);
-            setCellValue(row, 8, deliveryData.get("delivery_notes"), dataStyle);
+                setDeliveryStatusCell(row, 8, deliveryData.get("delivery_status"), dataStyle);
+                setCellValue(row, 9, deliveryData.get("delivery_notes"), dataStyle);
 
-            setCellValue(row, 9, deliveryData.get("item_title"), dataStyle);
-            setCellValue(row, 10, deliveryData.get("item_description"), dataStyle);
-            setOperationalItemStatusCell(row, 11, deliveryData.get("item_status"), dataStyle);
-            setCellValue(row, 12, deliveryData.get("item_started_at"), dateStyle);
-            setCellValue(row, 13, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 10, deliveryData.get("item_title"), dataStyle);
+                setCellValue(row, 11, deliveryData.get("item_description"), dataStyle);
+                setOperationalItemStatusCell(row, 12, deliveryData.get("item_status"), dataStyle);
+                setCellValue(row, 13, deliveryData.get("item_started_at"), dateStyle);
+                setCellValue(row, 14, deliveryData.get("item_finished_at"), dateStyle);
+            } else {
+                setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
+                setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
+                setCellValue(row, 2, deliveryData.get("task_title"), dataStyle);
+                setTaskTypeCell(row, 3, deliveryData.get("task_type"), dataStyle);
+                setCellValue(row, 4, deliveryData.get("task_environment"), dataStyle);
+                setCellValue(row, 5, deliveryData.get("subtasks_count"), dataStyle);
+                setCellValue(row, 6, deliveryData.get("requester_name"), dataStyle);
+
+                setDeliveryStatusCell(row, 7, deliveryData.get("delivery_status"), dataStyle);
+                setCellValue(row, 8, deliveryData.get("delivery_notes"), dataStyle);
+
+                setCellValue(row, 9, deliveryData.get("item_title"), dataStyle);
+                setCellValue(row, 10, deliveryData.get("item_description"), dataStyle);
+                setOperationalItemStatusCell(row, 11, deliveryData.get("item_status"), dataStyle);
+                setCellValue(row, 12, deliveryData.get("item_started_at"), dateStyle);
+                setCellValue(row, 13, deliveryData.get("item_finished_at"), dateStyle);
+            }
         }
 
-        setColumnWidths(sheet, new int[]{
-                2500, 3500, 8000, 4000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 6500, 6500
-        });
+        if (canViewAmounts) {
+            setColumnWidths(sheet, new int[]{
+                    2500, 3500, 8000, 3500, 4000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 6500, 6500
+            });
+        } else {
+            setColumnWidths(sheet, new int[]{
+                    2500, 3500, 8000, 4000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 6500, 6500
+            });
+        }
 
         for (int i = 1; i <= data.size(); i++) {
             Row row = sheet.getRow(i);

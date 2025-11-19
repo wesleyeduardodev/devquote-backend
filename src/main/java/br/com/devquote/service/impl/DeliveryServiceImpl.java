@@ -538,16 +538,16 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public byte[] exportToExcel(String flowType) throws IOException {
+    public byte[] exportToExcel(String flowType, boolean canViewAmounts) throws IOException {
         if ("OPERACIONAL".equals(flowType)) {
-            return exportOperationalToExcel();
+            return exportOperationalToExcel(canViewAmounts);
         } else {
-            return exportDevelopmentToExcel();
+            return exportDevelopmentToExcel(canViewAmounts);
         }
     }
 
-    private byte[] exportDevelopmentToExcel() throws IOException {
-        log.debug("EXCEL EXPORT (Development Deliveries) STARTED");
+    private byte[] exportDevelopmentToExcel(boolean canViewAmounts) throws IOException {
+        log.debug("EXCEL EXPORT (Development Deliveries) STARTED canViewAmounts={}", canViewAmounts);
 
         String sql = """
             SELECT
@@ -556,6 +556,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 t.title as task_title,
                 t.task_type as task_type,
                 t.environment as task_environment,
+                t.amount as task_amount,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
                 d.status as delivery_status,
@@ -588,26 +589,27 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("task_title", row[2]);
             map.put("task_type", row[3]);
             map.put("task_environment", row[4]);
-            map.put("subtasks_count", row[5]);
-            map.put("requester_name", row[6]);
-            map.put("delivery_status", row[7]);
-            map.put("delivery_notes", row[8]);
-            map.put("project_name", row[9]);
-            map.put("item_status", row[10]);
-            map.put("item_branch", row[11]);
-            map.put("item_source_branch", row[12]);
-            map.put("item_pull_request", row[13]);
-            map.put("item_notes", row[14]);
-            map.put("item_started_at", row[15]);
-            map.put("item_finished_at", row[16]);
+            map.put("task_amount", row[5]);
+            map.put("subtasks_count", row[6]);
+            map.put("requester_name", row[7]);
+            map.put("delivery_status", row[8]);
+            map.put("delivery_notes", row[9]);
+            map.put("project_name", row[10]);
+            map.put("item_status", row[11]);
+            map.put("item_branch", row[12]);
+            map.put("item_source_branch", row[13]);
+            map.put("item_pull_request", row[14]);
+            map.put("item_notes", row[15]);
+            map.put("item_started_at", row[16]);
+            map.put("item_finished_at", row[17]);
             return map;
         }).collect(Collectors.toList());
 
-        return excelReportUtils.generateDeliveriesReport(data);
+        return excelReportUtils.generateDeliveriesReport(data, canViewAmounts);
     }
 
-    private byte[] exportOperationalToExcel() throws IOException {
-        log.debug("EXCEL EXPORT (Operational Deliveries) STARTED");
+    private byte[] exportOperationalToExcel(boolean canViewAmounts) throws IOException {
+        log.debug("EXCEL EXPORT (Operational Deliveries) STARTED canViewAmounts={}", canViewAmounts);
 
         String sql = """
             SELECT
@@ -616,6 +618,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 t.title as task_title,
                 t.task_type as task_type,
                 t.environment as task_environment,
+                t.amount as task_amount,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
                 d.status as delivery_status,
@@ -644,19 +647,20 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("task_title", row[2]);
             map.put("task_type", row[3]);
             map.put("task_environment", row[4]);
-            map.put("subtasks_count", row[5]);
-            map.put("requester_name", row[6]);
-            map.put("delivery_status", row[7]);
-            map.put("delivery_notes", row[8]);
-            map.put("item_title", row[9]);
-            map.put("item_description", row[10]);
-            map.put("item_status", row[11]);
-            map.put("item_started_at", row[12]);
-            map.put("item_finished_at", row[13]);
+            map.put("task_amount", row[5]);
+            map.put("subtasks_count", row[6]);
+            map.put("requester_name", row[7]);
+            map.put("delivery_status", row[8]);
+            map.put("delivery_notes", row[9]);
+            map.put("item_title", row[10]);
+            map.put("item_description", row[11]);
+            map.put("item_status", row[12]);
+            map.put("item_started_at", row[13]);
+            map.put("item_finished_at", row[14]);
             return map;
         }).collect(Collectors.toList());
 
-        return excelReportUtils.generateOperationalDeliveriesReport(data);
+        return excelReportUtils.generateOperationalDeliveriesReport(data, canViewAmounts);
     }
 
     @Override
