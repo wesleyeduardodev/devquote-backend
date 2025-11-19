@@ -28,7 +28,7 @@ public class ExcelReportUtils {
         String[] headers;
         if (canViewAmounts) {
             headers = new String[]{
-                    "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
+                    "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo", "Ambiente",
                     "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
                     "Link", "Link da Reunião", "Valor da Tarefa", "Tem Subtarefas",
                     "Tem Entrega", "Orçamento no Faturamento",
@@ -37,7 +37,7 @@ public class ExcelReportUtils {
             };
         } else {
             headers = new String[]{
-                    "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo",
+                    "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo", "Ambiente",
                     "Prioridade", "Solicitante", "Origem do Servidor", "Módulo do Sistema",
                     "Link", "Link da Reunião", "Tem Subtarefas",
                     "Subtarefa ID", "Subtarefa Título", "Subtarefa Descrição"
@@ -50,13 +50,13 @@ public class ExcelReportUtils {
             cell.setCellValue(headers[i]);
 
             if (canViewAmounts) {
-                if (i <= 15) {
+                if (i <= 16) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
                     cell.setCellStyle(subtaskHeaderStyle);
                 }
             } else {
-                if (i <= 12) {
+                if (i <= 13) {
                     cell.setCellStyle(taskHeaderStyle);
                 } else {
                     cell.setCellStyle(subtaskHeaderStyle);
@@ -75,20 +75,21 @@ public class ExcelReportUtils {
                 setCellValue(row, 3, taskData.get("task_title"), dataStyle);
                 setCellValue(row, 4, taskData.get("task_description"), dataStyle);
                 setTaskTypeCell(row, 5, taskData.get("task_type"), dataStyle);
-                setPriorityCell(row, 6, taskData.get("task_priority"), dataStyle);
-                setCellValue(row, 7, taskData.get("requester_name"), dataStyle);
-                setCellValue(row, 8, taskData.get("server_origin"), dataStyle);
-                setCellValue(row, 9, taskData.get("system_module"), dataStyle);
-                setCellValue(row, 10, taskData.get("task_link"), dataStyle);
-                setCellValue(row, 11, taskData.get("meeting_link"), dataStyle);
-                setCellValue(row, 12, taskData.get("task_amount"), currencyStyle);
-                setCellValue(row, 13, taskData.get("has_subtasks"), dataStyle);
-                setCellValue(row, 14, taskData.get("has_delivery"), dataStyle);
-                setCellValue(row, 15, taskData.get("has_quote_in_billing"), dataStyle);
-                setCellValue(row, 16, taskData.get("subtask_id"), dataStyle);
-                setCellValue(row, 17, taskData.get("subtask_title"), dataStyle);
-                setCellValue(row, 18, taskData.get("subtask_description"), dataStyle);
-                setCellValue(row, 19, taskData.get("subtask_amount"), currencyStyle);
+                setCellValue(row, 6, taskData.get("task_environment"), dataStyle);
+                setPriorityCell(row, 7, taskData.get("task_priority"), dataStyle);
+                setCellValue(row, 8, taskData.get("requester_name"), dataStyle);
+                setCellValue(row, 9, taskData.get("server_origin"), dataStyle);
+                setCellValue(row, 10, taskData.get("system_module"), dataStyle);
+                setCellValue(row, 11, taskData.get("task_link"), dataStyle);
+                setCellValue(row, 12, taskData.get("meeting_link"), dataStyle);
+                setCellValue(row, 13, taskData.get("task_amount"), currencyStyle);
+                setCellValue(row, 14, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 15, taskData.get("has_delivery"), dataStyle);
+                setCellValue(row, 16, taskData.get("has_quote_in_billing"), dataStyle);
+                setCellValue(row, 17, taskData.get("subtask_id"), dataStyle);
+                setCellValue(row, 18, taskData.get("subtask_title"), dataStyle);
+                setCellValue(row, 19, taskData.get("subtask_description"), dataStyle);
+                setCellValue(row, 20, taskData.get("subtask_amount"), currencyStyle);
             } else {
                 setCellValue(row, 0, taskData.get("task_id"), dataStyle);
                 setFlowTypeCell(row, 1, taskData.get("task_flow_type"), dataStyle);
@@ -96,27 +97,28 @@ public class ExcelReportUtils {
                 setCellValue(row, 3, taskData.get("task_title"), dataStyle);
                 setCellValue(row, 4, taskData.get("task_description"), dataStyle);
                 setTaskTypeCell(row, 5, taskData.get("task_type"), dataStyle);
-                setPriorityCell(row, 6, taskData.get("task_priority"), dataStyle);
-                setCellValue(row, 7, taskData.get("requester_name"), dataStyle);
-                setCellValue(row, 8, taskData.get("server_origin"), dataStyle);
-                setCellValue(row, 9, taskData.get("system_module"), dataStyle);
-                setCellValue(row, 10, taskData.get("task_link"), dataStyle);
-                setCellValue(row, 11, taskData.get("meeting_link"), dataStyle);
-                setCellValue(row, 12, taskData.get("has_subtasks"), dataStyle);
-                setCellValue(row, 13, taskData.get("subtask_id"), dataStyle);
-                setCellValue(row, 14, taskData.get("subtask_title"), dataStyle);
-                setCellValue(row, 15, taskData.get("subtask_description"), dataStyle);
+                setCellValue(row, 6, taskData.get("task_environment"), dataStyle);
+                setPriorityCell(row, 7, taskData.get("task_priority"), dataStyle);
+                setCellValue(row, 8, taskData.get("requester_name"), dataStyle);
+                setCellValue(row, 9, taskData.get("server_origin"), dataStyle);
+                setCellValue(row, 10, taskData.get("system_module"), dataStyle);
+                setCellValue(row, 11, taskData.get("task_link"), dataStyle);
+                setCellValue(row, 12, taskData.get("meeting_link"), dataStyle);
+                setCellValue(row, 13, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 14, taskData.get("subtask_id"), dataStyle);
+                setCellValue(row, 15, taskData.get("subtask_title"), dataStyle);
+                setCellValue(row, 16, taskData.get("subtask_description"), dataStyle);
             }
         }
 
         if (canViewAmounts) {
             setColumnWidths(sheet, new int[]{
-                    2500, 4000, 3500, 8000, 10000, 3500, 3000, 6000, 4000, 4000,
+                    2500, 4000, 3500, 8000, 10000, 3500, 4000, 3000, 6000, 4000, 4000,
                     8000, 8000, 3500, 3000, 3000, 4000, 2500, 8000, 10000, 3500
             });
         } else {
             setColumnWidths(sheet, new int[]{
-                    2500, 4000, 3500, 8000, 10000, 3500, 3000, 6000, 4000, 4000,
+                    2500, 4000, 3500, 8000, 10000, 3500, 4000, 3000, 6000, 4000, 4000,
                     8000, 8000, 3000, 2500, 8000, 10000
             });
         }
