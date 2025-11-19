@@ -288,6 +288,19 @@ public class ExcelReportUtils {
         }
     }
 
+    private void setEnvironmentCell(Row row, int columnIndex, Object value, CellStyle style) {
+        Cell cell = row.createCell(columnIndex);
+        cell.setCellStyle(style);
+
+        if (value == null) {
+            cell.setCellValue("");
+        } else {
+            String environment = value.toString();
+            String translatedEnvironment = translateEnvironment(environment);
+            cell.setCellValue(translatedEnvironment);
+        }
+    }
+
     private void setMonthNameCell(Row row, int columnIndex, Object value, CellStyle style) {
         Cell cell = row.createCell(columnIndex);
         cell.setCellStyle(style);
@@ -387,6 +400,16 @@ public class ExcelReportUtils {
             case "DESENVOLVIMENTO" -> "Desenvolvimento";
             case "OPERACIONAL" -> "Operacional";
             default -> flowType;
+        };
+    }
+
+    private String translateEnvironment(String environment) {
+        if (environment == null) return "";
+        return switch (environment.toUpperCase()) {
+            case "DESENVOLVIMENTO" -> "Desenvolvimento";
+            case "HOMOLOGACAO" -> "Homologação";
+            case "PRODUCAO" -> "Produção";
+            default -> environment;
         };
     }
 
@@ -589,7 +612,7 @@ public class ExcelReportUtils {
 
         String[] headers = {
                 "Ano", "Mês", "Nome do Mês", "Status do Faturamento", "ID Tarefa", "Código da Tarefa",
-                "Fluxo", "Título da Tarefa", "Tipo da Tarefa", "Valor da Tarefa", "Qtd. Subtarefas",
+                "Fluxo", "Título da Tarefa", "Tipo da Tarefa", "Ambiente", "Valor da Tarefa", "Qtd. Subtarefas",
                 "Solicitante"
         };
 
@@ -614,13 +637,14 @@ public class ExcelReportUtils {
             setFlowTypeCell(row, 6, billingData.get("task_flow_type"), dataStyle);
             setCellValue(row, 7, billingData.get("task_title"), dataStyle);
             setTaskTypeCell(row, 8, billingData.get("task_type"), dataStyle);
-            setCellValue(row, 9, billingData.get("task_amount"), currencyStyle);
-            setCellValue(row, 10, billingData.get("subtasks_count"), dataStyle);
-            setCellValue(row, 11, billingData.get("requester_name"), dataStyle);
+            setEnvironmentCell(row, 9, billingData.get("task_environment"), dataStyle);
+            setCellValue(row, 10, billingData.get("task_amount"), currencyStyle);
+            setCellValue(row, 11, billingData.get("subtasks_count"), dataStyle);
+            setCellValue(row, 12, billingData.get("requester_name"), dataStyle);
         }
 
         setColumnWidths(sheet, new int[]{
-                2500, 2500, 3500, 4000, 2500, 3500, 4000, 8000, 4000, 4000, 3000, 6000
+                2500, 2500, 3500, 4000, 2500, 3500, 4000, 8000, 4000, 4000, 4000, 3000, 6000
         });
 
         for (int i = 1; i <= data.size(); i++) {
