@@ -555,6 +555,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 t.code as task_code,
                 t.title as task_title,
                 t.task_type as task_type,
+                t.environment as task_environment,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
                 d.status as delivery_status,
@@ -586,18 +587,19 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
             map.put("task_type", row[3]);
-            map.put("subtasks_count", row[4]);
-            map.put("requester_name", row[5]);
-            map.put("delivery_status", row[6]);
-            map.put("delivery_notes", row[7]);
-            map.put("project_name", row[8]);
-            map.put("item_status", row[9]);
-            map.put("item_branch", row[10]);
-            map.put("item_source_branch", row[11]);
-            map.put("item_pull_request", row[12]);
-            map.put("item_notes", row[13]);
-            map.put("item_started_at", row[14]);
-            map.put("item_finished_at", row[15]);
+            map.put("task_environment", row[4]);
+            map.put("subtasks_count", row[5]);
+            map.put("requester_name", row[6]);
+            map.put("delivery_status", row[7]);
+            map.put("delivery_notes", row[8]);
+            map.put("project_name", row[9]);
+            map.put("item_status", row[10]);
+            map.put("item_branch", row[11]);
+            map.put("item_source_branch", row[12]);
+            map.put("item_pull_request", row[13]);
+            map.put("item_notes", row[14]);
+            map.put("item_started_at", row[15]);
+            map.put("item_finished_at", row[16]);
             return map;
         }).collect(Collectors.toList());
 
@@ -613,6 +615,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 t.code as task_code,
                 t.title as task_title,
                 t.task_type as task_type,
+                t.environment as task_environment,
                 (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
                 r.name as requester_name,
                 d.status as delivery_status,
@@ -640,15 +643,16 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
             map.put("task_type", row[3]);
-            map.put("subtasks_count", row[4]);
-            map.put("requester_name", row[5]);
-            map.put("delivery_status", row[6]);
-            map.put("delivery_notes", row[7]);
-            map.put("item_title", row[8]);
-            map.put("item_description", row[9]);
-            map.put("item_status", row[10]);
-            map.put("item_started_at", row[11]);
-            map.put("item_finished_at", row[12]);
+            map.put("task_environment", row[4]);
+            map.put("subtasks_count", row[5]);
+            map.put("requester_name", row[6]);
+            map.put("delivery_status", row[7]);
+            map.put("delivery_notes", row[8]);
+            map.put("item_title", row[9]);
+            map.put("item_description", row[10]);
+            map.put("item_status", row[11]);
+            map.put("item_started_at", row[12]);
+            map.put("item_finished_at", row[13]);
             return map;
         }).collect(Collectors.toList());
 
