@@ -1,4 +1,5 @@
 package br.com.devquote.entity;
+import br.com.devquote.enums.Environment;
 import br.com.devquote.enums.FlowType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -56,6 +57,10 @@ public class Task {
     @Column(name = "flow_type", nullable = false, length = 30)
     @Enumerated(EnumType.STRING)
     private FlowType flowType;
+
+    @Column(name = "environment", length = 30)
+    @Enumerated(EnumType.STRING)
+    private Environment environment;
 
     @Column(name = "server_origin", length = 100)
     private String serverOrigin;

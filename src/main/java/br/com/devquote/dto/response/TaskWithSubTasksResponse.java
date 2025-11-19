@@ -18,6 +18,9 @@ public class TaskWithSubTasksResponse {
 
     private String description;
 
+    private String flowType;
+
+    private String environment;
 
     private String code;
 

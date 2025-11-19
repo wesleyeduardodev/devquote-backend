@@ -22,6 +22,9 @@ public class TaskWithSubTasksUpdateRequest {
     @NotBlank(message = "Flow type is required")
     private String flowType;
 
+    @Size(max = 30, message = "Environment must be at most 30 characters")
+    private String environment;
+
     @NotBlank(message = "Code is required")
     @Size(max = 100, message = "Code must be at most 100 characters")
     private String code;

@@ -26,6 +26,9 @@ public class TaskWithSubTasksCreateRequest {
     @NotBlank(message = "Flow type is required")
     private String flowType;
 
+    @Size(max = 30, message = "Environment must be at most 30 characters")
+    private String environment;
+
     @Size(max = 100, message = "Code must be at most 100 characters")
     private String code;
 

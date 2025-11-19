@@ -27,6 +27,8 @@ public class TaskResponse {
 
     private String flowType;
 
+    private String environment;
+
     private String link;
 
     private String meetingLink;
