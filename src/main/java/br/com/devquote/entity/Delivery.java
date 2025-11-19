@@ -1,5 +1,6 @@
 package br.com.devquote.entity;
 import br.com.devquote.enums.DeliveryStatus;
+import br.com.devquote.enums.Environment;
 import br.com.devquote.enums.FlowType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,6 +27,10 @@ public class Delivery {
     @Column(name = "flow_type", nullable = false, length = 30)
     @Enumerated(EnumType.STRING)
     private FlowType flowType;
+
+    @Column(name = "environment", length = 30)
+    @Enumerated(EnumType.STRING)
+    private Environment environment;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

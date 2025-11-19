@@ -6,6 +6,7 @@ import br.com.devquote.dto.response.DeliveryResponse;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.Task;
 import br.com.devquote.enums.DeliveryStatus;
+import br.com.devquote.enums.Environment;
 import lombok.experimental.UtilityClass;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ public final class DeliveryAdapter {
                 .taskCode(entity.getTask() != null ? entity.getTask().getCode() : null)
                 .taskType(entity.getTask() != null ? entity.getTask().getTaskType() : null)
                 .flowType(entity.getFlowType() != null ? entity.getFlowType().name() : null)
+                .environment(entity.getEnvironment() != null ? entity.getEnvironment().name() : null)
                 .status(entity.getStatus() != null ? entity.getStatus().name() : null)
                 .totalItems(entity.getTotalItems())
                 .pendingCount(entity.getItemsByStatus(DeliveryStatus.PENDING))
@@ -81,6 +83,7 @@ public final class DeliveryAdapter {
         Delivery delivery = Delivery.builder()
                 .task(task)
                 .flowType(task != null ? task.getFlowType() : null)
+                .environment(dto.getEnvironment() != null ? Environment.fromString(dto.getEnvironment()) : (task != null ? task.getEnvironment() : null))
                 .status(dto.getStatus() != null ? DeliveryStatus.fromString(dto.getStatus()) : DeliveryStatus.PENDING)
                 .notes(dto.getNotes())
                 .build();
@@ -102,6 +105,10 @@ public final class DeliveryAdapter {
 
         if (dto.getStatus() != null) {
             entity.setStatus(DeliveryStatus.fromString(dto.getStatus()));
+        }
+
+        if (dto.getEnvironment() != null) {
+            entity.setEnvironment(Environment.fromString(dto.getEnvironment()));
         }
 
         entity.setNotes(dto.getNotes());

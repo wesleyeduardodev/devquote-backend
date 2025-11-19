@@ -1035,7 +1035,8 @@ public class TaskServiceImpl implements TaskService {
 
             DeliveryRequest.DeliveryRequestBuilder builder = DeliveryRequest.builder()
                     .taskId(task.getId())
-                    .status("PENDING");
+                    .status("PENDING")
+                    .environment(task.getEnvironment() != null ? task.getEnvironment().name() : null);
 
             if (task.getFlowType() == FlowType.OPERACIONAL) {
                 builder.notes(task.getDescription());

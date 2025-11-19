@@ -16,6 +16,7 @@ public class DeliveryResponse {
     private String taskCode;
     private String taskType;
     private String flowType;
+    private String environment;
     private String status;
     private Integer totalItems;
     private Long pendingCount;

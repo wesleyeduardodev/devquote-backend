@@ -452,6 +452,7 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
             context.setVariable("taskFlowType", translateFlowType(delivery.getTask().getFlowType()));
             context.setVariable("taskType", translateTaskType(delivery.getTask().getTaskType()));
+            context.setVariable("taskEnvironment", translateEnvironment(delivery.getTask().getEnvironment()));
             context.setVariable("requesterName", delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "");
             context.setVariable("requesterEmail", delivery.getTask().getRequester() != null && delivery.getTask().getRequester().getEmail() != null ? delivery.getTask().getRequester().getEmail() : "");
         } else {
@@ -459,6 +460,7 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("quoteName", "");
             context.setVariable("taskFlowType", "");
             context.setVariable("taskType", "");
+            context.setVariable("taskEnvironment", "");
             context.setVariable("requesterName", "");
             context.setVariable("requesterEmail", "");
         }
@@ -945,6 +947,9 @@ public class EmailServiceImpl implements EmailService {
         message.append("*Título:* ").append(delivery.getTask() != null && delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "N/A").append("\n");
         message.append("*Tipo de Fluxo:* ").append(delivery.getTask() != null ? translateFlowType(delivery.getTask().getFlowType()) : "N/A").append("\n");
         message.append("*Tipo da Tarefa:* ").append(delivery.getTask() != null ? translateTaskType(delivery.getTask().getTaskType()) : "N/A").append("\n");
+        if (delivery.getTask() != null && delivery.getTask().getEnvironment() != null) {
+            message.append("*Ambiente:* ").append(translateEnvironment(delivery.getTask().getEnvironment())).append("\n");
+        }
         message.append("*Solicitante:* ").append(delivery.getTask() != null && delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "N/A").append("\n");
 
         if (delivery.getNotes() != null && !delivery.getNotes().trim().isEmpty()) {

@@ -6,6 +6,7 @@ import br.com.devquote.dto.response.DeliveryGroupResponse;
 import br.com.devquote.dto.response.DeliveryStatusCount;
 import br.com.devquote.entity.*;
 import br.com.devquote.enums.DeliveryStatus;
+import br.com.devquote.enums.Environment;
 import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.repository.ProjectRepository;
 import br.com.devquote.repository.TaskRepository;
@@ -87,6 +88,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         Delivery entity = Delivery.builder()
                 .task(task)
                 .flowType(task.getFlowType())
+                .environment(dto.getEnvironment() != null ? Environment.fromString(dto.getEnvironment()) : task.getEnvironment())
                 .status(dto.getStatus() != null ? DeliveryStatus.fromString(dto.getStatus()) : DeliveryStatus.PENDING)
                 .notes(dto.getNotes())
                 .build();
@@ -130,6 +132,9 @@ public class DeliveryServiceImpl implements DeliveryService {
         entity.setTask(task);
         if (dto.getStatus() != null) {
             entity.setStatus(DeliveryStatus.fromString(dto.getStatus()));
+        }
+        if (dto.getEnvironment() != null) {
+            entity.setEnvironment(Environment.fromString(dto.getEnvironment()));
         }
         entity.setNotes(dto.getNotes());
 

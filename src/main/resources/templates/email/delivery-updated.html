@@ -214,6 +214,10 @@
                         <div class="info-label">Tipo de Tarefa:</div>
                         <div class="info-value" th:text="${taskType}">Bug</div>
                     </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskEnvironment)}">
+                        <div class="info-label">Ambiente:</div>
+                        <div class="info-value" th:text="${taskEnvironment}">Desenvolvimento</div>
+                    </div>
                 </div>
             </div>
 

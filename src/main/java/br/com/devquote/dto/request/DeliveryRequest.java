@@ -16,6 +16,9 @@ public class DeliveryRequest {
     @Size(max = 30, message = "Status must be at most 30 characters")
     private String status;
 
+    @Size(max = 30)
+    private String environment;
+
     private String notes;
 
     private List<DeliveryItemRequest> items;
