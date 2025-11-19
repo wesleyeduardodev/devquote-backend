@@ -6,6 +6,7 @@ import br.com.devquote.entity.NotificationConfig;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
 import br.com.devquote.entity.TaskAttachment;
+import br.com.devquote.enums.Environment;
 import br.com.devquote.enums.FlowType;
 import br.com.devquote.enums.NotificationConfigType;
 import br.com.devquote.enums.NotificationType;
@@ -244,6 +245,7 @@ public class EmailServiceImpl implements EmailService {
 
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
+        context.setVariable("taskEnvironment", translateEnvironment(task.getEnvironment()));
         context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
         context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
         context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
@@ -510,6 +512,15 @@ public class EmailServiceImpl implements EmailService {
         };
     }
 
+    private String translateEnvironment(br.com.devquote.enums.Environment environment) {
+        if (environment == null) return "";
+        return switch (environment) {
+            case DESENVOLVIMENTO -> "Desenvolvimento";
+            case HOMOLOGACAO -> "Homologação";
+            case PRODUCAO -> "Produção";
+        };
+    }
+
     private void sendEmailWithAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments) {
         log.info("📧 SENDWITHATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}",
                 to, cc != null ? cc : "none", subject, attachments != null ? attachments.size() : 0);
@@ -651,6 +662,7 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("taskDescription", convertLineBreaksToHtml(task.getDescription()));
             context.setVariable("taskPriority", translatePriority(task.getPriority()));
             context.setVariable("taskType", translateTaskType(task.getTaskType()));
+            context.setVariable("taskEnvironment", translateEnvironment(task.getEnvironment()));
             context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
             context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
             context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
@@ -830,6 +842,9 @@ public class EmailServiceImpl implements EmailService {
         message.append("*Título:* ").append(task.getTitle() != null ? task.getTitle() : "N/A").append("\n");
         message.append("*Tipo de Fluxo:* ").append(translateFlowType(task.getFlowType())).append("\n");
         message.append("*Tipo da Tarefa:* ").append(translateTaskType(task.getTaskType())).append("\n");
+        if (task.getEnvironment() != null) {
+            message.append("*Ambiente:* ").append(translateEnvironment(task.getEnvironment())).append("\n");
+        }
         message.append("*Solicitante:* ").append(task.getRequester() != null ? task.getRequester().getName() : "N/A").append("\n");
 
         if (task.getFlowType() == FlowType.OPERACIONAL && task.getDescription() != null && !task.getDescription().trim().isEmpty()) {

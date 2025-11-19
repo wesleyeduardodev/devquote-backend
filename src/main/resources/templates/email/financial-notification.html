@@ -281,6 +281,10 @@
                         <div class="info-label">Tipo da Tarefa:</div>
                         <div class="info-value" th:text="${taskType}">Nova Funcionalidade</div>
                     </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskEnvironment)}">
+                        <div class="info-label">Ambiente:</div>
+                        <div class="info-value" th:text="${taskEnvironment}">Desenvolvimento</div>
+                    </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(requesterName)}">
                         <div class="info-label">Solicitante:</div>
                         <div class="info-value" th:text="${requesterName}">Nome do Solicitante</div>
