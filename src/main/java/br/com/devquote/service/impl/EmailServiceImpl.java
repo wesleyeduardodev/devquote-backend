@@ -453,6 +453,8 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("taskFlowType", translateFlowType(delivery.getTask().getFlowType()));
             context.setVariable("taskType", translateTaskType(delivery.getTask().getTaskType()));
             context.setVariable("taskEnvironment", translateEnvironment(delivery.getTask().getEnvironment()));
+            context.setVariable("taskAmount", delivery.getTask().getAmount() != null ? delivery.getTask().getAmount() : java.math.BigDecimal.ZERO);
+            context.setVariable("taskAmountFormatted", formatCurrency(delivery.getTask().getAmount()));
             context.setVariable("requesterName", delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "");
             context.setVariable("requesterEmail", delivery.getTask().getRequester() != null && delivery.getTask().getRequester().getEmail() != null ? delivery.getTask().getRequester().getEmail() : "");
         } else {
@@ -461,6 +463,8 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("taskFlowType", "");
             context.setVariable("taskType", "");
             context.setVariable("taskEnvironment", "");
+            context.setVariable("taskAmount", java.math.BigDecimal.ZERO);
+            context.setVariable("taskAmountFormatted", "R$ 0,00");
             context.setVariable("requesterName", "");
             context.setVariable("requesterEmail", "");
         }
@@ -521,6 +525,14 @@ public class EmailServiceImpl implements EmailService {
             case HOMOLOGACAO -> "Homologação";
             case PRODUCAO -> "Produção";
         };
+    }
+
+    private String formatCurrency(BigDecimal amount) {
+        if (amount == null) {
+            amount = BigDecimal.ZERO;
+        }
+        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        return currencyFormatter.format(amount);
     }
 
     private void sendEmailWithAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments) {
@@ -940,11 +952,16 @@ public class EmailServiceImpl implements EmailService {
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+        NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
         StringBuilder message = new StringBuilder();
         message.append("*Notificação Automática de Entrega - DevQuote*\n\n");
         message.append("*📋 Dados da Tarefa*\n\n");
         message.append("*Código:* ").append(delivery.getTask() != null && delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "N/A").append("\n");
         message.append("*Título:* ").append(delivery.getTask() != null && delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "N/A").append("\n");
+        if (delivery.getTask() != null && delivery.getTask().getAmount() != null) {
+            message.append("*Valor:* ").append(currencyFormatter.format(delivery.getTask().getAmount())).append("\n");
+        }
         message.append("*Tipo de Fluxo:* ").append(delivery.getTask() != null ? translateFlowType(delivery.getTask().getFlowType()) : "N/A").append("\n");
         message.append("*Tipo da Tarefa:* ").append(delivery.getTask() != null ? translateTaskType(delivery.getTask().getTaskType()) : "N/A").append("\n");
         if (delivery.getTask() != null && delivery.getTask().getEnvironment() != null) {
