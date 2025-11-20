@@ -415,10 +415,14 @@ public class TaskServiceImpl implements TaskService {
                                                String createdAt,
                                                String updatedAt,
                                                FlowType flowType,
+                                               String taskType,
+                                               String environment,
+                                               String startDate,
+                                               String endDate,
                                                Pageable pageable) {
 
         Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, taskType, environment, startDate, endDate, pageable
         );
         return buildTaskResponsePage(page, pageable);
     }

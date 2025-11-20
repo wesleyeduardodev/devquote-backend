@@ -39,8 +39,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
            AND (:taskType IS NULL OR :taskType = '' OR CAST(t.taskType AS string) = :taskType)
            AND (:environment IS NULL OR :environment = '' OR CAST(t.environment AS string) = :environment)
            AND (:status IS NULL OR :status = '' OR d.status = :status)
-           AND (:startDate IS NULL OR :startDate = '' OR d.startedAt >= CAST(:startDate AS timestamp))
-           AND (:endDate IS NULL OR :endDate = '' OR d.finishedAt <= CAST(:endDate AS timestamp))
+           AND (:startDate IS NULL OR :startDate = '' OR CAST(d.startedAt AS date) >= CAST(:startDate AS date))
+           AND (:endDate IS NULL OR :endDate = '' OR CAST(d.finishedAt AS date) <= CAST(:endDate AS date))
          ORDER BY t.id DESC
         """)
     Page<Long> findIdsByOptionalFieldsPaginated(

@@ -40,6 +40,10 @@ public interface TaskService {
                                         String createdAt,
                                         String updatedAt,
                                         FlowType flowType,
+                                        String taskType,
+                                        String environment,
+                                        String startDate,
+                                        String endDate,
                                         Pageable pageable);
 
     Page<TaskResponse> findUnlinkedBillingByOptionalFieldsPaginated(Long id,

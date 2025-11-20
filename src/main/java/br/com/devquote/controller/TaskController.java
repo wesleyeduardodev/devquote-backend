@@ -61,6 +61,10 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
             @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(required = false) String environment,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -76,7 +80,7 @@ public class TaskController implements TaskControllerDoc {
                 : FlowType.fromString(flowType);
 
         Page<TaskResponse> pageResult = taskService.findAllPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, taskType, environment, startDate, endDate, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));

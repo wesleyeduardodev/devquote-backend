@@ -39,6 +39,10 @@ public interface TaskControllerDoc {
     @Parameter(name = "createdAt", description = "Filter by creation date. Supports partial dates: '2024', '2024-01', '2024-01-15'", example = "2024-01")
     @Parameter(name = "updatedAt", description = "Filter by update date. Supports partial dates: '2024', '2024-01', '2024-01-15'", example = "2024-01-15")
     @Parameter(name = "flowType", description = "Filter by flow type: TODOS (default), DESENVOLVIMENTO, or OPERACIONAL", example = "DESENVOLVIMENTO")
+    @Parameter(name = "taskType", description = "Filter by task type", example = "BUG")
+    @Parameter(name = "environment", description = "Filter by environment: PRODUCTION, STAGING, or DEVELOPMENT", example = "PRODUCTION")
+    @Parameter(name = "startDate", description = "Filter by start date (yyyy-MM-dd). Tasks created from this date onwards", example = "2024-01-01")
+    @Parameter(name = "endDate", description = "Filter by end date (yyyy-MM-dd). Tasks created up to this date", example = "2024-12-31")
     @Parameter(
             name = "sort",
             description = "Repeatable. Format: field,(asc|desc). Allowed: id,requesterId,title,description,code,link,createdAt,updatedAt",
@@ -57,6 +61,10 @@ public interface TaskControllerDoc {
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
             @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(required = false) String environment,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             @RequestParam MultiValueMap<String, String> params
     );
 

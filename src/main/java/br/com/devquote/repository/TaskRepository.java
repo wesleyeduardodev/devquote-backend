@@ -31,6 +31,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:createdAt IS NULL OR :createdAt = '' OR CAST(t.createdAt AS string) LIKE CONCAT('%', :createdAt, '%'))
               AND (:updatedAt IS NULL OR :updatedAt = '' OR CAST(t.updatedAt AS string) LIKE CONCAT('%', :updatedAt, '%'))
               AND (:flowType IS NULL OR t.flowType = :flowType)
+              AND (:taskType IS NULL OR :taskType = '' OR CAST(t.taskType AS string) = :taskType)
+              AND (:environment IS NULL OR :environment = '' OR CAST(t.environment AS string) = :environment)
+              AND (:startDate IS NULL OR :startDate = '' OR CAST(t.createdAt AS date) >= CAST(:startDate AS date))
+              AND (:endDate IS NULL OR :endDate = '' OR CAST(t.createdAt AS date) <= CAST(:endDate AS date))
             """)
     Page<Task> findByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -43,6 +47,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("createdAt") String createdAt,
             @Param("updatedAt") String updatedAt,
             @Param("flowType") FlowType flowType,
+            @Param("taskType") String taskType,
+            @Param("environment") String environment,
+            @Param("startDate") String startDate,
+            @Param("endDate") String endDate,
             Pageable pageable
     );
 
