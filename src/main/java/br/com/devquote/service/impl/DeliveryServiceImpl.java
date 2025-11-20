@@ -325,7 +325,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
 
         Page<Long> idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                id, taskName, taskCode, flowType, statusEnum, createdAt, updatedAt, pageable
+                id, taskName, taskCode, flowType, null, null, statusEnum, null, null, createdAt, updatedAt, pageable
         );
 
         if (idsPage.isEmpty()) {
@@ -390,28 +390,32 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                              String taskName,
                                                              String taskCode,
                                                              String flowType,
+                                                             String taskType,
+                                                             String environment,
                                                              String status,
+                                                             String startDate,
+                                                             String endDate,
                                                              String createdAt,
                                                              String updatedAt,
                                                              Pageable pageable) {
 
-        log.debug("findAllGroupedByTask - taskId: {}, taskName: {}, taskCode: {}, flowType: {}, status: {}, pageable: {}",
-                taskId, taskName, taskCode, flowType, status, pageable);
+        log.debug("findAllGroupedByTask - taskId: {}, taskName: {}, taskCode: {}, flowType: {}, taskType: {}, environment: {}, status: {}, startDate: {}, endDate: {}, pageable: {}",
+                taskId, taskName, taskCode, flowType, taskType, environment, status, startDate, endDate, pageable);
 
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
 
         Page<Long> idsPage;
         try {
-            if (taskId != null || taskName != null || taskCode != null || flowType != null || statusEnum != null) {
+            if (taskId != null || taskName != null || taskCode != null || flowType != null || taskType != null || environment != null || statusEnum != null || startDate != null || endDate != null) {
                 log.debug("Using filtered query for IDs");
                 idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                        taskId, taskName, taskCode, flowType, statusEnum, createdAt, updatedAt, pageable
+                        taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, pageable
                 );
             } else {
                 log.debug("Using simple query for IDs");
                 idsPage = deliveryRepository.findAllOrderedByTaskIdDescPaginated(pageable);
             }
-            
+
             log.debug("Found {} delivery IDs", idsPage.getTotalElements());
         } catch (Exception e) {
             log.error("Error in findAllGroupedByTask: {}", e.getMessage(), e);
@@ -753,7 +757,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                                      String status, String createdAt,
                                                                      String updatedAt, Pageable pageable) {
 
-        return findAllGroupedByTask(null, taskName, taskCode, null, status, createdAt, updatedAt, pageable);
+        return findAllGroupedByTask(null, taskName, taskCode, null, null, null, status, null, null, createdAt, updatedAt, pageable);
     }
 
 

@@ -37,7 +37,11 @@ public interface DeliveryService {
                                                       String taskName,
                                                       String taskCode,
                                                       String flowType,
+                                                      String taskType,
+                                                      String environment,
                                                       String status,
+                                                      String startDate,
+                                                      String endDate,
                                                       String createdAt,
                                                       String updatedAt,
                                                       Pageable pageable);

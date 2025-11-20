@@ -158,7 +158,11 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String taskCode,
             @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(required = false) String environment,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
             @RequestParam MultiValueMap<String, String> allParams
@@ -166,7 +170,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         List<String> sortParams = allParams != null ? allParams.get("sort") : null;
         Pageable pageable = PageRequest.of(page, size, SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id"));
         Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTask(
-                taskId, taskName, taskCode, flowType, status, createdAt, updatedAt, pageable
+                taskId, taskName, taskCode, flowType, taskType, environment, status, startDate, endDate, createdAt, updatedAt, pageable
         );
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
     }
@@ -180,7 +184,11 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String taskCode,
             @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(required = false) String environment,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
             @RequestParam MultiValueMap<String, String> allParams
@@ -188,7 +196,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         List<String> sortParams = allParams != null ? allParams.get("sort") : null;
         Pageable pageable = PageRequest.of(page, size, SortUtils.buildAndSanitize(sortParams, ALLOWED_SORT_FIELDS, "id"));
         Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTask(
-                taskId, taskName, taskCode, flowType, status, createdAt, updatedAt, pageable
+                taskId, taskName, taskCode, flowType, taskType, environment, status, startDate, endDate, createdAt, updatedAt, pageable
         );
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
     }

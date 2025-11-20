@@ -36,7 +36,11 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
            AND (:taskName IS NULL OR :taskName = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :taskName, '%')))
            AND (:taskCode IS NULL OR :taskCode = '' OR LOWER(t.code) LIKE LOWER(CONCAT('%', :taskCode, '%')))
            AND (:flowType IS NULL OR :flowType = '' OR CAST(t.flowType AS string) = :flowType)
+           AND (:taskType IS NULL OR :taskType = '' OR CAST(t.taskType AS string) = :taskType)
+           AND (:environment IS NULL OR :environment = '' OR CAST(t.environment AS string) = :environment)
            AND (:status IS NULL OR :status = '' OR d.status = :status)
+           AND (:startDate IS NULL OR :startDate = '' OR d.startedAt >= CAST(:startDate AS timestamp))
+           AND (:endDate IS NULL OR :endDate = '' OR d.finishedAt <= CAST(:endDate AS timestamp))
          ORDER BY t.id DESC
         """)
     Page<Long> findIdsByOptionalFieldsPaginated(
@@ -44,7 +48,11 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             @Param("taskName") String taskName,
             @Param("taskCode") String taskCode,
             @Param("flowType") String flowType,
+            @Param("taskType") String taskType,
+            @Param("environment") String environment,
             @Param("status") br.com.devquote.enums.DeliveryStatus status,
+            @Param("startDate") String startDate,
+            @Param("endDate") String endDate,
             @Param("createdAt") String createdAt,
             @Param("updatedAt") String updatedAt,
             Pageable pageable
