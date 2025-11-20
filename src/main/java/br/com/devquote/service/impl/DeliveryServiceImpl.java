@@ -563,6 +563,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 r.name as requester_name,
                 d.status as delivery_status,
                 d.notes as delivery_notes,
+                d.started_at as delivery_started_at,
+                d.finished_at as delivery_finished_at,
                 p.name as project_name,
                 di.status as item_status,
                 di.branch as item_branch,
@@ -596,14 +598,16 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("requester_name", row[7]);
             map.put("delivery_status", row[8]);
             map.put("delivery_notes", row[9]);
-            map.put("project_name", row[10]);
-            map.put("item_status", row[11]);
-            map.put("item_branch", row[12]);
-            map.put("item_source_branch", row[13]);
-            map.put("item_pull_request", row[14]);
-            map.put("item_notes", row[15]);
-            map.put("item_started_at", row[16]);
-            map.put("item_finished_at", row[17]);
+            map.put("delivery_started_at", row[10]);
+            map.put("delivery_finished_at", row[11]);
+            map.put("project_name", row[12]);
+            map.put("item_status", row[13]);
+            map.put("item_branch", row[14]);
+            map.put("item_source_branch", row[15]);
+            map.put("item_pull_request", row[16]);
+            map.put("item_notes", row[17]);
+            map.put("item_started_at", row[18]);
+            map.put("item_finished_at", row[19]);
             return map;
         }).collect(Collectors.toList());
 
@@ -625,6 +629,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 r.name as requester_name,
                 d.status as delivery_status,
                 d.notes as delivery_notes,
+                d.started_at as delivery_started_at,
+                d.finished_at as delivery_finished_at,
                 doi.title as item_title,
                 doi.description as item_description,
                 doi.status as item_status,
@@ -654,11 +660,13 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("requester_name", row[7]);
             map.put("delivery_status", row[8]);
             map.put("delivery_notes", row[9]);
-            map.put("item_title", row[10]);
-            map.put("item_description", row[11]);
-            map.put("item_status", row[12]);
-            map.put("item_started_at", row[13]);
-            map.put("item_finished_at", row[14]);
+            map.put("delivery_started_at", row[10]);
+            map.put("delivery_finished_at", row[11]);
+            map.put("item_title", row[12]);
+            map.put("item_description", row[13]);
+            map.put("item_status", row[14]);
+            map.put("item_started_at", row[15]);
+            map.put("item_finished_at", row[16]);
             return map;
         }).collect(Collectors.toList());
 

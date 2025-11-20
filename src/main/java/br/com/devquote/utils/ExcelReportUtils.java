@@ -446,16 +446,16 @@ public class ExcelReportUtils {
         if (canViewAmounts) {
             headers = new String[]{
                     "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Valor da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
-                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Status Geral da Entrega", "Observações da Entrega", "Data Início Entrega", "Data Fim Entrega",
                     "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
-                    "Pull Request", "Observações do Item", "Data Início", "Data Fim"
+                    "Pull Request", "Observações do Item", "Data Início Item", "Data Fim Item"
             };
         } else {
             headers = new String[]{
                     "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
-                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Status Geral da Entrega", "Observações da Entrega", "Data Início Entrega", "Data Fim Entrega",
                     "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
-                    "Pull Request", "Observações do Item", "Data Início", "Data Fim"
+                    "Pull Request", "Observações do Item", "Data Início Item", "Data Fim Item"
             };
         }
 
@@ -467,7 +467,7 @@ public class ExcelReportUtils {
             if (canViewAmounts) {
                 if (i <= 7) {
                     cell.setCellStyle(taskHeaderStyle);
-                } else if (i >= 8 && i <= 9) {
+                } else if (i >= 8 && i <= 11) {
                     cell.setCellStyle(deliveryHeaderStyle);
                 } else {
                     cell.setCellStyle(itemHeaderStyle);
@@ -475,7 +475,7 @@ public class ExcelReportUtils {
             } else {
                 if (i <= 6) {
                     cell.setCellStyle(taskHeaderStyle);
-                } else if (i >= 7 && i <= 8) {
+                } else if (i >= 7 && i <= 10) {
                     cell.setCellStyle(deliveryHeaderStyle);
                 } else {
                     cell.setCellStyle(itemHeaderStyle);
@@ -499,15 +499,17 @@ public class ExcelReportUtils {
 
                 setDeliveryStatusCell(row, 8, deliveryData.get("delivery_status"), dataStyle);
                 setCellValue(row, 9, deliveryData.get("delivery_notes"), dataStyle);
+                setCellValue(row, 10, deliveryData.get("delivery_started_at"), dateStyle);
+                setCellValue(row, 11, deliveryData.get("delivery_finished_at"), dateStyle);
 
-                setCellValue(row, 10, deliveryData.get("project_name"), dataStyle);
-                setDeliveryStatusCell(row, 11, deliveryData.get("item_status"), dataStyle);
-                setCellValue(row, 12, deliveryData.get("item_branch"), dataStyle);
-                setCellValue(row, 13, deliveryData.get("item_source_branch"), dataStyle);
-                setCellValue(row, 14, deliveryData.get("item_pull_request"), dataStyle);
-                setCellValue(row, 15, deliveryData.get("item_notes"), dataStyle);
-                setCellValue(row, 16, deliveryData.get("item_started_at"), dateStyle);
-                setCellValue(row, 17, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 12, deliveryData.get("project_name"), dataStyle);
+                setDeliveryStatusCell(row, 13, deliveryData.get("item_status"), dataStyle);
+                setCellValue(row, 14, deliveryData.get("item_branch"), dataStyle);
+                setCellValue(row, 15, deliveryData.get("item_source_branch"), dataStyle);
+                setCellValue(row, 16, deliveryData.get("item_pull_request"), dataStyle);
+                setCellValue(row, 17, deliveryData.get("item_notes"), dataStyle);
+                setCellValue(row, 18, deliveryData.get("item_started_at"), dateStyle);
+                setCellValue(row, 19, deliveryData.get("item_finished_at"), dateStyle);
             } else {
                 setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
                 setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
@@ -519,25 +521,27 @@ public class ExcelReportUtils {
 
                 setDeliveryStatusCell(row, 7, deliveryData.get("delivery_status"), dataStyle);
                 setCellValue(row, 8, deliveryData.get("delivery_notes"), dataStyle);
+                setCellValue(row, 9, deliveryData.get("delivery_started_at"), dateStyle);
+                setCellValue(row, 10, deliveryData.get("delivery_finished_at"), dateStyle);
 
-                setCellValue(row, 9, deliveryData.get("project_name"), dataStyle);
-                setDeliveryStatusCell(row, 10, deliveryData.get("item_status"), dataStyle);
-                setCellValue(row, 11, deliveryData.get("item_branch"), dataStyle);
-                setCellValue(row, 12, deliveryData.get("item_source_branch"), dataStyle);
-                setCellValue(row, 13, deliveryData.get("item_pull_request"), dataStyle);
-                setCellValue(row, 14, deliveryData.get("item_notes"), dataStyle);
-                setCellValue(row, 15, deliveryData.get("item_started_at"), dateStyle);
-                setCellValue(row, 16, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 11, deliveryData.get("project_name"), dataStyle);
+                setDeliveryStatusCell(row, 12, deliveryData.get("item_status"), dataStyle);
+                setCellValue(row, 13, deliveryData.get("item_branch"), dataStyle);
+                setCellValue(row, 14, deliveryData.get("item_source_branch"), dataStyle);
+                setCellValue(row, 15, deliveryData.get("item_pull_request"), dataStyle);
+                setCellValue(row, 16, deliveryData.get("item_notes"), dataStyle);
+                setCellValue(row, 17, deliveryData.get("item_started_at"), dateStyle);
+                setCellValue(row, 18, deliveryData.get("item_finished_at"), dateStyle);
             }
         }
 
         if (canViewAmounts) {
             setColumnWidths(sheet, new int[]{
-                    2500, 3500, 8000, 3500, 4000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 6500, 6500
+                    2500, 3500, 8000, 3500, 4000, 4000, 3000, 6000, 4000, 7000, 6500, 6500, 6000, 3500, 5000, 5000, 8000, 6000, 6500, 6500
             });
         } else {
             setColumnWidths(sheet, new int[]{
-                    2500, 3500, 8000, 4000, 4000, 3000, 6000, 4000, 7000, 6000, 3500, 5000, 5000, 8000, 6000, 6500, 6500
+                    2500, 3500, 8000, 4000, 4000, 3000, 6000, 4000, 7000, 6500, 6500, 6000, 3500, 5000, 5000, 8000, 6000, 6500, 6500
             });
         }
 
@@ -576,16 +580,16 @@ public class ExcelReportUtils {
         if (canViewAmounts) {
             headers = new String[]{
                     "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Valor da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
-                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Status Geral da Entrega", "Observações da Entrega", "Data Início Entrega", "Data Fim Entrega",
                     "Título do Item", "Descrição do Item", "Status do Item",
-                    "Data Início", "Data Fim"
+                    "Data Início Item", "Data Fim Item"
             };
         } else {
             headers = new String[]{
                     "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
-                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Status Geral da Entrega", "Observações da Entrega", "Data Início Entrega", "Data Fim Entrega",
                     "Título do Item", "Descrição do Item", "Status do Item",
-                    "Data Início", "Data Fim"
+                    "Data Início Item", "Data Fim Item"
             };
         }
 
@@ -597,7 +601,7 @@ public class ExcelReportUtils {
             if (canViewAmounts) {
                 if (i <= 7) {
                     cell.setCellStyle(taskHeaderStyle);
-                } else if (i >= 8 && i <= 9) {
+                } else if (i >= 8 && i <= 11) {
                     cell.setCellStyle(deliveryHeaderStyle);
                 } else {
                     cell.setCellStyle(itemHeaderStyle);
@@ -605,7 +609,7 @@ public class ExcelReportUtils {
             } else {
                 if (i <= 6) {
                     cell.setCellStyle(taskHeaderStyle);
-                } else if (i >= 7 && i <= 8) {
+                } else if (i >= 7 && i <= 10) {
                     cell.setCellStyle(deliveryHeaderStyle);
                 } else {
                     cell.setCellStyle(itemHeaderStyle);
@@ -629,12 +633,14 @@ public class ExcelReportUtils {
 
                 setDeliveryStatusCell(row, 8, deliveryData.get("delivery_status"), dataStyle);
                 setCellValue(row, 9, deliveryData.get("delivery_notes"), dataStyle);
+                setCellValue(row, 10, deliveryData.get("delivery_started_at"), dateStyle);
+                setCellValue(row, 11, deliveryData.get("delivery_finished_at"), dateStyle);
 
-                setCellValue(row, 10, deliveryData.get("item_title"), dataStyle);
-                setCellValue(row, 11, deliveryData.get("item_description"), dataStyle);
-                setOperationalItemStatusCell(row, 12, deliveryData.get("item_status"), dataStyle);
-                setCellValue(row, 13, deliveryData.get("item_started_at"), dateStyle);
-                setCellValue(row, 14, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 12, deliveryData.get("item_title"), dataStyle);
+                setCellValue(row, 13, deliveryData.get("item_description"), dataStyle);
+                setOperationalItemStatusCell(row, 14, deliveryData.get("item_status"), dataStyle);
+                setCellValue(row, 15, deliveryData.get("item_started_at"), dateStyle);
+                setCellValue(row, 16, deliveryData.get("item_finished_at"), dateStyle);
             } else {
                 setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
                 setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
@@ -646,22 +652,24 @@ public class ExcelReportUtils {
 
                 setDeliveryStatusCell(row, 7, deliveryData.get("delivery_status"), dataStyle);
                 setCellValue(row, 8, deliveryData.get("delivery_notes"), dataStyle);
+                setCellValue(row, 9, deliveryData.get("delivery_started_at"), dateStyle);
+                setCellValue(row, 10, deliveryData.get("delivery_finished_at"), dateStyle);
 
-                setCellValue(row, 9, deliveryData.get("item_title"), dataStyle);
-                setCellValue(row, 10, deliveryData.get("item_description"), dataStyle);
-                setOperationalItemStatusCell(row, 11, deliveryData.get("item_status"), dataStyle);
-                setCellValue(row, 12, deliveryData.get("item_started_at"), dateStyle);
-                setCellValue(row, 13, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 11, deliveryData.get("item_title"), dataStyle);
+                setCellValue(row, 12, deliveryData.get("item_description"), dataStyle);
+                setOperationalItemStatusCell(row, 13, deliveryData.get("item_status"), dataStyle);
+                setCellValue(row, 14, deliveryData.get("item_started_at"), dateStyle);
+                setCellValue(row, 15, deliveryData.get("item_finished_at"), dateStyle);
             }
         }
 
         if (canViewAmounts) {
             setColumnWidths(sheet, new int[]{
-                    2500, 3500, 8000, 3500, 4000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 6500, 6500
+                    2500, 3500, 8000, 3500, 4000, 4000, 3000, 6000, 4000, 7000, 6500, 6500, 7000, 9000, 3500, 6500, 6500
             });
         } else {
             setColumnWidths(sheet, new int[]{
-                    2500, 3500, 8000, 4000, 4000, 3000, 6000, 4000, 7000, 7000, 9000, 3500, 6500, 6500
+                    2500, 3500, 8000, 4000, 4000, 3000, 6000, 4000, 7000, 6500, 6500, 7000, 9000, 3500, 6500, 6500
             });
         }
 

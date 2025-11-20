@@ -6,6 +6,7 @@ import br.com.devquote.entity.DeliveryItem;
 import br.com.devquote.entity.Project;
 import br.com.devquote.enums.DeliveryStatus;
 import lombok.experimental.UtilityClass;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,7 @@ public final class DeliveryItemAdapter {
                 .sourceBranch(dto.getSourceBranch())
                 .pullRequest(dto.getPullRequest())
                 .notes(dto.getNotes())
-                .startedAt(dto.getStartedAt())
+                .startedAt(dto.getStartedAt() != null ? dto.getStartedAt() : LocalDateTime.now())
                 .finishedAt(dto.getFinishedAt())
                 .build();
     }

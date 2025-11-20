@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,7 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .status(OperationalItemStatus.fromString(request.getStatus()))
-                .startedAt(request.getStartedAt())
+                .startedAt(request.getStartedAt() != null ? request.getStartedAt() : LocalDateTime.now())
                 .finishedAt(request.getFinishedAt())
                 .build();
 

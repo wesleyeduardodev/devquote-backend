@@ -26,7 +26,9 @@ public class DeliveryOperationalItemRequest {
     @Size(max = 30, message = "Status must be at most 30 characters")
     private String status;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startedAt;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime finishedAt;
 }

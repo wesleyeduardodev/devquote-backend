@@ -16,8 +16,10 @@ public class DeliveryOperationalItemResponse {
     private String description;
     private String status;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startedAt;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime finishedAt;
 
     private List<DeliveryOperationalAttachmentResponse> attachments;
