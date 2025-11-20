@@ -49,6 +49,7 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
         DeliveryOperationalItem saved = operationalItemRepository.save(item);
 
         delivery.updateStatus();
+        delivery.updateDates();
         deliveryRepository.save(delivery);
 
         return toResponse(saved);
@@ -71,6 +72,7 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
         DeliveryOperationalItem updated = operationalItemRepository.save(item);
 
         item.getDelivery().updateStatus();
+        item.getDelivery().updateDates();
         deliveryRepository.save(item.getDelivery());
 
         return toResponse(updated);
@@ -118,6 +120,7 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
         operationalItemRepository.delete(item);
 
         delivery.updateStatus();
+        delivery.updateDates();
         deliveryRepository.save(delivery);
 
         log.info("Operational item deleted successfully: {}", id);

@@ -71,6 +71,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         item = deliveryItemRepository.save(item);
 
         delivery.updateStatus();
+        delivery.updateDates();
         deliveryRepository.save(delivery);
 
 
@@ -102,6 +103,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         item = deliveryItemRepository.save(item);
 
         item.getDelivery().updateStatus();
+        item.getDelivery().updateDates();
         deliveryRepository.save(item.getDelivery());
 
         log.debug("DeliveryItem updated with id: {}", item.getId());
@@ -140,6 +142,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                 .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
 
         delivery.updateStatus();
+        delivery.updateDates();
         deliveryRepository.save(delivery);
 
         log.info("Delivery item deleted successfully: {}", id);
@@ -171,6 +174,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             Delivery delivery = deliveryRepository.findById(deliveryId)
                     .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
             delivery.updateStatus();
+            delivery.updateDates();
             deliveryRepository.save(delivery);
         });
 
@@ -293,7 +297,8 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         createdItems = deliveryItemRepository.saveAll(createdItems);
 
         delivery.updateStatus();
-       deliveryRepository.save(delivery);
+        delivery.updateDates();
+        deliveryRepository.save(delivery);
 
 
         log.debug("Created {} delivery items for delivery: {}", createdItems.size(), deliveryId);
@@ -343,6 +348,7 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
 
         affectedDeliveries.forEach(delivery -> {
             delivery.updateStatus();
+            delivery.updateDates();
             deliveryRepository.save(delivery);
         });
 

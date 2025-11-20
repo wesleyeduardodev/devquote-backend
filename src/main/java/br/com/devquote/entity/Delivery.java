@@ -51,6 +51,12 @@ public class Delivery {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
+    @Column(name = "finished_at")
+    private LocalDateTime finishedAt;
+
     @Column(name = "delivery_email_sent")
     @Builder.Default
     private Boolean deliveryEmailSent = false;
@@ -138,6 +144,44 @@ public class Delivery {
 
     public void updateStatus() {
         this.status = calculateStatus();
+    }
+
+    public void updateDates() {
+        if (this.flowType == FlowType.DESENVOLVIMENTO) {
+            if (items != null && !items.isEmpty()) {
+                this.startedAt = items.stream()
+                    .map(DeliveryItem::getStartedAt)
+                    .filter(date -> date != null)
+                    .min(LocalDateTime::compareTo)
+                    .orElse(null);
+
+                this.finishedAt = items.stream()
+                    .map(DeliveryItem::getFinishedAt)
+                    .filter(date -> date != null)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+            } else {
+                this.startedAt = null;
+                this.finishedAt = null;
+            }
+        } else if (this.flowType == FlowType.OPERACIONAL) {
+            if (operationalItems != null && !operationalItems.isEmpty()) {
+                this.startedAt = operationalItems.stream()
+                    .map(DeliveryOperationalItem::getStartedAt)
+                    .filter(date -> date != null)
+                    .min(LocalDateTime::compareTo)
+                    .orElse(null);
+
+                this.finishedAt = operationalItems.stream()
+                    .map(DeliveryOperationalItem::getFinishedAt)
+                    .filter(date -> date != null)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(null);
+            } else {
+                this.startedAt = null;
+                this.finishedAt = null;
+            }
+        }
     }
 
     public int getTotalItems() {

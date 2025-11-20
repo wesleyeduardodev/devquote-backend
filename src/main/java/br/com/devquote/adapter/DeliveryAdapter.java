@@ -36,6 +36,8 @@ public final class DeliveryAdapter {
                 .productionCount(entity.getItemsByStatus(DeliveryStatus.PRODUCTION))
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .startedAt(entity.getStartedAt())
+                .finishedAt(entity.getFinishedAt())
                 .deliveryEmailSent(entity.getDeliveryEmailSent())
                 .notes(entity.getNotes())
                 .items(entity.getItems() != null ?

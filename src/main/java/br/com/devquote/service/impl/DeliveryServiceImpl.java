@@ -116,6 +116,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 savedDelivery.addItem(item);
             });
 
+            entity.updateDates();
             entity = deliveryRepository.save(entity);
         }
 
@@ -162,6 +163,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             });
         }
 
+        entity.updateDates();
         entity = deliveryRepository.save(entity);
 
         return DeliveryAdapter.toResponseDTO(entity);
@@ -719,23 +721,23 @@ public class DeliveryServiceImpl implements DeliveryService {
     @Transactional
     public void updateAllDeliveryStatuses() {
         log.debug("Atualizando status de todas as entregas...");
-        
+
         List<Delivery> deliveries = deliveryRepository.findAll();
         int updated = 0;
-        
+
         for (Delivery delivery : deliveries) {
             DeliveryStatus oldStatus = delivery.getStatus();
             delivery.updateStatus();
             DeliveryStatus newStatus = delivery.getStatus();
-            
+
             if (oldStatus != newStatus) {
                 deliveryRepository.save(delivery);
                 updated++;
-                log.debug("Delivery ID {} status updated: {} -> {}", 
+                log.debug("Delivery ID {} status updated: {} -> {}",
                     delivery.getId(), oldStatus, newStatus);
             }
         }
-        
+
         log.debug("Status de {} entregas foram atualizados", updated);
     }
 
