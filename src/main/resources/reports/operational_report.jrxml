@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="operational_report"
+              pageWidth="595"
+              pageHeight="842"
+              columnWidth="555"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20"
+              uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
+
+    <property name="ireport.zoom" value="1.0"/>
+    <property name="ireport.x" value="0"/>
+    <property name="ireport.y" value="0"/>
+
+    <!-- Parameters -->
+    <parameter name="dataInicio" class="java.time.LocalDateTime"/>
+    <parameter name="dataFim" class="java.time.LocalDateTime"/>
+    <parameter name="dataGeracao" class="java.time.LocalDateTime"/>
+    <parameter name="filtrosTipos" class="java.lang.String"/>
+    <parameter name="filtrosAmbientes" class="java.lang.String"/>
+    <parameter name="totalProducao" class="java.lang.Long"/>
+    <parameter name="totalHomologacao" class="java.lang.Long"/>
+    <parameter name="totalDesenvolvimento" class="java.lang.Long"/>
+    <parameter name="totalNaoEspecificado" class="java.lang.Long"/>
+    <parameter name="totalGeral" class="java.lang.Long"/>
+    <parameter name="totalGeralStats" class="java.lang.Long"/>
+    <parameter name="ambienteMaisFrequente" class="java.lang.String"/>
+    <parameter name="volumeAmbienteMaisFrequente" class="java.lang.Long"/>
+    <parameter name="percentualAmbienteMaisFrequente" class="java.lang.String"/>
+    <parameter name="tipoMaisFrequente" class="java.lang.String"/>
+    <parameter name="volumeTipoMaisFrequente" class="java.lang.Long"/>
+    <parameter name="percentualTipoMaisFrequente" class="java.lang.String"/>
+    <parameter name="mediaDiaria" class="java.lang.String"/>
+    <parameter name="desenvolvedorNome" class="java.lang.String"/>
+    <parameter name="desenvolvedorTitulo" class="java.lang.String"/>
+    <parameter name="desenvolvedorEmail" class="java.lang.String"/>
+    <parameter name="desenvolvedorTelefone" class="java.lang.String"/>
+    <parameter name="copyright" class="java.lang.String"/>
+    <parameter name="sistemaTagline" class="java.lang.String"/>
+    <parameter name="logoPath" class="java.lang.String"/>
+
+    <!-- Fields -->
+    <field name="tipoTarefa" class="java.lang.String"/>
+    <field name="quantidadeProducao" class="java.lang.Long"/>
+    <field name="quantidadeHomologacao" class="java.lang.Long"/>
+    <field name="quantidadeDesenvolvimento" class="java.lang.Long"/>
+    <field name="quantidadeNaoEspecificado" class="java.lang.Long"/>
+    <field name="total" class="java.lang.Long"/>
+
+    <!-- Title Band -->
+    <title>
+        <band height="150" splitType="Stretch">
+            <!-- Background gradient -->
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="120" backcolor="#5B6FE8" uuid="b1c2d3e4-f5a6-4b1c-9d8e-1234567890ab"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <!-- DevQuote Text -->
+            <staticText>
+                <reportElement x="20" y="20" width="200" height="30" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-4c2d-8e9f-234567890abc"/>
+                <textElement>
+                    <font fontName="Arial" size="24" isBold="true"/>
+                </textElement>
+                <text><![CDATA[DevQuote]]></text>
+            </staticText>
+
+            <!-- Tagline -->
+            <staticText>
+                <reportElement x="20" y="50" width="300" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-4d3e-9f0a-34567890abcd"/>
+                <textElement>
+                    <font fontName="Arial" size="10"/>
+                </textElement>
+                <text><![CDATA[Gestao Inteligente de Projetos de Desenvolvimento]]></text>
+            </staticText>
+
+            <!-- Report Title -->
+            <staticText>
+                <reportElement x="20" y="75" width="400" height="20" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4e4f-0a1b-4567890abcde"/>
+                <textElement>
+                    <font fontName="Arial" size="16" isBold="true"/>
+                </textElement>
+                <text><![CDATA[RELATORIO DE ENTREGAS OPERACIONAIS]]></text>
+            </staticText>
+
+            <!-- Period -->
+            <textField>
+                <reportElement x="20" y="100" width="250" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4f5a-1b2c-567890abcdef"/>
+                <textElement>
+                    <font fontName="Arial" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Periodo: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataInicio})) + " a " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataFim}))]]></textFieldExpression>
+            </textField>
+
+            <!-- Generation Date -->
+            <textField>
+                <reportElement x="300" y="100" width="235" height="15" forecolor="#FFFFFF" uuid="a6b1c2d3-e4f5-4a6b-2c3d-67890abcdef0"/>
+                <textElement textAlignment="Right">
+                    <font fontName="Arial" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Gerado em: " + new java.text.SimpleDateFormat("dd/MM/yyyy 'as' HH:mm").format(java.sql.Timestamp.valueOf($P{dataGeracao}))]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <!-- Page Header -->
+    <pageHeader>
+        <band height="10">
+            <!-- Spacer only -->
+        </band>
+    </pageHeader>
+
+    <!-- Column Header -->
+    <columnHeader>
+        <band height="40">
+            <staticText>
+                <reportElement x="10" y="10" width="150" height="15" uuid="f5a6b1c2-d3e4-4fb0-1c2d-bcdef012345a"/>
+                <textElement>
+                    <font fontName="Arial" size="11" isBold="true"/>
+                </textElement>
+                <text><![CDATA[DADOS QUANTITATIVOS]]></text>
+            </staticText>
+
+            <!-- Table Header -->
+            <rectangle>
+                <reportElement x="0" y="30" width="555" height="10" backcolor="#5B6FE8" uuid="a6b1c2d3-e4f5-40c1-2d3e-cdef012345ab"/>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="5" y="30" width="160" height="10" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-41d2-3e4f-def012345abc"/>
+                <textElement>
+                    <font fontName="Arial" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Tipo de Tarefa]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="170" y="30" width="70" height="10" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-42e3-4f5a-ef012345abcd"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="7" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Producao]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="245" y="30" width="70" height="10" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-43f4-5a6b-f012345abcde"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="7" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Homologacao]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="320" y="30" width="80" height="10" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4405-6b7c-012345abcdef"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="7" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Desenvolvim.]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="405" y="30" width="80" height="10" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a1b-8c9d-23456789abcd"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="7" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Nao Especif.]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="490" y="30" width="65" height="10" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4516-7c8d-12345abcdef0"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[TOTAL]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <!-- Detail Band -->
+    <detail>
+        <band height="20" splitType="Stretch">
+            <!-- Alternating row color -->
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="20" backcolor="#FFFFFF" uuid="a6b1c2d3-e4f5-4627-8d9e-2345abcdef01">
+                    <printWhenExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue() % 2 == 0)]]></printWhenExpression>
+                </reportElement>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="20" backcolor="#F9FAFB" uuid="b1c2d3e4-f5a6-4738-9eaf-345abcdef012">
+                    <printWhenExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue() % 2 != 0)]]></printWhenExpression>
+                </reportElement>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <!-- Data Fields -->
+            <textField>
+                <reportElement x="5" y="5" width="160" height="15" uuid="c2d3e4f5-a6b1-4849-afb0-45abcdef0123"/>
+                <textElement>
+                    <font fontName="Arial" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{tipoTarefa}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="170" y="5" width="70" height="15" uuid="d3e4f5a6-b1c2-495a-b0c1-5abcdef01234"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{quantidadeProducao}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="245" y="5" width="70" height="15" uuid="e4f5a6b1-c2d3-4a6b-c1d2-abcdef012345"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{quantidadeHomologacao}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="320" y="5" width="80" height="15" uuid="f5a6b1c2-d3e4-4b7c-d2e3-bcdef0123456"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{quantidadeDesenvolvimento}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="405" y="5" width="80" height="15" uuid="b2c3d4e5-f6a7-4c8d-e4f5-def123456789"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{quantidadeNaoEspecificado}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="490" y="5" width="65" height="15" uuid="a6b1c2d3-e4f5-4c8d-e3f4-cdef01234567"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+            </textField>
+
+            <!-- Border Line -->
+            <line>
+                <reportElement x="0" y="19" width="555" height="1" forecolor="#E5E7EB" uuid="b1c2d3e4-f5a6-4d9e-f4a5-def012345678"/>
+            </line>
+        </band>
+    </detail>
+
+    <!-- Page Footer -->
+    <pageFooter>
+        <band height="90">
+            <!-- Footer Background -->
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="90" backcolor="#F9FAFB" uuid="c2d3e4f5-a6b1-4a6b-6b7c-bcdef0123456"/>
+                <graphicElement>
+                    <pen lineWidth="1" lineColor="#E5E7EB"/>
+                </graphicElement>
+            </rectangle>
+
+            <!-- Separator Line -->
+            <line>
+                <reportElement x="0" y="5" width="555" height="1" forecolor="#E5E7EB" uuid="d3e4f5a6-b1c2-4b7c-7c8d-cdef01234567"/>
+            </line>
+
+            <staticText>
+                <reportElement x="0" y="15" width="555" height="15" uuid="e4f5a6b1-c2d3-4c8d-8d9e-def012345678"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="9" isBold="false" isItalic="true"/>
+                </textElement>
+                <text><![CDATA[Solucao Empresarial para Desenvolvedores]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="0" y="35" width="555" height="15" uuid="f5a6b1c2-d3e4-4d9e-9eaf-ef0123456789"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Desenvolvido por " + $P{desenvolvedorNome}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="50" width="555" height="12" uuid="a6b1c2d3-e4f5-4eaf-afb0-f012345678ab"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{desenvolvedorTitulo}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="67" width="555" height="10" uuid="d3e4f5a6-b1c2-41d2-d2e3-2345678abcde"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="8" isItalic="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{copyright}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="450" y="80" width="80" height="8" uuid="e4f5a6b1-c2d3-42e3-e3f4-345678abcdef"/>
+                <textElement textAlignment="Right">
+                    <font fontName="Arial" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Pagina " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+
+            <textField evaluationTime="Report">
+                <reportElement x="530" y="80" width="25" height="8" uuid="f5a6b1c2-d3e4-43f4-f4a5-45678abcdef0"/>
+                <textElement>
+                    <font fontName="Arial" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[" de " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <!-- Summary Band -->
+    <summary>
+        <band height="35">
+            <!-- Totals Row -->
+            <rectangle>
+                <reportElement x="0" y="5" width="555" height="25" backcolor="#6366F1" uuid="c2d3e4f5-a6b1-4eaf-a5b6-ef0123456789"/>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="5" y="10" width="160" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-4fb0-b6c7-f012345678ab"/>
+                <textElement>
+                    <font fontName="Arial" size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[TOTAL GERAL]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="170" y="10" width="70" height="15" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-40c1-c7d8-012345678abc"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalProducao}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="245" y="10" width="70" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-41d2-d8e9-12345678abcd"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalHomologacao}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="320" y="10" width="80" height="15" forecolor="#FFFFFF" uuid="a6b1c2d3-e4f5-42e3-e9fa-2345678abcde"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalDesenvolvimento}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="405" y="10" width="80" height="15" forecolor="#FFFFFF" uuid="c3d4e5f6-a7b8-43f5-fab1-456789abcdef"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalNaoEspecificado}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="490" y="10" width="65" height="15" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-43f4-fa0b-345678abcdef"/>
+                <textElement textAlignment="Center">
+                    <font fontName="Arial" size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalGeral}]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+</jasperReport>

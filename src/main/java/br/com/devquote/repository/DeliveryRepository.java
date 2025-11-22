@@ -98,7 +98,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     Object[] findDeliveryGroupByTaskIdOptimized(@Param("taskId") Long taskId);
 
     @Query(value = """
-        SELECT 
+        SELECT
             SUM(CASE WHEN d.status = 'PENDING' THEN 1 ELSE 0 END) as pending_count,
             SUM(CASE WHEN d.status = 'DEVELOPMENT' THEN 1 ELSE 0 END) as development_count,
             SUM(CASE WHEN d.status = 'DELIVERED' THEN 1 ELSE 0 END) as delivered_count,
@@ -109,4 +109,36 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         FROM delivery d
         """, nativeQuery = true)
     Object[] findGlobalDeliveryStatistics();
+
+    @Query(value = """
+        SELECT
+            t.task_type AS tipoTarefa,
+            d.environment AS ambiente,
+            COUNT(d.id) AS quantidade
+        FROM delivery d
+        INNER JOIN task t ON t.id = d.task_id
+        WHERE
+            d.flow_type = 'OPERACIONAL'
+            AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
+                 d.finished_at BETWEEN :dataInicio AND :dataFim)
+            AND (:tipoTarefa IS NULL OR t.task_type = :tipoTarefa)
+            AND (:ambiente IS NULL OR d.environment = CAST(:ambiente AS VARCHAR))
+        GROUP BY t.task_type, d.environment
+        ORDER BY t.task_type, d.environment
+        """, nativeQuery = true)
+    List<Object[]> findOperationalReportData(
+            @Param("dataInicio") java.time.LocalDateTime dataInicio,
+            @Param("dataFim") java.time.LocalDateTime dataFim,
+            @Param("tipoTarefa") String tipoTarefa,
+            @Param("ambiente") String ambiente
+    );
+
+    @Query(value = """
+        SELECT
+            MIN(COALESCE(d.started_at, d.finished_at, d.created_at)),
+            MAX(COALESCE(d.finished_at, d.started_at, d.updated_at, d.created_at))
+        FROM delivery d
+        WHERE d.flow_type = 'OPERACIONAL'
+        """, nativeQuery = true)
+    List<Object[]> findOperationalDateRange();
 }

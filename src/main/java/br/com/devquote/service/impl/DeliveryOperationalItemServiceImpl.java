@@ -47,6 +47,10 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
                 .finishedAt(request.getFinishedAt())
                 .build();
 
+        if (OperationalItemStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
+            throw new IllegalArgumentException("Data de conclusão é obrigatória para itens operacionais com status 'Entregue'");
+        }
+
         DeliveryOperationalItem saved = operationalItemRepository.save(item);
 
         delivery.updateStatus();
@@ -69,6 +73,10 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
         item.setStatus(OperationalItemStatus.fromString(request.getStatus()));
         item.setStartedAt(request.getStartedAt());
         item.setFinishedAt(request.getFinishedAt());
+
+        if (OperationalItemStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
+            throw new IllegalArgumentException("Data de conclusão é obrigatória para itens operacionais com status 'Entregue'");
+        }
 
         DeliveryOperationalItem updated = operationalItemRepository.save(item);
 
