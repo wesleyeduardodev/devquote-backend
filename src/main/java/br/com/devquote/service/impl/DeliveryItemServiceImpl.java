@@ -68,6 +68,11 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                 .orElseThrow(() -> new RuntimeException("Project not found with id: " + dto.getProjectId()));
 
         DeliveryItem item = DeliveryItemAdapter.toEntity(dto, delivery, project);
+
+        if (DeliveryStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
+            throw new IllegalArgumentException("Data de conclusão é obrigatória para itens com status 'Entregue'");
+        }
+
         item = deliveryItemRepository.save(item);
 
         delivery.updateStatus();
@@ -100,6 +105,11 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
         }
 
         DeliveryItemAdapter.updateEntityFromDto(dto, item, delivery, project);
+
+        if (DeliveryStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
+            throw new IllegalArgumentException("Data de conclusão é obrigatória para itens com status 'Entregue'");
+        }
+
         item = deliveryItemRepository.save(item);
 
         item.getDelivery().updateStatus();
@@ -291,6 +301,11 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                     .orElseThrow(() -> new RuntimeException("Project not found with id: " + itemDto.getProjectId()));
 
             DeliveryItem item = DeliveryItemAdapter.toEntity(itemDto, delivery, project);
+
+            if (DeliveryStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
+                throw new IllegalArgumentException("Data de conclusão é obrigatória para itens com status 'Entregue'");
+            }
+
             createdItems.add(item);
         }
 
@@ -336,6 +351,11 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
             }
 
             DeliveryItemAdapter.updateEntityFromDto(itemDto, item, delivery, project);
+
+            if (DeliveryStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
+                throw new IllegalArgumentException("Data de conclusão é obrigatória para itens com status 'Entregue'");
+            }
+
             updatedItems.add(item);
         }
 
