@@ -81,7 +81,7 @@
             <staticText>
                 <reportElement x="0" y="20" width="555" height="30" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-4c2d-8e9f-234567890abc"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="24" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="24" isBold="true"/>
                 </textElement>
                 <text><![CDATA[DevQuote]]></text>
             </staticText>
@@ -90,7 +90,7 @@
             <staticText>
                 <reportElement x="0" y="50" width="555" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-4d3e-9f0a-34567890abcd"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="10"/>
+                    <font fontName="DejaVu Sans" size="10"/>
                 </textElement>
                 <text><![CDATA[Gestao Inteligente de Projetos de Desenvolvimento]]></text>
             </staticText>
@@ -99,7 +99,7 @@
             <staticText>
                 <reportElement x="0" y="75" width="555" height="20" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4e4f-0a1b-4567890abcde"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="16" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="16" isBold="true"/>
                 </textElement>
                 <text><![CDATA[RELATORIO DE ENTREGAS OPERACIONAIS]]></text>
             </staticText>
@@ -108,7 +108,7 @@
             <textField>
                 <reportElement x="0" y="100" width="280" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4f5a-1b2c-567890abcdef"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="9"/>
+                    <font fontName="DejaVu Sans" size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Período: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataInicio})) + " a " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataFim}))]]></textFieldExpression>
             </textField>
@@ -117,7 +117,7 @@
             <textField>
                 <reportElement x="300" y="100" width="235" height="15" forecolor="#FFFFFF" uuid="a6b1c2d3-e4f5-4a6b-2c3d-67890abcdef0"/>
                 <textElement textAlignment="Right">
-                    <font fontName="Arial" size="9"/>
+                    <font fontName="DejaVu Sans" size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Gerado em: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(java.sql.Timestamp.valueOf($P{dataGeracao}))]]></textFieldExpression>
             </textField>
@@ -137,7 +137,7 @@
             <staticText>
                 <reportElement x="0" y="10" width="555" height="15" uuid="f5a6b1c2-d3e4-4fb0-1c2d-bcdef012345a"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="11" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="11" isBold="true"/>
                 </textElement>
                 <text><![CDATA[DADOS QUANTITATIVOS]]></text>
             </staticText>
@@ -150,7 +150,7 @@
             <staticText>
                 <reportElement x="5" y="35" width="100" height="15" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-41d2-3e4f-def012345abc"/>
                 <textElement verticalAlignment="Middle">
-                    <font fontName="Arial" size="8" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Tipo de Tarefa]]></text>
             </staticText>
@@ -158,7 +158,7 @@
             <staticText>
                 <reportElement x="110" y="35" width="90" height="15" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-42e3-4f5a-ef012345abcd"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Producao]]></text>
             </staticText>
@@ -166,7 +166,7 @@
             <staticText>
                 <reportElement x="205" y="35" width="90" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-43f4-5a6b-f012345abcde"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Homologacao]]></text>
             </staticText>
@@ -174,7 +174,7 @@
             <staticText>
                 <reportElement x="300" y="35" width="85" height="15" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4405-6b7c-012345abcdef"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Desenvolvimento]]></text>
             </staticText>
@@ -182,7 +182,7 @@
             <staticText>
                 <reportElement x="390" y="35" width="85" height="15" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a1b-8c9d-23456789abcd"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Não Especificado]]></text>
             </staticText>
@@ -190,7 +190,7 @@
             <staticText>
                 <reportElement x="480" y="35" width="75" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4516-7c8d-12345abcdef0"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font fontName="Arial" size="8" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
                 <text><![CDATA[TOTAL]]></text>
             </staticText>
@@ -223,7 +223,7 @@
             <textField>
                 <reportElement x="5" y="5" width="100" height="15" uuid="c2d3e4f5-a6b1-4849-afb0-45abcdef0123"/>
                 <textElement>
-                    <font fontName="Arial" size="8"/>
+                    <font fontName="DejaVu Sans" size="8"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{tipoTarefa}]]></textFieldExpression>
             </textField>
@@ -231,7 +231,7 @@
             <textField>
                 <reportElement x="110" y="5" width="90" height="15" uuid="d3e4f5a6-b1c2-495a-b0c1-5abcdef01234"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7"/>
+                    <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{quantidadeProducao} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorProducao})]]></textFieldExpression>
             </textField>
@@ -239,7 +239,7 @@
             <textField>
                 <reportElement x="205" y="5" width="90" height="15" uuid="e4f5a6b1-c2d3-4a6b-c1d2-abcdef012345"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7"/>
+                    <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{quantidadeHomologacao} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorHomologacao})]]></textFieldExpression>
             </textField>
@@ -247,7 +247,7 @@
             <textField>
                 <reportElement x="300" y="5" width="85" height="15" uuid="f5a6b1c2-d3e4-4b7c-d2e3-bcdef0123456"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7"/>
+                    <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{quantidadeDesenvolvimento} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorDesenvolvimento})]]></textFieldExpression>
             </textField>
@@ -255,7 +255,7 @@
             <textField>
                 <reportElement x="390" y="5" width="85" height="15" uuid="b2c3d4e5-f6a7-4c8d-e4f5-def123456789"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7"/>
+                    <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{quantidadeNaoEspecificado} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorNaoEspecificado})]]></textFieldExpression>
             </textField>
@@ -263,7 +263,7 @@
             <textField>
                 <reportElement x="480" y="5" width="75" height="15" uuid="a6b1c2d3-e4f5-4c8d-e3f4-cdef01234567"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{total} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorTotal})]]></textFieldExpression>
             </textField>
@@ -281,7 +281,7 @@
             <textField>
                 <reportElement x="450" y="5" width="80" height="8" uuid="e4f5a6b1-c2d3-42e3-e3f4-345678901234"/>
                 <textElement textAlignment="Right">
-                    <font fontName="Arial" size="7"/>
+                    <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Pagina " + $V{PAGE_NUMBER}]]></textFieldExpression>
             </textField>
@@ -289,7 +289,7 @@
             <textField evaluationTime="Report">
                 <reportElement x="530" y="5" width="25" height="8" uuid="f5a6b1c2-d3e4-43f4-f4a5-456789012345"/>
                 <textElement>
-                    <font fontName="Arial" size="7"/>
+                    <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
                 <textFieldExpression><![CDATA[" de " + $V{PAGE_NUMBER}]]></textFieldExpression>
             </textField>
@@ -307,7 +307,7 @@
             <staticText>
                 <reportElement x="5" y="10" width="100" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-4fb0-b6c7-f012345678ab"/>
                 <textElement>
-                    <font fontName="Arial" size="10" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="10" isBold="true"/>
                 </textElement>
                 <text><![CDATA[TOTAL GERAL]]></text>
             </staticText>
@@ -315,7 +315,7 @@
             <textField>
                 <reportElement x="110" y="10" width="90" height="15" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-40c1-c7d8-012345678abc"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalProducao} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorProducao})]]></textFieldExpression>
             </textField>
@@ -323,7 +323,7 @@
             <textField>
                 <reportElement x="205" y="10" width="90" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-41d2-d8e9-12345678abcd"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalHomologacao} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorHomologacao})]]></textFieldExpression>
             </textField>
@@ -331,7 +331,7 @@
             <textField>
                 <reportElement x="300" y="10" width="85" height="15" forecolor="#FFFFFF" uuid="a6b1c2d3-e4f5-42e3-e9fa-2345678abcde"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalDesenvolvimento} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorDesenvolvimento})]]></textFieldExpression>
             </textField>
@@ -339,7 +339,7 @@
             <textField>
                 <reportElement x="390" y="10" width="85" height="15" forecolor="#FFFFFF" uuid="c3d4e5f6-a7b8-43f5-fab1-456789abcdef"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalNaoEspecificado} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorNaoEspecificado})]]></textFieldExpression>
             </textField>
@@ -347,7 +347,7 @@
             <textField>
                 <reportElement x="480" y="10" width="75" height="15" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-43f4-fa0b-345678abcdef"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="7" isBold="true"/>
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalGeral} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorGeral})]]></textFieldExpression>
             </textField>
