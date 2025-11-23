@@ -118,15 +118,15 @@ public class ReportServiceImpl implements ReportService {
         List<Object[]> queryResults = deliveryRepository.findOperationalReportData(
                 dataInicio,
                 dataFim,
-                request.getTipoTarefa(),
-                ambiente
+                null,
+                null
         );
 
         List<Object[]> financialResults = deliveryRepository.findOperationalReportFinancialData(
                 dataInicio,
                 dataFim,
-                request.getTipoTarefa(),
-                ambiente
+                null,
+                null
         );
 
         Map<String, OperationalReportRow> rowMap = new LinkedHashMap<>();
