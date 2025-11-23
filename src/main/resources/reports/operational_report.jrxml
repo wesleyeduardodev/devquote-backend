@@ -148,7 +148,7 @@
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="30" width="160" height="10" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-41d2-3e4f-def012345abc"/>
+                <reportElement x="5" y="30" width="100" height="10" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-41d2-3e4f-def012345abc"/>
                 <textElement>
                     <font fontName="Arial" size="8" isBold="true"/>
                 </textElement>
@@ -156,7 +156,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="170" y="30" width="70" height="10" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-42e3-4f5a-ef012345abcd"/>
+                <reportElement x="110" y="30" width="90" height="10" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-42e3-4f5a-ef012345abcd"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
@@ -164,7 +164,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="245" y="30" width="70" height="10" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-43f4-5a6b-f012345abcde"/>
+                <reportElement x="205" y="30" width="90" height="10" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-43f4-5a6b-f012345abcde"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
@@ -172,7 +172,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="320" y="30" width="80" height="10" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4405-6b7c-012345abcdef"/>
+                <reportElement x="300" y="30" width="85" height="10" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4405-6b7c-012345abcdef"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
@@ -180,7 +180,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="405" y="30" width="80" height="10" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a1b-8c9d-23456789abcd"/>
+                <reportElement x="390" y="30" width="85" height="10" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a1b-8c9d-23456789abcd"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
@@ -188,7 +188,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="490" y="30" width="65" height="10" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4516-7c8d-12345abcdef0"/>
+                <reportElement x="480" y="30" width="75" height="10" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4516-7c8d-12345abcdef0"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="8" isBold="true"/>
                 </textElement>
@@ -221,7 +221,7 @@
 
             <!-- Data Fields -->
             <textField>
-                <reportElement x="5" y="5" width="160" height="15" uuid="c2d3e4f5-a6b1-4849-afb0-45abcdef0123"/>
+                <reportElement x="5" y="5" width="100" height="15" uuid="c2d3e4f5-a6b1-4849-afb0-45abcdef0123"/>
                 <textElement>
                     <font fontName="Arial" size="8"/>
                 </textElement>
@@ -229,7 +229,7 @@
             </textField>
 
             <textField>
-                <reportElement x="170" y="5" width="70" height="15" uuid="d3e4f5a6-b1c2-495a-b0c1-5abcdef01234"/>
+                <reportElement x="110" y="5" width="90" height="15" uuid="d3e4f5a6-b1c2-495a-b0c1-5abcdef01234"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7"/>
                 </textElement>
@@ -237,7 +237,7 @@
             </textField>
 
             <textField>
-                <reportElement x="245" y="5" width="70" height="15" uuid="e4f5a6b1-c2d3-4a6b-c1d2-abcdef012345"/>
+                <reportElement x="205" y="5" width="90" height="15" uuid="e4f5a6b1-c2d3-4a6b-c1d2-abcdef012345"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7"/>
                 </textElement>
@@ -245,7 +245,7 @@
             </textField>
 
             <textField>
-                <reportElement x="320" y="5" width="80" height="15" uuid="f5a6b1c2-d3e4-4b7c-d2e3-bcdef0123456"/>
+                <reportElement x="300" y="5" width="85" height="15" uuid="f5a6b1c2-d3e4-4b7c-d2e3-bcdef0123456"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7"/>
                 </textElement>
@@ -253,7 +253,7 @@
             </textField>
 
             <textField>
-                <reportElement x="405" y="5" width="80" height="15" uuid="b2c3d4e5-f6a7-4c8d-e4f5-def123456789"/>
+                <reportElement x="390" y="5" width="85" height="15" uuid="b2c3d4e5-f6a7-4c8d-e4f5-def123456789"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7"/>
                 </textElement>
@@ -261,7 +261,7 @@
             </textField>
 
             <textField>
-                <reportElement x="490" y="5" width="65" height="15" uuid="a6b1c2d3-e4f5-4c8d-e3f4-cdef01234567"/>
+                <reportElement x="480" y="5" width="75" height="15" uuid="a6b1c2d3-e4f5-4c8d-e3f4-cdef01234567"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
@@ -405,7 +405,7 @@
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="10" width="160" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-4fb0-b6c7-f012345678ab"/>
+                <reportElement x="5" y="10" width="100" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-4fb0-b6c7-f012345678ab"/>
                 <textElement>
                     <font fontName="Arial" size="10" isBold="true"/>
                 </textElement>
@@ -413,7 +413,7 @@
             </staticText>
 
             <textField>
-                <reportElement x="170" y="10" width="70" height="15" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-40c1-c7d8-012345678abc"/>
+                <reportElement x="110" y="10" width="90" height="15" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-40c1-c7d8-012345678abc"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
@@ -421,7 +421,7 @@
             </textField>
 
             <textField>
-                <reportElement x="245" y="10" width="70" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-41d2-d8e9-12345678abcd"/>
+                <reportElement x="205" y="10" width="90" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-41d2-d8e9-12345678abcd"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
@@ -429,7 +429,7 @@
             </textField>
 
             <textField>
-                <reportElement x="320" y="10" width="80" height="15" forecolor="#FFFFFF" uuid="a6b1c2d3-e4f5-42e3-e9fa-2345678abcde"/>
+                <reportElement x="300" y="10" width="85" height="15" forecolor="#FFFFFF" uuid="a6b1c2d3-e4f5-42e3-e9fa-2345678abcde"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
@@ -437,7 +437,7 @@
             </textField>
 
             <textField>
-                <reportElement x="405" y="10" width="80" height="15" forecolor="#FFFFFF" uuid="c3d4e5f6-a7b8-43f5-fab1-456789abcdef"/>
+                <reportElement x="390" y="10" width="85" height="15" forecolor="#FFFFFF" uuid="c3d4e5f6-a7b8-43f5-fab1-456789abcdef"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
@@ -445,7 +445,7 @@
             </textField>
 
             <textField>
-                <reportElement x="490" y="10" width="65" height="15" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-43f4-fa0b-345678abcdef"/>
+                <reportElement x="480" y="10" width="75" height="15" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-43f4-fa0b-345678abcdef"/>
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
