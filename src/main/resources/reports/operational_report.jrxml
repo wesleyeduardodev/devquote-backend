@@ -47,6 +47,11 @@
     <parameter name="githubUrl" class="java.lang.String"/>
     <parameter name="instagramUrl" class="java.lang.String"/>
     <parameter name="facebookUrl" class="java.lang.String"/>
+    <parameter name="totalValorProducao" class="java.math.BigDecimal"/>
+    <parameter name="totalValorHomologacao" class="java.math.BigDecimal"/>
+    <parameter name="totalValorDesenvolvimento" class="java.math.BigDecimal"/>
+    <parameter name="totalValorNaoEspecificado" class="java.math.BigDecimal"/>
+    <parameter name="totalValorGeral" class="java.math.BigDecimal"/>
 
     <!-- Fields -->
     <field name="tipoTarefa" class="java.lang.String"/>
@@ -55,6 +60,11 @@
     <field name="quantidadeDesenvolvimento" class="java.lang.Long"/>
     <field name="quantidadeNaoEspecificado" class="java.lang.Long"/>
     <field name="total" class="java.lang.Long"/>
+    <field name="valorProducao" class="java.math.BigDecimal"/>
+    <field name="valorHomologacao" class="java.math.BigDecimal"/>
+    <field name="valorDesenvolvimento" class="java.math.BigDecimal"/>
+    <field name="valorNaoEspecificado" class="java.math.BigDecimal"/>
+    <field name="valorTotal" class="java.math.BigDecimal"/>
 
     <!-- Title Band -->
     <title>
@@ -221,41 +231,41 @@
             <textField>
                 <reportElement x="170" y="5" width="70" height="15" uuid="d3e4f5a6-b1c2-495a-b0c1-5abcdef01234"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="8"/>
+                    <font fontName="Arial" size="7"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{quantidadeProducao}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{quantidadeProducao} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorProducao})]]></textFieldExpression>
             </textField>
 
             <textField>
                 <reportElement x="245" y="5" width="70" height="15" uuid="e4f5a6b1-c2d3-4a6b-c1d2-abcdef012345"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="8"/>
+                    <font fontName="Arial" size="7"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{quantidadeHomologacao}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{quantidadeHomologacao} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorHomologacao})]]></textFieldExpression>
             </textField>
 
             <textField>
                 <reportElement x="320" y="5" width="80" height="15" uuid="f5a6b1c2-d3e4-4b7c-d2e3-bcdef0123456"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="8"/>
+                    <font fontName="Arial" size="7"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{quantidadeDesenvolvimento}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{quantidadeDesenvolvimento} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorDesenvolvimento})]]></textFieldExpression>
             </textField>
 
             <textField>
                 <reportElement x="405" y="5" width="80" height="15" uuid="b2c3d4e5-f6a7-4c8d-e4f5-def123456789"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="8"/>
+                    <font fontName="Arial" size="7"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{quantidadeNaoEspecificado}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{quantidadeNaoEspecificado} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorNaoEspecificado})]]></textFieldExpression>
             </textField>
 
             <textField>
                 <reportElement x="490" y="5" width="65" height="15" uuid="a6b1c2d3-e4f5-4c8d-e3f4-cdef01234567"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="9" isBold="true"/>
+                    <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{total}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{total} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($F{valorTotal})]]></textFieldExpression>
             </textField>
 
             <!-- Border Line -->
@@ -405,41 +415,41 @@
             <textField>
                 <reportElement x="170" y="10" width="70" height="15" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-40c1-c7d8-012345678abc"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="9" isBold="true"/>
+                    <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$P{totalProducao}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$P{totalProducao} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorProducao})]]></textFieldExpression>
             </textField>
 
             <textField>
                 <reportElement x="245" y="10" width="70" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-41d2-d8e9-12345678abcd"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="9" isBold="true"/>
+                    <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$P{totalHomologacao}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$P{totalHomologacao} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorHomologacao})]]></textFieldExpression>
             </textField>
 
             <textField>
                 <reportElement x="320" y="10" width="80" height="15" forecolor="#FFFFFF" uuid="a6b1c2d3-e4f5-42e3-e9fa-2345678abcde"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="9" isBold="true"/>
+                    <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$P{totalDesenvolvimento}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$P{totalDesenvolvimento} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorDesenvolvimento})]]></textFieldExpression>
             </textField>
 
             <textField>
                 <reportElement x="405" y="10" width="80" height="15" forecolor="#FFFFFF" uuid="c3d4e5f6-a7b8-43f5-fab1-456789abcdef"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="9" isBold="true"/>
+                    <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$P{totalNaoEspecificado}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$P{totalNaoEspecificado} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorNaoEspecificado})]]></textFieldExpression>
             </textField>
 
             <textField>
                 <reportElement x="490" y="10" width="65" height="15" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-43f4-fa0b-345678abcdef"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Arial" size="10" isBold="true"/>
+                    <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$P{totalGeral}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$P{totalGeral} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorGeral})]]></textFieldExpression>
             </textField>
         </band>
     </summary>

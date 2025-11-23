@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,6 +38,16 @@ public class OperationalReportData {
     private Long totalNaoEspecificado;
 
     private Long totalGeral;
+
+    private BigDecimal totalValorProducao;
+
+    private BigDecimal totalValorHomologacao;
+
+    private BigDecimal totalValorDesenvolvimento;
+
+    private BigDecimal totalValorNaoEspecificado;
+
+    private BigDecimal totalValorGeral;
 
     private OperationalReportStatistics statistics;
 

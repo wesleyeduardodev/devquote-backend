@@ -135,6 +135,29 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 
     @Query(value = """
         SELECT
+            t.task_type AS tipoTarefa,
+            d.environment AS ambiente,
+            SUM(COALESCE(t.amount, 0)) AS valorTotal
+        FROM delivery d
+        INNER JOIN task t ON t.id = d.task_id
+        WHERE
+            d.flow_type = 'OPERACIONAL'
+            AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
+                 d.finished_at BETWEEN :dataInicio AND :dataFim)
+            AND (:tipoTarefa IS NULL OR t.task_type = :tipoTarefa)
+            AND (:ambiente IS NULL OR d.environment = CAST(:ambiente AS VARCHAR))
+        GROUP BY t.task_type, d.environment
+        ORDER BY t.task_type, d.environment
+        """, nativeQuery = true)
+    List<Object[]> findOperationalReportFinancialData(
+            @Param("dataInicio") java.time.LocalDateTime dataInicio,
+            @Param("dataFim") java.time.LocalDateTime dataFim,
+            @Param("tipoTarefa") String tipoTarefa,
+            @Param("ambiente") String ambiente
+    );
+
+    @Query(value = """
+        SELECT
             MIN(COALESCE(d.started_at, d.finished_at, d.created_at)),
             MAX(COALESCE(d.finished_at, d.started_at, d.updated_at, d.created_at))
         FROM delivery d
