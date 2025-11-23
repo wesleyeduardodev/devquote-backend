@@ -979,4 +979,17 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         return DeliveryAdapter.toResponseDTO(entity);
     }
+
+    @Override
+    @Transactional
+    public DeliveryResponse updateEnvironment(Long id, br.com.devquote.enums.Environment environment) {
+        Delivery entity = deliveryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Delivery not found with ID: " + id));
+
+        entity.setEnvironment(environment);
+
+        entity = deliveryRepository.save(entity);
+
+        return DeliveryAdapter.toResponseDTO(entity);
+    }
 }

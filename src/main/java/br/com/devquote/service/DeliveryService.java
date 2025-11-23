@@ -70,4 +70,6 @@ public interface DeliveryService {
     void sendDeliveryEmail(Long id, List<String> additionalEmails, List<String> additionalWhatsAppRecipients, boolean sendEmail, boolean sendWhatsApp);
 
     DeliveryResponse updateNotes(Long id, String notes);
+
+    DeliveryResponse updateEnvironment(Long id, br.com.devquote.enums.Environment environment);
 }

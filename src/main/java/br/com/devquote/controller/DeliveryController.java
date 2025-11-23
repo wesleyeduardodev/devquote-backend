@@ -1,6 +1,7 @@
 package br.com.devquote.controller;
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.controller.doc.DeliveryControllerDoc;
+import br.com.devquote.dto.request.DeliveryEnvironmentRequest;
 import br.com.devquote.dto.request.DeliveryNotesRequest;
 import br.com.devquote.dto.request.DeliveryRequest;
 import br.com.devquote.dto.response.DeliveryResponse;
@@ -125,6 +126,14 @@ public class DeliveryController implements DeliveryControllerDoc {
             @PathVariable Long id,
             @RequestBody @Valid DeliveryNotesRequest request) {
         return ResponseEntity.ok(deliveryService.updateNotes(id, request.getNotes()));
+    }
+
+    @PatchMapping("/{id}/environment")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<DeliveryResponse> updateEnvironment(
+            @PathVariable Long id,
+            @RequestBody @Valid DeliveryEnvironmentRequest request) {
+        return ResponseEntity.ok(deliveryService.updateEnvironment(id, request.getEnvironment()));
     }
 
     @Override
