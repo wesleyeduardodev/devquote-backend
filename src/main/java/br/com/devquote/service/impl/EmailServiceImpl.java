@@ -480,6 +480,7 @@ public class EmailServiceImpl implements EmailService {
             case APPROVED -> "Aprovado";
             case REJECTED -> "Rejeitado";
             case PRODUCTION -> "Produção";
+            case CANCELLED -> "Cancelado";
         };
     }
 
@@ -496,6 +497,7 @@ public class EmailServiceImpl implements EmailService {
         return switch (status) {
             case PENDING -> "Pendente";
             case DELIVERED -> "Entregue";
+            case CANCELLED -> "Cancelado";
         };
     }
 

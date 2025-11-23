@@ -350,6 +350,7 @@ public class ExcelReportUtils {
             case "APPROVED" -> "Aprovado";
             case "REJECTED" -> "Rejeitado";
             case "PRODUCTION" -> "Produção";
+            case "CANCELLED" -> "Cancelado";
             default -> status;
         };
     }

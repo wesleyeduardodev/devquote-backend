@@ -10,7 +10,8 @@ public enum DeliveryStatus {
     HOMOLOGATION("Homologação"),
     APPROVED("Aprovado"),
     REJECTED("Rejeitado"),
-    PRODUCTION("Produção");
+    PRODUCTION("Produção"),
+    CANCELLED("Cancelado");
 
     private final String displayName;
 

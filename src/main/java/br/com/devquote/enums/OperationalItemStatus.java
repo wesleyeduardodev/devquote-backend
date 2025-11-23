@@ -4,7 +4,8 @@ import lombok.Getter;
 @Getter
 public enum OperationalItemStatus {
     PENDING("Pendente"),
-    DELIVERED("Entregue");
+    DELIVERED("Entregue"),
+    CANCELLED("Cancelado");
 
     private final String descricao;
 

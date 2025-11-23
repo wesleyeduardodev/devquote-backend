@@ -94,6 +94,9 @@ public class Delivery {
                             case DELIVERED -> {
                                 return DeliveryStatus.DELIVERED;
                             }
+                            case CANCELLED -> {
+                                return DeliveryStatus.CANCELLED;
+                            }
                             default -> {
                                 return DeliveryStatus.PENDING;
                             }
@@ -110,6 +113,10 @@ public class Delivery {
 
         if (itemStatuses.size() == 1) {
             return itemStatuses.get(0);
+        }
+
+        if (itemStatuses.contains(DeliveryStatus.CANCELLED)) {
+            return DeliveryStatus.CANCELLED;
         }
 
         if (itemStatuses.contains(DeliveryStatus.DEVELOPMENT)) {
@@ -200,6 +207,7 @@ public class Delivery {
                     DeliveryStatus mappedStatus = switch (item.getStatus()) {
                         case PENDING -> DeliveryStatus.PENDING;
                         case DELIVERED -> DeliveryStatus.DELIVERED;
+                        case CANCELLED -> DeliveryStatus.CANCELLED;
                     };
                     return mappedStatus == status;
                 })
