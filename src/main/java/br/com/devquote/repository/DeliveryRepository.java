@@ -119,6 +119,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         INNER JOIN task t ON t.id = d.task_id
         WHERE
             d.flow_type = 'OPERACIONAL'
+            AND d.status = 'DELIVERED'
             AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
                  d.finished_at BETWEEN :dataInicio AND :dataFim)
             AND (:tipoTarefa IS NULL OR t.task_type = :tipoTarefa)
@@ -142,6 +143,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         INNER JOIN task t ON t.id = d.task_id
         WHERE
             d.flow_type = 'OPERACIONAL'
+            AND d.status = 'DELIVERED'
             AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
                  d.finished_at BETWEEN :dataInicio AND :dataFim)
             AND (:tipoTarefa IS NULL OR t.task_type = :tipoTarefa)
