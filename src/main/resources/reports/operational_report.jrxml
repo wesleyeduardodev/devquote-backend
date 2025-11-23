@@ -133,10 +133,10 @@
 
     <!-- Column Header -->
     <columnHeader>
-        <band height="40">
+        <band height="55">
             <staticText>
-                <reportElement x="10" y="10" width="150" height="15" uuid="f5a6b1c2-d3e4-4fb0-1c2d-bcdef012345a"/>
-                <textElement>
+                <reportElement x="0" y="10" width="555" height="15" uuid="f5a6b1c2-d3e4-4fb0-1c2d-bcdef012345a"/>
+                <textElement textAlignment="Center">
                     <font fontName="Arial" size="11" isBold="true"/>
                 </textElement>
                 <text><![CDATA[DADOS QUANTITATIVOS]]></text>
@@ -144,52 +144,52 @@
 
             <!-- Table Header -->
             <rectangle>
-                <reportElement x="0" y="30" width="555" height="10" backcolor="#5B6FE8" uuid="a6b1c2d3-e4f5-40c1-2d3e-cdef012345ab"/>
+                <reportElement x="0" y="30" width="555" height="25" backcolor="#5B6FE8" uuid="a6b1c2d3-e4f5-40c1-2d3e-cdef012345ab"/>
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="30" width="100" height="10" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-41d2-3e4f-def012345abc"/>
-                <textElement>
+                <reportElement x="5" y="35" width="100" height="15" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-41d2-3e4f-def012345abc"/>
+                <textElement verticalAlignment="Middle">
                     <font fontName="Arial" size="8" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Tipo de Tarefa]]></text>
             </staticText>
 
             <staticText>
-                <reportElement x="110" y="30" width="90" height="10" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-42e3-4f5a-ef012345abcd"/>
-                <textElement textAlignment="Center">
+                <reportElement x="110" y="35" width="90" height="15" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-42e3-4f5a-ef012345abcd"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Producao]]></text>
             </staticText>
 
             <staticText>
-                <reportElement x="205" y="30" width="90" height="10" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-43f4-5a6b-f012345abcde"/>
-                <textElement textAlignment="Center">
+                <reportElement x="205" y="35" width="90" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-43f4-5a6b-f012345abcde"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Homologacao]]></text>
             </staticText>
 
             <staticText>
-                <reportElement x="300" y="30" width="85" height="10" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4405-6b7c-012345abcdef"/>
-                <textElement textAlignment="Center">
+                <reportElement x="300" y="35" width="85" height="15" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4405-6b7c-012345abcdef"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Desenvolvim.]]></text>
             </staticText>
 
             <staticText>
-                <reportElement x="390" y="30" width="85" height="10" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a1b-8c9d-23456789abcd"/>
-                <textElement textAlignment="Center">
+                <reportElement x="390" y="35" width="85" height="15" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a1b-8c9d-23456789abcd"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
                 <text><![CDATA[Nao Especif.]]></text>
             </staticText>
 
             <staticText>
-                <reportElement x="480" y="30" width="75" height="10" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4516-7c8d-12345abcdef0"/>
-                <textElement textAlignment="Center">
+                <reportElement x="480" y="35" width="75" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4516-7c8d-12345abcdef0"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="Arial" size="8" isBold="true"/>
                 </textElement>
                 <text><![CDATA[TOTAL]]></text>
@@ -277,109 +277,9 @@
 
     <!-- Page Footer -->
     <pageFooter>
-        <band height="120">
-            <!-- Footer Background -->
-            <rectangle>
-                <reportElement x="0" y="0" width="555" height="120" backcolor="#F9FAFB" uuid="c2d3e4f5-a6b1-4a6b-6b7c-bcdef0123456"/>
-                <graphicElement>
-                    <pen lineWidth="1" lineColor="#E5E7EB"/>
-                </graphicElement>
-            </rectangle>
-
-            <!-- Separator Line -->
-            <line>
-                <reportElement x="0" y="5" width="555" height="1" forecolor="#E5E7EB" uuid="d3e4f5a6-b1c2-4b7c-7c8d-cdef01234567"/>
-            </line>
-
-            <staticText>
-                <reportElement x="0" y="15" width="555" height="15" uuid="e4f5a6b1-c2d3-4c8d-8d9e-def012345678"/>
-                <textElement textAlignment="Center">
-                    <font fontName="Arial" size="9" isBold="false" isItalic="true"/>
-                </textElement>
-                <text><![CDATA[Solucao Empresarial para Desenvolvedores]]></text>
-            </staticText>
-
+        <band height="15">
             <textField>
-                <reportElement x="0" y="35" width="555" height="15" uuid="f5a6b1c2-d3e4-4d9e-9eaf-ef0123456789"/>
-                <textElement textAlignment="Center">
-                    <font fontName="Arial" size="10" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA["Desenvolvido por " + $P{desenvolvedorNome}]]></textFieldExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true">
-                <reportElement x="0" y="50" width="555" height="12" uuid="a6b1c2d3-e4f5-4eaf-afb0-f012345678ab"/>
-                <textElement textAlignment="Center">
-                    <font fontName="Arial" size="9"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$P{desenvolvedorTitulo}]]></textFieldExpression>
-            </textField>
-
-            <!-- Phone and Email Row -->
-            <textField isBlankWhenNull="true" hyperlinkType="Reference">
-                <reportElement x="150" y="65" width="120" height="10" uuid="b1c2d3e4-f5a6-4b1c-9d8e-1234567890cd"/>
-                <textElement textAlignment="Right">
-                    <font fontName="Arial" size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$P{desenvolvedorTelefone}]]></textFieldExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true" hyperlinkType="Reference">
-                <reportElement x="285" y="65" width="120" height="10" uuid="c2d3e4f5-a6b1-4c2d-8e9f-234567890de1"/>
-                <textElement textAlignment="Left">
-                    <font fontName="Arial" size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$P{desenvolvedorEmail}]]></textFieldExpression>
-                <hyperlinkReferenceExpression><![CDATA["mailto:" + $P{desenvolvedorEmail}]]></hyperlinkReferenceExpression>
-            </textField>
-
-            <!-- Social Media Links -->
-            <textField hyperlinkType="Reference">
-                <reportElement x="160" y="80" width="50" height="10" forecolor="#0077B5" uuid="d3e4f5a6-b1c2-4d3e-9f0a-345678901234"/>
-                <textElement textAlignment="Center">
-                    <font fontName="Arial" size="8" isUnderline="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA["LinkedIn"]]></textFieldExpression>
-                <hyperlinkReferenceExpression><![CDATA[$P{linkedinUrl}]]></hyperlinkReferenceExpression>
-            </textField>
-
-            <textField hyperlinkType="Reference">
-                <reportElement x="220" y="80" width="40" height="10" forecolor="#333333" uuid="e4f5a6b1-c2d3-4e4f-0a1b-456789012345"/>
-                <textElement textAlignment="Center">
-                    <font fontName="Arial" size="8" isUnderline="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA["GitHub"]]></textFieldExpression>
-                <hyperlinkReferenceExpression><![CDATA[$P{githubUrl}]]></hyperlinkReferenceExpression>
-            </textField>
-
-            <textField hyperlinkType="Reference">
-                <reportElement x="270" y="80" width="50" height="10" forecolor="#E4405F" uuid="f5a6b1c2-d3e4-4f5a-1b2c-567890123456"/>
-                <textElement textAlignment="Center">
-                    <font fontName="Arial" size="8" isUnderline="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA["Instagram"]]></textFieldExpression>
-                <hyperlinkReferenceExpression><![CDATA[$P{instagramUrl}]]></hyperlinkReferenceExpression>
-            </textField>
-
-            <textField hyperlinkType="Reference">
-                <reportElement x="330" y="80" width="50" height="10" forecolor="#1877F2" uuid="a6b1c2d3-e4f5-4a6b-2c3d-678901234567"/>
-                <textElement textAlignment="Center">
-                    <font fontName="Arial" size="8" isUnderline="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA["Facebook"]]></textFieldExpression>
-                <hyperlinkReferenceExpression><![CDATA[$P{facebookUrl}]]></hyperlinkReferenceExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true">
-                <reportElement x="0" y="95" width="555" height="10" uuid="d3e4f5a6-b1c2-41d2-d2e3-234567890123"/>
-                <textElement textAlignment="Center">
-                    <font fontName="Arial" size="8" isItalic="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$P{copyright}]]></textFieldExpression>
-            </textField>
-
-            <textField>
-                <reportElement x="450" y="110" width="80" height="8" uuid="e4f5a6b1-c2d3-42e3-e3f4-345678901234"/>
+                <reportElement x="450" y="5" width="80" height="8" uuid="e4f5a6b1-c2d3-42e3-e3f4-345678901234"/>
                 <textElement textAlignment="Right">
                     <font fontName="Arial" size="7"/>
                 </textElement>
@@ -387,7 +287,7 @@
             </textField>
 
             <textField evaluationTime="Report">
-                <reportElement x="530" y="110" width="25" height="8" uuid="f5a6b1c2-d3e4-43f4-f4a5-456789012345"/>
+                <reportElement x="530" y="5" width="25" height="8" uuid="f5a6b1c2-d3e4-43f4-f4a5-456789012345"/>
                 <textElement>
                     <font fontName="Arial" size="7"/>
                 </textElement>
