@@ -105,10 +105,26 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             SUM(CASE WHEN d.status = 'HOMOLOGATION' THEN 1 ELSE 0 END) as homologation_count,
             SUM(CASE WHEN d.status = 'APPROVED' THEN 1 ELSE 0 END) as approved_count,
             SUM(CASE WHEN d.status = 'REJECTED' THEN 1 ELSE 0 END) as rejected_count,
-            SUM(CASE WHEN d.status = 'PRODUCTION' THEN 1 ELSE 0 END) as production_count
+            SUM(CASE WHEN d.status = 'PRODUCTION' THEN 1 ELSE 0 END) as production_count,
+            SUM(CASE WHEN d.status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled_count
         FROM delivery d
         """, nativeQuery = true)
     Object[] findGlobalDeliveryStatistics();
+
+    @Query(value = """
+        SELECT
+            SUM(CASE WHEN d.status = 'PENDING' THEN 1 ELSE 0 END) as pending_count,
+            SUM(CASE WHEN d.status = 'DEVELOPMENT' THEN 1 ELSE 0 END) as development_count,
+            SUM(CASE WHEN d.status = 'DELIVERED' THEN 1 ELSE 0 END) as delivered_count,
+            SUM(CASE WHEN d.status = 'HOMOLOGATION' THEN 1 ELSE 0 END) as homologation_count,
+            SUM(CASE WHEN d.status = 'APPROVED' THEN 1 ELSE 0 END) as approved_count,
+            SUM(CASE WHEN d.status = 'REJECTED' THEN 1 ELSE 0 END) as rejected_count,
+            SUM(CASE WHEN d.status = 'PRODUCTION' THEN 1 ELSE 0 END) as production_count,
+            SUM(CASE WHEN d.status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled_count
+        FROM delivery d
+        WHERE d.flow_type = :flowType
+        """, nativeQuery = true)
+    Object[] findDeliveryStatisticsByFlowType(String flowType);
 
     @Query(value = """
         SELECT

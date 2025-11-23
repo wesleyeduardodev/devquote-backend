@@ -698,7 +698,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         Object[] result = deliveryRepository.findGlobalDeliveryStatistics();
         log.debug("Resultado da query: {}", result != null ? Arrays.toString(result) : "null");
         
-        if (result == null || result.length < 7) {
+        if (result == null || result.length < 8) {
             log.debug("Query retornou dados insuficientes. Usando contagem manual.");
             return DeliveryStatusCount.builder()
                     .pending(counts.getOrDefault(DeliveryStatus.PENDING, 0))
@@ -708,9 +708,10 @@ public class DeliveryServiceImpl implements DeliveryService {
                     .approved(counts.getOrDefault(DeliveryStatus.APPROVED, 0))
                     .rejected(counts.getOrDefault(DeliveryStatus.REJECTED, 0))
                     .production(counts.getOrDefault(DeliveryStatus.PRODUCTION, 0))
+                    .cancelled(counts.getOrDefault(DeliveryStatus.CANCELLED, 0))
                     .build();
         }
-        
+
         DeliveryStatusCount stats = DeliveryStatusCount.builder()
                 .pending(result[0] != null ? ((Number) result[0]).intValue() : 0)
                 .development(result[1] != null ? ((Number) result[1]).intValue() : 0)
@@ -719,6 +720,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .approved(result[4] != null ? ((Number) result[4]).intValue() : 0)
                 .rejected(result[5] != null ? ((Number) result[5]).intValue() : 0)
                 .production(result[6] != null ? ((Number) result[6]).intValue() : 0)
+                .cancelled(result[7] != null ? ((Number) result[7]).intValue() : 0)
                 .build();
         
         log.debug("Estatísticas calculadas pela query: {}", stats);
@@ -726,6 +728,46 @@ public class DeliveryServiceImpl implements DeliveryService {
             counts.getOrDefault(DeliveryStatus.PENDING, 0), 
             counts.getOrDefault(DeliveryStatus.DEVELOPMENT, 0));
         
+        return stats;
+    }
+
+    @Override
+    public DeliveryStatusCount getStatisticsByFlowType(String flowType) {
+        log.debug("Executando query de estatísticas por fluxo: {}", flowType);
+
+        if (flowType == null || flowType.isBlank()) {
+            return getGlobalStatistics();
+        }
+
+        Object[] result = deliveryRepository.findDeliveryStatisticsByFlowType(flowType);
+        log.debug("Resultado da query por fluxo: {}", result != null ? Arrays.toString(result) : "null");
+
+        if (result == null || result.length < 8) {
+            log.debug("Query retornou dados insuficientes para fluxo {}. Retornando zeros.", flowType);
+            return DeliveryStatusCount.builder()
+                    .pending(0)
+                    .development(0)
+                    .delivered(0)
+                    .homologation(0)
+                    .approved(0)
+                    .rejected(0)
+                    .production(0)
+                    .cancelled(0)
+                    .build();
+        }
+
+        DeliveryStatusCount stats = DeliveryStatusCount.builder()
+                .pending(result[0] != null ? ((Number) result[0]).intValue() : 0)
+                .development(result[1] != null ? ((Number) result[1]).intValue() : 0)
+                .delivered(result[2] != null ? ((Number) result[2]).intValue() : 0)
+                .homologation(result[3] != null ? ((Number) result[3]).intValue() : 0)
+                .approved(result[4] != null ? ((Number) result[4]).intValue() : 0)
+                .rejected(result[5] != null ? ((Number) result[5]).intValue() : 0)
+                .production(result[6] != null ? ((Number) result[6]).intValue() : 0)
+                .cancelled(result[7] != null ? ((Number) result[7]).intValue() : 0)
+                .build();
+
+        log.debug("Estatísticas por fluxo {} calculadas: {}", flowType, stats);
         return stats;
     }
 

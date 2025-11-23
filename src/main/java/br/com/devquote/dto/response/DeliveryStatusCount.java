@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class DeliveryStatusCount {
-    
+
     private Integer pending;
     private Integer development;
     private Integer delivered;
@@ -17,6 +17,7 @@ public class DeliveryStatusCount {
     private Integer approved;
     private Integer rejected;
     private Integer production;
+    private Integer cancelled;
 
     public Integer getTotal() {
         return (pending != null ? pending : 0) +
@@ -25,7 +26,8 @@ public class DeliveryStatusCount {
                (homologation != null ? homologation : 0) +
                (approved != null ? approved : 0) +
                (rejected != null ? rejected : 0) +
-               (production != null ? production : 0);
+               (production != null ? production : 0) +
+               (cancelled != null ? cancelled : 0);
     }
 
     public Integer getCompleted() {

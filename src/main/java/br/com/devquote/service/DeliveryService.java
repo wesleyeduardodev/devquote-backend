@@ -61,6 +61,8 @@ public interface DeliveryService {
 
     DeliveryStatusCount getGlobalStatistics();
 
+    DeliveryStatusCount getStatisticsByFlowType(String flowType);
+
     void updateAllDeliveryStatuses();
 
     byte[] exportToExcel(String flowType, boolean canViewAmounts) throws IOException;

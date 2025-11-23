@@ -256,8 +256,14 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @GetMapping("/statistics")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
-    public ResponseEntity<DeliveryStatusCount> getGlobalStatistics() {
-        DeliveryStatusCount statistics = deliveryService.getGlobalStatistics();
+    public ResponseEntity<DeliveryStatusCount> getGlobalStatistics(
+            @RequestParam(required = false) String flowType) {
+        DeliveryStatusCount statistics;
+        if (flowType != null && !flowType.isBlank()) {
+            statistics = deliveryService.getStatisticsByFlowType(flowType);
+        } else {
+            statistics = deliveryService.getGlobalStatistics();
+        }
         return ResponseEntity.ok(statistics);
     }
 
