@@ -64,6 +64,11 @@ public class ReportServiceImpl implements ReportService {
         LocalDateTime dataInicio = request.getDataInicio();
         LocalDateTime dataFim = request.getDataFim();
 
+        // Ajusta dataFim para o final do dia quando fornecida
+        if (dataFim != null) {
+            dataFim = dataFim.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        }
+
         if (dataInicio == null || dataFim == null) {
             try {
                 List<Object[]> dateRangeList = deliveryRepository.findOperationalDateRange();
