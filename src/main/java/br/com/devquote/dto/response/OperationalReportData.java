@@ -50,11 +50,23 @@ public class OperationalReportData {
     private String desenvolvedorEmail = "wesleyeduardo.dev@gmail.com";
 
     @Builder.Default
-    private String desenvolvedorTelefone = "+55 98 98165-0805";
+    private String desenvolvedorTelefone = "98 98165-0805";
 
     @Builder.Default
     private String copyright = "© 2025 DevQuote. Todos os direitos reservados.";
 
     @Builder.Default
     private String sistemaTagline = "Sistema de Gestão de Orçamentos";
+
+    @Builder.Default
+    private String linkedinUrl = "https://linkedin.com/in/wesleyeduardodev";
+
+    @Builder.Default
+    private String githubUrl = "https://github.com/wesleyeduardodev";
+
+    @Builder.Default
+    private String instagramUrl = "https://instagram.com/wesleyeduardodev";
+
+    @Builder.Default
+    private String facebookUrl = "https://facebook.com/wesleyeduardodev";
 }

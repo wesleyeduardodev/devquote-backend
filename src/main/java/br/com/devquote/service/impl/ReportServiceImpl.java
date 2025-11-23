@@ -351,6 +351,10 @@ public class ReportServiceImpl implements ReportService {
         parameters.put("desenvolvedorTelefone", data.getDesenvolvedorTelefone());
         parameters.put("copyright", data.getCopyright());
         parameters.put("sistemaTagline", data.getSistemaTagline());
+        parameters.put("linkedinUrl", data.getLinkedinUrl());
+        parameters.put("githubUrl", data.getGithubUrl());
+        parameters.put("instagramUrl", data.getInstagramUrl());
+        parameters.put("facebookUrl", data.getFacebookUrl());
 
         try {
             ClassPathResource logoResource = new ClassPathResource(data.getLogoPath());
