@@ -110,7 +110,7 @@
                 <textElement textAlignment="Center">
                     <font fontName="Arial" size="9"/>
                 </textElement>
-                <textFieldExpression><![CDATA["Periodo: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataInicio})) + " a " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataFim}))]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Período: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataInicio})) + " a " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataFim}))]]></textFieldExpression>
             </textField>
 
             <!-- Generation Date -->
@@ -119,7 +119,7 @@
                 <textElement textAlignment="Right">
                     <font fontName="Arial" size="9"/>
                 </textElement>
-                <textFieldExpression><![CDATA["Gerado em: " + new java.text.SimpleDateFormat("dd/MM/yyyy 'as' HH:mm").format(java.sql.Timestamp.valueOf($P{dataGeracao}))]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Gerado em: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(java.sql.Timestamp.valueOf($P{dataGeracao}))]]></textFieldExpression>
             </textField>
         </band>
     </title>
@@ -176,7 +176,7 @@
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
-                <text><![CDATA[Desenvolvim.]]></text>
+                <text><![CDATA[Desenvolvimento]]></text>
             </staticText>
 
             <staticText>
@@ -184,7 +184,7 @@
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="Arial" size="7" isBold="true"/>
                 </textElement>
-                <text><![CDATA[Nao Especif.]]></text>
+                <text><![CDATA[Não Especificado]]></text>
             </staticText>
 
             <staticText>
