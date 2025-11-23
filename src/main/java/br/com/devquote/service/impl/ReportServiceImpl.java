@@ -321,7 +321,7 @@ public class ReportServiceImpl implements ReportService {
                 .dataGeracao(LocalDateTime.now())
                 .filtrosTipos(filtrosTipos)
                 .filtrosAmbientes(filtrosAmbientes)
-                .logoPath("reports/images/logo-devquote.png")
+                //.logoPath("reports/images/logo-devquote.png")
                 .linhas(linhas)
                 .totalProducao(totalProducao)
                 .totalHomologacao(totalHomologacao)
