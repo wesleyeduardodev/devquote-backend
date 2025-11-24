@@ -59,14 +59,12 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private OperationalReportData buildReportData(OperationalReportRequest request) {
-        String ambiente = request.getAmbiente() != null ? request.getAmbiente().name() : null;
 
         LocalDateTime dataInicio = request.getDataInicio();
         LocalDateTime dataFim = request.getDataFim();
 
-        // Ajusta dataFim para o final do dia quando fornecida
         if (dataFim != null) {
-            dataFim = dataFim.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+            dataFim = dataFim.withHour(23).withMinute(59).withSecond(59);
         }
 
         if (dataInicio == null || dataFim == null) {
@@ -117,16 +115,13 @@ public class ReportServiceImpl implements ReportService {
 
         List<Object[]> queryResults = deliveryRepository.findOperationalReportData(
                 dataInicio,
-                dataFim,
-                null,
-                null
+                dataFim
         );
 
         List<Object[]> financialResults = deliveryRepository.findOperationalReportFinancialData(
                 dataInicio,
-                dataFim,
-                null,
-                null
+                dataFim
+
         );
 
         Map<String, OperationalReportRow> rowMap = new LinkedHashMap<>();

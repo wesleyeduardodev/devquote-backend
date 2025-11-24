@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -138,16 +140,12 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             AND d.status = 'DELIVERED'
             AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
                  d.finished_at BETWEEN :dataInicio AND :dataFim)
-            AND (:tipoTarefa IS NULL OR t.task_type = :tipoTarefa)
-            AND (:ambiente IS NULL OR d.environment = CAST(:ambiente AS VARCHAR))
         GROUP BY t.task_type, d.environment
         ORDER BY t.task_type, d.environment
         """, nativeQuery = true)
     List<Object[]> findOperationalReportData(
-            @Param("dataInicio") java.time.LocalDateTime dataInicio,
-            @Param("dataFim") java.time.LocalDateTime dataFim,
-            @Param("tipoTarefa") String tipoTarefa,
-            @Param("ambiente") String ambiente
+            @Param("dataInicio") LocalDateTime dataInicio,
+            @Param("dataFim") LocalDateTime dataFim
     );
 
     @Query(value = """
@@ -161,17 +159,13 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             d.flow_type = 'OPERACIONAL'
             AND d.status = 'DELIVERED'
             AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
-                 d.finished_at BETWEEN :dataInicio AND :dataFim)
-            AND (:tipoTarefa IS NULL OR t.task_type = :tipoTarefa)
-            AND (:ambiente IS NULL OR d.environment = CAST(:ambiente AS VARCHAR))
+                 d.finished_at BETWEEN :dataInicio AND :dataFim)   
         GROUP BY t.task_type, d.environment
         ORDER BY t.task_type, d.environment
         """, nativeQuery = true)
     List<Object[]> findOperationalReportFinancialData(
-            @Param("dataInicio") java.time.LocalDateTime dataInicio,
-            @Param("dataFim") java.time.LocalDateTime dataFim,
-            @Param("tipoTarefa") String tipoTarefa,
-            @Param("ambiente") String ambiente
+            @Param("dataInicio") LocalDateTime dataInicio,
+            @Param("dataFim") LocalDateTime dataFim
     );
 
     @Query(value = """
