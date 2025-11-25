@@ -49,6 +49,28 @@ public class OperationalReportData {
 
     private BigDecimal totalValorGeral;
 
+    private List<OperationalReportRow> linhasDesenvolvimento;
+
+    private Long totalProducaoDesenv;
+
+    private Long totalHomologacaoDesenv;
+
+    private Long totalDesenvolvimentoDesenv;
+
+    private Long totalNaoEspecificadoDesenv;
+
+    private Long totalGeralDesenv;
+
+    private BigDecimal totalValorProducaoDesenv;
+
+    private BigDecimal totalValorHomologacaoDesenv;
+
+    private BigDecimal totalValorDesenvolvimentoDesenv;
+
+    private BigDecimal totalValorNaoEspecificadoDesenv;
+
+    private BigDecimal totalValorGeralDesenv;
+
     private OperationalReportStatistics statistics;
 
     @Builder.Default

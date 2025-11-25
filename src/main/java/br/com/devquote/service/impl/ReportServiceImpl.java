@@ -124,6 +124,16 @@ public class ReportServiceImpl implements ReportService {
 
         );
 
+        List<Object[]> developmentQueryResults = deliveryRepository.findDevelopmentReportData(
+                dataInicio,
+                dataFim
+        );
+
+        List<Object[]> developmentFinancialResults = deliveryRepository.findDevelopmentReportFinancialData(
+                dataInicio,
+                dataFim
+        );
+
         Map<String, OperationalReportRow> rowMap = new LinkedHashMap<>();
 
         Map<String, String> taskTypeTranslations = new LinkedHashMap<>();
@@ -135,8 +145,31 @@ public class ReportServiceImpl implements ReportService {
         taskTypeTranslations.put("MONITORING", "Monitoramento");
         taskTypeTranslations.put("SUPPORT", "Suporte");
 
+        Map<String, OperationalReportRow> developmentRowMap = new LinkedHashMap<>();
+
+        Map<String, String> developmentTaskTypeTranslations = new LinkedHashMap<>();
+        developmentTaskTypeTranslations.put("BUG", "Bug");
+        developmentTaskTypeTranslations.put("ENHANCEMENT", "Melhoria");
+        developmentTaskTypeTranslations.put("NEW_FEATURE", "Nova Funcionalidade");
+
         for (Map.Entry<String, String> entry : taskTypeTranslations.entrySet()) {
             rowMap.put(entry.getKey(), OperationalReportRow.builder()
+                    .tipoTarefa(entry.getValue())
+                    .quantidadeProducao(0L)
+                    .quantidadeHomologacao(0L)
+                    .quantidadeDesenvolvimento(0L)
+                    .quantidadeNaoEspecificado(0L)
+                    .total(0L)
+                    .valorProducao(java.math.BigDecimal.ZERO)
+                    .valorHomologacao(java.math.BigDecimal.ZERO)
+                    .valorDesenvolvimento(java.math.BigDecimal.ZERO)
+                    .valorNaoEspecificado(java.math.BigDecimal.ZERO)
+                    .valorTotal(java.math.BigDecimal.ZERO)
+                    .build());
+        }
+
+        for (Map.Entry<String, String> entry : developmentTaskTypeTranslations.entrySet()) {
+            developmentRowMap.put(entry.getKey(), OperationalReportRow.builder()
                     .tipoTarefa(entry.getValue())
                     .quantidadeProducao(0L)
                     .quantidadeHomologacao(0L)
@@ -250,7 +283,107 @@ public class ReportServiceImpl implements ReportService {
             );
         }
 
+        for (Object[] row : developmentQueryResults) {
+            String tipoTarefaRaw = (String) row[0];
+            String ambienteNome = (String) row[1];
+            Long quantidade = ((Number) row[2]).longValue();
+
+            if (tipoTarefaRaw == null || tipoTarefaRaw.trim().isEmpty()) {
+                continue;
+            }
+
+            OperationalReportRow reportRow = developmentRowMap.get(tipoTarefaRaw);
+            if (reportRow == null) {
+                String translatedName = developmentTaskTypeTranslations.getOrDefault(tipoTarefaRaw, tipoTarefaRaw);
+                reportRow = OperationalReportRow.builder()
+                        .tipoTarefa(translatedName)
+                        .quantidadeProducao(0L)
+                        .quantidadeHomologacao(0L)
+                        .quantidadeDesenvolvimento(0L)
+                        .quantidadeNaoEspecificado(0L)
+                        .total(0L)
+                        .build();
+                developmentRowMap.put(tipoTarefaRaw, reportRow);
+            }
+
+            if (ambienteNome != null) {
+                switch (Environment.valueOf(ambienteNome)) {
+                    case PRODUCAO:
+                        reportRow.setQuantidadeProducao(quantidade);
+                        break;
+                    case HOMOLOGACAO:
+                        reportRow.setQuantidadeHomologacao(quantidade);
+                        break;
+                    case DESENVOLVIMENTO:
+                        reportRow.setQuantidadeDesenvolvimento(quantidade);
+                        break;
+                }
+            } else {
+                reportRow.setQuantidadeNaoEspecificado(quantidade);
+            }
+
+            reportRow.setTotal(
+                    reportRow.getQuantidadeProducao() +
+                            reportRow.getQuantidadeHomologacao() +
+                            reportRow.getQuantidadeDesenvolvimento() +
+                            reportRow.getQuantidadeNaoEspecificado()
+            );
+        }
+
+        for (Object[] row : developmentFinancialResults) {
+            String tipoTarefaRaw = (String) row[0];
+            String ambienteNome = (String) row[1];
+            java.math.BigDecimal valor = row[2] != null ? new java.math.BigDecimal(row[2].toString()) : java.math.BigDecimal.ZERO;
+
+            if (tipoTarefaRaw == null || tipoTarefaRaw.trim().isEmpty()) {
+                continue;
+            }
+
+            OperationalReportRow reportRow = developmentRowMap.get(tipoTarefaRaw);
+            if (reportRow == null) {
+                String translatedName = developmentTaskTypeTranslations.getOrDefault(tipoTarefaRaw, tipoTarefaRaw);
+                reportRow = OperationalReportRow.builder()
+                        .tipoTarefa(translatedName)
+                        .quantidadeProducao(0L)
+                        .quantidadeHomologacao(0L)
+                        .quantidadeDesenvolvimento(0L)
+                        .quantidadeNaoEspecificado(0L)
+                        .total(0L)
+                        .valorProducao(java.math.BigDecimal.ZERO)
+                        .valorHomologacao(java.math.BigDecimal.ZERO)
+                        .valorDesenvolvimento(java.math.BigDecimal.ZERO)
+                        .valorNaoEspecificado(java.math.BigDecimal.ZERO)
+                        .valorTotal(java.math.BigDecimal.ZERO)
+                        .build();
+                developmentRowMap.put(tipoTarefaRaw, reportRow);
+            }
+
+            if (ambienteNome != null) {
+                switch (Environment.valueOf(ambienteNome)) {
+                    case PRODUCAO:
+                        reportRow.setValorProducao(valor);
+                        break;
+                    case HOMOLOGACAO:
+                        reportRow.setValorHomologacao(valor);
+                        break;
+                    case DESENVOLVIMENTO:
+                        reportRow.setValorDesenvolvimento(valor);
+                        break;
+                }
+            } else {
+                reportRow.setValorNaoEspecificado(valor);
+            }
+
+            reportRow.setValorTotal(
+                    reportRow.getValorProducao()
+                            .add(reportRow.getValorHomologacao())
+                            .add(reportRow.getValorDesenvolvimento())
+                            .add(reportRow.getValorNaoEspecificado())
+            );
+        }
+
         List<OperationalReportRow> linhas = new ArrayList<>(rowMap.values());
+        List<OperationalReportRow> linhasDesenvolvimento = new ArrayList<>(developmentRowMap.values());
 
         long totalProducao = linhas.stream()
                 .mapToLong(OperationalReportRow::getQuantidadeProducao)
@@ -291,6 +424,45 @@ public class ReportServiceImpl implements ReportService {
                 .add(totalValorDesenvolvimento)
                 .add(totalValorNaoEspecificado);
 
+        long totalProducaoDesenv = linhasDesenvolvimento.stream()
+                .mapToLong(OperationalReportRow::getQuantidadeProducao)
+                .sum();
+
+        long totalHomologacaoDesenv = linhasDesenvolvimento.stream()
+                .mapToLong(OperationalReportRow::getQuantidadeHomologacao)
+                .sum();
+
+        long totalDesenvolvimentoDesenv = linhasDesenvolvimento.stream()
+                .mapToLong(OperationalReportRow::getQuantidadeDesenvolvimento)
+                .sum();
+
+        long totalNaoEspecificadoDesenv = linhasDesenvolvimento.stream()
+                .mapToLong(OperationalReportRow::getQuantidadeNaoEspecificado)
+                .sum();
+
+        long totalGeralDesenv = totalProducaoDesenv + totalHomologacaoDesenv + totalDesenvolvimentoDesenv + totalNaoEspecificadoDesenv;
+
+        java.math.BigDecimal totalValorProducaoDesenv = linhasDesenvolvimento.stream()
+                .map(OperationalReportRow::getValorProducao)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+
+        java.math.BigDecimal totalValorHomologacaoDesenv = linhasDesenvolvimento.stream()
+                .map(OperationalReportRow::getValorHomologacao)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+
+        java.math.BigDecimal totalValorDesenvolvimentoDesenv = linhasDesenvolvimento.stream()
+                .map(OperationalReportRow::getValorDesenvolvimento)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+
+        java.math.BigDecimal totalValorNaoEspecificadoDesenv = linhasDesenvolvimento.stream()
+                .map(OperationalReportRow::getValorNaoEspecificado)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+
+        java.math.BigDecimal totalValorGeralDesenv = totalValorProducaoDesenv
+                .add(totalValorHomologacaoDesenv)
+                .add(totalValorDesenvolvimentoDesenv)
+                .add(totalValorNaoEspecificadoDesenv);
+
         OperationalReportStatistics statistics = calculateStatistics(
                 linhas,
                 totalProducao,
@@ -328,6 +500,17 @@ public class ReportServiceImpl implements ReportService {
                 .totalValorDesenvolvimento(totalValorDesenvolvimento)
                 .totalValorNaoEspecificado(totalValorNaoEspecificado)
                 .totalValorGeral(totalValorGeral)
+                .linhasDesenvolvimento(linhasDesenvolvimento)
+                .totalProducaoDesenv(totalProducaoDesenv)
+                .totalHomologacaoDesenv(totalHomologacaoDesenv)
+                .totalDesenvolvimentoDesenv(totalDesenvolvimentoDesenv)
+                .totalNaoEspecificadoDesenv(totalNaoEspecificadoDesenv)
+                .totalGeralDesenv(totalGeralDesenv)
+                .totalValorProducaoDesenv(totalValorProducaoDesenv)
+                .totalValorHomologacaoDesenv(totalValorHomologacaoDesenv)
+                .totalValorDesenvolvimentoDesenv(totalValorDesenvolvimentoDesenv)
+                .totalValorNaoEspecificadoDesenv(totalValorNaoEspecificadoDesenv)
+                .totalValorGeralDesenv(totalValorGeralDesenv)
                 .statistics(statistics)
                 .build();
     }
@@ -428,6 +611,17 @@ public class ReportServiceImpl implements ReportService {
         parameters.put("totalValorNaoEspecificado", data.getTotalValorNaoEspecificado());
         parameters.put("totalValorGeral", data.getTotalValorGeral());
         parameters.put("linhas", data.getLinhas());
+        parameters.put("linhasDesenvolvimento", data.getLinhasDesenvolvimento());
+        parameters.put("totalProducaoDesenv", data.getTotalProducaoDesenv());
+        parameters.put("totalHomologacaoDesenv", data.getTotalHomologacaoDesenv());
+        parameters.put("totalDesenvolvimentoDesenv", data.getTotalDesenvolvimentoDesenv());
+        parameters.put("totalNaoEspecificadoDesenv", data.getTotalNaoEspecificadoDesenv());
+        parameters.put("totalGeralDesenv", data.getTotalGeralDesenv());
+        parameters.put("totalValorProducaoDesenv", data.getTotalValorProducaoDesenv());
+        parameters.put("totalValorHomologacaoDesenv", data.getTotalValorHomologacaoDesenv());
+        parameters.put("totalValorDesenvolvimentoDesenv", data.getTotalValorDesenvolvimentoDesenv());
+        parameters.put("totalValorNaoEspecificadoDesenv", data.getTotalValorNaoEspecificadoDesenv());
+        parameters.put("totalValorGeralDesenv", data.getTotalValorGeralDesenv());
 
         if (data.getStatistics() != null) {
             OperationalReportStatistics stats = data.getStatistics();

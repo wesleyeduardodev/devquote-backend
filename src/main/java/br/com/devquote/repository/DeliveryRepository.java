@@ -176,4 +176,44 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         WHERE d.flow_type = 'OPERACIONAL'
         """, nativeQuery = true)
     List<Object[]> findOperationalDateRange();
+
+    @Query(value = """
+        SELECT
+            t.task_type AS tipoTarefa,
+            d.environment AS ambiente,
+            COUNT(d.id) AS quantidade
+        FROM delivery d
+        INNER JOIN task t ON t.id = d.task_id
+        WHERE
+            d.flow_type = 'DESENVOLVIMENTO'
+            AND d.status = 'DELIVERED'
+            AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
+                 d.finished_at BETWEEN :dataInicio AND :dataFim)
+        GROUP BY t.task_type, d.environment
+        ORDER BY t.task_type, d.environment
+        """, nativeQuery = true)
+    List<Object[]> findDevelopmentReportData(
+            @Param("dataInicio") LocalDateTime dataInicio,
+            @Param("dataFim") LocalDateTime dataFim
+    );
+
+    @Query(value = """
+        SELECT
+            t.task_type AS tipoTarefa,
+            d.environment AS ambiente,
+            SUM(COALESCE(t.amount, 0)) AS valorTotal
+        FROM delivery d
+        INNER JOIN task t ON t.id = d.task_id
+        WHERE
+            d.flow_type = 'DESENVOLVIMENTO'
+            AND d.status = 'DELIVERED'
+            AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
+                 d.finished_at BETWEEN :dataInicio AND :dataFim)
+        GROUP BY t.task_type, d.environment
+        ORDER BY t.task_type, d.environment
+        """, nativeQuery = true)
+    List<Object[]> findDevelopmentReportFinancialData(
+            @Param("dataInicio") LocalDateTime dataInicio,
+            @Param("dataFim") LocalDateTime dataFim
+    );
 }

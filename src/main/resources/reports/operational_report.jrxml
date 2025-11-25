@@ -17,6 +17,9 @@
     <property name="ireport.x" value="0"/>
     <property name="ireport.y" value="0"/>
 
+    <!-- Imports -->
+    <import value="br.com.devquote.dto.response.OperationalReportRow"/>
+
     <!-- Parameters -->
     <parameter name="dataInicio" class="java.time.LocalDateTime"/>
     <parameter name="dataFim" class="java.time.LocalDateTime"/>
@@ -52,6 +55,17 @@
     <parameter name="totalValorDesenvolvimento" class="java.math.BigDecimal"/>
     <parameter name="totalValorNaoEspecificado" class="java.math.BigDecimal"/>
     <parameter name="totalValorGeral" class="java.math.BigDecimal"/>
+    <parameter name="linhasDesenvolvimento" class="java.util.List"/>
+    <parameter name="totalProducaoDesenv" class="java.lang.Long"/>
+    <parameter name="totalHomologacaoDesenv" class="java.lang.Long"/>
+    <parameter name="totalDesenvolvimentoDesenv" class="java.lang.Long"/>
+    <parameter name="totalNaoEspecificadoDesenv" class="java.lang.Long"/>
+    <parameter name="totalGeralDesenv" class="java.lang.Long"/>
+    <parameter name="totalValorProducaoDesenv" class="java.math.BigDecimal"/>
+    <parameter name="totalValorHomologacaoDesenv" class="java.math.BigDecimal"/>
+    <parameter name="totalValorDesenvolvimentoDesenv" class="java.math.BigDecimal"/>
+    <parameter name="totalValorNaoEspecificadoDesenv" class="java.math.BigDecimal"/>
+    <parameter name="totalValorGeralDesenv" class="java.math.BigDecimal"/>
 
     <!-- Fields -->
     <field name="tipoTarefa" class="java.lang.String"/>
@@ -298,8 +312,8 @@
 
     <!-- Summary Band -->
     <summary>
-        <band height="35">
-            <!-- Totals Row -->
+        <band height="250">
+            <!-- Totals Row OPERACIONAL -->
             <rectangle>
                 <reportElement x="0" y="5" width="555" height="25" backcolor="#6366F1" uuid="c2d3e4f5-a6b1-4eaf-a5b6-ef0123456789"/>
             </rectangle>
@@ -350,6 +364,301 @@
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalGeral} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorGeral})]]></textFieldExpression>
+            </textField>
+
+            <!-- SEGUNDA TABELA - DESENVOLVIMENTO -->
+            <staticText>
+                <reportElement x="0" y="50" width="555" height="15" uuid="d4e5f6a7-b8c9-4dc6-e8f9-b1c2d3e4f5a6"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="11" isBold="true"/>
+                </textElement>
+                <text><![CDATA[DADOS QUANTITATIVOS - DESENVOLVIMENTO]]></text>
+            </staticText>
+
+            <!-- Table Header DESENVOLVIMENTO -->
+            <rectangle>
+                <reportElement x="0" y="70" width="555" height="25" backcolor="#5B6FE8" uuid="e5f6a7b8-c9d0-4ed7-f9a0-c2d3e4f5a6b7"/>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="5" y="75" width="100" height="15" forecolor="#FFFFFF" uuid="f6a7b8c9-d0e1-4fe8-a0b1-d3e4f5a6b7c8"/>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Tipo de Tarefa]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="110" y="75" width="90" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-40f9-b1c2-e4f5a6b7c8d9"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Producao]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="205" y="75" width="90" height="15" forecolor="#FFFFFF" uuid="b8c9d0e1-f2a3-41a0-c2d3-f5a6b7c8d9e0"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Homologacao]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="300" y="75" width="85" height="15" forecolor="#FFFFFF" uuid="c9d0e1f2-a3b4-42b1-d3e4-a6b7c8d9e0f1"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Desenvolvimento]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="390" y="75" width="85" height="15" forecolor="#FFFFFF" uuid="d0e1f2a3-b4c5-43c2-e4f5-b7c8d9e0f1a2"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Não Especificado]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="480" y="75" width="75" height="15" forecolor="#FFFFFF" uuid="e1f2a3b4-c5d6-44d3-f5a6-c8d9e0f1a2b3"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[TOTAL]]></text>
+            </staticText>
+
+            <!-- Bug Row (line 1) -->
+            <rectangle>
+                <reportElement x="0" y="100" width="555" height="20" backcolor="#F9FAFB" uuid="d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="5" y="105" width="100" height="15" uuid="e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b"/>
+                <textElement>
+                    <font fontName="DejaVu Sans" size="8"/>
+                </textElement>
+                <text><![CDATA[Bug]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="110" y="105" width="90" height="15" uuid="f3a4b5c6-d7e8-4f9a-0b1c-2d3e4f5a6b7c"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getQuantidadeProducao() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getValorProducao())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="205" y="105" width="90" height="15" uuid="a4b5c6d7-e8f9-40a1-b2c3-d4e5f6a7b8c9"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getQuantidadeHomologacao() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getValorHomologacao())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="300" y="105" width="85" height="15" uuid="b5c6d7e8-f9a0-41b2-c3d4-e5f6a7b8c9d0"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getQuantidadeDesenvolvimento() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getValorDesenvolvimento())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="390" y="105" width="85" height="15" uuid="c6d7e8f9-a0b1-42c3-d4e5-f6a7b8c9d0e1"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getQuantidadeNaoEspecificado() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getValorNaoEspecificado())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="480" y="105" width="75" height="15" uuid="d7e8f9a0-b1c2-43d4-e5f6-a7b8c9d0e1f2"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getTotal() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(0)).getValorTotal())]]></textFieldExpression>
+            </textField>
+
+            <line>
+                <reportElement x="0" y="119" width="555" height="1" forecolor="#E5E7EB" uuid="e8f9a0b1-c2d3-44e5-f6a7-b8c9d0e1f2a3"/>
+            </line>
+
+            <!-- Melhoria Row (line 2) -->
+            <rectangle>
+                <reportElement x="0" y="120" width="555" height="20" backcolor="#FFFFFF" uuid="f9a0b1c2-d3e4-45f6-a7b8-c9d0e1f2a3b4"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="5" y="125" width="100" height="15" uuid="a0b1c2d3-e4f5-46a7-b8c9-d0e1f2a3b4c5"/>
+                <textElement>
+                    <font fontName="DejaVu Sans" size="8"/>
+                </textElement>
+                <text><![CDATA[Melhoria]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="110" y="125" width="90" height="15" uuid="b1c2d3e4-f5a6-47b8-c9d0-e1f2a3b4c5d6"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getQuantidadeProducao() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getValorProducao())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="205" y="125" width="90" height="15" uuid="c2d3e4f5-a6b7-48c9-d0e1-f2a3b4c5d6e7"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getQuantidadeHomologacao() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getValorHomologacao())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="300" y="125" width="85" height="15" uuid="d3e4f5a6-b7c8-49d0-e1f2-a3b4c5d6e7f8"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getQuantidadeDesenvolvimento() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getValorDesenvolvimento())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="390" y="125" width="85" height="15" uuid="e4f5a6b7-c8d9-4ae1-f2a3-b4c5d6e7f8a9"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getQuantidadeNaoEspecificado() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getValorNaoEspecificado())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="480" y="125" width="75" height="15" uuid="f5a6b7c8-d9e0-4bf2-a3b4-c5d6e7f8a9b0"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getTotal() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(1)).getValorTotal())]]></textFieldExpression>
+            </textField>
+
+            <line>
+                <reportElement x="0" y="139" width="555" height="1" forecolor="#E5E7EB" uuid="a6b7c8d9-e0f1-4ca3-b4c5-d6e7f8a9b0c1"/>
+            </line>
+
+            <!-- Nova Funcionalidade Row (line 3) -->
+            <rectangle>
+                <reportElement x="0" y="140" width="555" height="20" backcolor="#F9FAFB" uuid="b7c8d9e0-f1a2-4db4-c5d6-e7f8a9b0c1d2"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="5" y="145" width="100" height="15" uuid="c8d9e0f1-a2b3-4ec5-d6e7-f8a9b0c1d2e3"/>
+                <textElement>
+                    <font fontName="DejaVu Sans" size="8"/>
+                </textElement>
+                <text><![CDATA[Nova Funcionalidade]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="110" y="145" width="90" height="15" uuid="d9e0f1a2-b3c4-4fd6-e7f8-a9b0c1d2e3f4"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getQuantidadeProducao() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getValorProducao())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="205" y="145" width="90" height="15" uuid="e0f1a2b3-c4d5-40e7-f8a9-b0c1d2e3f4a5"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getQuantidadeHomologacao() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getValorHomologacao())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="300" y="145" width="85" height="15" uuid="f1a2b3c4-d5e6-41f8-a9b0-c1d2e3f4a5b6"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getQuantidadeDesenvolvimento() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getValorDesenvolvimento())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="390" y="145" width="85" height="15" uuid="a2b3c4d5-e6f7-42a9-b0c1-d2e3f4a5b6c7"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getQuantidadeNaoEspecificado() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getValorNaoEspecificado())]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="480" y="145" width="75" height="15" uuid="b3c4d5e6-f7a8-43b0-c1d2-e3f4a5b6c7d8"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getTotal() + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(((OperationalReportRow)$P{linhasDesenvolvimento}.get(2)).getValorTotal())]]></textFieldExpression>
+            </textField>
+
+            <line>
+                <reportElement x="0" y="159" width="555" height="1" forecolor="#E5E7EB" uuid="c4d5e6f7-a8b9-44c1-d2e3-f4a5b6c7d8e9"/>
+            </line>
+
+            <!-- Totals Row DESENVOLVIMENTO -->
+            <rectangle>
+                <reportElement x="0" y="165" width="555" height="25" backcolor="#6366F1" uuid="f2a3b4c5-d6e7-44e4-a6b7-d9e0f1a2b3c4"/>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="5" y="170" width="100" height="15" forecolor="#FFFFFF" uuid="a3b4c5d6-e7f8-45f5-b7c8-e0f1a2b3c4d5"/>
+                <textElement>
+                    <font fontName="DejaVu Sans" size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[TOTAL GERAL]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="110" y="170" width="90" height="15" forecolor="#FFFFFF" uuid="b4c5d6e7-f8a9-46a6-c8d9-f1a2b3c4d5e6"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalProducaoDesenv} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorProducaoDesenv})]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="205" y="170" width="90" height="15" forecolor="#FFFFFF" uuid="c5d6e7f8-a9b0-47b7-d9e0-a2b3c4d5e6f7"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalHomologacaoDesenv} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorHomologacaoDesenv})]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="300" y="170" width="85" height="15" forecolor="#FFFFFF" uuid="d6e7f8a9-b0c1-48c8-e0f1-b3c4d5e6f7a8"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalDesenvolvimentoDesenv} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorDesenvolvimentoDesenv})]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="390" y="170" width="85" height="15" forecolor="#FFFFFF" uuid="e7f8a9b0-c1d2-49d9-f1a2-c4d5e6f7a8b9"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalNaoEspecificadoDesenv} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorNaoEspecificadoDesenv})]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="480" y="170" width="75" height="15" forecolor="#FFFFFF" uuid="f8a9b0c1-d2e3-4aea-a2b3-d5e6f7a8b9c0"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{totalGeralDesenv} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorGeralDesenv})]]></textFieldExpression>
             </textField>
         </band>
     </summary>
