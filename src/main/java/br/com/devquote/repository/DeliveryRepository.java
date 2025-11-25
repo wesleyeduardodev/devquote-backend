@@ -195,7 +195,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         INNER JOIN task t ON t.id = d.task_id
         WHERE
             d.flow_type = 'DESENVOLVIMENTO'
-            AND d.status IN ('DELIVERED', 'HOMOLOGATION', 'APPROVED', 'PRODUCTION')
+            --AND d.status IN ('DELIVERED', 'HOMOLOGATION', 'APPROVED', 'PRODUCTION')
             AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
                  d.finished_at BETWEEN :dataInicio AND :dataFim)
         GROUP BY t.task_type, d.environment
@@ -215,7 +215,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         INNER JOIN task t ON t.id = d.task_id
         WHERE
             d.flow_type = 'DESENVOLVIMENTO'
-            AND d.status IN ('DELIVERED', 'HOMOLOGATION', 'APPROVED', 'PRODUCTION')
+            --AND d.status IN ('DELIVERED', 'HOMOLOGATION', 'APPROVED', 'PRODUCTION')
             AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
                  d.finished_at BETWEEN :dataInicio AND :dataFim)
         GROUP BY t.task_type, d.environment

@@ -62,18 +62,21 @@ public class ReportServiceImpl implements ReportService {
 
         LocalDateTime dataInicio = request.getDataInicio();
         LocalDateTime dataFim = request.getDataFim();
-        boolean filtroInformado = dataInicio != null && dataFim != null;
+
+        if (dataInicio != null) {
+            dataInicio = dataInicio.withHour(0).withMinute(0).withSecond(0);
+        }
 
         if (dataFim != null) {
             dataFim = dataFim.withHour(23).withMinute(59).withSecond(59);
         }
 
-        LocalDateTime dataInicioOperacional = dataInicio;
-        LocalDateTime dataFimOperacional = dataFim;
-        LocalDateTime dataInicioDesenvolvimento = dataInicio;
-        LocalDateTime dataFimDesenvolvimento = dataFim;
+        LocalDateTime dataInicioOperacional;
+        LocalDateTime dataFimOperacional;
+        LocalDateTime dataInicioDesenvolvimento;
+        LocalDateTime dataFimDesenvolvimento;
 
-        if (!filtroInformado) {
+        if (dataInicio == null && dataFim == null) {
             try {
                 List<Object[]> operationalDateRangeList = deliveryRepository.findOperationalDateRange();
                 List<Object[]> developmentDateRangeList = deliveryRepository.findDevelopmentDateRange();
@@ -83,7 +86,15 @@ public class ReportServiceImpl implements ReportService {
                     if (operationalRange != null && operationalRange.length >= 2 && operationalRange[0] != null && operationalRange[1] != null) {
                         dataInicioOperacional = ((java.sql.Timestamp) operationalRange[0]).toLocalDateTime();
                         dataFimOperacional = ((java.sql.Timestamp) operationalRange[1]).toLocalDateTime();
+                    } else {
+                        log.warn("Range de datas operacional retornou valores nulos");
+                        dataInicioOperacional = LocalDateTime.now().minusMonths(1);
+                        dataFimOperacional = LocalDateTime.now();
                     }
+                } else {
+                    log.warn("Range de datas operacional vazio");
+                    dataInicioOperacional = LocalDateTime.now().minusMonths(1);
+                    dataFimOperacional = LocalDateTime.now();
                 }
 
                 if (developmentDateRangeList != null && !developmentDateRangeList.isEmpty()) {
@@ -91,23 +102,16 @@ public class ReportServiceImpl implements ReportService {
                     if (developmentRange != null && developmentRange.length >= 2 && developmentRange[0] != null && developmentRange[1] != null) {
                         dataInicioDesenvolvimento = ((java.sql.Timestamp) developmentRange[0]).toLocalDateTime();
                         dataFimDesenvolvimento = ((java.sql.Timestamp) developmentRange[1]).toLocalDateTime();
+                    } else {
+                        log.warn("Range de datas desenvolvimento retornou valores nulos");
+                        dataInicioDesenvolvimento = LocalDateTime.now().minusMonths(1);
+                        dataFimDesenvolvimento = LocalDateTime.now();
                     }
-                }
-
-                if (dataInicioOperacional == null || dataFimOperacional == null) {
-                    log.warn("Range de datas operacional retornou valores nulos");
-                    dataInicioOperacional = LocalDateTime.now().minusMonths(1);
-                    dataFimOperacional = LocalDateTime.now();
-                }
-
-                if (dataInicioDesenvolvimento == null || dataFimDesenvolvimento == null) {
-                    log.warn("Range de datas desenvolvimento retornou valores nulos");
+                } else {
+                    log.warn("Range de datas desenvolvimento vazio");
                     dataInicioDesenvolvimento = LocalDateTime.now().minusMonths(1);
                     dataFimDesenvolvimento = LocalDateTime.now();
                 }
-
-                dataInicio = dataInicioOperacional.isBefore(dataInicioDesenvolvimento) ? dataInicioOperacional : dataInicioDesenvolvimento;
-                dataFim = dataFimOperacional.isAfter(dataFimDesenvolvimento) ? dataFimOperacional : dataFimDesenvolvimento;
 
             } catch (Exception e) {
                 log.error("Erro ao buscar range de datas: {}", e.getMessage(), e);
@@ -115,8 +119,76 @@ public class ReportServiceImpl implements ReportService {
                 dataFimOperacional = LocalDateTime.now();
                 dataInicioDesenvolvimento = LocalDateTime.now().minusMonths(1);
                 dataFimDesenvolvimento = LocalDateTime.now();
-                dataInicio = dataInicioOperacional;
-                dataFim = dataFimOperacional;
+            }
+        } else if (dataInicio != null && dataFim == null) {
+            dataInicioOperacional = dataInicio;
+            dataInicioDesenvolvimento = dataInicio;
+
+            try {
+                List<Object[]> operationalDateRangeList = deliveryRepository.findOperationalDateRange();
+                List<Object[]> developmentDateRangeList = deliveryRepository.findDevelopmentDateRange();
+
+                if (operationalDateRangeList != null && !operationalDateRangeList.isEmpty()) {
+                    Object[] operationalRange = operationalDateRangeList.get(0);
+                    if (operationalRange != null && operationalRange.length >= 2 && operationalRange[1] != null) {
+                        dataFimOperacional = ((java.sql.Timestamp) operationalRange[1]).toLocalDateTime();
+                    } else {
+                        dataFimOperacional = LocalDateTime.now();
+                    }
+                } else {
+                    dataFimOperacional = LocalDateTime.now();
+                }
+
+                if (developmentDateRangeList != null && !developmentDateRangeList.isEmpty()) {
+                    Object[] developmentRange = developmentDateRangeList.get(0);
+                    if (developmentRange != null && developmentRange.length >= 2 && developmentRange[1] != null) {
+                        dataFimDesenvolvimento = ((java.sql.Timestamp) developmentRange[1]).toLocalDateTime();
+                    } else {
+                        dataFimDesenvolvimento = LocalDateTime.now();
+                    }
+                } else {
+                    dataFimDesenvolvimento = LocalDateTime.now();
+                }
+
+            } catch (Exception e) {
+                log.error("Erro ao buscar data fim: {}", e.getMessage(), e);
+                dataFimOperacional = LocalDateTime.now();
+                dataFimDesenvolvimento = LocalDateTime.now();
+            }
+        } else if (dataInicio == null && dataFim != null) {
+            dataFimOperacional = dataFim;
+            dataFimDesenvolvimento = dataFim;
+
+            try {
+                List<Object[]> operationalDateRangeList = deliveryRepository.findOperationalDateRange();
+                List<Object[]> developmentDateRangeList = deliveryRepository.findDevelopmentDateRange();
+
+                if (operationalDateRangeList != null && !operationalDateRangeList.isEmpty()) {
+                    Object[] operationalRange = operationalDateRangeList.get(0);
+                    if (operationalRange != null && operationalRange.length >= 2 && operationalRange[0] != null) {
+                        dataInicioOperacional = ((java.sql.Timestamp) operationalRange[0]).toLocalDateTime();
+                    } else {
+                        dataInicioOperacional = LocalDateTime.now().minusMonths(1);
+                    }
+                } else {
+                    dataInicioOperacional = LocalDateTime.now().minusMonths(1);
+                }
+
+                if (developmentDateRangeList != null && !developmentDateRangeList.isEmpty()) {
+                    Object[] developmentRange = developmentDateRangeList.get(0);
+                    if (developmentRange != null && developmentRange.length >= 2 && developmentRange[0] != null) {
+                        dataInicioDesenvolvimento = ((java.sql.Timestamp) developmentRange[0]).toLocalDateTime();
+                    } else {
+                        dataInicioDesenvolvimento = LocalDateTime.now().minusMonths(1);
+                    }
+                } else {
+                    dataInicioDesenvolvimento = LocalDateTime.now().minusMonths(1);
+                }
+
+            } catch (Exception e) {
+                log.error("Erro ao buscar data início: {}", e.getMessage(), e);
+                dataInicioOperacional = LocalDateTime.now().minusMonths(1);
+                dataInicioDesenvolvimento = LocalDateTime.now().minusMonths(1);
             }
         } else {
             dataInicioOperacional = dataInicio;
@@ -481,8 +553,8 @@ public class ReportServiceImpl implements ReportService {
                 totalHomologacao,
                 totalDesenvolvimento,
                 totalGeral,
-                dataInicio,
-                dataFim
+                dataInicioOperacional,
+                dataFimOperacional
         );
 
         String filtrosTipos = request.getTipoTarefa() != null && !request.getTipoTarefa().trim().isEmpty()
@@ -495,8 +567,6 @@ public class ReportServiceImpl implements ReportService {
         }
 
         return OperationalReportData.builder()
-                .dataInicio(dataInicio)
-                .dataFim(dataFim)
                 .dataInicioOperacional(dataInicioOperacional)
                 .dataFimOperacional(dataFimOperacional)
                 .dataInicioDesenvolvimento(dataInicioDesenvolvimento)
