@@ -23,6 +23,10 @@
     <!-- Parameters -->
     <parameter name="dataInicio" class="java.time.LocalDateTime"/>
     <parameter name="dataFim" class="java.time.LocalDateTime"/>
+    <parameter name="dataInicioOperacional" class="java.time.LocalDateTime"/>
+    <parameter name="dataFimOperacional" class="java.time.LocalDateTime"/>
+    <parameter name="dataInicioDesenvolvimento" class="java.time.LocalDateTime"/>
+    <parameter name="dataFimDesenvolvimento" class="java.time.LocalDateTime"/>
     <parameter name="dataGeracao" class="java.time.LocalDateTime"/>
     <parameter name="filtrosTipos" class="java.lang.String"/>
     <parameter name="filtrosAmbientes" class="java.lang.String"/>
@@ -118,19 +122,10 @@
                 <text><![CDATA[RELATORIO DE ENTREGAS OPERACIONAIS]]></text>
             </staticText>
 
-            <!-- Period -->
-            <textField>
-                <reportElement x="0" y="100" width="280" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4f5a-1b2c-567890abcdef"/>
-                <textElement textAlignment="Center">
-                    <font fontName="DejaVu Sans" size="9"/>
-                </textElement>
-                <textFieldExpression><![CDATA["Período: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataInicio})) + " a " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataFim}))]]></textFieldExpression>
-            </textField>
-
             <!-- Generation Date -->
             <textField>
-                <reportElement x="300" y="100" width="235" height="15" forecolor="#FFFFFF" uuid="a6b1c2d3-e4f5-4a6b-2c3d-67890abcdef0"/>
-                <textElement textAlignment="Right">
+                <reportElement x="0" y="100" width="555" height="15" forecolor="#FFFFFF" uuid="a6b1c2d3-e4f5-4a6b-2c3d-67890abcdef0"/>
+                <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Gerado em: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(java.sql.Timestamp.valueOf($P{dataGeracao}))]]></textFieldExpression>
@@ -147,7 +142,7 @@
 
     <!-- Column Header -->
     <columnHeader>
-        <band height="55">
+        <band height="70">
             <staticText>
                 <reportElement x="0" y="10" width="555" height="15" uuid="f5a6b1c2-d3e4-4fb0-1c2d-bcdef012345a"/>
                 <textElement textAlignment="Center">
@@ -156,13 +151,22 @@
                 <text><![CDATA[DADOS QUANTITATIVOS - OPERACIONAL]]></text>
             </staticText>
 
+            <!-- Período Operacional -->
+            <textField>
+                <reportElement x="0" y="25" width="555" height="12" uuid="a1b2c3d4-e5f6-7890-abcd-1234567890ab"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="8" isBold="false"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{dataInicioOperacional} != null && $P{dataFimOperacional} != null ? "Período: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataInicioOperacional})) + " a " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataFimOperacional})) : ""]]></textFieldExpression>
+            </textField>
+
             <!-- Table Header -->
             <rectangle>
-                <reportElement x="0" y="30" width="555" height="25" backcolor="#5B6FE8" uuid="a6b1c2d3-e4f5-40c1-2d3e-cdef012345ab"/>
+                <reportElement x="0" y="45" width="555" height="25" backcolor="#5B6FE8" uuid="a6b1c2d3-e4f5-40c1-2d3e-cdef012345ab"/>
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="35" width="100" height="15" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-41d2-3e4f-def012345abc"/>
+                <reportElement x="5" y="50" width="100" height="15" forecolor="#FFFFFF" uuid="b1c2d3e4-f5a6-41d2-3e4f-def012345abc"/>
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
@@ -170,7 +174,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="110" y="35" width="90" height="15" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-42e3-4f5a-ef012345abcd"/>
+                <reportElement x="110" y="50" width="90" height="15" forecolor="#FFFFFF" uuid="c2d3e4f5-a6b1-42e3-4f5a-ef012345abcd"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -178,7 +182,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="205" y="35" width="90" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-43f4-5a6b-f012345abcde"/>
+                <reportElement x="205" y="50" width="90" height="15" forecolor="#FFFFFF" uuid="d3e4f5a6-b1c2-43f4-5a6b-f012345abcde"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -186,7 +190,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="300" y="35" width="85" height="15" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4405-6b7c-012345abcdef"/>
+                <reportElement x="300" y="50" width="85" height="15" forecolor="#FFFFFF" uuid="e4f5a6b1-c2d3-4405-6b7c-012345abcdef"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -194,7 +198,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="390" y="35" width="85" height="15" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a1b-8c9d-23456789abcd"/>
+                <reportElement x="390" y="50" width="85" height="15" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a1b-8c9d-23456789abcd"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -202,7 +206,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="480" y="35" width="75" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4516-7c8d-12345abcdef0"/>
+                <reportElement x="480" y="50" width="75" height="15" forecolor="#FFFFFF" uuid="f5a6b1c2-d3e4-4516-7c8d-12345abcdef0"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
@@ -312,7 +316,7 @@
 
     <!-- Summary Band -->
     <summary>
-        <band height="220">
+        <band height="230">
             <!-- Totals Row OPERACIONAL -->
             <rectangle>
                 <reportElement x="0" y="5" width="555" height="25" backcolor="#6366F1" uuid="c2d3e4f5-a6b1-4eaf-a5b6-ef0123456789"/>
@@ -375,13 +379,22 @@
                 <text><![CDATA[DADOS QUANTITATIVOS - DESENVOLVIMENTO]]></text>
             </staticText>
 
+            <!-- Período Desenvolvimento -->
+            <textField>
+                <reportElement x="0" y="85" width="555" height="12" uuid="b2c3d4e5-f6a7-8901-bcde-2345678901bc"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="8" isBold="false"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{dataInicioDesenvolvimento} != null && $P{dataFimDesenvolvimento} != null ? "Período: " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataInicioDesenvolvimento})) + " a " + new java.text.SimpleDateFormat("dd/MM/yyyy").format(java.sql.Timestamp.valueOf($P{dataFimDesenvolvimento})) : ""]]></textFieldExpression>
+            </textField>
+
             <!-- Table Header DESENVOLVIMENTO -->
             <rectangle>
-                <reportElement x="0" y="90" width="555" height="25" backcolor="#5B6FE8" uuid="e5f6a7b8-c9d0-4ed7-f9a0-c2d3e4f5a6b7"/>
+                <reportElement x="0" y="105" width="555" height="25" backcolor="#5B6FE8" uuid="e5f6a7b8-c9d0-4ed7-f9a0-c2d3e4f5a6b7"/>
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="95" width="100" height="15" forecolor="#FFFFFF" uuid="f6a7b8c9-d0e1-4fe8-a0b1-d3e4f5a6b7c8"/>
+                <reportElement x="5" y="110" width="100" height="15" forecolor="#FFFFFF" uuid="f6a7b8c9-d0e1-4fe8-a0b1-d3e4f5a6b7c8"/>
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
@@ -389,7 +402,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="110" y="95" width="90" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-40f9-b1c2-e4f5a6b7c8d9"/>
+                <reportElement x="110" y="110" width="90" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-40f9-b1c2-e4f5a6b7c8d9"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -397,7 +410,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="205" y="95" width="90" height="15" forecolor="#FFFFFF" uuid="b8c9d0e1-f2a3-41a0-c2d3-f5a6b7c8d9e0"/>
+                <reportElement x="205" y="110" width="90" height="15" forecolor="#FFFFFF" uuid="b8c9d0e1-f2a3-41a0-c2d3-f5a6b7c8d9e0"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -405,7 +418,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="300" y="95" width="85" height="15" forecolor="#FFFFFF" uuid="c9d0e1f2-a3b4-42b1-d3e4-a6b7c8d9e0f1"/>
+                <reportElement x="300" y="110" width="85" height="15" forecolor="#FFFFFF" uuid="c9d0e1f2-a3b4-42b1-d3e4-a6b7c8d9e0f1"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -413,7 +426,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="390" y="95" width="85" height="15" forecolor="#FFFFFF" uuid="d0e1f2a3-b4c5-43c2-e4f5-b7c8d9e0f1a2"/>
+                <reportElement x="390" y="110" width="85" height="15" forecolor="#FFFFFF" uuid="d0e1f2a3-b4c5-43c2-e4f5-b7c8d9e0f1a2"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -421,7 +434,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="480" y="95" width="75" height="15" forecolor="#FFFFFF" uuid="e1f2a3b4-c5d6-44d3-f5a6-c8d9e0f1a2b3"/>
+                <reportElement x="480" y="110" width="75" height="15" forecolor="#FFFFFF" uuid="e1f2a3b4-c5d6-44d3-f5a6-c8d9e0f1a2b3"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
@@ -430,14 +443,14 @@
 
             <!-- Bug Row (line 1) -->
             <rectangle>
-                <reportElement x="0" y="120" width="555" height="20" backcolor="#F9FAFB" uuid="d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"/>
+                <reportElement x="0" y="135" width="555" height="20" backcolor="#F9FAFB" uuid="d1e2f3a4-b5c6-4d7e-8f9a-0b1c2d3e4f5a"/>
                 <graphicElement>
                     <pen lineWidth="0"/>
                 </graphicElement>
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="125" width="100" height="15" uuid="e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b"/>
+                <reportElement x="5" y="140" width="100" height="15" uuid="e2f3a4b5-c6d7-4e8f-9a0b-1c2d3e4f5a6b"/>
                 <textElement>
                     <font fontName="DejaVu Sans" size="8"/>
                 </textElement>
@@ -445,7 +458,7 @@
             </staticText>
 
             <textField>
-                <reportElement x="110" y="125" width="90" height="15" uuid="f3a4b5c6-d7e8-4f9a-0b1c-2d3e4f5a6b7c"/>
+                <reportElement x="110" y="140" width="90" height="15" uuid="f3a4b5c6-d7e8-4f9a-0b1c-2d3e4f5a6b7c"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -453,7 +466,7 @@
             </textField>
 
             <textField>
-                <reportElement x="205" y="125" width="90" height="15" uuid="a4b5c6d7-e8f9-40a1-b2c3-d4e5f6a7b8c9"/>
+                <reportElement x="205" y="140" width="90" height="15" uuid="a4b5c6d7-e8f9-40a1-b2c3-d4e5f6a7b8c9"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -461,7 +474,7 @@
             </textField>
 
             <textField>
-                <reportElement x="300" y="125" width="85" height="15" uuid="b5c6d7e8-f9a0-41b2-c3d4-e5f6a7b8c9d0"/>
+                <reportElement x="300" y="140" width="85" height="15" uuid="b5c6d7e8-f9a0-41b2-c3d4-e5f6a7b8c9d0"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -469,7 +482,7 @@
             </textField>
 
             <textField>
-                <reportElement x="390" y="125" width="85" height="15" uuid="c6d7e8f9-a0b1-42c3-d4e5-f6a7b8c9d0e1"/>
+                <reportElement x="390" y="140" width="85" height="15" uuid="c6d7e8f9-a0b1-42c3-d4e5-f6a7b8c9d0e1"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -477,7 +490,7 @@
             </textField>
 
             <textField>
-                <reportElement x="480" y="125" width="75" height="15" uuid="d7e8f9a0-b1c2-43d4-e5f6-a7b8c9d0e1f2"/>
+                <reportElement x="480" y="140" width="75" height="15" uuid="d7e8f9a0-b1c2-43d4-e5f6-a7b8c9d0e1f2"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -485,19 +498,19 @@
             </textField>
 
             <line>
-                <reportElement x="0" y="139" width="555" height="1" forecolor="#E5E7EB" uuid="e8f9a0b1-c2d3-44e5-f6a7-b8c9d0e1f2a3"/>
+                <reportElement x="0" y="154" width="555" height="1" forecolor="#E5E7EB" uuid="e8f9a0b1-c2d3-44e5-f6a7-b8c9d0e1f2a3"/>
             </line>
 
             <!-- Melhoria Row (line 2) -->
             <rectangle>
-                <reportElement x="0" y="140" width="555" height="20" backcolor="#FFFFFF" uuid="f9a0b1c2-d3e4-45f6-a7b8-c9d0e1f2a3b4"/>
+                <reportElement x="0" y="155" width="555" height="20" backcolor="#FFFFFF" uuid="f9a0b1c2-d3e4-45f6-a7b8-c9d0e1f2a3b4"/>
                 <graphicElement>
                     <pen lineWidth="0"/>
                 </graphicElement>
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="145" width="100" height="15" uuid="a0b1c2d3-e4f5-46a7-b8c9-d0e1f2a3b4c5"/>
+                <reportElement x="5" y="160" width="100" height="15" uuid="a0b1c2d3-e4f5-46a7-b8c9-d0e1f2a3b4c5"/>
                 <textElement>
                     <font fontName="DejaVu Sans" size="8"/>
                 </textElement>
@@ -505,7 +518,7 @@
             </staticText>
 
             <textField>
-                <reportElement x="110" y="145" width="90" height="15" uuid="b1c2d3e4-f5a6-47b8-c9d0-e1f2a3b4c5d6"/>
+                <reportElement x="110" y="160" width="90" height="15" uuid="b1c2d3e4-f5a6-47b8-c9d0-e1f2a3b4c5d6"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -513,7 +526,7 @@
             </textField>
 
             <textField>
-                <reportElement x="205" y="145" width="90" height="15" uuid="c2d3e4f5-a6b7-48c9-d0e1-f2a3b4c5d6e7"/>
+                <reportElement x="205" y="160" width="90" height="15" uuid="c2d3e4f5-a6b7-48c9-d0e1-f2a3b4c5d6e7"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -521,7 +534,7 @@
             </textField>
 
             <textField>
-                <reportElement x="300" y="145" width="85" height="15" uuid="d3e4f5a6-b7c8-49d0-e1f2-a3b4c5d6e7f8"/>
+                <reportElement x="300" y="160" width="85" height="15" uuid="d3e4f5a6-b7c8-49d0-e1f2-a3b4c5d6e7f8"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -529,7 +542,7 @@
             </textField>
 
             <textField>
-                <reportElement x="390" y="145" width="85" height="15" uuid="e4f5a6b7-c8d9-4ae1-f2a3-b4c5d6e7f8a9"/>
+                <reportElement x="390" y="160" width="85" height="15" uuid="e4f5a6b7-c8d9-4ae1-f2a3-b4c5d6e7f8a9"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -537,7 +550,7 @@
             </textField>
 
             <textField>
-                <reportElement x="480" y="145" width="75" height="15" uuid="f5a6b7c8-d9e0-4bf2-a3b4-c5d6e7f8a9b0"/>
+                <reportElement x="480" y="160" width="75" height="15" uuid="f5a6b7c8-d9e0-4bf2-a3b4-c5d6e7f8a9b0"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -545,19 +558,19 @@
             </textField>
 
             <line>
-                <reportElement x="0" y="159" width="555" height="1" forecolor="#E5E7EB" uuid="a6b7c8d9-e0f1-4ca3-b4c5-d6e7f8a9b0c1"/>
+                <reportElement x="0" y="174" width="555" height="1" forecolor="#E5E7EB" uuid="a6b7c8d9-e0f1-4ca3-b4c5-d6e7f8a9b0c1"/>
             </line>
 
             <!-- Nova Funcionalidade Row (line 3) -->
             <rectangle>
-                <reportElement x="0" y="160" width="555" height="20" backcolor="#F9FAFB" uuid="b7c8d9e0-f1a2-4db4-c5d6-e7f8a9b0c1d2"/>
+                <reportElement x="0" y="175" width="555" height="20" backcolor="#F9FAFB" uuid="b7c8d9e0-f1a2-4db4-c5d6-e7f8a9b0c1d2"/>
                 <graphicElement>
                     <pen lineWidth="0"/>
                 </graphicElement>
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="165" width="100" height="15" uuid="c8d9e0f1-a2b3-4ec5-d6e7-f8a9b0c1d2e3"/>
+                <reportElement x="5" y="180" width="100" height="15" uuid="c8d9e0f1-a2b3-4ec5-d6e7-f8a9b0c1d2e3"/>
                 <textElement>
                     <font fontName="DejaVu Sans" size="8"/>
                 </textElement>
@@ -565,7 +578,7 @@
             </staticText>
 
             <textField>
-                <reportElement x="110" y="165" width="90" height="15" uuid="d9e0f1a2-b3c4-4fd6-e7f8-a9b0c1d2e3f4"/>
+                <reportElement x="110" y="180" width="90" height="15" uuid="d9e0f1a2-b3c4-4fd6-e7f8-a9b0c1d2e3f4"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -573,7 +586,7 @@
             </textField>
 
             <textField>
-                <reportElement x="205" y="165" width="90" height="15" uuid="e0f1a2b3-c4d5-40e7-f8a9-b0c1d2e3f4a5"/>
+                <reportElement x="205" y="180" width="90" height="15" uuid="e0f1a2b3-c4d5-40e7-f8a9-b0c1d2e3f4a5"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -581,7 +594,7 @@
             </textField>
 
             <textField>
-                <reportElement x="300" y="165" width="85" height="15" uuid="f1a2b3c4-d5e6-41f8-a9b0-c1d2e3f4a5b6"/>
+                <reportElement x="300" y="180" width="85" height="15" uuid="f1a2b3c4-d5e6-41f8-a9b0-c1d2e3f4a5b6"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -589,7 +602,7 @@
             </textField>
 
             <textField>
-                <reportElement x="390" y="165" width="85" height="15" uuid="a2b3c4d5-e6f7-42a9-b0c1-d2e3f4a5b6c7"/>
+                <reportElement x="390" y="180" width="85" height="15" uuid="a2b3c4d5-e6f7-42a9-b0c1-d2e3f4a5b6c7"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -597,7 +610,7 @@
             </textField>
 
             <textField>
-                <reportElement x="480" y="165" width="75" height="15" uuid="b3c4d5e6-f7a8-43b0-c1d2-e3f4a5b6c7d8"/>
+                <reportElement x="480" y="180" width="75" height="15" uuid="b3c4d5e6-f7a8-43b0-c1d2-e3f4a5b6c7d8"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -605,16 +618,16 @@
             </textField>
 
             <line>
-                <reportElement x="0" y="179" width="555" height="1" forecolor="#E5E7EB" uuid="c4d5e6f7-a8b9-44c1-d2e3-f4a5b6c7d8e9"/>
+                <reportElement x="0" y="194" width="555" height="1" forecolor="#E5E7EB" uuid="c4d5e6f7-a8b9-44c1-d2e3-f4a5b6c7d8e9"/>
             </line>
 
             <!-- Totals Row DESENVOLVIMENTO -->
             <rectangle>
-                <reportElement x="0" y="185" width="555" height="25" backcolor="#6366F1" uuid="f2a3b4c5-d6e7-44e4-a6b7-d9e0f1a2b3c4"/>
+                <reportElement x="0" y="200" width="555" height="25" backcolor="#6366F1" uuid="f2a3b4c5-d6e7-44e4-a6b7-d9e0f1a2b3c4"/>
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="190" width="100" height="15" forecolor="#FFFFFF" uuid="a3b4c5d6-e7f8-45f5-b7c8-e0f1a2b3c4d5"/>
+                <reportElement x="5" y="205" width="100" height="15" forecolor="#FFFFFF" uuid="a3b4c5d6-e7f8-45f5-b7c8-e0f1a2b3c4d5"/>
                 <textElement>
                     <font fontName="DejaVu Sans" size="10" isBold="true"/>
                 </textElement>
@@ -622,7 +635,7 @@
             </staticText>
 
             <textField>
-                <reportElement x="110" y="190" width="90" height="15" forecolor="#FFFFFF" uuid="b4c5d6e7-f8a9-46a6-c8d9-f1a2b3c4d5e6"/>
+                <reportElement x="110" y="205" width="90" height="15" forecolor="#FFFFFF" uuid="b4c5d6e7-f8a9-46a6-c8d9-f1a2b3c4d5e6"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -630,7 +643,7 @@
             </textField>
 
             <textField>
-                <reportElement x="205" y="190" width="90" height="15" forecolor="#FFFFFF" uuid="c5d6e7f8-a9b0-47b7-d9e0-a2b3c4d5e6f7"/>
+                <reportElement x="205" y="205" width="90" height="15" forecolor="#FFFFFF" uuid="c5d6e7f8-a9b0-47b7-d9e0-a2b3c4d5e6f7"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -638,7 +651,7 @@
             </textField>
 
             <textField>
-                <reportElement x="300" y="190" width="85" height="15" forecolor="#FFFFFF" uuid="d6e7f8a9-b0c1-48c8-e0f1-b3c4d5e6f7a8"/>
+                <reportElement x="300" y="205" width="85" height="15" forecolor="#FFFFFF" uuid="d6e7f8a9-b0c1-48c8-e0f1-b3c4d5e6f7a8"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -646,7 +659,7 @@
             </textField>
 
             <textField>
-                <reportElement x="390" y="190" width="85" height="15" forecolor="#FFFFFF" uuid="e7f8a9b0-c1d2-49d9-f1a2-c4d5e6f7a8b9"/>
+                <reportElement x="390" y="205" width="85" height="15" forecolor="#FFFFFF" uuid="e7f8a9b0-c1d2-49d9-f1a2-c4d5e6f7a8b9"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
@@ -654,7 +667,7 @@
             </textField>
 
             <textField>
-                <reportElement x="480" y="190" width="75" height="15" forecolor="#FFFFFF" uuid="f8a9b0c1-d2e3-4aea-a2b3-d5e6f7a8b9c0"/>
+                <reportElement x="480" y="205" width="75" height="15" forecolor="#FFFFFF" uuid="f8a9b0c1-d2e3-4aea-a2b3-d5e6f7a8b9c0"/>
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>

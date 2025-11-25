@@ -19,6 +19,14 @@ public class OperationalReportData {
 
     private LocalDateTime dataFim;
 
+    private LocalDateTime dataInicioOperacional;
+
+    private LocalDateTime dataFimOperacional;
+
+    private LocalDateTime dataInicioDesenvolvimento;
+
+    private LocalDateTime dataFimDesenvolvimento;
+
     private LocalDateTime dataGeracao;
 
     private String filtrosTipos;

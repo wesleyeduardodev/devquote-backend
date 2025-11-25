@@ -62,76 +62,88 @@ public class ReportServiceImpl implements ReportService {
 
         LocalDateTime dataInicio = request.getDataInicio();
         LocalDateTime dataFim = request.getDataFim();
+        boolean filtroInformado = dataInicio != null && dataFim != null;
 
         if (dataFim != null) {
             dataFim = dataFim.withHour(23).withMinute(59).withSecond(59);
         }
 
-        if (dataInicio == null || dataFim == null) {
+        LocalDateTime dataInicioOperacional = dataInicio;
+        LocalDateTime dataFimOperacional = dataFim;
+        LocalDateTime dataInicioDesenvolvimento = dataInicio;
+        LocalDateTime dataFimDesenvolvimento = dataFim;
+
+        if (!filtroInformado) {
             try {
-                List<Object[]> dateRangeList = deliveryRepository.findOperationalDateRange();
+                List<Object[]> operationalDateRangeList = deliveryRepository.findOperationalDateRange();
+                List<Object[]> developmentDateRangeList = deliveryRepository.findDevelopmentDateRange();
 
-                if (dateRangeList != null && !dateRangeList.isEmpty()) {
-                    Object[] dateRange = dateRangeList.get(0);
-
-                    if (dateRange != null && dateRange.length >= 2 && dateRange[0] != null && dateRange[1] != null) {
-                        LocalDateTime minDate = ((java.sql.Timestamp) dateRange[0]).toLocalDateTime();
-                        LocalDateTime maxDate = ((java.sql.Timestamp) dateRange[1]).toLocalDateTime();
-
-                        if (dataInicio == null) {
-                            dataInicio = minDate;
-                        }
-                        if (dataFim == null) {
-                            dataFim = maxDate;
-                        }
-                    } else {
-                        log.warn("Range de datas retornou valores nulos");
-                        if (dataInicio == null) {
-                            dataInicio = LocalDateTime.now().minusMonths(1);
-                        }
-                        if (dataFim == null) {
-                            dataFim = LocalDateTime.now();
-                        }
-                    }
-                } else {
-                    log.warn("Nenhum registro encontrado para determinar o range de datas");
-                    if (dataInicio == null) {
-                        dataInicio = LocalDateTime.now().minusMonths(1);
-                    }
-                    if (dataFim == null) {
-                        dataFim = LocalDateTime.now();
+                if (operationalDateRangeList != null && !operationalDateRangeList.isEmpty()) {
+                    Object[] operationalRange = operationalDateRangeList.get(0);
+                    if (operationalRange != null && operationalRange.length >= 2 && operationalRange[0] != null && operationalRange[1] != null) {
+                        dataInicioOperacional = ((java.sql.Timestamp) operationalRange[0]).toLocalDateTime();
+                        dataFimOperacional = ((java.sql.Timestamp) operationalRange[1]).toLocalDateTime();
                     }
                 }
+
+                if (developmentDateRangeList != null && !developmentDateRangeList.isEmpty()) {
+                    Object[] developmentRange = developmentDateRangeList.get(0);
+                    if (developmentRange != null && developmentRange.length >= 2 && developmentRange[0] != null && developmentRange[1] != null) {
+                        dataInicioDesenvolvimento = ((java.sql.Timestamp) developmentRange[0]).toLocalDateTime();
+                        dataFimDesenvolvimento = ((java.sql.Timestamp) developmentRange[1]).toLocalDateTime();
+                    }
+                }
+
+                if (dataInicioOperacional == null || dataFimOperacional == null) {
+                    log.warn("Range de datas operacional retornou valores nulos");
+                    dataInicioOperacional = LocalDateTime.now().minusMonths(1);
+                    dataFimOperacional = LocalDateTime.now();
+                }
+
+                if (dataInicioDesenvolvimento == null || dataFimDesenvolvimento == null) {
+                    log.warn("Range de datas desenvolvimento retornou valores nulos");
+                    dataInicioDesenvolvimento = LocalDateTime.now().minusMonths(1);
+                    dataFimDesenvolvimento = LocalDateTime.now();
+                }
+
+                dataInicio = dataInicioOperacional.isBefore(dataInicioDesenvolvimento) ? dataInicioOperacional : dataInicioDesenvolvimento;
+                dataFim = dataFimOperacional.isAfter(dataFimDesenvolvimento) ? dataFimOperacional : dataFimDesenvolvimento;
+
             } catch (Exception e) {
                 log.error("Erro ao buscar range de datas: {}", e.getMessage(), e);
-                if (dataInicio == null) {
-                    dataInicio = LocalDateTime.now().minusMonths(1);
-                }
-                if (dataFim == null) {
-                    dataFim = LocalDateTime.now();
-                }
+                dataInicioOperacional = LocalDateTime.now().minusMonths(1);
+                dataFimOperacional = LocalDateTime.now();
+                dataInicioDesenvolvimento = LocalDateTime.now().minusMonths(1);
+                dataFimDesenvolvimento = LocalDateTime.now();
+                dataInicio = dataInicioOperacional;
+                dataFim = dataFimOperacional;
             }
+        } else {
+            dataInicioOperacional = dataInicio;
+            dataFimOperacional = dataFim;
+            dataInicioDesenvolvimento = dataInicio;
+            dataFimDesenvolvimento = dataFim;
         }
 
         List<Object[]> queryResults = deliveryRepository.findOperationalReportData(
-                dataInicio,
-                dataFim
+                dataInicioOperacional,
+                dataFimOperacional
         );
 
         List<Object[]> financialResults = deliveryRepository.findOperationalReportFinancialData(
-                dataInicio,
-                dataFim
+                dataInicioOperacional,
+                dataFimOperacional
 
         );
 
         List<Object[]> developmentQueryResults = deliveryRepository.findDevelopmentReportData(
-                dataInicio,
-                dataFim
+                dataInicioDesenvolvimento,
+                dataFimDesenvolvimento
         );
 
         List<Object[]> developmentFinancialResults = deliveryRepository.findDevelopmentReportFinancialData(
-                dataInicio,
-                dataFim
+                dataInicioDesenvolvimento,
+                dataFimDesenvolvimento
         );
 
         Map<String, OperationalReportRow> rowMap = new LinkedHashMap<>();
@@ -485,6 +497,10 @@ public class ReportServiceImpl implements ReportService {
         return OperationalReportData.builder()
                 .dataInicio(dataInicio)
                 .dataFim(dataFim)
+                .dataInicioOperacional(dataInicioOperacional)
+                .dataFimOperacional(dataFimOperacional)
+                .dataInicioDesenvolvimento(dataInicioDesenvolvimento)
+                .dataFimDesenvolvimento(dataFimDesenvolvimento)
                 .dataGeracao(LocalDateTime.now())
                 .filtrosTipos(filtrosTipos)
                 .filtrosAmbientes(filtrosAmbientes)
@@ -597,6 +613,10 @@ public class ReportServiceImpl implements ReportService {
 
         parameters.put("dataInicio", data.getDataInicio());
         parameters.put("dataFim", data.getDataFim());
+        parameters.put("dataInicioOperacional", data.getDataInicioOperacional());
+        parameters.put("dataFimOperacional", data.getDataFimOperacional());
+        parameters.put("dataInicioDesenvolvimento", data.getDataInicioDesenvolvimento());
+        parameters.put("dataFimDesenvolvimento", data.getDataFimDesenvolvimento());
         parameters.put("dataGeracao", data.getDataGeracao());
         parameters.put("filtrosTipos", data.getFiltrosTipos());
         parameters.put("filtrosAmbientes", data.getFiltrosAmbientes());

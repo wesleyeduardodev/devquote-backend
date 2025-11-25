@@ -179,6 +179,15 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 
     @Query(value = """
         SELECT
+            MIN(COALESCE(d.started_at, d.finished_at, d.created_at)),
+            MAX(COALESCE(d.finished_at, d.started_at, d.updated_at, d.created_at))
+        FROM delivery d
+        WHERE d.flow_type = 'DESENVOLVIMENTO'
+        """, nativeQuery = true)
+    List<Object[]> findDevelopmentDateRange();
+
+    @Query(value = """
+        SELECT
             t.task_type AS tipoTarefa,
             d.environment AS ambiente,
             COUNT(d.id) AS quantidade
@@ -186,7 +195,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         INNER JOIN task t ON t.id = d.task_id
         WHERE
             d.flow_type = 'DESENVOLVIMENTO'
-            AND d.status = 'DELIVERED'
+            AND d.status IN ('DELIVERED', 'HOMOLOGATION', 'APPROVED', 'PRODUCTION')
             AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
                  d.finished_at BETWEEN :dataInicio AND :dataFim)
         GROUP BY t.task_type, d.environment
@@ -206,7 +215,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         INNER JOIN task t ON t.id = d.task_id
         WHERE
             d.flow_type = 'DESENVOLVIMENTO'
-            AND d.status = 'DELIVERED'
+            AND d.status IN ('DELIVERED', 'HOMOLOGATION', 'APPROVED', 'PRODUCTION')
             AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
                  d.finished_at BETWEEN :dataInicio AND :dataFim)
         GROUP BY t.task_type, d.environment
