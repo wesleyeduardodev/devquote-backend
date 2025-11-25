@@ -314,6 +314,63 @@
         </band>
     </pageFooter>
 
+    <!-- Last Page Footer -->
+    <lastPageFooter>
+        <band height="80">
+            <!-- Fundo do footer -->
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="80" backcolor="#F9FAFB" uuid="a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <!-- Linha superior -->
+            <line>
+                <reportElement x="0" y="0" width="555" height="1" forecolor="#5B6FE8" uuid="b2b3b4b5-c6c7-d8d9-e0e1-f2f3f4f5f6f7"/>
+                <graphicElement>
+                    <pen lineWidth="2"/>
+                </graphicElement>
+            </line>
+
+            <!-- DevQuote -->
+            <staticText>
+                <reportElement x="0" y="15" width="555" height="15" uuid="c3c4c5c6-d7d8-e9e0-f1f2-a3a4a5a6a7a8"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="12" isBold="true" isItalic="false"/>
+                </textElement>
+                <text><![CDATA[DevQuote]]></text>
+            </staticText>
+
+            <!-- Tagline -->
+            <staticText>
+                <reportElement x="0" y="30" width="555" height="12" forecolor="#666666" uuid="d4d5d6d7-e8e9-f0f1-a2a3-b4b5b6b7b8b9"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="8" isBold="false" isItalic="true"/>
+                </textElement>
+                <text><![CDATA[💼 Solução Empresarial para Desenvolvedores]]></text>
+            </staticText>
+
+            <!-- Contato -->
+            <staticText>
+                <reportElement x="0" y="48" width="555" height="10" forecolor="#333333" uuid="e5e6e7e8-f9f0-a1a2-b3b4-c5c6c7c8c9c0"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <text><![CDATA[+55 98 98165-0805  •  wesleyeduardo.dev@gmail.com]]></text>
+            </staticText>
+
+            <!-- Copyright -->
+            <staticText>
+                <reportElement x="0" y="63" width="555" height="10" forecolor="#999999" uuid="f6f7f8f9-a0a1-b2b3-c4c5-d6d7d8d9d0d1"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="6"/>
+                </textElement>
+                <text><![CDATA[© 2025 DevQuote. Todos os direitos reservados.]]></text>
+            </staticText>
+        </band>
+    </lastPageFooter>
+
     <!-- Summary Band -->
     <summary>
         <band height="230">
