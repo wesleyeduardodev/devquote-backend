@@ -857,7 +857,7 @@ public class EmailServiceImpl implements EmailService {
         message.append("*Código:* ").append(task.getCode() != null ? task.getCode() : "N/A").append("\n");
         message.append("*Título:* ").append(task.getTitle() != null ? task.getTitle() : "N/A").append("\n");
         if (task.getDescription() != null && !task.getDescription().trim().isEmpty()) {
-            message.append("*Descrição:* ").append(task.getDescription()).append("\n");
+            message.append("*Descrição:*\n").append(task.getDescription()).append("\n");
         }
         message.append("*Tipo de Fluxo:* ").append(translateFlowType(task.getFlowType())).append("\n");
         message.append("*Tipo da Tarefa:* ").append(translateTaskType(task.getTaskType())).append("\n");
@@ -875,7 +875,7 @@ public class EmailServiceImpl implements EmailService {
                 for (SubTask subTask : subTasks) {
                     message.append("*Título:* ").append(subTask.getTitle() != null ? subTask.getTitle() : "N/A").append("\n");
                     if (subTask.getDescription() != null && !subTask.getDescription().trim().isEmpty()) {
-                        message.append("*Descrição:* ").append(subTask.getDescription()).append("\n");
+                        message.append("*Descrição:*\n").append(subTask.getDescription()).append("\n");
                     }
                     BigDecimal subTaskAmount = subTask.getAmount() != null ? subTask.getAmount() : BigDecimal.ZERO;
                     message.append("*Valor:* ").append(currencyFormatter.format(subTaskAmount)).append("\n\n");
