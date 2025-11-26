@@ -856,17 +856,15 @@ public class EmailServiceImpl implements EmailService {
         message.append("*📋 Dados da Tarefa*\n\n");
         message.append("*Código:* ").append(task.getCode() != null ? task.getCode() : "N/A").append("\n");
         message.append("*Título:* ").append(task.getTitle() != null ? task.getTitle() : "N/A").append("\n");
+        if (task.getDescription() != null && !task.getDescription().trim().isEmpty()) {
+            message.append("*Descrição:* ").append(task.getDescription()).append("\n");
+        }
         message.append("*Tipo de Fluxo:* ").append(translateFlowType(task.getFlowType())).append("\n");
         message.append("*Tipo da Tarefa:* ").append(translateTaskType(task.getTaskType())).append("\n");
         if (task.getEnvironment() != null) {
             message.append("*Ambiente:* ").append(translateEnvironment(task.getEnvironment())).append("\n");
         }
         message.append("*Solicitante:* ").append(task.getRequester() != null ? task.getRequester().getName() : "N/A").append("\n");
-
-        if (task.getFlowType() == FlowType.OPERACIONAL && task.getDescription() != null && !task.getDescription().trim().isEmpty()) {
-            message.append("\n*Descrição:*\n\n");
-            message.append(task.getDescription()).append("\n");
-        }
 
         if (task.getHasSubTasks()) {
             List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
@@ -876,6 +874,9 @@ public class EmailServiceImpl implements EmailService {
 
                 for (SubTask subTask : subTasks) {
                     message.append("*Título:* ").append(subTask.getTitle() != null ? subTask.getTitle() : "N/A").append("\n");
+                    if (subTask.getDescription() != null && !subTask.getDescription().trim().isEmpty()) {
+                        message.append("*Descrição:* ").append(subTask.getDescription()).append("\n");
+                    }
                     BigDecimal subTaskAmount = subTask.getAmount() != null ? subTask.getAmount() : BigDecimal.ZERO;
                     message.append("*Valor:* ").append(currencyFormatter.format(subTaskAmount)).append("\n\n");
                 }

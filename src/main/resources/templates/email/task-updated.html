@@ -207,6 +207,10 @@
                         <div class="info-label">Tipo da Tarefa:</div>
                         <div class="info-value" th:text="${taskType}">Nova Funcionalidade</div>
                     </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(taskEnvironment)}">
+                        <div class="info-label">Ambiente:</div>
+                        <div class="info-value" th:text="${taskEnvironment}">Produção</div>
+                    </div>
                     <div class="info-row" th:if="${!#strings.isEmpty(taskSystemModule)}">
                         <div class="info-label">Módulo do Sistema:</div>
                         <div class="info-value" th:text="${taskSystemModule}">Backend</div>
