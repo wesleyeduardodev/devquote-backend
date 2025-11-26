@@ -678,6 +678,63 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    public byte[] exportDeliveriesOnlyToExcel(boolean canViewAmounts) throws IOException {
+        log.debug("EXCEL EXPORT (Deliveries Only - All Flows) STARTED canViewAmounts={}", canViewAmounts);
+
+        String sql = """
+            SELECT
+                d.id as delivery_id,
+                t.id as task_id,
+                t.code as task_code,
+                t.title as task_title,
+                t.task_type as task_type,
+                t.flow_type as flow_type,
+                t.environment as task_environment,
+                t.amount as task_amount,
+                (SELECT COUNT(*) FROM sub_task st WHERE st.task_id = t.id) as subtasks_count,
+                r.name as requester_name,
+                d.status as delivery_status,
+                d.notes as delivery_notes,
+                d.started_at as delivery_started_at,
+                d.finished_at as delivery_finished_at,
+                d.created_at as delivery_created_at,
+                d.updated_at as delivery_updated_at
+            FROM delivery d
+            INNER JOIN task t ON d.task_id = t.id
+            INNER JOIN requester r ON t.requester_id = r.id
+            ORDER BY d.id DESC
+        """;
+
+        Query query = entityManager.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = query.getResultList();
+
+        List<Map<String, Object>> data = results.stream().map(row -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("delivery_id", row[0]);
+            map.put("task_id", row[1]);
+            map.put("task_code", row[2]);
+            map.put("task_title", row[3]);
+            map.put("task_type", row[4]);
+            map.put("flow_type", row[5]);
+            map.put("task_environment", row[6]);
+            map.put("task_amount", row[7]);
+            map.put("subtasks_count", row[8]);
+            map.put("requester_name", row[9]);
+            map.put("delivery_status", row[10]);
+            map.put("delivery_notes", row[11]);
+            map.put("delivery_started_at", row[12]);
+            map.put("delivery_finished_at", row[13]);
+            map.put("delivery_created_at", row[14]);
+            map.put("delivery_updated_at", row[15]);
+            return map;
+        }).collect(Collectors.toList());
+
+        log.debug("EXCEL EXPORT (Deliveries Only) generating file with {} records", data.size());
+        return excelReportUtils.generateDeliveriesOnlyReport(data, canViewAmounts);
+    }
+
+    @Override
     public boolean existsByTaskId(Long taskId) {
         return deliveryRepository.existsByTaskId(taskId);
     }

@@ -66,7 +66,9 @@ public interface DeliveryService {
     void updateAllDeliveryStatuses();
 
     byte[] exportToExcel(String flowType, boolean canViewAmounts) throws IOException;
-    
+
+    byte[] exportDeliveriesOnlyToExcel(boolean canViewAmounts) throws IOException;
+
     DeliveryResponse findByTaskId(Long taskId);
 
     void sendDeliveryEmail(Long id, List<String> additionalEmails, List<String> additionalWhatsAppRecipients, boolean sendEmail, boolean sendWhatsApp);

@@ -848,6 +848,112 @@ public class ExcelReportUtils {
         cell.setCellStyle(defaultStyle);
     }
 
+    public byte[] generateDeliveriesOnlyReport(List<Map<String, Object>> data, boolean canViewAmounts) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Relatório de Entregas");
+
+        CellStyle dataStyle = createDataStyle(workbook);
+        CellStyle dateStyle = createDateStyle(workbook);
+        CellStyle currencyStyle = createCurrencyStyle(workbook);
+        CellStyle headerStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
+
+        String[] headers;
+        if (canViewAmounts) {
+            headers = new String[]{
+                    "ID Entrega", "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa",
+                    "Fluxo", "Ambiente", "Valor da Tarefa", "Qtd. Subtarefas", "Solicitante",
+                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Data Início Entrega", "Data Fim Entrega",
+                    "Data Criação", "Data Atualização"
+            };
+        } else {
+            headers = new String[]{
+                    "ID Entrega", "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa",
+                    "Fluxo", "Ambiente", "Qtd. Subtarefas", "Solicitante",
+                    "Status Geral da Entrega", "Observações da Entrega",
+                    "Data Início Entrega", "Data Fim Entrega",
+                    "Data Criação", "Data Atualização"
+            };
+        }
+
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int rowNum = 1;
+        for (Map<String, Object> deliveryData : data) {
+            Row row = sheet.createRow(rowNum++);
+
+            if (canViewAmounts) {
+                setCellValue(row, 0, deliveryData.get("delivery_id"), dataStyle);
+                setCellValue(row, 1, deliveryData.get("task_id"), dataStyle);
+                setCellValue(row, 2, deliveryData.get("task_code"), dataStyle);
+                setCellValue(row, 3, deliveryData.get("task_title"), dataStyle);
+                setTaskTypeCell(row, 4, deliveryData.get("task_type"), dataStyle);
+                setFlowTypeCell(row, 5, deliveryData.get("flow_type"), dataStyle);
+                setCellValue(row, 6, deliveryData.get("task_environment"), dataStyle);
+                setCellValue(row, 7, deliveryData.get("task_amount"), currencyStyle);
+                setCellValue(row, 8, deliveryData.get("subtasks_count"), dataStyle);
+                setCellValue(row, 9, deliveryData.get("requester_name"), dataStyle);
+                setDeliveryStatusCell(row, 10, deliveryData.get("delivery_status"), dataStyle);
+                setCellValue(row, 11, deliveryData.get("delivery_notes"), dataStyle);
+                setCellValue(row, 12, deliveryData.get("delivery_started_at"), dateStyle);
+                setCellValue(row, 13, deliveryData.get("delivery_finished_at"), dateStyle);
+                setCellValue(row, 14, deliveryData.get("delivery_created_at"), dateStyle);
+                setCellValue(row, 15, deliveryData.get("delivery_updated_at"), dateStyle);
+            } else {
+                setCellValue(row, 0, deliveryData.get("delivery_id"), dataStyle);
+                setCellValue(row, 1, deliveryData.get("task_id"), dataStyle);
+                setCellValue(row, 2, deliveryData.get("task_code"), dataStyle);
+                setCellValue(row, 3, deliveryData.get("task_title"), dataStyle);
+                setTaskTypeCell(row, 4, deliveryData.get("task_type"), dataStyle);
+                setFlowTypeCell(row, 5, deliveryData.get("flow_type"), dataStyle);
+                setCellValue(row, 6, deliveryData.get("task_environment"), dataStyle);
+                setCellValue(row, 7, deliveryData.get("subtasks_count"), dataStyle);
+                setCellValue(row, 8, deliveryData.get("requester_name"), dataStyle);
+                setDeliveryStatusCell(row, 9, deliveryData.get("delivery_status"), dataStyle);
+                setCellValue(row, 10, deliveryData.get("delivery_notes"), dataStyle);
+                setCellValue(row, 11, deliveryData.get("delivery_started_at"), dateStyle);
+                setCellValue(row, 12, deliveryData.get("delivery_finished_at"), dateStyle);
+                setCellValue(row, 13, deliveryData.get("delivery_created_at"), dateStyle);
+                setCellValue(row, 14, deliveryData.get("delivery_updated_at"), dateStyle);
+            }
+        }
+
+        if (canViewAmounts) {
+            setColumnWidths(sheet, new int[]{
+                    2500, 2500, 3500, 8000, 3500, 4000, 4000, 3500, 2500, 6000,
+                    4000, 8000, 5500, 5500, 5500, 5500
+            });
+        } else {
+            setColumnWidths(sheet, new int[]{
+                    2500, 2500, 3500, 8000, 3500, 4000, 4000, 2500, 6000,
+                    4000, 8000, 5500, 5500, 5500, 5500
+            });
+        }
+
+        for (int i = 1; i <= data.size(); i++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                row.setHeightInPoints(30);
+            }
+        }
+
+        headerRow.setHeightInPoints(35);
+
+        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
+        sheet.createFreezePane(0, 1);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream.toByteArray();
+    }
+
     public byte[] generateBillingReport(List<Map<String, Object>> data) throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Relatório de Faturamento");

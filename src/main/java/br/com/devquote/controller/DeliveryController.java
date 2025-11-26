@@ -293,6 +293,24 @@ public class DeliveryController implements DeliveryControllerDoc {
         return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
     }
 
+    @GetMapping("/export/excel-only")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<byte[]> exportDeliveriesOnlyToExcel(
+            @RequestParam(required = false, defaultValue = "false") boolean canViewAmounts) throws IOException {
+        byte[] excelData = deliveryService.exportDeliveriesOnlyToExcel(canViewAmounts);
+
+        String filename = "relatorio_entregas_" +
+                         LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) +
+                         ".xlsx";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
+    }
+
     @PostMapping("/{id}/send-delivery-email")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<String> sendDeliveryEmail(
