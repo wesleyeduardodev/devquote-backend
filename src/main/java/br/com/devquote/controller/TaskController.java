@@ -267,6 +267,24 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String flowType) throws IOException {
         byte[] excelData = taskService.exportTasksToExcel(flowType);
 
+        String filename = "Relatorio_Tarefas_Itens_" +
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) +
+            ".xlsx";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(excelData, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/export/excel-only")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<byte[]> exportTasksOnlyToExcel(
+            @RequestParam(required = false) String flowType) throws IOException {
+        byte[] excelData = taskService.exportTasksOnlyToExcel(flowType);
+
         String filename = "Relatorio_Tarefas_" +
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) +
             ".xlsx";

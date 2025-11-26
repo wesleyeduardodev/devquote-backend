@@ -11,6 +11,126 @@ import java.util.Map;
 @Component
 public class ExcelReportUtils {
 
+    public byte[] generateTasksOnlyReport(List<Map<String, Object>> data, boolean canViewAmounts) throws IOException {
+
+        Workbook workbook = new XSSFWorkbook();
+
+        Sheet sheet = workbook.createSheet("Relatório de Tarefas");
+
+        CellStyle dataStyle = createDataStyle(workbook);
+
+        CellStyle currencyStyle = createCurrencyStyle(workbook);
+
+        CellStyle taskHeaderStyle = createColoredHeaderStyle(workbook, IndexedColors.PALE_BLUE.getIndex());
+
+        String[] headers;
+        if (canViewAmounts) {
+            headers = new String[]{
+                    "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo", "Ambiente",
+                    "Prioridade", "Solicitante", "Criado Por", "Atualizado Por",
+                    "Origem do Servidor", "Módulo do Sistema", "Link", "Link da Reunião",
+                    "Valor da Tarefa", "Tem Subtarefas", "Tem Entrega", "Orçamento no Faturamento",
+                    "Data Criação", "Data Atualização"
+            };
+        } else {
+            headers = new String[]{
+                    "ID", "Fluxo", "Código", "Título", "Descrição", "Tipo", "Ambiente",
+                    "Prioridade", "Solicitante", "Criado Por", "Atualizado Por",
+                    "Origem do Servidor", "Módulo do Sistema", "Link", "Link da Reunião",
+                    "Tem Subtarefas", "Tem Entrega", "Orçamento no Faturamento",
+                    "Data Criação", "Data Atualização"
+            };
+        }
+
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(taskHeaderStyle);
+        }
+
+        int rowNum = 1;
+        for (Map<String, Object> taskData : data) {
+            Row row = sheet.createRow(rowNum++);
+
+            if (canViewAmounts) {
+                setCellValue(row, 0, taskData.get("task_id"), dataStyle);
+                setFlowTypeCell(row, 1, taskData.get("task_flow_type"), dataStyle);
+                setCellValue(row, 2, taskData.get("task_code"), dataStyle);
+                setCellValue(row, 3, taskData.get("task_title"), dataStyle);
+                setCellValue(row, 4, taskData.get("task_description"), dataStyle);
+                setTaskTypeCell(row, 5, taskData.get("task_type"), dataStyle);
+                setCellValue(row, 6, taskData.get("task_environment"), dataStyle);
+                setPriorityCell(row, 7, taskData.get("task_priority"), dataStyle);
+                setCellValue(row, 8, taskData.get("requester_name"), dataStyle);
+                setCellValue(row, 9, taskData.get("created_by_user"), dataStyle);
+                setCellValue(row, 10, taskData.get("updated_by_user"), dataStyle);
+                setCellValue(row, 11, taskData.get("server_origin"), dataStyle);
+                setCellValue(row, 12, taskData.get("system_module"), dataStyle);
+                setCellValue(row, 13, taskData.get("task_link"), dataStyle);
+                setCellValue(row, 14, taskData.get("meeting_link"), dataStyle);
+                setCellValue(row, 15, taskData.get("task_amount"), currencyStyle);
+                setCellValue(row, 16, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 17, taskData.get("has_delivery"), dataStyle);
+                setCellValue(row, 18, taskData.get("has_quote_in_billing"), dataStyle);
+                setDateTimeCell(row, 19, taskData.get("task_created_at"), dataStyle);
+                setDateTimeCell(row, 20, taskData.get("task_updated_at"), dataStyle);
+            } else {
+                setCellValue(row, 0, taskData.get("task_id"), dataStyle);
+                setFlowTypeCell(row, 1, taskData.get("task_flow_type"), dataStyle);
+                setCellValue(row, 2, taskData.get("task_code"), dataStyle);
+                setCellValue(row, 3, taskData.get("task_title"), dataStyle);
+                setCellValue(row, 4, taskData.get("task_description"), dataStyle);
+                setTaskTypeCell(row, 5, taskData.get("task_type"), dataStyle);
+                setCellValue(row, 6, taskData.get("task_environment"), dataStyle);
+                setPriorityCell(row, 7, taskData.get("task_priority"), dataStyle);
+                setCellValue(row, 8, taskData.get("requester_name"), dataStyle);
+                setCellValue(row, 9, taskData.get("created_by_user"), dataStyle);
+                setCellValue(row, 10, taskData.get("updated_by_user"), dataStyle);
+                setCellValue(row, 11, taskData.get("server_origin"), dataStyle);
+                setCellValue(row, 12, taskData.get("system_module"), dataStyle);
+                setCellValue(row, 13, taskData.get("task_link"), dataStyle);
+                setCellValue(row, 14, taskData.get("meeting_link"), dataStyle);
+                setCellValue(row, 15, taskData.get("has_subtasks"), dataStyle);
+                setCellValue(row, 16, taskData.get("has_delivery"), dataStyle);
+                setCellValue(row, 17, taskData.get("has_quote_in_billing"), dataStyle);
+                setDateTimeCell(row, 18, taskData.get("task_created_at"), dataStyle);
+                setDateTimeCell(row, 19, taskData.get("task_updated_at"), dataStyle);
+            }
+        }
+
+        if (canViewAmounts) {
+            setColumnWidths(sheet, new int[]{
+                    2500, 4000, 3500, 8000, 10000, 3500, 4000, 3000, 6000, 4000, 4000,
+                    4000, 4000, 8000, 8000, 3500, 3000, 3000, 4000, 4500, 4500
+            });
+        } else {
+            setColumnWidths(sheet, new int[]{
+                    2500, 4000, 3500, 8000, 10000, 3500, 4000, 3000, 6000, 4000, 4000,
+                    4000, 4000, 8000, 8000, 3000, 3000, 4000, 4500, 4500
+            });
+        }
+
+        for (int i = 1; i <= data.size(); i++) {
+            Row row = sheet.getRow(i);
+            if (row != null) {
+                row.setHeightInPoints(30);
+            }
+        }
+
+        headerRow.setHeightInPoints(35);
+
+        sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, data.size(), 0, headers.length - 1));
+
+        sheet.createFreezePane(0, 1);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        return outputStream.toByteArray();
+    }
+
     public byte[] generateTasksReport(List<Map<String, Object>> data, boolean canViewAmounts) throws IOException {
 
         Workbook workbook = new XSSFWorkbook();
@@ -298,6 +418,26 @@ public class ExcelReportUtils {
             String environment = value.toString();
             String translatedEnvironment = translateEnvironment(environment);
             cell.setCellValue(translatedEnvironment);
+        }
+    }
+
+    private void setDateTimeCell(Row row, int columnIndex, Object value, CellStyle style) {
+        Cell cell = row.createCell(columnIndex);
+        cell.setCellStyle(style);
+
+        if (value == null) {
+            cell.setCellValue("");
+        } else if (value instanceof java.sql.Timestamp) {
+            java.sql.Timestamp timestamp = (java.sql.Timestamp) value;
+            LocalDateTime dateTime = timestamp.toLocalDateTime();
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            cell.setCellValue(dateTime.format(formatter));
+        } else if (value instanceof LocalDateTime) {
+            LocalDateTime dateTime = (LocalDateTime) value;
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            cell.setCellValue(dateTime.format(formatter));
+        } else {
+            cell.setCellValue(value.toString());
         }
     }
 

@@ -71,9 +71,11 @@ public interface TaskService {
                                                                      Pageable pageable);
     
     byte[] exportTasksToExcel(String flowType) throws IOException;
-    
+
+    byte[] exportTasksOnlyToExcel(String flowType) throws IOException;
+
     byte[] exportGeneralReport() throws IOException;
-    
+
     byte[] exportGeneralReportForUser() throws IOException;
 
     void sendFinancialEmail(Long taskId, List<String> additionalEmails, List<String> additionalWhatsAppRecipients, boolean sendEmail, boolean sendWhatsApp);

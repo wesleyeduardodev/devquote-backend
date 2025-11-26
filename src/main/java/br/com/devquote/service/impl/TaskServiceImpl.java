@@ -756,6 +756,93 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public byte[] exportTasksOnlyToExcel(String flowType) throws IOException {
+        log.debug("EXCEL EXPORT TASKS ONLY STARTED with flowType={}", flowType);
+
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new BusinessException("Usuário não autenticado", "USER_NOT_AUTHENTICATED");
+        }
+
+        var profiles = currentUser.getActiveProfileCodes();
+        boolean canViewAmounts = profiles.contains("ADMIN") || profiles.contains("MANAGER");
+        log.debug("EXCEL EXPORT TASKS ONLY user={} canViewAmounts={}", currentUser.getUsername(), canViewAmounts);
+
+        String whereClause = "";
+        if (flowType != null && !flowType.equals("TODOS")) {
+            whereClause = "WHERE t.flow_type = '" + flowType + "' ";
+        }
+
+        String sql = """
+            SELECT
+                t.id as task_id,
+                t.code as task_code,
+                t.title as task_title,
+                t.description as task_description,
+                t.task_type as task_type,
+                t.environment as task_environment,
+                t.flow_type as task_flow_type,
+                t.priority as task_priority,
+                r.name as requester_name,
+                cb.username as created_by_user,
+                ub.username as updated_by_user,
+                t.server_origin,
+                t.system_module,
+                t.link as task_link,
+                t.meeting_link,
+                t.amount as task_amount,
+                t.has_sub_tasks as has_subtasks,
+                CASE WHEN EXISTS(SELECT 1 FROM delivery d WHERE d.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_delivery,
+                CASE WHEN EXISTS(SELECT 1 FROM billing_period_task bpt
+                                 WHERE bpt.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
+                t.created_at as task_created_at,
+                t.updated_at as task_updated_at
+            FROM task t
+            INNER JOIN requester r ON t.requester_id = r.id
+            LEFT JOIN users cb ON t.created_by = cb.id
+            LEFT JOIN users ub ON t.updated_by = ub.id
+            """ + whereClause + """
+            ORDER BY t.id desc
+            """;
+
+        Query query = entityManager.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = query.getResultList();
+
+        List<Map<String, Object>> data = results.stream().map(row -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("task_id", row[0]);
+            map.put("task_code", row[1]);
+            map.put("task_title", row[2]);
+            map.put("task_description", row[3]);
+            map.put("task_type", row[4]);
+            map.put("task_environment", row[5]);
+            map.put("task_flow_type", row[6]);
+            map.put("task_priority", row[7]);
+            map.put("requester_name", row[8]);
+            map.put("created_by_user", row[9]);
+            map.put("updated_by_user", row[10]);
+            map.put("server_origin", row[11]);
+            map.put("system_module", row[12]);
+            map.put("task_link", row[13]);
+            map.put("meeting_link", row[14]);
+            map.put("task_amount", row[15]);
+            map.put("has_subtasks", Boolean.TRUE.equals(row[16]) ? "Sim" : "Não");
+            map.put("has_delivery", row[17]);
+            map.put("has_quote_in_billing", row[18]);
+            map.put("task_created_at", row[19]);
+            map.put("task_updated_at", row[20]);
+            return map;
+        }).collect(Collectors.toList());
+
+        log.debug("EXCEL EXPORT TASKS ONLY generating file with {} records", data.size());
+        byte[] result = excelReportUtils.generateTasksOnlyReport(data, canViewAmounts);
+        log.debug("EXCEL EXPORT TASKS ONLY completed successfully");
+
+        return result;
+    }
+
+    @Override
     public byte[] exportGeneralReport() throws IOException {
         log.debug("GENERAL REPORT EXPORT STARTED");
 
