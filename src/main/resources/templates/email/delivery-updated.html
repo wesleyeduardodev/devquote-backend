@@ -206,6 +206,12 @@
                         <div class="info-label">Título:</div>
                         <div class="info-value" th:text="${quoteName}">Nome da tarefa</div>
                     </div>
+                    <div class="info-row" th:if="${!#strings.isEmpty(quoteDescription)}">
+                        <div class="info-label">Descrição:</div>
+                        <div class="info-value">
+                            <div class="notes-value" th:text="${quoteDescription}">Descrição da tarefa</div>
+                        </div>
+                    </div>
                     <div class="info-row" th:if="${taskAmountFormatted != null}">
                         <div class="info-label">Valor:</div>
                         <div class="info-value" th:text="${taskAmountFormatted}">R$ 0,00</div>

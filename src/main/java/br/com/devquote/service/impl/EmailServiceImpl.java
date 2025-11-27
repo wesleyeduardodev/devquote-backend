@@ -450,6 +450,7 @@ public class EmailServiceImpl implements EmailService {
         if (delivery.getTask() != null) {
             context.setVariable("quoteCode", delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "");
             context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
+            context.setVariable("quoteDescription", delivery.getTask().getDescription() != null ? delivery.getTask().getDescription() : "");
             context.setVariable("taskFlowType", translateFlowType(delivery.getTask().getFlowType()));
             context.setVariable("taskType", translateTaskType(delivery.getTask().getTaskType()));
             context.setVariable("taskEnvironment", translateEnvironment(delivery.getTask().getEnvironment()));
@@ -460,6 +461,7 @@ public class EmailServiceImpl implements EmailService {
         } else {
             context.setVariable("quoteCode", "");
             context.setVariable("quoteName", "");
+            context.setVariable("quoteDescription", "");
             context.setVariable("taskFlowType", "");
             context.setVariable("taskType", "");
             context.setVariable("taskEnvironment", "");
@@ -962,6 +964,9 @@ public class EmailServiceImpl implements EmailService {
         message.append("*📋 Dados da Tarefa*\n\n");
         message.append("*Código:* ").append(delivery.getTask() != null && delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "N/A").append("\n");
         message.append("*Título:* ").append(delivery.getTask() != null && delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "N/A").append("\n");
+        if (delivery.getTask() != null && delivery.getTask().getDescription() != null && !delivery.getTask().getDescription().trim().isEmpty()) {
+            message.append("*Descrição:*\n").append(delivery.getTask().getDescription()).append("\n");
+        }
         if (delivery.getTask() != null && delivery.getTask().getAmount() != null) {
             message.append("*Valor:* ").append(currencyFormatter.format(delivery.getTask().getAmount())).append("\n");
         }
@@ -983,6 +988,10 @@ public class EmailServiceImpl implements EmailService {
 
                 for (br.com.devquote.entity.DeliveryItem item : delivery.getItems()) {
                     message.append("*Projeto:* ").append(item.getProject() != null ? item.getProject().getName() : "N/A").append("\n");
+
+                    if (item.getNotes() != null && !item.getNotes().trim().isEmpty()) {
+                        message.append("*Observações:*\n").append(item.getNotes()).append("\n");
+                    }
 
                     if (item.getPullRequest() != null && !item.getPullRequest().trim().isEmpty()) {
                         message.append("*Link Entrega:* ").append(item.getPullRequest()).append("\n");
