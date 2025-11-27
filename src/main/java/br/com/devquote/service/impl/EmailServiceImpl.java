@@ -1015,6 +1015,10 @@ public class EmailServiceImpl implements EmailService {
                 for (br.com.devquote.entity.DeliveryOperationalItem item : delivery.getOperationalItems()) {
                     message.append("*Título:* ").append(item.getTitle() != null ? item.getTitle() : "N/A").append("\n");
 
+                    if (item.getDescription() != null && !item.getDescription().trim().isEmpty()) {
+                        message.append("*Descrição:*\n").append(item.getDescription()).append("\n");
+                    }
+
                     if (item.getStartedAt() != null) {
                         message.append("*Data de Início:* ").append(item.getStartedAt().format(dateFormatter)).append("\n");
                     }
