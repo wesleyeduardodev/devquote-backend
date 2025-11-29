@@ -110,7 +110,7 @@
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="10"/>
                 </textElement>
-                <text><![CDATA[Gestao Inteligente de Projetos de Desenvolvimento]]></text>
+                <text><![CDATA[Gestão Inteligente de Projetos de Desenvolvimento]]></text>
             </staticText>
 
             <!-- Report Title -->
@@ -119,7 +119,7 @@
                 <textElement textAlignment="Center">
                     <font fontName="DejaVu Sans" size="16" isBold="true"/>
                 </textElement>
-                <text><![CDATA[RELATORIO DE ENTREGAS OPERACIONAIS]]></text>
+                <text><![CDATA[RELATÓRIO DE ENTREGAS]]></text>
             </staticText>
 
             <!-- Generation Date -->
