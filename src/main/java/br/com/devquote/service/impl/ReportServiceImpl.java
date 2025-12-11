@@ -882,18 +882,21 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private JasperReport loadTaskJasperReport() throws JRException {
-        try {
-            ClassPathResource resource = new ClassPathResource("reports/task_report.jasper");
-            return (JasperReport) JRLoader.loadObject(resource.getInputStream());
-        } catch (Exception e) {
-            log.warn("Template Jasper compilado nao encontrado, compilando .jrxml", e);
+        ClassPathResource jasperResource = new ClassPathResource("reports/task_report.jasper");
+        if (jasperResource.exists()) {
             try {
-                ClassPathResource resourceJrxml = new ClassPathResource("reports/task_report.jrxml");
-                return JasperCompileManager.compileReport(resourceJrxml.getInputStream());
-            } catch (Exception ex) {
-                log.error("Erro ao compilar template Jasper da tarefa", ex);
-                throw new RuntimeException("Nao foi possivel carregar o template do relatorio de tarefa", ex);
+                return (JasperReport) JRLoader.loadObject(jasperResource.getInputStream());
+            } catch (Exception e) {
+                log.warn("Erro ao carregar template Jasper compilado, compilando .jrxml", e);
             }
+        }
+
+        try {
+            ClassPathResource jrxmlResource = new ClassPathResource("reports/task_report.jrxml");
+            return JasperCompileManager.compileReport(jrxmlResource.getInputStream());
+        } catch (Exception ex) {
+            log.error("Erro ao compilar template Jasper da tarefa", ex);
+            throw new RuntimeException("Nao foi possivel carregar o template do relatorio de tarefa", ex);
         }
     }
 
@@ -936,18 +939,21 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private JasperReport loadSubTasksJasperReport() throws JRException {
-        try {
-            ClassPathResource resource = new ClassPathResource("reports/task_subtasks_report.jasper");
-            return (JasperReport) JRLoader.loadObject(resource.getInputStream());
-        } catch (Exception e) {
-            log.warn("Template Jasper de subtarefas compilado nao encontrado, compilando .jrxml", e);
+        ClassPathResource jasperResource = new ClassPathResource("reports/task_subtasks_report.jasper");
+        if (jasperResource.exists()) {
             try {
-                ClassPathResource resourceJrxml = new ClassPathResource("reports/task_subtasks_report.jrxml");
-                return JasperCompileManager.compileReport(resourceJrxml.getInputStream());
-            } catch (Exception ex) {
-                log.error("Erro ao compilar template Jasper de subtarefas", ex);
-                throw new RuntimeException("Nao foi possivel carregar o template do relatorio de subtarefas", ex);
+                return (JasperReport) JRLoader.loadObject(jasperResource.getInputStream());
+            } catch (Exception e) {
+                log.warn("Erro ao carregar template Jasper de subtarefas compilado, compilando .jrxml", e);
             }
+        }
+
+        try {
+            ClassPathResource jrxmlResource = new ClassPathResource("reports/task_subtasks_report.jrxml");
+            return JasperCompileManager.compileReport(jrxmlResource.getInputStream());
+        } catch (Exception ex) {
+            log.error("Erro ao compilar template Jasper de subtarefas", ex);
+            throw new RuntimeException("Nao foi possivel carregar o template do relatorio de subtarefas", ex);
         }
     }
 
