@@ -116,6 +116,43 @@ public class ReportController {
                 .body(pdfBytes);
     }
 
+    @GetMapping("/delivery/{id}/pdf")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @Operation(summary = "Gerar relatório PDF de uma entrega",
+            description = "Gera um relatório PDF com os detalhes completos de uma entrega e seus itens.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Relatório gerado com sucesso",
+                    content = @Content(mediaType = "application/pdf",
+                            schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(responseCode = "401", description = "Não autorizado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Acesso negado", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Entrega não encontrada", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content)
+    })
+    public ResponseEntity<byte[]> generateDeliveryReport(
+            @Parameter(description = "ID da entrega") @PathVariable Long id) {
+
+        log.info("Requisição de relatório PDF da entrega ID: {}", id);
+
+        byte[] pdfBytes = reportService.generateDeliveryReportPdf(id);
+
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String filename = String.format("entrega_%d_%s.pdf", id, timestamp);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        log.info("Relatório PDF da entrega gerado com sucesso - Arquivo: {}, Tamanho: {} bytes",
+                filename, pdfBytes.length);
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
+
     private boolean hasRoleAdminOrManager(Authentication authentication) {
         if (authentication == null) return false;
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();

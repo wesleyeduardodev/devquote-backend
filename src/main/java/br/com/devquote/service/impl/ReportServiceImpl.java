@@ -1,11 +1,16 @@
 package br.com.devquote.service.impl;
 
 import br.com.devquote.dto.request.OperationalReportRequest;
+import br.com.devquote.dto.response.DeliveryItemReportRow;
+import br.com.devquote.dto.response.DeliveryReportData;
 import br.com.devquote.dto.response.OperationalReportData;
 import br.com.devquote.dto.response.OperationalReportRow;
 import br.com.devquote.dto.response.OperationalReportStatistics;
 import br.com.devquote.dto.response.SubTaskReportRow;
 import br.com.devquote.dto.response.TaskReportData;
+import br.com.devquote.entity.Delivery;
+import br.com.devquote.entity.DeliveryItem;
+import br.com.devquote.entity.DeliveryOperationalItem;
 import br.com.devquote.entity.SubTask;
 import br.com.devquote.entity.Task;
 import br.com.devquote.enums.Environment;
@@ -1016,6 +1021,248 @@ public class ReportServiceImpl implements ReportService {
             case "HIGH" -> "Alta";
             case "URGENT" -> "Urgente";
             default -> priority;
+        };
+    }
+
+    @Override
+    public byte[] generateDeliveryReportPdf(Long deliveryId) {
+        try {
+            log.info("Gerando relatorio PDF da entrega ID: {}", deliveryId);
+
+            Delivery delivery = deliveryRepository.findById(deliveryId)
+                    .orElseThrow(() -> new RuntimeException("Entrega nao encontrada: " + deliveryId));
+
+            DeliveryReportData reportData = buildDeliveryReportData(delivery);
+
+            JasperReport deliveryReport = loadDeliveryJasperReport();
+            Map<String, Object> deliveryParameters = buildDeliveryReportParameters(reportData);
+            JasperPrint deliveryPrint = JasperFillManager.fillReport(deliveryReport, deliveryParameters, new JREmptyDataSource());
+
+            List<JasperPrint> jasperPrints = new ArrayList<>();
+            jasperPrints.add(deliveryPrint);
+
+            if (!reportData.getItems().isEmpty()) {
+                boolean isDesenvolvimento = "DESENVOLVIMENTO".equals(reportData.getFlowType());
+                JasperReport itemsReport = isDesenvolvimento ? loadDeliveryItemsDevJasperReport() : loadDeliveryItemsOpJasperReport();
+                Map<String, Object> itemsParameters = buildDeliveryItemsReportParameters(reportData);
+                JRBeanCollectionDataSource itemsDataSource = new JRBeanCollectionDataSource(reportData.getItems());
+                JasperPrint itemsPrint = JasperFillManager.fillReport(itemsReport, itemsParameters, itemsDataSource);
+                jasperPrints.add(itemsPrint);
+            }
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            JRPdfExporter exporter = new JRPdfExporter();
+            exporter.setExporterInput(SimpleExporterInput.getInstance(jasperPrints));
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
+            SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
+            configuration.setCreatingBatchModeBookmarks(true);
+            exporter.setConfiguration(configuration);
+            exporter.exportReport();
+
+            byte[] pdfBytes = outputStream.toByteArray();
+
+            log.info("Relatorio PDF da entrega gerado com sucesso - Entrega: {} - {} itens", delivery.getId(), reportData.getTotalItems());
+
+            return pdfBytes;
+
+        } catch (Exception e) {
+            log.error("Erro ao gerar relatorio PDF da entrega", e);
+            throw new RuntimeException("Erro ao gerar relatorio: " + e.getMessage(), e);
+        }
+    }
+
+    private DeliveryReportData buildDeliveryReportData(Delivery delivery) {
+        List<DeliveryItemReportRow> itemRows = new ArrayList<>();
+        int order = 1;
+
+        if (delivery.getItems() != null) {
+            for (DeliveryItem item : delivery.getItems()) {
+                itemRows.add(DeliveryItemReportRow.builder()
+                        .id(item.getId())
+                        .order(order++)
+                        .itemType("Desenvolvimento")
+                        .projectName(item.getProject() != null ? item.getProject().getName() : null)
+                        .title(null)
+                        .description(null)
+                        .status(item.getStatus() != null ? item.getStatus().name() : null)
+                        .statusLabel(getDeliveryStatusLabel(item.getStatus() != null ? item.getStatus().name() : null))
+                        .branch(item.getBranch())
+                        .sourceBranch(item.getSourceBranch())
+                        .pullRequest(item.getPullRequest())
+                        .notes(item.getNotes())
+                        .startedAtFormatted(item.getStartedAt() != null ? item.getStartedAt().format(DATE_TIME_FORMATTER) : null)
+                        .finishedAtFormatted(item.getFinishedAt() != null ? item.getFinishedAt().format(DATE_TIME_FORMATTER) : null)
+                        .build());
+            }
+        }
+
+        if (delivery.getOperationalItems() != null) {
+            for (DeliveryOperationalItem item : delivery.getOperationalItems()) {
+                itemRows.add(DeliveryItemReportRow.builder()
+                        .id(item.getId())
+                        .order(order++)
+                        .itemType("Operacional")
+                        .projectName(null)
+                        .title(item.getTitle())
+                        .description(item.getDescription())
+                        .status(item.getStatus() != null ? item.getStatus().name() : null)
+                        .statusLabel(getOperationalStatusLabel(item.getStatus() != null ? item.getStatus().name() : null))
+                        .branch(null)
+                        .sourceBranch(null)
+                        .pullRequest(null)
+                        .notes(null)
+                        .startedAtFormatted(item.getStartedAt() != null ? item.getStartedAt().format(DATE_TIME_FORMATTER) : null)
+                        .finishedAtFormatted(item.getFinishedAt() != null ? item.getFinishedAt().format(DATE_TIME_FORMATTER) : null)
+                        .build());
+            }
+        }
+
+        Task task = delivery.getTask();
+
+        return DeliveryReportData.builder()
+                .id(delivery.getId())
+                .taskId(task.getId())
+                .taskCode(task.getCode())
+                .taskTitle(task.getTitle())
+                .flowType(delivery.getFlowType() != null ? delivery.getFlowType().name() : null)
+                .flowTypeLabel(getFlowTypeLabel(delivery.getFlowType() != null ? delivery.getFlowType().name() : null))
+                .environment(delivery.getEnvironment() != null ? delivery.getEnvironment().name() : null)
+                .environmentLabel(getEnvironmentLabel(delivery.getEnvironment() != null ? delivery.getEnvironment().name() : null))
+                .status(delivery.getStatus() != null ? delivery.getStatus().name() : null)
+                .statusLabel(getDeliveryStatusLabel(delivery.getStatus() != null ? delivery.getStatus().name() : null))
+                .notes(delivery.getNotes())
+                .startedAt(delivery.getStartedAt())
+                .startedAtFormatted(delivery.getStartedAt() != null ? delivery.getStartedAt().format(DATE_TIME_FORMATTER) : null)
+                .finishedAt(delivery.getFinishedAt())
+                .finishedAtFormatted(delivery.getFinishedAt() != null ? delivery.getFinishedAt().format(DATE_TIME_FORMATTER) : null)
+                .totalItems(itemRows.size())
+                .items(itemRows)
+                .createdAt(delivery.getCreatedAt())
+                .createdAtFormatted(delivery.getCreatedAt() != null ? delivery.getCreatedAt().format(DATE_TIME_FORMATTER) : null)
+                .updatedAt(delivery.getUpdatedAt())
+                .updatedAtFormatted(delivery.getUpdatedAt() != null ? delivery.getUpdatedAt().format(DATE_TIME_FORMATTER) : null)
+                .dataGeracao(LocalDateTime.now())
+                .build();
+    }
+
+    private JasperReport loadDeliveryJasperReport() throws JRException {
+        ClassPathResource jasperResource = new ClassPathResource("reports/delivery_report.jasper");
+        if (jasperResource.exists()) {
+            try {
+                return (JasperReport) JRLoader.loadObject(jasperResource.getInputStream());
+            } catch (Exception e) {
+                log.warn("Erro ao carregar template Jasper de entrega compilado, compilando .jrxml", e);
+            }
+        }
+
+        try {
+            ClassPathResource jrxmlResource = new ClassPathResource("reports/delivery_report.jrxml");
+            return JasperCompileManager.compileReport(jrxmlResource.getInputStream());
+        } catch (Exception ex) {
+            log.error("Erro ao compilar template Jasper de entrega", ex);
+            throw new RuntimeException("Nao foi possivel carregar o template do relatorio de entrega", ex);
+        }
+    }
+
+    private JasperReport loadDeliveryItemsDevJasperReport() throws JRException {
+        ClassPathResource jasperResource = new ClassPathResource("reports/delivery_items_dev_report.jasper");
+        if (jasperResource.exists()) {
+            try {
+                return (JasperReport) JRLoader.loadObject(jasperResource.getInputStream());
+            } catch (Exception e) {
+                log.warn("Erro ao carregar template Jasper de itens dev compilado, compilando .jrxml", e);
+            }
+        }
+
+        try {
+            ClassPathResource jrxmlResource = new ClassPathResource("reports/delivery_items_dev_report.jrxml");
+            return JasperCompileManager.compileReport(jrxmlResource.getInputStream());
+        } catch (Exception ex) {
+            log.error("Erro ao compilar template Jasper de itens dev", ex);
+            throw new RuntimeException("Nao foi possivel carregar o template do relatorio de itens dev", ex);
+        }
+    }
+
+    private JasperReport loadDeliveryItemsOpJasperReport() throws JRException {
+        ClassPathResource jasperResource = new ClassPathResource("reports/delivery_items_op_report.jasper");
+        if (jasperResource.exists()) {
+            try {
+                return (JasperReport) JRLoader.loadObject(jasperResource.getInputStream());
+            } catch (Exception e) {
+                log.warn("Erro ao carregar template Jasper de itens op compilado, compilando .jrxml", e);
+            }
+        }
+
+        try {
+            ClassPathResource jrxmlResource = new ClassPathResource("reports/delivery_items_op_report.jrxml");
+            return JasperCompileManager.compileReport(jrxmlResource.getInputStream());
+        } catch (Exception ex) {
+            log.error("Erro ao compilar template Jasper de itens op", ex);
+            throw new RuntimeException("Nao foi possivel carregar o template do relatorio de itens op", ex);
+        }
+    }
+
+    private Map<String, Object> buildDeliveryReportParameters(DeliveryReportData data) {
+        Map<String, Object> parameters = new HashMap<>();
+
+        parameters.put("id", data.getId());
+        parameters.put("taskId", data.getTaskId());
+        parameters.put("taskCode", data.getTaskCode());
+        parameters.put("taskTitle", data.getTaskTitle());
+        parameters.put("flowTypeLabel", data.getFlowTypeLabel());
+        parameters.put("environmentLabel", data.getEnvironmentLabel());
+        parameters.put("statusLabel", data.getStatusLabel());
+        parameters.put("notes", data.getNotes());
+        parameters.put("startedAtFormatted", data.getStartedAtFormatted());
+        parameters.put("finishedAtFormatted", data.getFinishedAtFormatted());
+        parameters.put("totalItems", data.getTotalItems());
+        parameters.put("createdAtFormatted", data.getCreatedAtFormatted());
+        parameters.put("updatedAtFormatted", data.getUpdatedAtFormatted());
+        parameters.put("dataGeracao", data.getDataGeracao());
+        parameters.put("copyright", data.getCopyright());
+        parameters.put("sistemaTagline", data.getSistemaTagline());
+        parameters.put("desenvolvedorEmail", data.getDesenvolvedorEmail());
+        parameters.put("desenvolvedorTelefone", data.getDesenvolvedorTelefone());
+
+        return parameters;
+    }
+
+    private Map<String, Object> buildDeliveryItemsReportParameters(DeliveryReportData data) {
+        Map<String, Object> parameters = new HashMap<>();
+
+        parameters.put("taskCode", data.getTaskCode());
+        parameters.put("taskTitle", data.getTaskTitle());
+        parameters.put("totalItems", data.getTotalItems());
+        parameters.put("flowTypeLabel", data.getFlowTypeLabel());
+        parameters.put("copyright", data.getCopyright());
+        parameters.put("desenvolvedorEmail", data.getDesenvolvedorEmail());
+        parameters.put("desenvolvedorTelefone", data.getDesenvolvedorTelefone());
+
+        return parameters;
+    }
+
+    private String getDeliveryStatusLabel(String status) {
+        if (status == null) return "-";
+        return switch (status) {
+            case "PENDING" -> "Pendente";
+            case "DEVELOPMENT" -> "Em Desenvolvimento";
+            case "HOMOLOGATION" -> "Em Homologacao";
+            case "APPROVED" -> "Aprovado";
+            case "REJECTED" -> "Rejeitado";
+            case "PRODUCTION" -> "Em Producao";
+            case "DELIVERED" -> "Entregue";
+            case "CANCELLED" -> "Cancelado";
+            default -> status;
+        };
+    }
+
+    private String getOperationalStatusLabel(String status) {
+        if (status == null) return "-";
+        return switch (status) {
+            case "PENDING" -> "Pendente";
+            case "DELIVERED" -> "Entregue";
+            case "CANCELLED" -> "Cancelado";
+            default -> status;
         };
     }
 }

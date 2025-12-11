@@ -7,4 +7,6 @@ public interface ReportService {
     byte[] generateOperationalReportPdf(OperationalReportRequest request);
 
     byte[] generateTaskReportPdf(Long taskId, boolean showValues);
+
+    byte[] generateDeliveryReportPdf(Long deliveryId);
 }
