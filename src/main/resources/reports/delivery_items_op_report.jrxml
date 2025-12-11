@@ -101,7 +101,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="400" y="65" width="75" height="15" forecolor="#FFFFFF" uuid="c9d0e1f2-a3b4-5678-90ab-cd02123456789"/>
+                <reportElement x="400" y="65" width="75" height="15" forecolor="#FFFFFF" uuid="c9d0e1f2-a3b4-5678-90ab-cd0212345678"/>
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
@@ -109,7 +109,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="475" y="65" width="75" height="15" forecolor="#FFFFFF" uuid="d0e1f2a3-b4c5-6789-0abc-d0212345678"/>
+                <reportElement x="475" y="65" width="75" height="15" forecolor="#FFFFFF" uuid="d0e1f2a3-b4c5-6789-0abc-d02123456780"/>
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
