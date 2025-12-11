@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="task_subtasks_report"
+              pageWidth="595"
+              pageHeight="842"
+              columnWidth="555"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20"
+              uuid="c2d3e4f5-a6b7-8901-bcde-f12345678901">
+
+    <property name="ireport.zoom" value="1.0"/>
+    <property name="ireport.x" value="0"/>
+    <property name="ireport.y" value="0"/>
+
+    <style name="TableHeader" backcolor="#5B6FE8" forecolor="#FFFFFF" fontName="DejaVu Sans" fontSize="9" isBold="true"/>
+    <style name="TableRow" fontName="DejaVu Sans" fontSize="8"/>
+    <style name="TableRowAlt" backcolor="#F9FAFB" fontName="DejaVu Sans" fontSize="8"/>
+
+    <parameter name="taskCode" class="java.lang.String"/>
+    <parameter name="taskTitle" class="java.lang.String"/>
+    <parameter name="subTasksCount" class="java.lang.Integer"/>
+    <parameter name="subTasksTotalAmountFormatted" class="java.lang.String"/>
+    <parameter name="showValues" class="java.lang.Boolean"/>
+    <parameter name="copyright" class="java.lang.String"/>
+    <parameter name="desenvolvedorEmail" class="java.lang.String"/>
+    <parameter name="desenvolvedorTelefone" class="java.lang.String"/>
+
+    <field name="order" class="java.lang.Integer"/>
+    <field name="title" class="java.lang.String"/>
+    <field name="description" class="java.lang.String"/>
+    <field name="amountFormatted" class="java.lang.String"/>
+
+    <variable name="rowIndex" class="java.lang.Integer" calculation="Count">
+        <variableExpression><![CDATA[Boolean.TRUE]]></variableExpression>
+        <initialValueExpression><![CDATA[0]]></initialValueExpression>
+    </variable>
+
+    <title>
+        <band height="80" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="60" backcolor="#5B6FE8" uuid="a1b2c3d4-e5f6-7890-1234-567890abcdef"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="0" y="10" width="555" height="20" forecolor="#FFFFFF" uuid="b2c3d4e5-f6a7-8901-2345-67890abcdef0"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="14" isBold="true"/>
+                </textElement>
+                <text><![CDATA[SUBTAREFAS]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="0" y="32" width="555" height="12" forecolor="#FFFFFF" uuid="c3d4e5f6-a7b8-9012-3456-7890abcdef01"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Tarefa: " + $P{taskCode} + " - " + $P{taskTitle}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="46" width="555" height="12" forecolor="#FFFFFF" uuid="d4e5f6a7-b8c9-0123-4567-890abcdef012"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Total de Subtarefas: " + $P{subTasksCount} + ($P{showValues} ? "  |  Valor Total: " + $P{subTasksTotalAmountFormatted} : "")]]></textFieldExpression>
+            </textField>
+
+            <rectangle>
+                <reportElement x="0" y="65" width="555" height="15" backcolor="#4B5EE4" uuid="e5f6a7b8-c9d0-1234-5678-90abcdef0123"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="5" y="65" width="30" height="15" forecolor="#FFFFFF" uuid="f6a7b8c9-d0e1-2345-6789-0abcdef01234"/>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[#]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="35" y="65" width="420" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcdef012345">
+                    <printWhenExpression><![CDATA[!$P{showValues}]]></printWhenExpression>
+                </reportElement>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Titulo / Descricao]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="35" y="65" width="420" height="15" forecolor="#FFFFFF" uuid="b8c9d0e1-f2a3-4567-890a-bcdef0123456">
+                    <printWhenExpression><![CDATA[$P{showValues}]]></printWhenExpression>
+                </reportElement>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Titulo / Descricao]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="455" y="65" width="95" height="15" forecolor="#FFFFFF" uuid="c9d0e1f2-a3b4-5678-90ab-cdef01234567">
+                    <printWhenExpression><![CDATA[$P{showValues}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Valor]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <detail>
+        <band height="60" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="60" backcolor="#F9FAFB" uuid="d0e1f2a3-b4c5-6789-0abc-def012345678">
+                    <printWhenExpression><![CDATA[$V{rowIndex} % 2 == 0]]></printWhenExpression>
+                </reportElement>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <textField>
+                <reportElement x="5" y="5" width="25" height="14" uuid="e1f2a3b4-c5d6-7890-abcd-ef0123456789"/>
+                <textElement verticalAlignment="Top">
+                    <font fontName="DejaVu Sans" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{order}]]></textFieldExpression>
+            </textField>
+
+            <textField textAdjust="StretchHeight">
+                <reportElement x="35" y="5" width="415" height="14" uuid="f2a3b4c5-d6e7-8901-bcde-f01234567890">
+                    <printWhenExpression><![CDATA[$P{showValues}]]></printWhenExpression>
+                </reportElement>
+                <textElement verticalAlignment="Top">
+                    <font fontName="DejaVu Sans" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
+            </textField>
+
+            <textField textAdjust="StretchHeight">
+                <reportElement x="35" y="5" width="515" height="14" uuid="a3b4c5d6-e7f8-9012-cdef-012345678901">
+                    <printWhenExpression><![CDATA[!$P{showValues}]]></printWhenExpression>
+                </reportElement>
+                <textElement verticalAlignment="Top">
+                    <font fontName="DejaVu Sans" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="455" y="5" width="95" height="14" uuid="b4c5d6e7-f890-1234-def0-123456789012">
+                    <printWhenExpression><![CDATA[$P{showValues}]]></printWhenExpression>
+                </reportElement>
+                <textElement textAlignment="Right" verticalAlignment="Top">
+                    <font fontName="DejaVu Sans" size="9" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{amountFormatted}]]></textFieldExpression>
+            </textField>
+
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+                <reportElement x="35" y="22" width="515" height="35" uuid="c5d6e7f8-9012-3456-ef01-234567890123">
+                    <printWhenExpression><![CDATA[$F{description} != null && !$F{description}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement verticalAlignment="Top" markup="none">
+                    <font fontName="DejaVu Sans" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{description}]]></textFieldExpression>
+            </textField>
+
+            <line>
+                <reportElement x="0" y="59" width="555" height="1" forecolor="#E5E7EB" uuid="d6e7f890-1234-5678-f012-345678901234"/>
+            </line>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="20">
+            <textField>
+                <reportElement x="450" y="5" width="80" height="10" uuid="e7f89012-3456-7890-0123-456789012345"/>
+                <textElement textAlignment="Right">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Pagina " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement x="530" y="5" width="25" height="10" uuid="f8901234-5678-9012-1234-567890123456"/>
+                <textElement>
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[" de " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <lastPageFooter>
+        <band height="70">
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="70" backcolor="#F9FAFB" uuid="a9012345-6789-0123-2345-678901234567"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+            <line>
+                <reportElement x="0" y="0" width="555" height="1" forecolor="#5B6FE8" uuid="b0123456-7890-1234-3456-789012345678"/>
+                <graphicElement>
+                    <pen lineWidth="2"/>
+                </graphicElement>
+            </line>
+            <staticText>
+                <reportElement x="0" y="10" width="555" height="15" uuid="c1234567-8901-2345-4567-890123456789"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="12" isBold="true"/>
+                </textElement>
+                <text><![CDATA[DevQuote]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="25" width="555" height="12" forecolor="#666666" uuid="d2345678-9012-3456-5678-901234567890"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="8" isItalic="true"/>
+                </textElement>
+                <text><![CDATA[Solucao Empresarial para Desenvolvedores]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="42" width="555" height="10" forecolor="#333333" uuid="e3456789-0123-4567-6789-012345678901"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA["+55 " + $P{desenvolvedorTelefone} + "  |  " + $P{desenvolvedorEmail}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="55" width="555" height="10" forecolor="#999999" uuid="f4567890-1234-5678-7890-123456789012"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="6"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{copyright}]]></textFieldExpression>
+            </textField>
+        </band>
+    </lastPageFooter>
+</jasperReport>

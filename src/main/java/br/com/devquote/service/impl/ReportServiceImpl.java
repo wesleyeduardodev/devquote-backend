@@ -4,12 +4,20 @@ import br.com.devquote.dto.request.OperationalReportRequest;
 import br.com.devquote.dto.response.OperationalReportData;
 import br.com.devquote.dto.response.OperationalReportRow;
 import br.com.devquote.dto.response.OperationalReportStatistics;
+import br.com.devquote.dto.response.SubTaskReportRow;
+import br.com.devquote.dto.response.TaskReportData;
+import br.com.devquote.entity.SubTask;
+import br.com.devquote.entity.Task;
 import br.com.devquote.enums.Environment;
+import br.com.devquote.repository.BillingPeriodTaskRepository;
 import br.com.devquote.repository.DeliveryRepository;
+import br.com.devquote.repository.SubTaskRepository;
+import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JREmptyDataSource;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -17,10 +25,18 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.util.JRLoader;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
+import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
+import java.io.ByteArrayOutputStream;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -30,6 +46,12 @@ import java.util.*;
 public class ReportServiceImpl implements ReportService {
 
     private final DeliveryRepository deliveryRepository;
+    private final TaskRepository taskRepository;
+    private final SubTaskRepository subTaskRepository;
+    private final BillingPeriodTaskRepository billingPeriodTaskRepository;
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
     @Override
     public byte[] generateOperationalReportPdf(OperationalReportRequest request) {
@@ -745,5 +767,249 @@ public class ReportServiceImpl implements ReportService {
         }
 
         return parameters;
+    }
+
+    @Override
+    public byte[] generateTaskReportPdf(Long taskId, boolean showValues) {
+        try {
+            log.info("Gerando relatorio PDF da tarefa ID: {} - showValues: {}", taskId, showValues);
+
+            Task task = taskRepository.findById(taskId)
+                    .orElseThrow(() -> new RuntimeException("Tarefa nao encontrada: " + taskId));
+
+            List<SubTask> subTasks = subTaskRepository.findByTaskId(taskId);
+
+            TaskReportData reportData = buildTaskReportData(task, subTasks, showValues);
+
+            JasperReport taskReport = loadTaskJasperReport();
+            Map<String, Object> taskParameters = buildTaskReportParameters(reportData);
+            JasperPrint taskPrint = JasperFillManager.fillReport(taskReport, taskParameters, new JREmptyDataSource());
+
+            List<JasperPrint> jasperPrints = new ArrayList<>();
+            jasperPrints.add(taskPrint);
+
+            if (!subTasks.isEmpty()) {
+                JasperReport subTasksReport = loadSubTasksJasperReport();
+                Map<String, Object> subTasksParameters = buildSubTasksReportParameters(reportData);
+                JRBeanCollectionDataSource subTasksDataSource = new JRBeanCollectionDataSource(reportData.getSubTasks());
+                JasperPrint subTasksPrint = JasperFillManager.fillReport(subTasksReport, subTasksParameters, subTasksDataSource);
+                jasperPrints.add(subTasksPrint);
+            }
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            JRPdfExporter exporter = new JRPdfExporter();
+            exporter.setExporterInput(SimpleExporterInput.getInstance(jasperPrints));
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(outputStream));
+            SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
+            configuration.setCreatingBatchModeBookmarks(true);
+            exporter.setConfiguration(configuration);
+            exporter.exportReport();
+
+            byte[] pdfBytes = outputStream.toByteArray();
+
+            log.info("Relatorio PDF da tarefa gerado com sucesso - Tarefa: {} - {} subtarefas", task.getCode(), subTasks.size());
+
+            return pdfBytes;
+
+        } catch (Exception e) {
+            log.error("Erro ao gerar relatorio PDF da tarefa", e);
+            throw new RuntimeException("Erro ao gerar relatorio: " + e.getMessage(), e);
+        }
+    }
+
+    private TaskReportData buildTaskReportData(Task task, List<SubTask> subTasks, boolean showValues) {
+        boolean hasDelivery = deliveryRepository.existsByTaskId(task.getId());
+        boolean hasQuoteInBilling = billingPeriodTaskRepository.existsByTaskId(task.getId());
+
+        BigDecimal totalAmount = task.getAmount() != null ? task.getAmount() : BigDecimal.ZERO;
+        BigDecimal subTasksTotalAmount = subTasks.stream()
+                .map(SubTask::getAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        List<SubTaskReportRow> subTaskRows = new ArrayList<>();
+        int order = 1;
+        for (SubTask subTask : subTasks) {
+            subTaskRows.add(SubTaskReportRow.builder()
+                    .id(subTask.getId())
+                    .title(subTask.getTitle())
+                    .description(subTask.getDescription())
+                    .amount(subTask.getAmount())
+                    .amountFormatted(subTask.getAmount() != null ? CURRENCY_FORMATTER.format(subTask.getAmount()) : "-")
+                    .order(order++)
+                    .build());
+        }
+
+        return TaskReportData.builder()
+                .id(task.getId())
+                .code(task.getCode())
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .flowType(task.getFlowType() != null ? task.getFlowType().name() : null)
+                .flowTypeLabel(getFlowTypeLabel(task.getFlowType() != null ? task.getFlowType().name() : null))
+                .taskType(task.getTaskType())
+                .taskTypeLabel(getTaskTypeLabel(task.getTaskType()))
+                .environment(task.getEnvironment() != null ? task.getEnvironment().name() : null)
+                .environmentLabel(getEnvironmentLabel(task.getEnvironment() != null ? task.getEnvironment().name() : null))
+                .priority(task.getPriority())
+                .priorityLabel(getPriorityLabel(task.getPriority()))
+                .systemModule(task.getSystemModule())
+                .serverOrigin(task.getServerOrigin())
+                .link(task.getLink())
+                .meetingLink(task.getMeetingLink())
+                .requesterName(task.getRequester() != null ? task.getRequester().getName() : null)
+                .requesterPhone(task.getRequester() != null ? task.getRequester().getPhone() : null)
+                .requesterEmail(task.getRequester() != null ? task.getRequester().getEmail() : null)
+                .hasDelivery(hasDelivery)
+                .hasDeliveryLabel(hasDelivery ? "Sim" : "Nao")
+                .hasQuoteInBilling(hasQuoteInBilling)
+                .hasQuoteInBillingLabel(hasQuoteInBilling ? "Sim" : "Nao")
+                .totalAmount(totalAmount)
+                .totalAmountFormatted(CURRENCY_FORMATTER.format(totalAmount))
+                .showValues(showValues)
+                .subTasksCount(subTasks.size())
+                .subTasks(subTaskRows)
+                .subTasksTotalAmount(subTasksTotalAmount)
+                .subTasksTotalAmountFormatted(CURRENCY_FORMATTER.format(subTasksTotalAmount))
+                .createdAt(task.getCreatedAt())
+                .createdAtFormatted(task.getCreatedAt() != null ? task.getCreatedAt().format(DATE_TIME_FORMATTER) : null)
+                .updatedAt(task.getUpdatedAt())
+                .updatedAtFormatted(task.getUpdatedAt() != null ? task.getUpdatedAt().format(DATE_TIME_FORMATTER) : null)
+                .createdByUserName(task.getCreatedBy() != null ? task.getCreatedBy().getName() : null)
+                .updatedByUserName(task.getUpdatedBy() != null ? task.getUpdatedBy().getName() : null)
+                .dataGeracao(LocalDateTime.now())
+                .build();
+    }
+
+    private JasperReport loadTaskJasperReport() throws JRException {
+        try {
+            ClassPathResource resource = new ClassPathResource("reports/task_report.jasper");
+            return (JasperReport) JRLoader.loadObject(resource.getInputStream());
+        } catch (Exception e) {
+            log.warn("Template Jasper compilado nao encontrado, compilando .jrxml", e);
+            try {
+                ClassPathResource resourceJrxml = new ClassPathResource("reports/task_report.jrxml");
+                return JasperCompileManager.compileReport(resourceJrxml.getInputStream());
+            } catch (Exception ex) {
+                log.error("Erro ao compilar template Jasper da tarefa", ex);
+                throw new RuntimeException("Nao foi possivel carregar o template do relatorio de tarefa", ex);
+            }
+        }
+    }
+
+    private Map<String, Object> buildTaskReportParameters(TaskReportData data) {
+        Map<String, Object> parameters = new HashMap<>();
+
+        parameters.put("id", data.getId());
+        parameters.put("code", data.getCode());
+        parameters.put("title", data.getTitle());
+        parameters.put("description", data.getDescription());
+        parameters.put("flowTypeLabel", data.getFlowTypeLabel());
+        parameters.put("taskTypeLabel", data.getTaskTypeLabel());
+        parameters.put("environmentLabel", data.getEnvironmentLabel());
+        parameters.put("priorityLabel", data.getPriorityLabel());
+        parameters.put("systemModule", data.getSystemModule());
+        parameters.put("serverOrigin", data.getServerOrigin());
+        parameters.put("link", data.getLink());
+        parameters.put("meetingLink", data.getMeetingLink());
+        parameters.put("requesterName", data.getRequesterName());
+        parameters.put("requesterPhone", data.getRequesterPhone());
+        parameters.put("requesterEmail", data.getRequesterEmail());
+        parameters.put("hasDeliveryLabel", data.getHasDeliveryLabel());
+        parameters.put("hasQuoteInBillingLabel", data.getHasQuoteInBillingLabel());
+        parameters.put("totalAmountFormatted", data.getTotalAmountFormatted());
+        parameters.put("showValues", data.getShowValues());
+        parameters.put("subTasksCount", data.getSubTasksCount());
+        parameters.put("subTasksDataSource", new JRBeanCollectionDataSource(data.getSubTasks()));
+        parameters.put("subTasksTotalAmountFormatted", data.getSubTasksTotalAmountFormatted());
+        parameters.put("createdAtFormatted", data.getCreatedAtFormatted());
+        parameters.put("updatedAtFormatted", data.getUpdatedAtFormatted());
+        parameters.put("createdByUserName", data.getCreatedByUserName());
+        parameters.put("updatedByUserName", data.getUpdatedByUserName());
+        parameters.put("dataGeracao", data.getDataGeracao());
+        parameters.put("copyright", data.getCopyright());
+        parameters.put("sistemaTagline", data.getSistemaTagline());
+        parameters.put("desenvolvedorEmail", data.getDesenvolvedorEmail());
+        parameters.put("desenvolvedorTelefone", data.getDesenvolvedorTelefone());
+
+        return parameters;
+    }
+
+    private JasperReport loadSubTasksJasperReport() throws JRException {
+        try {
+            ClassPathResource resource = new ClassPathResource("reports/task_subtasks_report.jasper");
+            return (JasperReport) JRLoader.loadObject(resource.getInputStream());
+        } catch (Exception e) {
+            log.warn("Template Jasper de subtarefas compilado nao encontrado, compilando .jrxml", e);
+            try {
+                ClassPathResource resourceJrxml = new ClassPathResource("reports/task_subtasks_report.jrxml");
+                return JasperCompileManager.compileReport(resourceJrxml.getInputStream());
+            } catch (Exception ex) {
+                log.error("Erro ao compilar template Jasper de subtarefas", ex);
+                throw new RuntimeException("Nao foi possivel carregar o template do relatorio de subtarefas", ex);
+            }
+        }
+    }
+
+    private Map<String, Object> buildSubTasksReportParameters(TaskReportData data) {
+        Map<String, Object> parameters = new HashMap<>();
+
+        parameters.put("taskCode", data.getCode());
+        parameters.put("taskTitle", data.getTitle());
+        parameters.put("subTasksCount", data.getSubTasksCount());
+        parameters.put("subTasksTotalAmountFormatted", data.getSubTasksTotalAmountFormatted());
+        parameters.put("showValues", data.getShowValues());
+        parameters.put("copyright", data.getCopyright());
+        parameters.put("desenvolvedorEmail", data.getDesenvolvedorEmail());
+        parameters.put("desenvolvedorTelefone", data.getDesenvolvedorTelefone());
+
+        return parameters;
+    }
+
+    private String getFlowTypeLabel(String flowType) {
+        if (flowType == null) return "-";
+        return switch (flowType) {
+            case "OPERACIONAL" -> "Operacional";
+            case "DESENVOLVIMENTO" -> "Desenvolvimento";
+            default -> flowType;
+        };
+    }
+
+    private String getTaskTypeLabel(String taskType) {
+        if (taskType == null) return "-";
+        return switch (taskType) {
+            case "BUG" -> "Bug";
+            case "ENHANCEMENT" -> "Melhoria";
+            case "NEW_FEATURE" -> "Nova Funcionalidade";
+            case "BACKUP" -> "Backup";
+            case "DEPLOY" -> "Deploy";
+            case "LOGS" -> "Logs";
+            case "DATABASE_APPLICATION" -> "Aplicacao de Banco";
+            case "NEW_SERVER" -> "Novo Servidor";
+            case "MONITORING" -> "Monitoramento";
+            case "SUPPORT" -> "Suporte";
+            default -> taskType;
+        };
+    }
+
+    private String getEnvironmentLabel(String environment) {
+        if (environment == null) return null;
+        return switch (environment) {
+            case "DESENVOLVIMENTO" -> "Desenvolvimento";
+            case "HOMOLOGACAO" -> "Homologacao";
+            case "PRODUCAO" -> "Producao";
+            default -> environment;
+        };
+    }
+
+    private String getPriorityLabel(String priority) {
+        if (priority == null) return "Media";
+        return switch (priority) {
+            case "LOW" -> "Baixa";
+            case "MEDIUM" -> "Media";
+            case "HIGH" -> "Alta";
+            case "URGENT" -> "Urgente";
+            default -> priority;
+        };
     }
 }
