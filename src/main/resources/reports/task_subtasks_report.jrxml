@@ -89,19 +89,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="35" y="65" width="420" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcdef012345">
-                    <printWhenExpression><![CDATA[!$P{showValues}]]></printWhenExpression>
-                </reportElement>
-                <textElement verticalAlignment="Middle">
-                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
-                </textElement>
-                <text><![CDATA[Titulo / Descricao]]></text>
-            </staticText>
-
-            <staticText>
-                <reportElement x="35" y="65" width="420" height="15" forecolor="#FFFFFF" uuid="b8c9d0e1-f2a3-4567-890a-bcdef0123456">
-                    <printWhenExpression><![CDATA[$P{showValues}]]></printWhenExpression>
-                </reportElement>
+                <reportElement x="35" y="65" width="420" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcdef012345"/>
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
@@ -121,9 +109,9 @@
     </title>
 
     <detail>
-        <band height="60" splitType="Stretch">
+        <band height="25" splitType="Stretch">
             <rectangle>
-                <reportElement x="0" y="0" width="555" height="60" backcolor="#F9FAFB" uuid="d0e1f2a3-b4c5-6789-0abc-def012345678">
+                <reportElement stretchType="ContainerHeight" x="0" y="0" width="555" height="25" backcolor="#F9FAFB" uuid="d0e1f2a3-b4c5-6789-0abc-def012345678">
                     <printWhenExpression><![CDATA[$V{rowIndex} % 2 == 0]]></printWhenExpression>
                 </reportElement>
                 <graphicElement>
@@ -168,19 +156,23 @@
                 </textElement>
                 <textFieldExpression><![CDATA[$F{amountFormatted}]]></textFieldExpression>
             </textField>
+        </band>
+
+        <band height="20" splitType="Stretch">
+            <printWhenExpression><![CDATA[$F{description} != null && !$F{description}.isEmpty()]]></printWhenExpression>
 
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement x="35" y="22" width="515" height="35" uuid="c5d6e7f8-9012-3456-ef01-234567890123">
-                    <printWhenExpression><![CDATA[$F{description} != null && !$F{description}.isEmpty()]]></printWhenExpression>
-                </reportElement>
+                <reportElement x="35" y="0" width="515" height="15" uuid="c5d6e7f8-9012-3456-ef01-234567890123"/>
                 <textElement verticalAlignment="Top" markup="none">
                     <font fontName="DejaVu Sans" size="8"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{description}]]></textFieldExpression>
             </textField>
+        </band>
 
+        <band height="10" splitType="Stretch">
             <line>
-                <reportElement x="0" y="59" width="555" height="1" forecolor="#E5E7EB" uuid="d6e7f890-1234-5678-f012-345678901234"/>
+                <reportElement positionType="Float" x="0" y="5" width="555" height="1" forecolor="#E5E7EB" uuid="d6e7f890-1234-5678-f012-345678901234"/>
             </line>
         </band>
     </detail>
