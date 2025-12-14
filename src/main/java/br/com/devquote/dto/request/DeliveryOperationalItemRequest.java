@@ -19,7 +19,6 @@ public class DeliveryOperationalItemRequest {
     @Size(max = 255, message = "Title must be at most 255 characters")
     private String title;
 
-    @Size(max = 5000, message = "Description must be at most 5000 characters")
     private String description;
 
     @NotBlank(message = "Status is required")
