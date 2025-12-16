@@ -51,8 +51,8 @@ public class HtmlImageExtractor {
         while (matcher.find()) {
             if (matcher.start() > lastEnd) {
                 String textBefore = html.substring(lastEnd, matcher.start());
-                String cleanText = stripHtmlTags(textBefore);
-                if (!cleanText.isBlank()) {
+                String cleanText = cleanHtmlForPdf(textBefore);
+                if (cleanText != null && !cleanText.isBlank()) {
                     blocks.add(ContentBlock.textBlock(cleanText.trim(), order++));
                 }
             }
@@ -68,8 +68,8 @@ public class HtmlImageExtractor {
 
         if (lastEnd < html.length()) {
             String textAfter = html.substring(lastEnd);
-            String cleanText = stripHtmlTags(textAfter);
-            if (!cleanText.isBlank()) {
+            String cleanText = cleanHtmlForPdf(textAfter);
+            if (cleanText != null && !cleanText.isBlank()) {
                 blocks.add(ContentBlock.textBlock(cleanText.trim(), order));
             }
         }
@@ -104,6 +104,29 @@ public class HtmlImageExtractor {
         String decoded = decodeHtmlEntities(noTags);
 
         return decoded.replaceAll("\\s+", " ").trim();
+    }
+
+    public static String cleanHtmlForPdf(String html) {
+        if (html == null || html.isEmpty()) {
+            return html;
+        }
+
+        String result = html.replaceAll("<img[^>]*>", "");
+
+        result = result.replaceAll("<(p|div|span|br)[^>]*>", "");
+        result = result.replaceAll("</(p|div|span)>", " ");
+        result = result.replaceAll("<br\\s*/?>", "<br/>");
+
+        result = result.replaceAll("<strong>", "<b>");
+        result = result.replaceAll("</strong>", "</b>");
+        result = result.replaceAll("<em>", "<i>");
+        result = result.replaceAll("</em>", "</i>");
+
+        result = decodeHtmlEntities(result);
+
+        result = result.replaceAll("\\s+", " ").trim();
+
+        return result;
     }
 
     public static String decodeHtmlEntities(String text) {

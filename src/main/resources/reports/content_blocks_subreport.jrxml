@@ -22,7 +22,7 @@
         <band height="20" splitType="Stretch">
             <printWhenExpression><![CDATA["TEXT".equals($F{type})]]></printWhenExpression>
 
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+            <textField textAdjust="StretchHeight" isBlankWhenNull="true" markup="html">
                 <reportElement x="0" y="0" width="545" height="15" uuid="a1b2c3d4-e5f6-7890-1234-567890123456"/>
                 <textElement>
                     <font fontName="DejaVu Sans" size="9"/>
