@@ -161,11 +161,11 @@
             </textField>
         </band>
 
-        <band height="180" splitType="Stretch">
+        <band height="20" splitType="Stretch">
             <printWhenExpression><![CDATA[$F{hasDescriptionContent} != null && $F{hasDescriptionContent}]]></printWhenExpression>
 
             <subreport>
-                <reportElement x="35" y="0" width="515" height="175" uuid="52b10c45-1234-5678-9012-345678901234"/>
+                <reportElement stretchType="ElementGroupHeight" x="35" y="0" width="515" height="15" uuid="52b10c45-1234-5678-9012-345678901234"/>
                 <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{descriptionBlocks})]]></dataSourceExpression>
                 <subreportExpression><![CDATA[$P{CONTENT_BLOCKS_SUBREPORT}]]></subreportExpression>
             </subreport>

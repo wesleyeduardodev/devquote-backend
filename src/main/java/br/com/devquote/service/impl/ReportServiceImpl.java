@@ -21,6 +21,7 @@ import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.ReportService;
+import br.com.devquote.service.storage.FileStorageStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JRException;
@@ -56,6 +57,7 @@ public class ReportServiceImpl implements ReportService {
     private final TaskRepository taskRepository;
     private final SubTaskRepository subTaskRepository;
     private final BillingPeriodTaskRepository billingPeriodTaskRepository;
+    private final FileStorageStrategy fileStorageStrategy;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final NumberFormat CURRENCY_FORMATTER = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
@@ -857,13 +859,13 @@ public class ReportServiceImpl implements ReportService {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<ContentBlock> taskDescriptionBlocks = HtmlImageExtractor.parseHtmlToBlocks(task.getDescription());
+        List<ContentBlock> taskDescriptionBlocks = HtmlImageExtractor.parseHtmlToBlocks(task.getDescription(), fileStorageStrategy);
         boolean hasTaskDescriptionContent = !taskDescriptionBlocks.isEmpty();
 
         List<SubTaskReportRow> subTaskRows = new ArrayList<>();
         int order = 1;
         for (SubTask subTask : subTasks) {
-            List<ContentBlock> subTaskBlocks = HtmlImageExtractor.parseHtmlToBlocks(subTask.getDescription());
+            List<ContentBlock> subTaskBlocks = HtmlImageExtractor.parseHtmlToBlocks(subTask.getDescription(), fileStorageStrategy);
             boolean hasSubTaskContent = !subTaskBlocks.isEmpty();
 
             subTaskRows.add(SubTaskReportRow.builder()

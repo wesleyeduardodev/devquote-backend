@@ -49,13 +49,14 @@ public class InlineImageServiceImpl implements InlineImageService {
             String filePath = buildFilePath(context, fileName);
 
             String uploadedFilePath = fileStorageStrategy.uploadFile(processedFile, filePath);
-            String fileUrl = fileStorageStrategy.getFileUrl(uploadedFilePath);
+
+            String proxyUrl = "/api/inline-images/view/" + uploadedFilePath;
 
             log.info("Inline image uploaded successfully: {} (original size: {}, compressed size: {})",
                     fileName, file.getSize(), processedFile.getSize());
 
             return InlineImageResponse.builder()
-                    .url(fileUrl)
+                    .url(proxyUrl)
                     .fileName(fileName)
                     .contentType(processedFile.getContentType())
                     .fileSize(processedFile.getSize())

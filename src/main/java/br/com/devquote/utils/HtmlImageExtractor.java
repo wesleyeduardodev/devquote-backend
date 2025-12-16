@@ -1,12 +1,10 @@
 package br.com.devquote.utils;
 
 import br.com.devquote.dto.response.ContentBlock;
+import br.com.devquote.service.storage.FileStorageStrategy;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -31,10 +29,15 @@ public class HtmlImageExtractor {
             .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
 
-    private static final int MAX_IMAGE_WIDTH = 500;
-    private static final int MAX_IMAGE_HEIGHT = 400;
+    private static final boolean RESIZE_IMAGES = false;
+
+    private static final String INLINE_IMAGE_PREFIX = "/api/inline-images/view/";
 
     public static List<ContentBlock> parseHtmlToBlocks(String html) {
+        return parseHtmlToBlocks(html, null);
+    }
+
+    public static List<ContentBlock> parseHtmlToBlocks(String html, FileStorageStrategy fileStorageStrategy) {
         List<ContentBlock> blocks = new ArrayList<>();
 
         if (html == null || html.isEmpty()) {
@@ -55,7 +58,7 @@ public class HtmlImageExtractor {
             }
 
             String imageUrl = decodeHtmlEntities(matcher.group(1));
-            byte[] imageBytes = downloadImage(imageUrl);
+            byte[] imageBytes = downloadImage(imageUrl, fileStorageStrategy);
             if (imageBytes != null) {
                 blocks.add(ContentBlock.imageBlock(imageBytes, order++));
             }
@@ -126,7 +129,20 @@ public class HtmlImageExtractor {
     }
 
     public static byte[] downloadImage(String imageUrl) {
+        return downloadImage(imageUrl, null);
+    }
+
+    public static byte[] downloadImage(String imageUrl, FileStorageStrategy fileStorageStrategy) {
         try {
+            if (imageUrl.startsWith(INLINE_IMAGE_PREFIX) && fileStorageStrategy != null) {
+                String filePath = imageUrl.substring(INLINE_IMAGE_PREFIX.length());
+                log.debug("Loading internal image from storage: {}", filePath);
+                InputStream inputStream = fileStorageStrategy.getFileStream(filePath);
+                byte[] imageBytes = inputStream.readAllBytes();
+                inputStream.close();
+                return resizeImageIfNeeded(imageBytes);
+            }
+
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(imageUrl))
                     .timeout(Duration.ofSeconds(30))
@@ -160,44 +176,10 @@ public class HtmlImageExtractor {
     }
 
     private static byte[] resizeImageIfNeeded(byte[] originalBytes) {
-        try {
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(originalBytes);
-            BufferedImage originalImage = ImageIO.read(inputStream);
-
-            if (originalImage == null) {
-                return originalBytes;
-            }
-
-            int originalWidth = originalImage.getWidth();
-            int originalHeight = originalImage.getHeight();
-
-            if (originalWidth <= MAX_IMAGE_WIDTH && originalHeight <= MAX_IMAGE_HEIGHT) {
-                return originalBytes;
-            }
-
-            double widthRatio = (double) MAX_IMAGE_WIDTH / originalWidth;
-            double heightRatio = (double) MAX_IMAGE_HEIGHT / originalHeight;
-            double ratio = Math.min(widthRatio, heightRatio);
-
-            int newWidth = (int) (originalWidth * ratio);
-            int newHeight = (int) (originalHeight * ratio);
-
-            BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
-            resizedImage.getGraphics().drawImage(
-                    originalImage.getScaledInstance(newWidth, newHeight, java.awt.Image.SCALE_SMOOTH),
-                    0, 0, null
-            );
-
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            ImageIO.write(resizedImage, "jpg", outputStream);
-
-            log.debug("Image resized from {}x{} to {}x{}", originalWidth, originalHeight, newWidth, newHeight);
-            return outputStream.toByteArray();
-
-        } catch (Exception e) {
-            log.warn("Could not resize image, using original: {}", e.getMessage());
+        if (!RESIZE_IMAGES) {
             return originalBytes;
         }
+        return originalBytes;
     }
 
     public static InputStream toInputStream(byte[] bytes) {
