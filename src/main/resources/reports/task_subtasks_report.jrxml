@@ -122,32 +122,24 @@
                 </graphicElement>
             </rectangle>
 
-            <textField>
-                <reportElement x="5" y="5" width="25" height="14" uuid="e1f2a3b4-c5d6-7890-abcd-ef0123456789"/>
-                <textElement verticalAlignment="Top">
-                    <font fontName="DejaVu Sans" size="9" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{order}]]></textFieldExpression>
-            </textField>
-
             <textField textAdjust="StretchHeight">
-                <reportElement x="35" y="5" width="415" height="14" uuid="f2a3b4c5-d6e7-8901-bcde-f01234567890">
+                <reportElement x="5" y="5" width="445" height="14" uuid="f2a3b4c5-d6e7-8901-bcde-f01234567890">
                     <printWhenExpression><![CDATA[$P{showValues}]]></printWhenExpression>
                 </reportElement>
                 <textElement verticalAlignment="Top">
                     <font fontName="DejaVu Sans" size="9" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{order} + ". " + $F{title}]]></textFieldExpression>
             </textField>
 
             <textField textAdjust="StretchHeight">
-                <reportElement x="35" y="5" width="515" height="14" uuid="a3b4c5d6-e7f8-9012-cdef-012345678901">
+                <reportElement x="5" y="5" width="545" height="14" uuid="a3b4c5d6-e7f8-9012-cdef-012345678901">
                     <printWhenExpression><![CDATA[!$P{showValues}]]></printWhenExpression>
                 </reportElement>
                 <textElement verticalAlignment="Top">
                     <font fontName="DejaVu Sans" size="9" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{order} + ". " + $F{title}]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
@@ -165,7 +157,7 @@
             <printWhenExpression><![CDATA[$F{hasDescriptionContent} != null && $F{hasDescriptionContent}]]></printWhenExpression>
 
             <subreport>
-                <reportElement stretchType="ElementGroupHeight" x="35" y="0" width="515" height="15" uuid="52b10c45-1234-5678-9012-345678901234"/>
+                <reportElement stretchType="ElementGroupHeight" x="5" y="0" width="545" height="15" uuid="52b10c45-1234-5678-9012-345678901234"/>
                 <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{descriptionBlocks})]]></dataSourceExpression>
                 <subreportExpression><![CDATA[$P{CONTENT_BLOCKS_SUBREPORT}]]></subreportExpression>
             </subreport>
