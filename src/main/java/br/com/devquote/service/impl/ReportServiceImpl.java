@@ -6,8 +6,10 @@ import br.com.devquote.dto.response.DeliveryReportData;
 import br.com.devquote.dto.response.OperationalReportData;
 import br.com.devquote.dto.response.OperationalReportRow;
 import br.com.devquote.dto.response.OperationalReportStatistics;
+import br.com.devquote.dto.response.ContentBlock;
 import br.com.devquote.dto.response.SubTaskReportRow;
 import br.com.devquote.dto.response.TaskReportData;
+import br.com.devquote.utils.HtmlImageExtractor;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.DeliveryItem;
 import br.com.devquote.entity.DeliveryOperationalItem;
@@ -786,8 +788,11 @@ public class ReportServiceImpl implements ReportService {
 
             TaskReportData reportData = buildTaskReportData(task, subTasks, showValues);
 
+            JasperReport contentBlocksSubreport = loadContentBlocksSubreport();
+
             JasperReport taskReport = loadTaskJasperReport();
             Map<String, Object> taskParameters = buildTaskReportParameters(reportData);
+            taskParameters.put("CONTENT_BLOCKS_SUBREPORT", contentBlocksSubreport);
             JasperPrint taskPrint = JasperFillManager.fillReport(taskReport, taskParameters, new JREmptyDataSource());
 
             List<JasperPrint> jasperPrints = new ArrayList<>();
@@ -796,6 +801,7 @@ public class ReportServiceImpl implements ReportService {
             if (!subTasks.isEmpty()) {
                 JasperReport subTasksReport = loadSubTasksJasperReport();
                 Map<String, Object> subTasksParameters = buildSubTasksReportParameters(reportData);
+                subTasksParameters.put("CONTENT_BLOCKS_SUBREPORT", contentBlocksSubreport);
                 JRBeanCollectionDataSource subTasksDataSource = new JRBeanCollectionDataSource(reportData.getSubTasks());
                 JasperPrint subTasksPrint = JasperFillManager.fillReport(subTasksReport, subTasksParameters, subTasksDataSource);
                 jasperPrints.add(subTasksPrint);
@@ -822,6 +828,25 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
+    private JasperReport loadContentBlocksSubreport() throws JRException {
+        ClassPathResource jasperResource = new ClassPathResource("reports/content_blocks_subreport.jasper");
+        if (jasperResource.exists()) {
+            try {
+                return (JasperReport) JRLoader.loadObject(jasperResource.getInputStream());
+            } catch (Exception e) {
+                log.warn("Erro ao carregar subreport de blocos de conteudo compilado, compilando .jrxml", e);
+            }
+        }
+
+        try {
+            ClassPathResource jrxmlResource = new ClassPathResource("reports/content_blocks_subreport.jrxml");
+            return JasperCompileManager.compileReport(jrxmlResource.getInputStream());
+        } catch (Exception ex) {
+            log.error("Erro ao compilar subreport de blocos de conteudo", ex);
+            throw new RuntimeException("Nao foi possivel carregar o subreport de blocos de conteudo", ex);
+        }
+    }
+
     private TaskReportData buildTaskReportData(Task task, List<SubTask> subTasks, boolean showValues) {
         boolean hasDelivery = deliveryRepository.existsByTaskId(task.getId());
         boolean hasQuoteInBilling = billingPeriodTaskRepository.existsByTaskId(task.getId());
@@ -832,13 +857,21 @@ public class ReportServiceImpl implements ReportService {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        List<ContentBlock> taskDescriptionBlocks = HtmlImageExtractor.parseHtmlToBlocks(task.getDescription());
+        boolean hasTaskDescriptionContent = !taskDescriptionBlocks.isEmpty();
+
         List<SubTaskReportRow> subTaskRows = new ArrayList<>();
         int order = 1;
         for (SubTask subTask : subTasks) {
+            List<ContentBlock> subTaskBlocks = HtmlImageExtractor.parseHtmlToBlocks(subTask.getDescription());
+            boolean hasSubTaskContent = !subTaskBlocks.isEmpty();
+
             subTaskRows.add(SubTaskReportRow.builder()
                     .id(subTask.getId())
                     .title(subTask.getTitle())
                     .description(subTask.getDescription())
+                    .descriptionBlocks(subTaskBlocks)
+                    .hasDescriptionContent(hasSubTaskContent)
                     .amount(subTask.getAmount())
                     .amountFormatted(subTask.getAmount() != null ? CURRENCY_FORMATTER.format(subTask.getAmount()) : "-")
                     .order(order++)
@@ -850,6 +883,8 @@ public class ReportServiceImpl implements ReportService {
                 .code(task.getCode())
                 .title(task.getTitle())
                 .description(task.getDescription())
+                .descriptionBlocks(taskDescriptionBlocks)
+                .hasDescriptionContent(hasTaskDescriptionContent)
                 .flowType(task.getFlowType() != null ? task.getFlowType().name() : null)
                 .flowTypeLabel(getFlowTypeLabel(task.getFlowType() != null ? task.getFlowType().name() : null))
                 .taskType(task.getTaskType())
@@ -911,7 +946,9 @@ public class ReportServiceImpl implements ReportService {
         parameters.put("id", data.getId());
         parameters.put("code", data.getCode());
         parameters.put("title", data.getTitle());
-        parameters.put("description", data.getDescription());
+        parameters.put("descriptionBlocks", new JRBeanCollectionDataSource(
+                data.getDescriptionBlocks() != null ? data.getDescriptionBlocks() : new ArrayList<>()));
+        parameters.put("hasDescriptionContent", data.getHasDescriptionContent() != null && data.getHasDescriptionContent());
         parameters.put("flowTypeLabel", data.getFlowTypeLabel());
         parameters.put("taskTypeLabel", data.getTaskTypeLabel());
         parameters.put("environmentLabel", data.getEnvironmentLabel());

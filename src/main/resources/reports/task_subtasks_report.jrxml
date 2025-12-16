@@ -29,10 +29,13 @@
     <parameter name="copyright" class="java.lang.String"/>
     <parameter name="desenvolvedorEmail" class="java.lang.String"/>
     <parameter name="desenvolvedorTelefone" class="java.lang.String"/>
+    <parameter name="CONTENT_BLOCKS_SUBREPORT" class="net.sf.jasperreports.engine.JasperReport"/>
 
     <field name="order" class="java.lang.Integer"/>
     <field name="title" class="java.lang.String"/>
     <field name="description" class="java.lang.String"/>
+    <field name="descriptionBlocks" class="java.util.List"/>
+    <field name="hasDescriptionContent" class="java.lang.Boolean"/>
     <field name="amountFormatted" class="java.lang.String"/>
 
     <variable name="rowIndex" class="java.lang.Integer" calculation="Count">
@@ -158,16 +161,14 @@
             </textField>
         </band>
 
-        <band height="20" splitType="Stretch">
-            <printWhenExpression><![CDATA[$F{description} != null && !$F{description}.isEmpty()]]></printWhenExpression>
+        <band height="180" splitType="Stretch">
+            <printWhenExpression><![CDATA[$F{hasDescriptionContent} != null && $F{hasDescriptionContent}]]></printWhenExpression>
 
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement x="35" y="0" width="515" height="15" uuid="c5d6e7f8-9012-3456-ef01-234567890123"/>
-                <textElement verticalAlignment="Top" markup="none">
-                    <font fontName="DejaVu Sans" size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{description}]]></textFieldExpression>
-            </textField>
+            <subreport>
+                <reportElement x="35" y="0" width="515" height="175" uuid="52b10c45-1234-5678-9012-345678901234"/>
+                <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{descriptionBlocks})]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{CONTENT_BLOCKS_SUBREPORT}]]></subreportExpression>
+            </subreport>
         </band>
 
         <band height="10" splitType="Stretch">

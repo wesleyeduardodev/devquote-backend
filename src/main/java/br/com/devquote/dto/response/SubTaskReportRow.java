@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -18,6 +19,10 @@ public class SubTaskReportRow {
     private String title;
 
     private String description;
+
+    private List<ContentBlock> descriptionBlocks;
+
+    private Boolean hasDescriptionContent;
 
     private BigDecimal amount;
 

@@ -23,6 +23,10 @@ public class TaskReportData {
 
     private String description;
 
+    private List<ContentBlock> descriptionBlocks;
+
+    private Boolean hasDescriptionContent;
+
     private String flowType;
 
     private String flowTypeLabel;

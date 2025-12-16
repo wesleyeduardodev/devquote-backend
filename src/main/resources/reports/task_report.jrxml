@@ -24,7 +24,9 @@
     <parameter name="id" class="java.lang.Long"/>
     <parameter name="code" class="java.lang.String"/>
     <parameter name="title" class="java.lang.String"/>
-    <parameter name="description" class="java.lang.String"/>
+    <parameter name="descriptionBlocks" class="net.sf.jasperreports.engine.JRDataSource"/>
+    <parameter name="hasDescriptionContent" class="java.lang.Boolean"/>
+    <parameter name="CONTENT_BLOCKS_SUBREPORT" class="net.sf.jasperreports.engine.JasperReport"/>
     <parameter name="flowTypeLabel" class="java.lang.String"/>
     <parameter name="taskTypeLabel" class="java.lang.String"/>
     <parameter name="environmentLabel" class="java.lang.String"/>
@@ -310,13 +312,25 @@
         </band>
 
         <band height="30" splitType="Stretch">
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
+            <printWhenExpression><![CDATA[$P{hasDescriptionContent} == null || !$P{hasDescriptionContent}]]></printWhenExpression>
+
+            <textField isBlankWhenNull="true">
                 <reportElement x="5" y="5" width="545" height="20" uuid="a1234567-8901-2345-4567-890123456789"/>
                 <textElement markup="none">
                     <font fontName="DejaVu Sans" size="9"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$P{description} != null ? $P{description} : "Sem descricao"]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Sem descricao"]]></textFieldExpression>
             </textField>
+        </band>
+
+        <band height="180" splitType="Stretch">
+            <printWhenExpression><![CDATA[$P{hasDescriptionContent} != null && $P{hasDescriptionContent}]]></printWhenExpression>
+
+            <subreport>
+                <reportElement x="5" y="5" width="545" height="170" uuid="51b10c45-1234-5678-9012-345678901234"/>
+                <dataSourceExpression><![CDATA[$P{descriptionBlocks}]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{CONTENT_BLOCKS_SUBREPORT}]]></subreportExpression>
+            </subreport>
         </band>
 
         <band height="18" splitType="Stretch">
