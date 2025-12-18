@@ -17,6 +17,7 @@ import br.com.devquote.service.NotificationConfigService;
 import br.com.devquote.service.TaskAttachmentService;
 import br.com.devquote.service.WhatsAppService;
 import br.com.devquote.service.storage.FileStorageStrategy;
+import br.com.devquote.utils.HtmlImageExtractor;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import java.math.BigDecimal;
@@ -54,6 +56,9 @@ public class EmailServiceImpl implements EmailService {
     private final FileStorageStrategy fileStorageStrategy;
     private final NotificationConfigService notificationConfigService;
     private final WhatsAppService whatsAppService;
+    private final br.com.devquote.repository.TaskRepository taskRepository;
+    private final br.com.devquote.repository.DeliveryRepository deliveryRepository;
+    private final br.com.devquote.repository.BillingPeriodRepository billingPeriodRepository;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
@@ -64,13 +69,17 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendTaskUpdatedNotification(Task task, List<String> additionalEmails) {
+    @Transactional(readOnly = true)
+    public void sendTaskUpdatedNotification(Task taskParam, List<String> additionalEmails) {
         if (!emailProperties.isEnabled()) {
             log.debug("Email notifications are disabled");
             return;
         }
 
         try {
+            Task task = taskRepository.findById(taskParam.getId())
+                    .orElseThrow(() -> new RuntimeException("Task not found: " + taskParam.getId()));
+
             log.debug("Sending task updated notification for task ID: {}", task.getId());
 
             String subject = String.format("DevQuote - Dados da Tarefa: [%s] - %s",
@@ -81,7 +90,7 @@ public class EmailServiceImpl implements EmailService {
             sendTaskDataEmailWithNotificationConfig(task, subject, htmlContent, additionalEmails);
 
         } catch (Exception e) {
-            log.error("Failed to send task updated notification for task ID: {}", task.getId(), e);
+            log.error("Failed to send task updated notification for task ID: {}", taskParam.getId(), e);
         }
     }
 
@@ -241,7 +250,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskId", task.getId());
         context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
         context.setVariable("taskTitle", convertLineBreaksToHtml(task.getTitle()));
-        context.setVariable("taskDescription", convertLineBreaksToHtml(task.getDescription()));
+        context.setVariable("taskDescription", prepareHtmlForEmail(task.getDescription()));
 
         context.setVariable("taskPriority", translatePriority(task.getPriority()));
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
@@ -266,7 +275,7 @@ public class EmailServiceImpl implements EmailService {
             subTasksTranslated = subTasks.stream().map(subtask -> {
                 Map<String, String> subtaskMap = new HashMap<>();
                 subtaskMap.put("title", convertLineBreaksToHtml(subtask.getTitle()));
-                subtaskMap.put("description", convertLineBreaksToHtml(subtask.getDescription()));
+                subtaskMap.put("description", prepareHtmlForEmail(subtask.getDescription()));
                 return subtaskMap;
             }).collect(Collectors.toList());
         }
@@ -295,20 +304,24 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendDeliveryUpdatedNotification(Delivery delivery, List<String> additionalEmails) {
+    @Transactional(readOnly = true)
+    public void sendDeliveryUpdatedNotification(Delivery deliveryParam, List<String> additionalEmails) {
         if (!emailProperties.isEnabled()) {
             log.debug("Email notifications are disabled");
             return;
         }
 
         try {
+            Delivery delivery = deliveryRepository.findById(deliveryParam.getId())
+                    .orElseThrow(() -> new RuntimeException("Delivery not found: " + deliveryParam.getId()));
+
             String subject = String.format("DevQuote - Dados da Entrega: #%d", delivery.getId());
             String htmlContent = buildDeliveryUpdatedEmailContent(delivery);
 
             sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent, additionalEmails);
 
         } catch (Exception e) {
-            log.error("Failed to send delivery updated notification for delivery ID: {}", delivery.getId(), e);
+            log.error("Failed to send delivery updated notification for delivery ID: {}", deliveryParam.getId(), e);
         }
     }
 
@@ -414,7 +427,7 @@ public class EmailServiceImpl implements EmailService {
                     .map(item -> {
                         var map = new java.util.HashMap<String, Object>();
                         map.put("title", item.getTitle());
-                        map.put("description", item.getDescription());
+                        map.put("description", prepareHtmlForEmail(item.getDescription()));
                         map.put("status", translateOperationalItemStatus(item.getStatus()));
                         map.put("startedAt", item.getStartedAt());
                         map.put("finishedAt", item.getFinishedAt());
@@ -450,7 +463,7 @@ public class EmailServiceImpl implements EmailService {
         if (delivery.getTask() != null) {
             context.setVariable("quoteCode", delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "");
             context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
-            context.setVariable("quoteDescription", delivery.getTask().getDescription() != null ? delivery.getTask().getDescription() : "");
+            context.setVariable("quoteDescription", prepareHtmlForEmail(delivery.getTask().getDescription()));
             context.setVariable("taskFlowType", translateFlowType(delivery.getTask().getFlowType()));
             context.setVariable("taskType", translateTaskType(delivery.getTask().getTaskType()));
             context.setVariable("taskEnvironment", translateEnvironment(delivery.getTask().getEnvironment()));
@@ -540,8 +553,13 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendEmailWithAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments) {
-        log.info("📧 SENDWITHATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}",
-                to, cc != null ? cc : "none", subject, attachments != null ? attachments.size() : 0);
+        sendEmailWithAttachments(to, cc, subject, htmlContent, attachments, null);
+    }
+
+    private void sendEmailWithAttachments(String to, String cc, String subject, String htmlContent, List<TaskAttachment> attachments, Map<String, byte[]> inlineImages) {
+        int totalAttachments = (attachments != null ? attachments.size() : 0) + (inlineImages != null ? inlineImages.size() : 0);
+        log.info("📧 SENDWITHATTACHMENTS called - To: {}, CC: {}, Subject: {}, Attachments: {}, InlineImages: {}",
+                to, cc != null ? cc : "none", subject, attachments != null ? attachments.size() : 0, inlineImages != null ? inlineImages.size() : 0);
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -568,6 +586,21 @@ public class EmailServiceImpl implements EmailService {
 
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
+
+            if (inlineImages != null && !inlineImages.isEmpty()) {
+                log.debug("Adding {} inline images as attachments", inlineImages.size());
+                for (Map.Entry<String, byte[]> entry : inlineImages.entrySet()) {
+                    try {
+                        String imageName = entry.getKey();
+                        byte[] imageBytes = entry.getValue();
+                        org.springframework.core.io.InputStreamSource inputStreamSource = () -> new java.io.ByteArrayInputStream(imageBytes);
+                        helper.addAttachment(imageName, inputStreamSource);
+                        log.debug("Attached inline image: {} ({} bytes)", imageName, imageBytes.length);
+                    } catch (Exception e) {
+                        log.warn("Failed to attach inline image: {} - {}", entry.getKey(), e.getMessage());
+                    }
+                }
+            }
 
             if (attachments != null && !attachments.isEmpty()) {
                 log.debug("Adding {} attachments to email", attachments.size());
@@ -664,20 +697,37 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendFinancialNotificationAsync(Task task, List<String> additionalEmails) {
+    @Transactional(readOnly = true)
+    public void sendFinancialNotificationAsync(Task taskParam, List<String> additionalEmails) {
         if (!emailProperties.isEnabled()) {
-            log.warn("Email notifications are disabled. Skipping financial notification for task ID: {}", task.getId());
+            log.warn("Email notifications are disabled. Skipping financial notification for task ID: {}", taskParam.getId());
             return;
         }
 
         try {
+            Task task = taskRepository.findById(taskParam.getId())
+                    .orElseThrow(() -> new RuntimeException("Task not found: " + taskParam.getId()));
+
+            Map<String, byte[]> allInlineImages = new java.util.LinkedHashMap<>();
+            int[] extractCounter = {1};
+            int[] replaceCounter = {1};
+
+            Map<String, byte[]> taskImages = extractInlineImagesWithCounter(task.getDescription(), extractCounter);
+            allInlineImages.putAll(taskImages);
+
+            List<SubTask> subTasks = task.getHasSubTasks() ? subTaskRepository.findByTaskId(task.getId()) : new ArrayList<>();
+            for (SubTask subtask : subTasks) {
+                Map<String, byte[]> subtaskImages = extractInlineImagesWithCounter(subtask.getDescription(), extractCounter);
+                allInlineImages.putAll(subtaskImages);
+            }
+
             Context context = new Context();
 
             context.setVariable("task", task);
             context.setVariable("taskId", task.getId());
             context.setVariable("taskCode", task.getCode() != null ? task.getCode() : "");
             context.setVariable("taskTitle", convertLineBreaksToHtml(task.getTitle()));
-            context.setVariable("taskDescription", convertLineBreaksToHtml(task.getDescription()));
+            context.setVariable("taskDescription", prepareHtmlForEmailWithCounter(task.getDescription(), replaceCounter));
             context.setVariable("taskPriority", translatePriority(task.getPriority()));
             context.setVariable("taskType", translateTaskType(task.getTaskType()));
             context.setVariable("taskEnvironment", translateEnvironment(task.getEnvironment()));
@@ -696,13 +746,11 @@ public class EmailServiceImpl implements EmailService {
 
             context.setVariable("priorityTranslation", translatePriority(task.getPriority()));
 
-            if (task.getHasSubTasks()) {
-                List<SubTask> subTasks = subTaskRepository.findByTaskId(task.getId());
-
+            if (task.getHasSubTasks() && !subTasks.isEmpty()) {
                 List<java.util.Map<String, Object>> subTasksTranslated = subTasks.stream().map(subtask -> {
                     java.util.Map<String, Object> subtaskMap = new java.util.HashMap<>();
                     subtaskMap.put("title", convertLineBreaksToHtml(subtask.getTitle()));
-                    subtaskMap.put("description", convertLineBreaksToHtml(subtask.getDescription()));
+                    subtaskMap.put("description", prepareHtmlForEmailWithCounter(subtask.getDescription(), replaceCounter));
                     subtaskMap.put("amount", subtask.getAmount());
                     return subtaskMap;
                 }).collect(java.util.stream.Collectors.toList());
@@ -716,11 +764,11 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = templateEngine.process("email/financial-notification", context);
             String subject = "💰 Notificação Financeira - Tarefa " + task.getCode();
 
-            sendFinancialEmailWithNotificationConfig(task, subject, htmlContent, additionalEmails);
+            sendFinancialEmailWithNotificationConfig(task, subject, htmlContent, additionalEmails, allInlineImages);
 
         } catch (Exception e) {
             log.error("Unexpected error while sending financial notification for task ID: {}: {}",
-                    task.getId(), e.getMessage(), e);
+                    taskParam.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to send financial notification email", e);
         }
     }
@@ -735,7 +783,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    private void sendFinancialEmailWithNotificationConfig(Task task, String subject, String htmlContent, List<String> additionalEmails) {
+    private void sendFinancialEmailWithNotificationConfig(Task task, String subject, String htmlContent, List<String> additionalEmails, Map<String, byte[]> inlineImages) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ORCAMENTO_TAREFA, NotificationType.EMAIL);
 
         if (config == null) {
@@ -794,14 +842,20 @@ public class EmailServiceImpl implements EmailService {
             taskAttachments = null;
         }
 
-        log.debug("📧 Sending FINANCIAL notification with config - To: {}, CC: {}, Attachments: {}",
+        if (inlineImages != null && !inlineImages.isEmpty()) {
+            log.info("📎 Extracted {} inline image(s) from description for FINANCIAL notification - task ID: {} - Files: {}",
+                    inlineImages.size(), task.getId(), inlineImages.keySet());
+        }
+
+        log.debug("📧 Sending FINANCIAL notification with config - To: {}, CC: {}, Attachments: {}, InlineImages: {}",
                 toEmails, ccEmails.isEmpty() ? "none" : ccEmails,
-                taskAttachments != null ? taskAttachments.size() : 0);
+                taskAttachments != null ? taskAttachments.size() : 0,
+                inlineImages != null ? inlineImages.size() : 0);
 
         for (String toEmail : toEmails) {
             try {
                 String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
-                sendEmailWithAttachments(toEmail, ccRecipientsString, subject, htmlContent, taskAttachments);
+                sendEmailWithAttachments(toEmail, ccRecipientsString, subject, htmlContent, taskAttachments, inlineImages);
                 log.debug("Financial notification sent successfully for task ID: {} to {}", task.getId(), toEmail);
             } catch (Exception e) {
                 log.error("Failed to send financial notification for task ID: {} to {}: {}",
@@ -859,7 +913,10 @@ public class EmailServiceImpl implements EmailService {
         message.append("*Código:* ").append(task.getCode() != null ? task.getCode() : "N/A").append("\n");
         message.append("*Título:* ").append(task.getTitle() != null ? task.getTitle() : "N/A").append("\n");
         if (task.getDescription() != null && !task.getDescription().trim().isEmpty()) {
-            message.append("*Descrição:*\n").append(task.getDescription()).append("\n");
+            String cleanDescription = HtmlImageExtractor.stripHtmlTags(task.getDescription());
+            if (cleanDescription != null && !cleanDescription.trim().isEmpty()) {
+                message.append("*Descrição:*\n").append(cleanDescription).append("\n");
+            }
         }
         message.append("*Tipo de Fluxo:* ").append(translateFlowType(task.getFlowType())).append("\n");
         message.append("*Tipo da Tarefa:* ").append(translateTaskType(task.getTaskType())).append("\n");
@@ -877,7 +934,10 @@ public class EmailServiceImpl implements EmailService {
                 for (SubTask subTask : subTasks) {
                     message.append("*Título:* ").append(subTask.getTitle() != null ? subTask.getTitle() : "N/A").append("\n");
                     if (subTask.getDescription() != null && !subTask.getDescription().trim().isEmpty()) {
-                        message.append("*Descrição:*\n").append(subTask.getDescription()).append("\n");
+                        String cleanSubDescription = HtmlImageExtractor.stripHtmlTags(subTask.getDescription());
+                        if (cleanSubDescription != null && !cleanSubDescription.trim().isEmpty()) {
+                            message.append("*Descrição:*\n").append(cleanSubDescription).append("\n");
+                        }
                     }
                     BigDecimal subTaskAmount = subTask.getAmount() != null ? subTask.getAmount() : BigDecimal.ZERO;
                     message.append("*Valor:* ").append(currencyFormatter.format(subTaskAmount)).append("\n\n");
@@ -965,7 +1025,10 @@ public class EmailServiceImpl implements EmailService {
         message.append("*Código:* ").append(delivery.getTask() != null && delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "N/A").append("\n");
         message.append("*Título:* ").append(delivery.getTask() != null && delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "N/A").append("\n");
         if (delivery.getTask() != null && delivery.getTask().getDescription() != null && !delivery.getTask().getDescription().trim().isEmpty()) {
-            message.append("*Descrição:*\n").append(delivery.getTask().getDescription()).append("\n");
+            String cleanTaskDesc = HtmlImageExtractor.stripHtmlTags(delivery.getTask().getDescription());
+            if (cleanTaskDesc != null && !cleanTaskDesc.trim().isEmpty()) {
+                message.append("*Descrição:*\n").append(cleanTaskDesc).append("\n");
+            }
         }
         if (delivery.getTask() != null && delivery.getTask().getAmount() != null) {
             message.append("*Valor:* ").append(currencyFormatter.format(delivery.getTask().getAmount())).append("\n");
@@ -1016,7 +1079,10 @@ public class EmailServiceImpl implements EmailService {
                     message.append("*Título:* ").append(item.getTitle() != null ? item.getTitle() : "N/A").append("\n");
 
                     if (item.getDescription() != null && !item.getDescription().trim().isEmpty()) {
-                        message.append("*Descrição:*\n").append(item.getDescription()).append("\n");
+                        String cleanItemDesc = HtmlImageExtractor.stripHtmlTags(item.getDescription());
+                        if (cleanItemDesc != null && !cleanItemDesc.trim().isEmpty()) {
+                            message.append("*Descrição:*\n").append(cleanItemDesc).append("\n");
+                        }
                     }
 
                     if (item.getStartedAt() != null) {
@@ -1052,13 +1118,17 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async
-    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriod, List<String> additionalEmails, String flowType) {
+    @Transactional(readOnly = true)
+    public void sendBillingPeriodNotificationAsync(BillingPeriod billingPeriodParam, List<String> additionalEmails, String flowType) {
         if (!emailProperties.isEnabled()) {
-            log.warn("Email notifications are disabled. Skipping billing period notification for period ID: {}", billingPeriod.getId());
+            log.warn("Email notifications are disabled. Skipping billing period notification for period ID: {}", billingPeriodParam.getId());
             return;
         }
 
         try {
+            BillingPeriod billingPeriod = billingPeriodRepository.findById(billingPeriodParam.getId())
+                    .orElseThrow(() -> new RuntimeException("BillingPeriod not found: " + billingPeriodParam.getId()));
+
             Context context = new Context();
             context.setVariable("billingPeriod", billingPeriod);
 
@@ -1111,7 +1181,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Unexpected error while sending billing period notification for period ID: {}: {}",
-                    billingPeriod.getId(), e.getMessage(), e);
+                    billingPeriodParam.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to send billing period notification email", e);
         }
     }
@@ -1176,13 +1246,17 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery delivery, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
-        if (delivery == null) {
+    @Transactional(readOnly = true)
+    public void sendDeliveryUpdatedNotificationWithAttachmentData(Delivery deliveryParam, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails) {
+        if (deliveryParam == null) {
             log.warn("Cannot send delivery updated notification with attachments: delivery is null");
             return;
         }
 
         try {
+            Delivery delivery = deliveryRepository.findById(deliveryParam.getId())
+                    .orElseThrow(() -> new RuntimeException("Delivery not found: " + deliveryParam.getId()));
+
             String subject = String.format("📊 Dados da Entrega - %s",
                     delivery.getTask() != null && delivery.getTask().getCode() != null ?
                             delivery.getTask().getCode() : "Código não disponível");
@@ -1192,7 +1266,7 @@ public class EmailServiceImpl implements EmailService {
             sendToMultipleRecipientsForDeliveryWithInMemoryAttachments(delivery, subject, htmlContent, "updated", attachmentDataMap, additionalEmails);
 
         } catch (Exception e) {
-            log.error("Failed to send delivery updated notification with attachments for delivery ID: {}", delivery.getId(), e);
+            log.error("Failed to send delivery updated notification with attachments for delivery ID: {}", deliveryParam.getId(), e);
         }
     }
 
@@ -1259,13 +1333,16 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     @Async("emailTaskExecutor")
-    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriod, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails, String flowType) {
-        if (billingPeriod == null) {
+    @Transactional(readOnly = true)
+    public void sendBillingPeriodNotificationWithAttachmentData(BillingPeriod billingPeriodParam, Map<String, byte[]> attachmentDataMap, List<String> additionalEmails, String flowType) {
+        if (billingPeriodParam == null) {
             log.warn("Cannot send billing period notification with attachments: billingPeriod is null");
             return;
         }
 
         try {
+            BillingPeriod billingPeriod = billingPeriodRepository.findById(billingPeriodParam.getId())
+                    .orElseThrow(() -> new RuntimeException("BillingPeriod not found: " + billingPeriodParam.getId()));
 
             String[] monthNames = {"janeiro", "fevereiro", "março", "abril", "maio", "junho",
                     "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"};
@@ -1319,7 +1396,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             log.error("Failed to send billing period notification with attachments for period ID: {}",
-                    billingPeriod.getId(), e);
+                    billingPeriodParam.getId(), e);
         }
     }
 
@@ -1383,5 +1460,94 @@ public class EmailServiceImpl implements EmailService {
             return "";
         }
         return text.replace("\n", "<br>").replace("\r\n", "<br>").replace("\r", "<br>");
+    }
+
+    private static final java.util.regex.Pattern IMG_TAG_PATTERN = java.util.regex.Pattern.compile(
+            "<img[^>]*src=[\"'](?:https?://[^/]+)?/api/inline-images/view/([^\"']+)[\"'][^>]*>",
+            java.util.regex.Pattern.CASE_INSENSITIVE
+    );
+
+    private String determineMimeType(String filePath) {
+        String lowerPath = filePath.toLowerCase();
+        if (lowerPath.endsWith(".png")) {
+            return "image/png";
+        } else if (lowerPath.endsWith(".gif")) {
+            return "image/gif";
+        } else if (lowerPath.endsWith(".webp")) {
+            return "image/webp";
+        } else if (lowerPath.endsWith(".svg")) {
+            return "image/svg+xml";
+        }
+        return "image/jpeg";
+    }
+
+    private String getFileExtension(String filePath) {
+        String lowerPath = filePath.toLowerCase();
+        if (lowerPath.endsWith(".png")) return ".png";
+        if (lowerPath.endsWith(".gif")) return ".gif";
+        if (lowerPath.endsWith(".webp")) return ".webp";
+        if (lowerPath.endsWith(".svg")) return ".svg";
+        if (lowerPath.endsWith(".jpg")) return ".jpg";
+        return ".png";
+    }
+
+    private String prepareHtmlForEmail(String html) {
+        if (html == null || html.isEmpty()) {
+            return "";
+        }
+        return replaceImagesWithPlaceholders(html, new int[]{1});
+    }
+
+    private String prepareHtmlForEmailWithCounter(String html, int[] counter) {
+        if (html == null || html.isEmpty()) {
+            return "";
+        }
+        return replaceImagesWithPlaceholders(html, counter);
+    }
+
+    private String replaceImagesWithPlaceholders(String html, int[] counter) {
+        if (html == null || html.isEmpty()) {
+            return html;
+        }
+        java.util.regex.Matcher matcher = IMG_TAG_PATTERN.matcher(html);
+        StringBuffer result = new StringBuffer();
+        while (matcher.find()) {
+            String placeholder = String.format("<strong>[imagem-%02d]</strong>", counter[0]++);
+            matcher.appendReplacement(result, java.util.regex.Matcher.quoteReplacement(placeholder));
+        }
+        matcher.appendTail(result);
+        return result.toString();
+    }
+
+    public Map<String, byte[]> extractInlineImages(String html) {
+        return extractInlineImagesWithCounter(html, new int[]{1});
+    }
+
+    public Map<String, byte[]> extractInlineImagesWithCounter(String html, int[] counter) {
+        Map<String, byte[]> images = new java.util.LinkedHashMap<>();
+        if (html == null || html.isEmpty()) {
+            return images;
+        }
+
+        java.util.regex.Matcher matcher = IMG_TAG_PATTERN.matcher(html);
+
+        while (matcher.find()) {
+            String filePath = matcher.group(1);
+            try {
+                java.io.InputStream inputStream = fileStorageStrategy.getFileStream(filePath);
+                byte[] imageBytes = inputStream.readAllBytes();
+                inputStream.close();
+
+                String extension = getFileExtension(filePath);
+                String imageName = String.format("imagem-%02d%s", counter[0]++, extension);
+                images.put(imageName, imageBytes);
+                log.info("Extracted inline image for email attachment: {} ({} bytes)", imageName, imageBytes.length);
+            } catch (Exception e) {
+                log.warn("Failed to extract inline image: {}, error: {}", filePath, e.getMessage());
+                counter[0]++;
+            }
+        }
+
+        return images;
     }
 }

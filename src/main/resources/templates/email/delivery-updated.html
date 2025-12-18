@@ -304,7 +304,7 @@
                             <div class="info-row" th:if="${item.containsKey('description') and !#strings.isEmpty(item.description)}">
                                 <div class="info-label">Descrição:</div>
                                 <div class="info-value">
-                                    <div class="notes-value" th:text="${item.description}">Descrição do item</div>
+                                    <div class="notes-value" th:utext="${item.description}">Descrição do item</div>
                                 </div>
                             </div>
 
