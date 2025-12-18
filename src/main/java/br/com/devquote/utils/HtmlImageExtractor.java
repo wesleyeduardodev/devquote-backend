@@ -99,11 +99,22 @@ public class HtmlImageExtractor {
             return html;
         }
 
-        String noImages = html.replaceAll("<img[^>]*>", "");
-        String noTags = noImages.replaceAll("<[^>]+>", " ");
-        String decoded = decodeHtmlEntities(noTags);
+        String result = html.replaceAll("<img[^>]*>", "[imagem]");
 
-        return decoded.replaceAll("\\s+", " ").trim();
+        result = result.replaceAll("</p>", "\n");
+        result = result.replaceAll("</div>", "\n");
+        result = result.replaceAll("<br\\s*/?>", "\n");
+
+        result = result.replaceAll("<[^>]+>", "");
+
+        result = decodeHtmlEntities(result);
+
+        result = result.replaceAll("[ \\t]+", " ");
+
+        result = result.replaceAll(" *\\n *", "\n");
+        result = result.replaceAll("\\n{3,}", "\n\n");
+
+        return result.trim();
     }
 
     public static String cleanHtmlForPdf(String html) {
