@@ -315,17 +315,54 @@ public class EmailServiceImpl implements EmailService {
             Delivery delivery = deliveryRepository.findById(deliveryParam.getId())
                     .orElseThrow(() -> new RuntimeException("Delivery not found: " + deliveryParam.getId()));
 
-            String subject = String.format("DevQuote - Dados da Entrega: #%d", delivery.getId());
-            String htmlContent = buildDeliveryUpdatedEmailContent(delivery);
+            Map<String, byte[]> allInlineImages = new java.util.LinkedHashMap<>();
+            int[] extractCounter = {1};
+            int[] replaceCounter = {1};
 
-            sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent, additionalEmails);
+            if (delivery.getTask() != null && delivery.getTask().getDescription() != null) {
+                Map<String, byte[]> taskDescImages = extractInlineImagesWithCounter(delivery.getTask().getDescription(), extractCounter);
+                allInlineImages.putAll(taskDescImages);
+            }
+
+            if (delivery.getNotes() != null) {
+                Map<String, byte[]> deliveryNotesImages = extractInlineImagesWithCounter(delivery.getNotes(), extractCounter);
+                allInlineImages.putAll(deliveryNotesImages);
+            }
+
+            if (delivery.getItems() != null) {
+                for (var item : delivery.getItems()) {
+                    if (item.getNotes() != null) {
+                        Map<String, byte[]> itemNotesImages = extractInlineImagesWithCounter(item.getNotes(), extractCounter);
+                        allInlineImages.putAll(itemNotesImages);
+                    }
+                }
+            }
+
+            if (delivery.getOperationalItems() != null) {
+                for (var item : delivery.getOperationalItems()) {
+                    if (item.getDescription() != null) {
+                        Map<String, byte[]> itemDescImages = extractInlineImagesWithCounter(item.getDescription(), extractCounter);
+                        allInlineImages.putAll(itemDescImages);
+                    }
+                }
+            }
+
+            String subject = String.format("DevQuote - Dados da Entrega: #%d", delivery.getId());
+            String htmlContent = buildDeliveryUpdatedEmailContent(delivery, replaceCounter);
+
+            if (!allInlineImages.isEmpty()) {
+                log.info("📎 Extracted {} inline image(s) from delivery fields for notification - delivery ID: {} - Files: {}",
+                        allInlineImages.size(), delivery.getId(), allInlineImages.keySet());
+            }
+
+            sendDeliveryEmailWithNotificationConfig(delivery, subject, htmlContent, additionalEmails, allInlineImages);
 
         } catch (Exception e) {
             log.error("Failed to send delivery updated notification for delivery ID: {}", deliveryParam.getId(), e);
         }
     }
 
-    private void sendDeliveryEmailWithNotificationConfig(Delivery delivery, String subject, String htmlContent, List<String> additionalEmails) {
+    private void sendDeliveryEmailWithNotificationConfig(Delivery delivery, String subject, String htmlContent, List<String> additionalEmails, Map<String, byte[]> inlineImages) {
         NotificationConfig config = findNotificationConfig(NotificationConfigType.NOTIFICACAO_ENTREGA, NotificationType.EMAIL);
 
         if (config == null) {
@@ -371,13 +408,14 @@ public class EmailServiceImpl implements EmailService {
             return;
         }
 
-        log.debug("📧 Sending DELIVERY notification with config - To: {}, CC: {}",
-                toEmails, ccEmails.isEmpty() ? "none" : ccEmails);
+        log.debug("📧 Sending DELIVERY notification with config - To: {}, CC: {}, InlineImages: {}",
+                toEmails, ccEmails.isEmpty() ? "none" : ccEmails,
+                inlineImages != null ? inlineImages.size() : 0);
 
         for (String toEmail : toEmails) {
             try {
                 String ccRecipientsString = ccEmails.isEmpty() ? null : String.join(",", ccEmails);
-                sendEmailWithAttachments(toEmail, ccRecipientsString, subject, htmlContent, null);
+                sendEmailWithAttachments(toEmail, ccRecipientsString, subject, htmlContent, null, inlineImages);
                 log.debug("Delivery notification sent successfully for delivery ID: {} to {}", delivery.getId(), toEmail);
             } catch (Exception e) {
                 log.error("Failed to send delivery notification for delivery ID: {} to {}: {}",
@@ -387,54 +425,81 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String buildDeliveryUpdatedEmailContent(Delivery delivery) {
+        return buildDeliveryUpdatedEmailContent(delivery, new int[]{1});
+    }
+
+    private String buildDeliveryUpdatedEmailContent(Delivery delivery, int[] replaceCounter) {
         Context context = new Context();
 
-        buildDeliveryEmailContext(context, delivery);
+        buildDeliveryEmailContext(context, delivery, replaceCounter);
 
         return templateEngine.process("email/delivery-updated", context);
     }
 
     private void buildDeliveryEmailContext(Context context, Delivery delivery) {
+        buildDeliveryEmailContext(context, delivery, new int[]{1});
+    }
+
+    private void buildDeliveryEmailContext(Context context, Delivery delivery, int[] replaceCounter) {
 
         context.setVariable("delivery", delivery);
         context.setVariable("deliveryId", delivery.getId());
         context.setVariable("deliveryStatus", translateDeliveryStatus(delivery.getStatus()));
         context.setVariable("createdAt", delivery.getCreatedAt().format(DATE_FORMATTER));
-        context.setVariable("notes", delivery.getNotes() != null ? delivery.getNotes() : "");
+
+        if (delivery.getTask() != null) {
+            context.setVariable("quoteCode", delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "");
+            context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
+            context.setVariable("quoteDescription", prepareHtmlForEmailWithCounter(delivery.getTask().getDescription(), replaceCounter));
+            context.setVariable("taskFlowType", translateFlowType(delivery.getTask().getFlowType()));
+            context.setVariable("taskType", translateTaskType(delivery.getTask().getTaskType()));
+            context.setVariable("taskEnvironment", translateEnvironment(delivery.getTask().getEnvironment()));
+            context.setVariable("taskAmount", delivery.getTask().getAmount() != null ? delivery.getTask().getAmount() : java.math.BigDecimal.ZERO);
+            context.setVariable("taskAmountFormatted", formatCurrency(delivery.getTask().getAmount()));
+            context.setVariable("requesterName", delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "");
+            context.setVariable("requesterEmail", delivery.getTask().getRequester() != null && delivery.getTask().getRequester().getEmail() != null ? delivery.getTask().getRequester().getEmail() : "");
+        } else {
+            context.setVariable("quoteCode", "");
+            context.setVariable("quoteName", "");
+            context.setVariable("quoteDescription", "");
+            context.setVariable("taskFlowType", "");
+            context.setVariable("taskType", "");
+            context.setVariable("taskEnvironment", "");
+            context.setVariable("taskAmount", java.math.BigDecimal.ZERO);
+            context.setVariable("taskAmountFormatted", "R$ 0,00");
+            context.setVariable("requesterName", "");
+            context.setVariable("requesterEmail", "");
+        }
+
+        context.setVariable("notes", delivery.getNotes() != null ? prepareHtmlForEmailWithCounter(delivery.getNotes(), replaceCounter) : "");
 
         var allTranslatedItems = new java.util.ArrayList<java.util.HashMap<String, Object>>();
 
         if (delivery.getItems() != null && !delivery.getItems().isEmpty()) {
-            var devItems = delivery.getItems().stream()
-                    .map(item -> {
-                        var map = new java.util.HashMap<String, Object>();
-                        map.put("project", item.getProject());
-                        map.put("status", translateDeliveryStatus(item.getStatus()));
-                        map.put("branch", item.getBranch());
-                        map.put("sourceBranch", item.getSourceBranch());
-                        map.put("pullRequest", item.getPullRequest());
-                        map.put("notes", item.getNotes());
-                        map.put("startedAt", item.getStartedAt());
-                        map.put("finishedAt", item.getFinishedAt());
-                        return map;
-                    })
-                    .toList();
-            allTranslatedItems.addAll(devItems);
+            for (var item : delivery.getItems()) {
+                var map = new java.util.HashMap<String, Object>();
+                map.put("project", item.getProject());
+                map.put("status", translateDeliveryStatus(item.getStatus()));
+                map.put("branch", item.getBranch());
+                map.put("sourceBranch", item.getSourceBranch());
+                map.put("pullRequest", item.getPullRequest());
+                map.put("notes", prepareHtmlForEmailWithCounter(item.getNotes(), replaceCounter));
+                map.put("startedAt", item.getStartedAt());
+                map.put("finishedAt", item.getFinishedAt());
+                allTranslatedItems.add(map);
+            }
         }
 
         if (delivery.getOperationalItems() != null && !delivery.getOperationalItems().isEmpty()) {
-            var opItems = delivery.getOperationalItems().stream()
-                    .map(item -> {
-                        var map = new java.util.HashMap<String, Object>();
-                        map.put("title", item.getTitle());
-                        map.put("description", prepareHtmlForEmail(item.getDescription()));
-                        map.put("status", translateOperationalItemStatus(item.getStatus()));
-                        map.put("startedAt", item.getStartedAt());
-                        map.put("finishedAt", item.getFinishedAt());
-                        return map;
-                    })
-                    .toList();
-            allTranslatedItems.addAll(opItems);
+            for (var item : delivery.getOperationalItems()) {
+                var map = new java.util.HashMap<String, Object>();
+                map.put("title", item.getTitle());
+                map.put("description", prepareHtmlForEmailWithCounter(item.getDescription(), replaceCounter));
+                map.put("status", translateOperationalItemStatus(item.getStatus()));
+                map.put("startedAt", item.getStartedAt());
+                map.put("finishedAt", item.getFinishedAt());
+                allTranslatedItems.add(map);
+            }
         }
 
         if (!allTranslatedItems.isEmpty()) {
@@ -458,30 +523,6 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("deliveryFinishedAt", "");
             context.setVariable("deliveryItems", java.util.Collections.emptyList());
             context.setVariable("hasMultipleItems", false);
-        }
-
-        if (delivery.getTask() != null) {
-            context.setVariable("quoteCode", delivery.getTask().getCode() != null ? delivery.getTask().getCode() : "");
-            context.setVariable("quoteName", delivery.getTask().getTitle() != null ? delivery.getTask().getTitle() : "");
-            context.setVariable("quoteDescription", prepareHtmlForEmail(delivery.getTask().getDescription()));
-            context.setVariable("taskFlowType", translateFlowType(delivery.getTask().getFlowType()));
-            context.setVariable("taskType", translateTaskType(delivery.getTask().getTaskType()));
-            context.setVariable("taskEnvironment", translateEnvironment(delivery.getTask().getEnvironment()));
-            context.setVariable("taskAmount", delivery.getTask().getAmount() != null ? delivery.getTask().getAmount() : java.math.BigDecimal.ZERO);
-            context.setVariable("taskAmountFormatted", formatCurrency(delivery.getTask().getAmount()));
-            context.setVariable("requesterName", delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "");
-            context.setVariable("requesterEmail", delivery.getTask().getRequester() != null && delivery.getTask().getRequester().getEmail() != null ? delivery.getTask().getRequester().getEmail() : "");
-        } else {
-            context.setVariable("quoteCode", "");
-            context.setVariable("quoteName", "");
-            context.setVariable("quoteDescription", "");
-            context.setVariable("taskFlowType", "");
-            context.setVariable("taskType", "");
-            context.setVariable("taskEnvironment", "");
-            context.setVariable("taskAmount", java.math.BigDecimal.ZERO);
-            context.setVariable("taskAmountFormatted", "R$ 0,00");
-            context.setVariable("requesterName", "");
-            context.setVariable("requesterEmail", "");
         }
     }
 
@@ -1041,8 +1082,11 @@ public class EmailServiceImpl implements EmailService {
         message.append("*Solicitante:* ").append(delivery.getTask() != null && delivery.getTask().getRequester() != null ? delivery.getTask().getRequester().getName() : "N/A").append("\n");
 
         if (delivery.getNotes() != null && !delivery.getNotes().trim().isEmpty()) {
-            message.append("\n*Observações:*\n");
-            message.append(delivery.getNotes()).append("\n");
+            String cleanDeliveryNotes = HtmlImageExtractor.stripHtmlTags(delivery.getNotes());
+            if (cleanDeliveryNotes != null && !cleanDeliveryNotes.trim().isEmpty()) {
+                message.append("\n*Observações:*\n");
+                message.append(cleanDeliveryNotes).append("\n");
+            }
         }
 
         if (delivery.getFlowType() == br.com.devquote.enums.FlowType.DESENVOLVIMENTO) {
@@ -1053,7 +1097,10 @@ public class EmailServiceImpl implements EmailService {
                     message.append("*Projeto:* ").append(item.getProject() != null ? item.getProject().getName() : "N/A").append("\n");
 
                     if (item.getNotes() != null && !item.getNotes().trim().isEmpty()) {
-                        message.append("*Observações:*\n").append(item.getNotes()).append("\n");
+                        String cleanItemNotes = HtmlImageExtractor.stripHtmlTags(item.getNotes());
+                        if (cleanItemNotes != null && !cleanItemNotes.trim().isEmpty()) {
+                            message.append("*Observações:*\n").append(cleanItemNotes).append("\n");
+                        }
                     }
 
                     if (item.getPullRequest() != null && !item.getPullRequest().trim().isEmpty()) {

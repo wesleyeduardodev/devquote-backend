@@ -209,7 +209,7 @@
                     <div class="info-row" th:if="${!#strings.isEmpty(quoteDescription)}">
                         <div class="info-label">Descrição:</div>
                         <div class="info-value">
-                            <div class="notes-value" th:text="${quoteDescription}">Descrição da tarefa</div>
+                            <div class="notes-value" th:utext="${quoteDescription}">Descrição da tarefa</div>
                         </div>
                     </div>
                     <div class="info-row" th:if="${taskAmountFormatted != null}">
@@ -253,7 +253,7 @@
                     <div class="info-row" th:if="${!#strings.isEmpty(notes)}">
                         <div class="info-label">Observações Gerais:</div>
                         <div class="info-value">
-                            <div class="notes-value" th:text="${notes}">Observações gerais da entrega</div>
+                            <div class="notes-value" th:utext="${notes}">Observações gerais da entrega</div>
                         </div>
                     </div>
                 </div>
@@ -324,7 +324,7 @@
                             <div class="info-row" th:if="${item.containsKey('notes') and !#strings.isEmpty(item.notes)}">
                                 <div class="info-label">Observações:</div>
                                 <div class="info-value">
-                                    <div class="notes-value" th:text="${item.notes}">Observações do item</div>
+                                    <div class="notes-value" th:utext="${item.notes}">Observações do item</div>
                                 </div>
                             </div>
                         </div>
