@@ -1129,10 +1129,6 @@ public class TaskServiceImpl implements TaskService {
                     .status("PENDING")
                     .environment(task.getEnvironment() != null ? task.getEnvironment().name() : null);
 
-            if (task.getFlowType() == FlowType.OPERACIONAL) {
-                builder.notes(task.getDescription());
-            }
-
             deliveryService.create(builder.build());
             log.debug("Automatic delivery created for task ID: {}", task.getId());
         }
