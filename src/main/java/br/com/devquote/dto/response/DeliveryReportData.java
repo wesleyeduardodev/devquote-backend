@@ -36,6 +36,10 @@ public class DeliveryReportData {
 
     private String notes;
 
+    private List<ContentBlock> notesBlocks;
+
+    private boolean hasNotesContent;
+
     private LocalDateTime startedAt;
 
     private String startedAtFormatted;

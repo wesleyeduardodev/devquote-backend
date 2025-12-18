@@ -29,6 +29,9 @@
     <parameter name="environmentLabel" class="java.lang.String"/>
     <parameter name="statusLabel" class="java.lang.String"/>
     <parameter name="notes" class="java.lang.String"/>
+    <parameter name="hasNotesContent" class="java.lang.Boolean"/>
+    <parameter name="notesBlocksDataSource" class="net.sf.jasperreports.engine.JRDataSource"/>
+    <parameter name="CONTENT_BLOCKS_SUBREPORT" class="net.sf.jasperreports.engine.JasperReport"/>
     <parameter name="startedAtFormatted" class="java.lang.String"/>
     <parameter name="finishedAtFormatted" class="java.lang.String"/>
     <parameter name="totalItems" class="java.lang.Integer"/>
@@ -246,7 +249,7 @@
         </band>
 
         <band height="18" splitType="Stretch">
-            <printWhenExpression><![CDATA[$P{notes} != null && !$P{notes}.isEmpty()]]></printWhenExpression>
+            <printWhenExpression><![CDATA[$P{hasNotesContent} != null && $P{hasNotesContent}]]></printWhenExpression>
 
             <staticText>
                 <reportElement x="0" y="0" width="555" height="18" backcolor="#E8EAED" mode="Opaque" uuid="b6789012-3456-7890-9012-cdef01234567"/>
@@ -260,16 +263,14 @@
             </staticText>
         </band>
 
-        <band height="30" splitType="Stretch">
-            <printWhenExpression><![CDATA[$P{notes} != null && !$P{notes}.isEmpty()]]></printWhenExpression>
+        <band height="20" splitType="Stretch">
+            <printWhenExpression><![CDATA[$P{hasNotesContent} != null && $P{hasNotesContent}]]></printWhenExpression>
 
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement x="5" y="5" width="545" height="20" uuid="c7890123-4567-8901-0123-def012345678"/>
-                <textElement markup="none">
-                    <font fontName="DejaVu Sans" size="9"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$P{notes}]]></textFieldExpression>
-            </textField>
+            <subreport>
+                <reportElement stretchType="ElementGroupHeight" x="5" y="5" width="545" height="15" uuid="c7890123-4567-8901-0123-def012345678"/>
+                <dataSourceExpression><![CDATA[$P{notesBlocksDataSource}]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{CONTENT_BLOCKS_SUBREPORT}]]></subreportExpression>
+            </subreport>
         </band>
     </detail>
 

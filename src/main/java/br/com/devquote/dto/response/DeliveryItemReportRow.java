@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,6 +25,10 @@ public class DeliveryItemReportRow {
 
     private String description;
 
+    private List<ContentBlock> descriptionBlocks;
+
+    private boolean hasDescriptionContent;
+
     private String status;
 
     private String statusLabel;
@@ -34,6 +40,10 @@ public class DeliveryItemReportRow {
     private String pullRequest;
 
     private String notes;
+
+    private List<ContentBlock> notesBlocks;
+
+    private boolean hasNotesContent;
 
     private String startedAtFormatted;
 

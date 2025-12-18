@@ -23,10 +23,13 @@
     <parameter name="copyright" class="java.lang.String"/>
     <parameter name="desenvolvedorEmail" class="java.lang.String"/>
     <parameter name="desenvolvedorTelefone" class="java.lang.String"/>
+    <parameter name="CONTENT_BLOCKS_SUBREPORT" class="net.sf.jasperreports.engine.JasperReport"/>
 
     <field name="order" class="java.lang.Integer"/>
     <field name="title" class="java.lang.String"/>
     <field name="description" class="java.lang.String"/>
+    <field name="descriptionBlocks" class="java.util.List"/>
+    <field name="hasDescriptionContent" class="java.lang.Boolean"/>
     <field name="statusLabel" class="java.lang.String"/>
     <field name="startedAtFormatted" class="java.lang.String"/>
     <field name="finishedAtFormatted" class="java.lang.String"/>
@@ -77,15 +80,7 @@
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="65" width="25" height="15" forecolor="#FFFFFF" uuid="f6a7b8c9-d0e1-2345-6789-0abcd0212345"/>
-                <textElement verticalAlignment="Middle">
-                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
-                </textElement>
-                <text><![CDATA[#]]></text>
-            </staticText>
-
-            <staticText>
-                <reportElement x="30" y="65" width="290" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcd02123456"/>
+                <reportElement x="5" y="65" width="310" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcd02123456"/>
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
@@ -129,20 +124,12 @@
                 </graphicElement>
             </rectangle>
 
-            <textField>
-                <reportElement x="5" y="5" width="20" height="14" uuid="f2a3b4c5-d6e7-8901-bcde-212345678901"/>
-                <textElement verticalAlignment="Top">
-                    <font fontName="DejaVu Sans" size="9" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{order}]]></textFieldExpression>
-            </textField>
-
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement x="30" y="5" width="285" height="14" uuid="a3b4c5d6-e7f8-9012-cdef-312345678901"/>
+                <reportElement x="5" y="5" width="310" height="14" uuid="a3b4c5d6-e7f8-9012-cdef-312345678901"/>
                 <textElement verticalAlignment="Top">
                     <font fontName="DejaVu Sans" size="9" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{order} + ". " + $F{title}]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
@@ -171,15 +158,13 @@
         </band>
 
         <band height="20" splitType="Stretch">
-            <printWhenExpression><![CDATA[$F{description} != null && !$F{description}.isEmpty()]]></printWhenExpression>
+            <printWhenExpression><![CDATA[$F{hasDescriptionContent} != null && $F{hasDescriptionContent}]]></printWhenExpression>
 
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement x="30" y="0" width="520" height="15" uuid="e7f89012-3456-7890-0123-712345678901"/>
-                <textElement verticalAlignment="Top" markup="none">
-                    <font fontName="DejaVu Sans" size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{description}]]></textFieldExpression>
-            </textField>
+            <subreport>
+                <reportElement stretchType="ElementGroupHeight" x="5" y="0" width="545" height="15" uuid="e7f89012-3456-7890-0123-712345678901"/>
+                <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{descriptionBlocks})]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{CONTENT_BLOCKS_SUBREPORT}]]></subreportExpression>
+            </subreport>
         </band>
 
         <band height="10" splitType="Stretch">

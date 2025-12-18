@@ -23,6 +23,7 @@
     <parameter name="copyright" class="java.lang.String"/>
     <parameter name="desenvolvedorEmail" class="java.lang.String"/>
     <parameter name="desenvolvedorTelefone" class="java.lang.String"/>
+    <parameter name="CONTENT_BLOCKS_SUBREPORT" class="net.sf.jasperreports.engine.JasperReport"/>
 
     <field name="order" class="java.lang.Integer"/>
     <field name="projectName" class="java.lang.String"/>
@@ -31,6 +32,8 @@
     <field name="sourceBranch" class="java.lang.String"/>
     <field name="pullRequest" class="java.lang.String"/>
     <field name="notes" class="java.lang.String"/>
+    <field name="notesBlocks" class="java.util.List"/>
+    <field name="hasNotesContent" class="java.lang.Boolean"/>
     <field name="startedAtFormatted" class="java.lang.String"/>
     <field name="finishedAtFormatted" class="java.lang.String"/>
 
@@ -80,15 +83,7 @@
             </rectangle>
 
             <staticText>
-                <reportElement x="5" y="65" width="25" height="15" forecolor="#FFFFFF" uuid="f6a7b8c9-d0e1-2345-6789-0abcd0123456"/>
-                <textElement verticalAlignment="Middle">
-                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
-                </textElement>
-                <text><![CDATA[#]]></text>
-            </staticText>
-
-            <staticText>
-                <reportElement x="30" y="65" width="150" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcd01234567"/>
+                <reportElement x="5" y="65" width="170" height="15" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcd01234567"/>
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
@@ -140,20 +135,12 @@
                 </graphicElement>
             </rectangle>
 
-            <textField>
-                <reportElement x="5" y="5" width="20" height="14" uuid="a3b4c5d6-e7f8-9012-cdef-234567890123"/>
-                <textElement verticalAlignment="Top">
-                    <font fontName="DejaVu Sans" size="9" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{order}]]></textFieldExpression>
-            </textField>
-
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement x="30" y="5" width="145" height="14" uuid="b4c5d6e7-f890-1234-def0-345678901234"/>
+                <reportElement x="5" y="5" width="170" height="14" uuid="b4c5d6e7-f890-1234-def0-345678901234"/>
                 <textElement verticalAlignment="Top">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{projectName}]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{order} + ". " + $F{projectName}]]></textFieldExpression>
             </textField>
 
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
@@ -193,7 +180,7 @@
             <printWhenExpression><![CDATA[$F{sourceBranch} != null || $F{pullRequest} != null]]></printWhenExpression>
 
             <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement x="30" y="0" width="520" height="15" uuid="a9012345-6789-0123-2345-890123456789"/>
+                <reportElement x="5" y="0" width="545" height="15" uuid="a9012345-6789-0123-2345-890123456789"/>
                 <textElement verticalAlignment="Top">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
@@ -202,15 +189,21 @@
         </band>
 
         <band height="20" splitType="Stretch">
-            <printWhenExpression><![CDATA[$F{notes} != null && !$F{notes}.isEmpty()]]></printWhenExpression>
+            <printWhenExpression><![CDATA[$F{hasNotesContent} != null && $F{hasNotesContent}]]></printWhenExpression>
 
-            <textField textAdjust="StretchHeight" isBlankWhenNull="true">
-                <reportElement x="30" y="0" width="520" height="15" uuid="b0123456-7890-1234-3456-901234567890"/>
+            <staticText>
+                <reportElement x="5" y="0" width="30" height="15" uuid="b0123456-7890-1234-3456-901234567899"/>
                 <textElement verticalAlignment="Top">
                     <font fontName="DejaVu Sans" size="7" isItalic="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA["Obs: " + $F{notes}]]></textFieldExpression>
-            </textField>
+                <text><![CDATA[Obs:]]></text>
+            </staticText>
+
+            <subreport>
+                <reportElement stretchType="ElementGroupHeight" x="35" y="0" width="515" height="15" uuid="b0123456-7890-1234-3456-901234567890"/>
+                <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($F{notesBlocks})]]></dataSourceExpression>
+                <subreportExpression><![CDATA[$P{CONTENT_BLOCKS_SUBREPORT}]]></subreportExpression>
+            </subreport>
         </band>
 
         <band height="10" splitType="Stretch">

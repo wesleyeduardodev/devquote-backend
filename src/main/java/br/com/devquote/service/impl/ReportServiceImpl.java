@@ -1073,8 +1073,11 @@ public class ReportServiceImpl implements ReportService {
 
             DeliveryReportData reportData = buildDeliveryReportData(delivery);
 
+            JasperReport contentBlocksSubreport = loadContentBlocksSubreport();
+
             JasperReport deliveryReport = loadDeliveryJasperReport();
             Map<String, Object> deliveryParameters = buildDeliveryReportParameters(reportData);
+            deliveryParameters.put("CONTENT_BLOCKS_SUBREPORT", contentBlocksSubreport);
             JasperPrint deliveryPrint = JasperFillManager.fillReport(deliveryReport, deliveryParameters, new JREmptyDataSource());
 
             List<JasperPrint> jasperPrints = new ArrayList<>();
@@ -1084,6 +1087,7 @@ public class ReportServiceImpl implements ReportService {
                 boolean isDesenvolvimento = "DESENVOLVIMENTO".equals(reportData.getFlowType());
                 JasperReport itemsReport = isDesenvolvimento ? loadDeliveryItemsDevJasperReport() : loadDeliveryItemsOpJasperReport();
                 Map<String, Object> itemsParameters = buildDeliveryItemsReportParameters(reportData);
+                itemsParameters.put("CONTENT_BLOCKS_SUBREPORT", contentBlocksSubreport);
                 JRBeanCollectionDataSource itemsDataSource = new JRBeanCollectionDataSource(reportData.getItems());
                 JasperPrint itemsPrint = JasperFillManager.fillReport(itemsReport, itemsParameters, itemsDataSource);
                 jasperPrints.add(itemsPrint);
@@ -1116,6 +1120,7 @@ public class ReportServiceImpl implements ReportService {
 
         if (delivery.getItems() != null) {
             for (DeliveryItem item : delivery.getItems()) {
+                List<ContentBlock> notesBlocks = HtmlImageExtractor.parseHtmlToBlocks(item.getNotes(), fileStorageStrategy);
                 itemRows.add(DeliveryItemReportRow.builder()
                         .id(item.getId())
                         .order(order++)
@@ -1129,6 +1134,8 @@ public class ReportServiceImpl implements ReportService {
                         .sourceBranch(item.getSourceBranch())
                         .pullRequest(item.getPullRequest())
                         .notes(item.getNotes())
+                        .notesBlocks(notesBlocks)
+                        .hasNotesContent(!notesBlocks.isEmpty())
                         .startedAtFormatted(item.getStartedAt() != null ? item.getStartedAt().format(DATE_TIME_FORMATTER) : null)
                         .finishedAtFormatted(item.getFinishedAt() != null ? item.getFinishedAt().format(DATE_TIME_FORMATTER) : null)
                         .build());
@@ -1137,6 +1144,7 @@ public class ReportServiceImpl implements ReportService {
 
         if (delivery.getOperationalItems() != null) {
             for (DeliveryOperationalItem item : delivery.getOperationalItems()) {
+                List<ContentBlock> descBlocks = HtmlImageExtractor.parseHtmlToBlocks(item.getDescription(), fileStorageStrategy);
                 itemRows.add(DeliveryItemReportRow.builder()
                         .id(item.getId())
                         .order(order++)
@@ -1144,6 +1152,8 @@ public class ReportServiceImpl implements ReportService {
                         .projectName(null)
                         .title(item.getTitle())
                         .description(item.getDescription())
+                        .descriptionBlocks(descBlocks)
+                        .hasDescriptionContent(!descBlocks.isEmpty())
                         .status(item.getStatus() != null ? item.getStatus().name() : null)
                         .statusLabel(getOperationalStatusLabel(item.getStatus() != null ? item.getStatus().name() : null))
                         .branch(null)
@@ -1158,6 +1168,8 @@ public class ReportServiceImpl implements ReportService {
 
         Task task = delivery.getTask();
 
+        List<ContentBlock> deliveryNotesBlocks = HtmlImageExtractor.parseHtmlToBlocks(delivery.getNotes(), fileStorageStrategy);
+
         return DeliveryReportData.builder()
                 .id(delivery.getId())
                 .taskId(task.getId())
@@ -1170,6 +1182,8 @@ public class ReportServiceImpl implements ReportService {
                 .status(delivery.getStatus() != null ? delivery.getStatus().name() : null)
                 .statusLabel(getDeliveryStatusLabel(delivery.getStatus() != null ? delivery.getStatus().name() : null))
                 .notes(delivery.getNotes())
+                .notesBlocks(deliveryNotesBlocks)
+                .hasNotesContent(!deliveryNotesBlocks.isEmpty())
                 .startedAt(delivery.getStartedAt())
                 .startedAtFormatted(delivery.getStartedAt() != null ? delivery.getStartedAt().format(DATE_TIME_FORMATTER) : null)
                 .finishedAt(delivery.getFinishedAt())
@@ -1252,6 +1266,8 @@ public class ReportServiceImpl implements ReportService {
         parameters.put("environmentLabel", data.getEnvironmentLabel());
         parameters.put("statusLabel", data.getStatusLabel());
         parameters.put("notes", data.getNotes());
+        parameters.put("hasNotesContent", data.isHasNotesContent());
+        parameters.put("notesBlocksDataSource", new JRBeanCollectionDataSource(data.getNotesBlocks() != null ? data.getNotesBlocks() : new ArrayList<>()));
         parameters.put("startedAtFormatted", data.getStartedAtFormatted());
         parameters.put("finishedAtFormatted", data.getFinishedAtFormatted());
         parameters.put("totalItems", data.getTotalItems());
