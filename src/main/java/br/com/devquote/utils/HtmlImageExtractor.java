@@ -122,11 +122,14 @@ public class HtmlImageExtractor {
             return html;
         }
 
-        String result = html.replaceAll("<img[^>]*>", "");
+        String result = html.replaceAll("<img[^>]*>", "[imagem]");
 
-        result = result.replaceAll("<(p|div|span|br)[^>]*>", "");
-        result = result.replaceAll("</(p|div|span)>", " ");
+        result = result.replaceAll("</p>", "<br/>");
+        result = result.replaceAll("</div>", "<br/>");
         result = result.replaceAll("<br\\s*/?>", "<br/>");
+
+        result = result.replaceAll("<(p|div|span)[^>]*>", "");
+        result = result.replaceAll("</span>", "");
 
         result = result.replaceAll("<strong>", "<b>");
         result = result.replaceAll("</strong>", "</b>");
@@ -135,9 +138,12 @@ public class HtmlImageExtractor {
 
         result = decodeHtmlEntities(result);
 
-        result = result.replaceAll("\\s+", " ").trim();
+        result = result.replaceAll("[ \\t]+", " ");
+        result = result.replaceAll("(<br/>\\s*){3,}", "<br/><br/>");
+        result = result.replaceAll("^\\s*(<br/>\\s*)+", "");
+        result = result.replaceAll("(<br/>\\s*)+$", "");
 
-        return result;
+        return result.trim();
     }
 
     public static String decodeHtmlEntities(String text) {
