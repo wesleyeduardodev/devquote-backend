@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Component
 public class ExcelReportUtils {
@@ -1232,5 +1233,38 @@ public class ExcelReportUtils {
         style.setWrapText(true);
 
         return style;
+    }
+
+    public static String stripHtml(Object value) {
+        if (value == null) {
+            return "";
+        }
+
+        String text = value.toString();
+        if (text.isEmpty()) {
+            return "";
+        }
+
+        text = text.replaceAll("<br\\s*/?>", "\n");
+        text = text.replaceAll("</p>\\s*<p[^>]*>", "\n\n");
+        text = text.replaceAll("</div>\\s*<div[^>]*>", "\n");
+        text = text.replaceAll("</li>", "\n");
+        text = text.replaceAll("<hr\\s*/?>", "\n---\n");
+
+        Pattern htmlTagPattern = Pattern.compile("<[^>]+>");
+        text = htmlTagPattern.matcher(text).replaceAll("");
+
+        text = text.replace("&nbsp;", " ");
+        text = text.replace("&amp;", "&");
+        text = text.replace("&lt;", "<");
+        text = text.replace("&gt;", ">");
+        text = text.replace("&quot;", "\"");
+        text = text.replace("&#39;", "'");
+        text = text.replace("&apos;", "'");
+
+        text = text.replaceAll("[ \\t]+", " ");
+        text = text.replaceAll("\\n{3,}", "\n\n");
+
+        return text.trim();
     }
 }

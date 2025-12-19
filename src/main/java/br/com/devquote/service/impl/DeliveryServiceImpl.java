@@ -601,7 +601,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("subtasks_count", row[6]);
             map.put("requester_name", row[7]);
             map.put("delivery_status", row[8]);
-            map.put("delivery_notes", row[9]);
+            map.put("delivery_notes", ExcelReportUtils.stripHtml(row[9]));
             map.put("delivery_started_at", row[10]);
             map.put("delivery_finished_at", row[11]);
             map.put("project_name", row[12]);
@@ -609,7 +609,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("item_branch", row[14]);
             map.put("item_source_branch", row[15]);
             map.put("item_pull_request", row[16]);
-            map.put("item_notes", row[17]);
+            map.put("item_notes", ExcelReportUtils.stripHtml(row[17]));
             map.put("item_started_at", row[18]);
             map.put("item_finished_at", row[19]);
             return map;
@@ -663,11 +663,11 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("subtasks_count", row[6]);
             map.put("requester_name", row[7]);
             map.put("delivery_status", row[8]);
-            map.put("delivery_notes", row[9]);
+            map.put("delivery_notes", ExcelReportUtils.stripHtml(row[9]));
             map.put("delivery_started_at", row[10]);
             map.put("delivery_finished_at", row[11]);
             map.put("item_title", row[12]);
-            map.put("item_description", row[13]);
+            map.put("item_description", ExcelReportUtils.stripHtml(row[13]));
             map.put("item_status", row[14]);
             map.put("item_started_at", row[15]);
             map.put("item_finished_at", row[16]);
@@ -722,7 +722,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("subtasks_count", row[8]);
             map.put("requester_name", row[9]);
             map.put("delivery_status", row[10]);
-            map.put("delivery_notes", row[11]);
+            map.put("delivery_notes", ExcelReportUtils.stripHtml(row[11]));
             map.put("delivery_started_at", row[12]);
             map.put("delivery_finished_at", row[13]);
             map.put("delivery_created_at", row[14]);

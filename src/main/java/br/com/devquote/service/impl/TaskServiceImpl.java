@@ -723,7 +723,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
-            map.put("task_description", row[3]);
+            map.put("task_description", ExcelReportUtils.stripHtml(row[3]));
             map.put("task_type", row[4]);
             map.put("task_environment", row[5]);
             map.put("task_flow_type", row[6]);
@@ -743,7 +743,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_updated_at", row[20]);
             map.put("subtask_id", row[21]);
             map.put("subtask_title", row[22]);
-            map.put("subtask_description", row[23]);
+            map.put("subtask_description", ExcelReportUtils.stripHtml(row[23]));
             map.put("subtask_amount", row[24]);
             return map;
         }).collect(Collectors.toList());
@@ -814,7 +814,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
-            map.put("task_description", row[3]);
+            map.put("task_description", ExcelReportUtils.stripHtml(row[3]));
             map.put("task_type", row[4]);
             map.put("task_environment", row[5]);
             map.put("task_flow_type", row[6]);
@@ -914,7 +914,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
-            map.put("task_description", row[3]);
+            map.put("task_description", ExcelReportUtils.stripHtml(row[3]));
             map.put("task_priority", row[4]);
             map.put("task_amount", row[5]);
             map.put("requester_name", row[6]);
@@ -937,7 +937,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("project_name", row[19]);
             map.put("delivery_pull_request", row[20]);
             map.put("delivery_branch", row[21]);
-            map.put("delivery_notes", row[22]);
+            map.put("delivery_notes", ExcelReportUtils.stripHtml(row[22]));
             map.put("delivery_started_at", row[23]);
             map.put("delivery_finished_at", row[24]);
 
@@ -1014,7 +1014,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("task_id", row[0]);
             map.put("task_code", row[1]);
             map.put("task_title", row[2]);
-            map.put("task_description", row[3]);
+            map.put("task_description", ExcelReportUtils.stripHtml(row[3]));
             map.put("task_priority", row[4]);
             map.put("requester_name", row[5]);
 
@@ -1030,7 +1030,7 @@ public class TaskServiceImpl implements TaskService {
             map.put("project_name", row[13]);
             map.put("delivery_pull_request", row[14]);
             map.put("delivery_branch", row[15]);
-            map.put("delivery_notes", row[16]);
+            map.put("delivery_notes", ExcelReportUtils.stripHtml(row[16]));
             map.put("delivery_started_at", row[17]);
             map.put("delivery_finished_at", row[18]);
 
