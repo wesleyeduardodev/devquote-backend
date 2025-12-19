@@ -128,8 +128,9 @@ public class HtmlImageExtractor {
         result = result.replaceAll("</div>", "<br/>");
         result = result.replaceAll("<br\\s*/?>", "<br/>");
 
-        result = result.replaceAll("<(p|div|span)[^>]*>", "");
-        result = result.replaceAll("</span>", "");
+        result = convertStylesToFontTags(result);
+
+        result = result.replaceAll("<(p|div)[^>]*>", "");
 
         result = result.replaceAll("<strong>", "<b>");
         result = result.replaceAll("</strong>", "</b>");
@@ -144,6 +145,36 @@ public class HtmlImageExtractor {
         result = result.replaceAll("(<br/>\\s*)+$", "");
 
         return result.trim();
+    }
+
+    private static String convertStylesToFontTags(String html) {
+        if (html == null || html.isEmpty()) {
+            return html;
+        }
+
+        String result = html;
+
+        Pattern colorPattern = Pattern.compile(
+            "<span[^>]*style=\"[^\"]*color:\\s*([^;\"]+)[^\"]*\"[^>]*>",
+            Pattern.CASE_INSENSITIVE
+        );
+        Matcher colorMatcher = colorPattern.matcher(result);
+        StringBuffer sb = new StringBuffer();
+        while (colorMatcher.find()) {
+            String color = colorMatcher.group(1).trim();
+            colorMatcher.appendReplacement(sb, "<font color=\"" + color + "\">");
+        }
+        colorMatcher.appendTail(sb);
+        result = sb.toString();
+
+        result = result.replaceAll("</span>", "</font>");
+
+        result = result.replaceAll("<span[^>]*>", "");
+
+        result = result.replaceAll("<mark[^>]*>", "");
+        result = result.replaceAll("</mark>", "");
+
+        return result;
     }
 
     public static String decodeHtmlEntities(String text) {
