@@ -2,6 +2,7 @@ package br.com.devquote.enums;
 
 public enum InlineImageEntityType {
     TASK,
+    SUBTASK,
     DELIVERY,
     DELIVERY_DEVELOPMENT_ITEM,
     DELIVERY_OPERATIONAL_ITEM,

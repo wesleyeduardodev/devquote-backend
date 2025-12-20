@@ -77,6 +77,9 @@ public class InlineImageServiceImpl implements InlineImageService {
         if (entityId == null) {
             throw new RuntimeException("ID da entidade e obrigatorio");
         }
+        if (entityType == InlineImageEntityType.SUBTASK && parentId == null) {
+            throw new RuntimeException("ID da task pai e obrigatorio para subtasks");
+        }
         if ((entityType == InlineImageEntityType.DELIVERY_DEVELOPMENT_ITEM ||
              entityType == InlineImageEntityType.DELIVERY_OPERATIONAL_ITEM) && parentId == null) {
             throw new RuntimeException("ID da entrega pai e obrigatorio para itens de entrega");
@@ -101,6 +104,7 @@ public class InlineImageServiceImpl implements InlineImageService {
     private String buildFilePath(InlineImageEntityType entityType, Long entityId, Long parentId, String fileName) {
         return switch (entityType) {
             case TASK -> String.format("tasks/%d/inline-images/%s", entityId, fileName);
+            case SUBTASK -> String.format("tasks/%d/subtasks/%d/inline-images/%s", parentId, entityId, fileName);
             case DELIVERY -> String.format("deliveries/%d/inline-images/%s", entityId, fileName);
             case DELIVERY_DEVELOPMENT_ITEM -> String.format("deliveries/%d/development-items/%d/inline-images/%s", parentId, entityId, fileName);
             case DELIVERY_OPERATIONAL_ITEM -> String.format("deliveries/%d/operational-items/%d/inline-images/%s", parentId, entityId, fileName);
