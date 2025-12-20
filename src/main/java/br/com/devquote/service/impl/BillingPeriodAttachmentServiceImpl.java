@@ -63,7 +63,7 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
             String extension = getFileExtension(originalFileName);
             String fileName = UUID.randomUUID() + extension;
 
-            String storagePath = "billing-periods/" + billingPeriodId + "/" + fileName;
+            String storagePath = "billing-periods/" + billingPeriodId + "/attachments/" + fileName;
 
             String filePath = fileStorageStrategy.uploadFile(file, storagePath);
 
@@ -174,7 +174,7 @@ public class BillingPeriodAttachmentServiceImpl implements BillingPeriodAttachme
 
             if (!attachments.isEmpty()) {
 
-                String folderPath = "billing-periods/" + billingPeriodId + "/";
+                String folderPath = "billing-periods/" + billingPeriodId + "/attachments/";
                 log.debug("Deleting folder from S3: {}", folderPath);
                 fileStorageStrategy.deleteFolder(folderPath);
                 log.debug("S3 folder deleted successfully");

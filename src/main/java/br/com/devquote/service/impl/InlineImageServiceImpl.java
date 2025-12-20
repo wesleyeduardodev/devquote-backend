@@ -1,6 +1,7 @@
 package br.com.devquote.service.impl;
 
 import br.com.devquote.dto.response.InlineImageResponse;
+import br.com.devquote.enums.InlineImageEntityType;
 import br.com.devquote.service.InlineImageService;
 import br.com.devquote.service.storage.FileStorageStrategy;
 import lombok.RequiredArgsConstructor;
@@ -39,21 +40,22 @@ public class InlineImageServiceImpl implements InlineImageService {
     private static final float COMPRESSION_QUALITY = 0.85f;
 
     @Override
-    public InlineImageResponse uploadImage(MultipartFile file, String context) {
+    public InlineImageResponse uploadImage(MultipartFile file, InlineImageEntityType entityType, Long entityId, Long parentId) {
         validateImage(file);
+        validateEntityParams(entityType, entityId, parentId);
 
         try {
             MultipartFile processedFile = compressImageIfNeeded(file);
 
             String fileName = generateFileName(file.getOriginalFilename());
-            String filePath = buildFilePath(context, fileName);
+            String filePath = buildFilePath(entityType, entityId, parentId, fileName);
 
             String uploadedFilePath = fileStorageStrategy.uploadFile(processedFile, filePath);
 
             String proxyUrl = "/api/inline-images/view/" + uploadedFilePath;
 
-            log.info("Inline image uploaded successfully: {} (original size: {}, compressed size: {})",
-                    fileName, file.getSize(), processedFile.getSize());
+            log.info("Inline image uploaded successfully: {} to path: {} (original size: {}, compressed size: {})",
+                    fileName, filePath, file.getSize(), processedFile.getSize());
 
             return InlineImageResponse.builder()
                     .url(proxyUrl)
@@ -65,6 +67,19 @@ public class InlineImageServiceImpl implements InlineImageService {
         } catch (IOException e) {
             log.error("Error uploading inline image: {}", e.getMessage(), e);
             throw new RuntimeException("Falha ao fazer upload da imagem: " + e.getMessage());
+        }
+    }
+
+    private void validateEntityParams(InlineImageEntityType entityType, Long entityId, Long parentId) {
+        if (entityType == null) {
+            throw new RuntimeException("Tipo de entidade e obrigatorio");
+        }
+        if (entityId == null) {
+            throw new RuntimeException("ID da entidade e obrigatorio");
+        }
+        if ((entityType == InlineImageEntityType.DELIVERY_DEVELOPMENT_ITEM ||
+             entityType == InlineImageEntityType.DELIVERY_OPERATIONAL_ITEM) && parentId == null) {
+            throw new RuntimeException("ID da entrega pai e obrigatorio para itens de entrega");
         }
     }
 
@@ -81,6 +96,16 @@ public class InlineImageServiceImpl implements InlineImageService {
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
             throw new RuntimeException("Tipo de imagem nao permitido. Use JPEG, PNG, GIF ou WebP");
         }
+    }
+
+    private String buildFilePath(InlineImageEntityType entityType, Long entityId, Long parentId, String fileName) {
+        return switch (entityType) {
+            case TASK -> String.format("tasks/%d/inline-images/%s", entityId, fileName);
+            case DELIVERY -> String.format("deliveries/%d/inline-images/%s", entityId, fileName);
+            case DELIVERY_DEVELOPMENT_ITEM -> String.format("deliveries/%d/development-items/%d/inline-images/%s", parentId, entityId, fileName);
+            case DELIVERY_OPERATIONAL_ITEM -> String.format("deliveries/%d/operational-items/%d/inline-images/%s", parentId, entityId, fileName);
+            case BILLING_PERIOD -> String.format("billing-periods/%d/inline-images/%s", entityId, fileName);
+        };
     }
 
     private MultipartFile compressImageIfNeeded(MultipartFile file) throws IOException {
@@ -150,11 +175,6 @@ public class InlineImageServiceImpl implements InlineImageService {
         }
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         return "img_" + timestamp + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
-    }
-
-    private String buildFilePath(String context, String fileName) {
-        String sanitizedContext = context.replaceAll("[^a-zA-Z0-9_-]", "_");
-        return String.format("inline-images/%s/%s", sanitizedContext, fileName);
     }
 
     private static class CompressedMultipartFile implements MultipartFile {

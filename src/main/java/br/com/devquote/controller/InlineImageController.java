@@ -1,6 +1,7 @@
 package br.com.devquote.controller;
 
 import br.com.devquote.dto.response.InlineImageResponse;
+import br.com.devquote.enums.InlineImageEntityType;
 import br.com.devquote.service.InlineImageService;
 import br.com.devquote.service.storage.FileStorageStrategy;
 import lombok.RequiredArgsConstructor;
@@ -30,10 +31,12 @@ public class InlineImageController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<InlineImageResponse> uploadImage(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "context", defaultValue = "general") String context) {
+            @RequestParam("entityType") InlineImageEntityType entityType,
+            @RequestParam("entityId") Long entityId,
+            @RequestParam(value = "parentId", required = false) Long parentId) {
 
         try {
-            InlineImageResponse response = inlineImageService.uploadImage(file, context);
+            InlineImageResponse response = inlineImageService.uploadImage(file, entityType, entityId, parentId);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             log.error("Error uploading inline image: {}", e.getMessage());

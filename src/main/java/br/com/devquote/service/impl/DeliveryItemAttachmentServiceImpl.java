@@ -253,7 +253,7 @@ public class DeliveryItemAttachmentServiceImpl implements DeliveryItemAttachment
     }
 
     private String buildFilePath(Long deliveryId, Long deliveryItemId, String fileName) {
-        return String.format("deliveries/%d/items/%d/attachments/%s", deliveryId, deliveryItemId, fileName);
+        return String.format("deliveries/%d/development-items/%d/attachments/%s", deliveryId, deliveryItemId, fileName);
     }
     
     @Override
