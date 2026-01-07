@@ -373,7 +373,7 @@
 
     <!-- Summary Band -->
     <summary>
-        <band height="250">
+        <band height="320">
             <!-- Totals Row OPERACIONAL -->
             <rectangle>
                 <reportElement x="0" y="5" width="555" height="25" backcolor="#6366F1" uuid="c2d3e4f5-a6b1-4eaf-a5b6-ef0123456789"/>
@@ -384,7 +384,7 @@
                 <textElement>
                     <font fontName="DejaVu Sans" size="10" isBold="true"/>
                 </textElement>
-                <text><![CDATA[TOTAL GERAL]]></text>
+                <text><![CDATA[TOTAL]]></text>
             </staticText>
 
             <textField>
@@ -688,7 +688,7 @@
                 <textElement>
                     <font fontName="DejaVu Sans" size="10" isBold="true"/>
                 </textElement>
-                <text><![CDATA[TOTAL GERAL]]></text>
+                <text><![CDATA[TOTAL]]></text>
             </staticText>
 
             <textField>
@@ -729,6 +729,27 @@
                     <font fontName="DejaVu Sans" size="7" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalGeralDesenv} + " - " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorGeralDesenv})]]></textFieldExpression>
+            </textField>
+
+            <!-- TOTAL GERAL (Soma dos 2 fluxos) -->
+            <rectangle>
+                <reportElement x="0" y="280" width="555" height="28" backcolor="#10B981" uuid="a1b2c3d4-e5f6-4a7b-8c9d-ef1234567002"/>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="10" y="285" width="120" height="18" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a7b-8c9d-ef1234567003"/>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="11" isBold="true"/>
+                </textElement>
+                <text><![CDATA[TOTAL GERAL]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="200" y="285" width="345" height="18" forecolor="#FFFFFF" uuid="a1b2c3d4-e5f6-4a7b-8c9d-ef1234567005"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="11" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Valor: " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format($P{totalValorGeral}.add($P{totalValorGeralDesenv}))]]></textFieldExpression>
             </textField>
         </band>
     </summary>
