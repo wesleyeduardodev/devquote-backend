@@ -138,8 +138,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         WHERE
             d.flow_type = 'OPERACIONAL'
             AND d.status = 'DELIVERED'
-            AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
-                 d.finished_at BETWEEN :dataInicio AND :dataFim)
+            AND d.finished_at BETWEEN :dataInicio AND :dataFim
         GROUP BY t.task_type, d.environment
         ORDER BY t.task_type, d.environment
         """, nativeQuery = true)
@@ -158,8 +157,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         WHERE
             d.flow_type = 'OPERACIONAL'
             AND d.status = 'DELIVERED'
-            AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
-                 d.finished_at BETWEEN :dataInicio AND :dataFim)   
+            AND d.finished_at BETWEEN :dataInicio AND :dataFim
         GROUP BY t.task_type, d.environment
         ORDER BY t.task_type, d.environment
         """, nativeQuery = true)
@@ -196,8 +194,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         WHERE
             d.flow_type = 'DESENVOLVIMENTO'
             --AND d.status IN ('DELIVERED', 'HOMOLOGATION', 'APPROVED', 'PRODUCTION')
-            AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
-                 d.finished_at BETWEEN :dataInicio AND :dataFim)
+            AND d.finished_at BETWEEN :dataInicio AND :dataFim
         GROUP BY t.task_type, d.environment
         ORDER BY t.task_type, d.environment
         """, nativeQuery = true)
@@ -216,8 +213,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
         WHERE
             d.flow_type = 'DESENVOLVIMENTO'
             --AND d.status IN ('DELIVERED', 'HOMOLOGATION', 'APPROVED', 'PRODUCTION')
-            AND (d.started_at BETWEEN :dataInicio AND :dataFim OR
-                 d.finished_at BETWEEN :dataInicio AND :dataFim)
+            AND d.finished_at BETWEEN :dataInicio AND :dataFim
         GROUP BY t.task_type, d.environment
         ORDER BY t.task_type, d.environment
         """, nativeQuery = true)
