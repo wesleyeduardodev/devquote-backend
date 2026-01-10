@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: devquote-postgres
+    ports:
+      - "5434:5434"
+    environment:
+      POSTGRES_DB: devquote
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      PGPORT: 5434
+    volumes:
+      - devquote_pgdata:/var/lib/postgresql
+    networks:
+      - devquote-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d devquote -h localhost -p 5434" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  devquote_pgdata:
+
+networks:
+  devquote-network:
+    external: true

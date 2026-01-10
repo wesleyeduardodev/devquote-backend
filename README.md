@@ -108,6 +108,75 @@ DEVQUOTE_EMAIL_ENABLED / DEVQUOTE_EMAIL_FROM
 Banco: `jdbc:postgresql://localhost:5434/devquote` (user: postgres, pass: root)
 Redis: `localhost:6379`
 
+## Docker Compose (Containers Separados)
+
+O projeto possui arquivos docker-compose separados para cada serviço, permitindo subir apenas o que for necessário.
+
+### Arquivos Disponíveis
+
+| Arquivo | Serviço | Porta |
+|---------|---------|-------|
+| `docker-compose.yml` | Todos (postgres + redis + api) | 5434, 6379, 8080 |
+| `docker-compose.postgres.yml` | PostgreSQL 17 | 5434 |
+| `docker-compose.redis.yml` | Redis 7 | 6379 |
+| `docker-compose.api.yml` | Backend Spring Boot | 8080 |
+
+### Passo 1: Criar a Rede Compartilhada
+
+Antes de subir qualquer container separado, crie a rede que será compartilhada entre eles:
+
+```bash
+docker network create devquote-network
+```
+
+### Passo 2: Subir os Containers
+
+**Subir apenas o PostgreSQL:**
+```bash
+docker-compose -f docker-compose.postgres.yml up -d
+```
+
+**Subir apenas o Redis:**
+```bash
+docker-compose -f docker-compose.redis.yml up -d
+```
+
+**Subir apenas a API (requer postgres e redis rodando):**
+```bash
+docker-compose -f docker-compose.api.yml up -d
+```
+
+**Subir PostgreSQL + Redis juntos:**
+```bash
+docker-compose -f docker-compose.postgres.yml -f docker-compose.redis.yml up -d
+```
+
+### Comandos Uteis
+
+**Verificar containers rodando:**
+```bash
+docker ps --filter "name=devquote"
+```
+
+**Ver logs de um container:**
+```bash
+docker logs -f devquote-postgres
+docker logs -f devquote-redis
+docker logs -f devquote-backend
+```
+
+**Parar containers:**
+```bash
+docker-compose -f docker-compose.postgres.yml down
+docker-compose -f docker-compose.redis.yml down
+docker-compose -f docker-compose.api.yml down
+```
+
+**Verificar rede:**
+```bash
+docker network inspect devquote-network
+```
+
 ## 📊 Status Atual
 
 ### ✅ Completo e Funcional
