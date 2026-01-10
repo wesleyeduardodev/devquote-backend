@@ -133,22 +133,22 @@ docker network create devquote-network
 
 **Subir apenas o PostgreSQL:**
 ```bash
-docker-compose -f docker-compose.postgres.yml up -d
+docker compose -f docker-compose.postgres.yml up -d
 ```
 
 **Subir apenas o Redis:**
 ```bash
-docker-compose -f docker-compose.redis.yml up -d
+docker compose -f docker-compose.redis.yml up -d
 ```
 
 **Subir apenas a API (requer postgres e redis rodando):**
 ```bash
-docker-compose -f docker-compose.api.yml up -d
+docker compose -f docker-compose.api.yml up -d
 ```
 
 **Subir PostgreSQL + Redis juntos:**
 ```bash
-docker-compose -f docker-compose.postgres.yml -f docker-compose.redis.yml up -d
+docker compose -f docker-compose.postgres.yml -f docker-compose.redis.yml up -d
 ```
 
 ### Comandos Uteis
