@@ -82,7 +82,7 @@ public interface DeliveryItemRepository extends JpaRepository<DeliveryItem, Long
     List<DeliveryItem> findByIdsWithEntityGraph(@Param("ids") List<Long> ids);
 
     @Query(value = """
-        SELECT 
+        SELECT
             di.id,
             di.delivery_id,
             di.project_id,
@@ -109,4 +109,13 @@ public interface DeliveryItemRepository extends JpaRepository<DeliveryItem, Long
         ORDER BY di.id
         """, nativeQuery = true)
     List<Object[]> findItemsByTaskIdOptimized(@Param("taskId") Long taskId);
+
+    @EntityGraph(attributePaths = {"delivery", "project"})
+    @Query("""
+        SELECT di FROM DeliveryItem di
+        WHERE di.pullRequest IS NOT NULL
+          AND di.pullRequest <> ''
+          AND (di.merged IS NULL OR di.merged = false)
+        """)
+    List<DeliveryItem> findEligibleForGitSync();
 }

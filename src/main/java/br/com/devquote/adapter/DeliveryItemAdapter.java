@@ -30,12 +30,14 @@ public final class DeliveryItemAdapter {
                 .finishedAt(entity.getFinishedAt())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
-                .taskId(entity.getDelivery() != null && entity.getDelivery().getTask() != null ? 
+                .taskId(entity.getDelivery() != null && entity.getDelivery().getTask() != null ?
                         entity.getDelivery().getTask().getId() : null)
-                .taskName(entity.getDelivery() != null && entity.getDelivery().getTask() != null ? 
+                .taskName(entity.getDelivery() != null && entity.getDelivery().getTask() != null ?
                         entity.getDelivery().getTask().getTitle() : null)
-                .taskCode(entity.getDelivery() != null && entity.getDelivery().getTask() != null ? 
+                .taskCode(entity.getDelivery() != null && entity.getDelivery().getTask() != null ?
                         entity.getDelivery().getTask().getCode() : null)
+                .merged(entity.getMerged())
+                .mergedAt(entity.getMergedAt())
                 .build();
     }
 

@@ -46,4 +46,10 @@ public class DeliveryItem extends BaseEntity {
 
     @Column(name = "finished_at")
     private LocalDateTime finishedAt;
+
+    @Column(name = "merged")
+    private Boolean merged;
+
+    @Column(name = "merged_at")
+    private LocalDateTime mergedAt;
 }

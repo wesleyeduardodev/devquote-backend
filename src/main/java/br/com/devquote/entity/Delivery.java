@@ -7,6 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Objects;
 
 @Entity
 @Table(name = "delivery")
@@ -164,7 +165,7 @@ public class Delivery {
 
                 this.finishedAt = items.stream()
                     .map(DeliveryItem::getFinishedAt)
-                    .filter(date -> date != null)
+                    .filter(Objects::nonNull)
                     .max(LocalDateTime::compareTo)
                     .orElse(null);
             } else {
@@ -175,7 +176,7 @@ public class Delivery {
             if (operationalItems != null && !operationalItems.isEmpty()) {
                 this.startedAt = operationalItems.stream()
                     .map(DeliveryOperationalItem::getStartedAt)
-                    .filter(date -> date != null)
+                    .filter(Objects::nonNull)
                     .min(LocalDateTime::compareTo)
                     .orElse(null);
 
