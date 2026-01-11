@@ -65,6 +65,12 @@ public class Delivery {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "clickup_last_synced_status")
+    private String clickupLastSyncedStatus;
+
+    @Column(name = "clickup_synced_at")
+    private LocalDateTime clickupSyncedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

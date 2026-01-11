@@ -221,4 +221,16 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             @Param("dataInicio") LocalDateTime dataInicio,
             @Param("dataFim") LocalDateTime dataFim
     );
+
+    @Query(value = """
+        SELECT d.* FROM delivery d
+        JOIN task t ON t.id = d.task_id
+        WHERE d.flow_type = :flowType
+          AND d.status IN ('DEVELOPMENT', 'DELIVERED', 'PRODUCTION')
+          AND (d.clickup_last_synced_status IS NULL
+               OR (d.status = 'DEVELOPMENT' AND d.clickup_last_synced_status != 'em progresso')
+               OR (d.status = 'DELIVERED' AND d.clickup_last_synced_status != 'desenvolvimento concluído')
+               OR (d.status = 'PRODUCTION' AND d.clickup_last_synced_status != 'complete'))
+        """, nativeQuery = true)
+    List<Delivery> findEligibleForClickUpSync(@Param("flowType") String flowType);
 }

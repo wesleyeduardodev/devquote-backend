@@ -1,6 +1,7 @@
 package br.com.devquote.controller;
 
 import br.com.devquote.controller.doc.GitSyncControllerDoc;
+import br.com.devquote.service.ClickUpSyncService;
 import br.com.devquote.service.GitPullRequestSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import java.util.Map;
 public class GitSyncController implements GitSyncControllerDoc {
 
     private final GitPullRequestSyncService gitPullRequestSyncService;
+    private final ClickUpSyncService clickUpSyncService;
 
     @PostMapping("/sync")
     @PreAuthorize("hasRole('ADMIN')")
@@ -30,11 +32,14 @@ public class GitSyncController implements GitSyncControllerDoc {
         try {
             gitPullRequestSyncService.syncMergedPullRequests();
 
+            log.info("Iniciando sincronizacao com ClickUp apos Git sync");
+            clickUpSyncService.syncDeliveriesToClickUp();
+
             long duration = System.currentTimeMillis() - startTime;
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Sincronizacao executada com sucesso");
+            response.put("message", "Sincronizacao Git e ClickUp executada com sucesso");
             response.put("durationMs", duration);
 
             return ResponseEntity.ok(response);

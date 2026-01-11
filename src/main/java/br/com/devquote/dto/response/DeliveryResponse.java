@@ -43,6 +43,11 @@ public class DeliveryResponse {
 
     private String notes;
 
+    private String clickupLastSyncedStatus;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime clickupSyncedAt;
+
     private List<DeliveryItemResponse> items;
 
     private List<DeliveryOperationalItemResponse> operationalItems;
