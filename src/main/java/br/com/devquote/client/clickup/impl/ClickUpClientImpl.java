@@ -102,6 +102,22 @@ public class ClickUpClientImpl implements ClickUpClient {
 
     @Override
     @SuppressWarnings("unchecked")
+    public String getTaskStatus(String taskId) {
+        Map<String, Object> task = getTask(taskId);
+        if (task == null) {
+            return null;
+        }
+
+        Map<String, Object> statusInfo = (Map<String, Object>) task.get("status");
+        if (statusInfo == null) {
+            return null;
+        }
+
+        return (String) statusInfo.get("status");
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getList(String listId) {
         String url = String.format("%s/list/%s", CLICKUP_API_BASE, listId);
 

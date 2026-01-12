@@ -3,6 +3,7 @@ package br.com.devquote.service.impl;
 import br.com.devquote.client.clickup.ClickUpClient;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.enums.ClickUpStatusMapping;
+import br.com.devquote.enums.ClickUpStatusOrder;
 import br.com.devquote.enums.FlowType;
 import br.com.devquote.helper.ClickUpParameterHelper;
 import br.com.devquote.repository.DeliveryRepository;
@@ -112,31 +113,38 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
             return false;
         }
 
-        String clickUpStatus = ClickUpStatusMapping.fromDeliveryStatus(delivery.getStatus());
-        if (clickUpStatus == null) {
+        String newClickUpStatus = ClickUpStatusMapping.fromDeliveryStatus(delivery.getStatus());
+        if (newClickUpStatus == null) {
             log.info("[PULADO] Delivery ID: {}, Task Code: {} | Motivo: Nao foi possivel mapear status {}",
                     delivery.getId(), taskCode, delivery.getStatus());
             return false;
         }
 
-        String statusAnterior = delivery.getClickupLastSyncedStatus();
-        if (clickUpStatus.equals(statusAnterior)) {
-            log.info("[PULADO] Delivery ID: {}, Task Code: {} | Motivo: Status ja sincronizado ({})",
-                    delivery.getId(), taskCode, clickUpStatus);
+        String currentClickUpStatus = clickUpClient.getTaskStatus(taskCode);
+        if (currentClickUpStatus == null) {
+            log.warn("[PULADO] Delivery ID: {}, Task Code: {} | Motivo: Nao foi possivel obter status atual do ClickUp",
+                    delivery.getId(), taskCode);
             return false;
         }
 
-        boolean success = clickUpClient.updateTaskStatus(taskCode, clickUpStatus);
+        if (!ClickUpStatusOrder.canAdvanceTo(currentClickUpStatus, newClickUpStatus)) {
+            log.info("[PRESERVADO] Delivery ID: {}, Task Code: {} | Status ClickUp atual '{}' esta mais avancado que '{}'. Nao sera regredido.",
+                    delivery.getId(), taskCode, currentClickUpStatus, newClickUpStatus);
+            delivery.setClickupLastSyncedStatus(currentClickUpStatus);
+            delivery.setClickupSyncedAt(LocalDateTime.now());
+            deliveryRepository.save(delivery);
+            return false;
+        }
+
+        boolean success = clickUpClient.updateTaskStatus(taskCode, newClickUpStatus);
 
         if (success) {
-            delivery.setClickupLastSyncedStatus(clickUpStatus);
+            delivery.setClickupLastSyncedStatus(newClickUpStatus);
             delivery.setClickupSyncedAt(LocalDateTime.now());
             deliveryRepository.save(delivery);
 
-            log.info("[SUCESSO] Delivery ID: {}, Task Code: {} | Status: {} -> {}",
-                    delivery.getId(), taskCode,
-                    statusAnterior != null ? statusAnterior : "null",
-                    clickUpStatus);
+            log.info("[SUCESSO] Delivery ID: {}, Task Code: {} | Status: '{}' -> '{}'",
+                    delivery.getId(), taskCode, currentClickUpStatus, newClickUpStatus);
             return true;
         }
 

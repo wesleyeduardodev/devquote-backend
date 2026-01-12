@@ -9,6 +9,8 @@ public interface ClickUpClient {
 
     Map<String, Object> getTask(String taskId);
 
+    String getTaskStatus(String taskId);
+
     Map<String, Object> getList(String listId);
 
     List<String> getAvailableStatuses(String taskId);
