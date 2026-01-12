@@ -210,5 +210,57 @@ Sistema usado para gerenciar demandas de desenvolvimento, desde a solicitação 
 1. **DESENVOLVIMENTO**: tarefas técnicas com itens vinculados a projetos/branches/PRs
 2. **OPERACIONAL**: tarefas operacionais sem vinculação técnica
 
-Permite rastreamento completo: Tarefa → Subtarefas → Entrega → Itens de Entrega → Período de Faturamento
-// Test deploy with new simple workflow
+Permite rastreamento completo: Tarefa → Subtarefas → Entrega → Itens de Entrega → Periodo de Faturamento
+
+## Visualizacao de Logs (Grafana/Loki)
+
+### Acessar Logs do Backend
+
+No Grafana, va em **Explore** e selecione **Loki** como datasource.
+
+### Query para todos os logs do Backend
+
+```
+{filename=~".*backend.*"}
+```
+
+Essa regex captura logs de **todos os pods** do backend, independente do nome (util quando pods reiniciam).
+
+### Filtrar por conteudo
+
+```
+{filename=~".*backend.*"} |= "[SUCESSO]"
+{filename=~".*backend.*"} |= "[ERRO]"
+{filename=~".*backend.*"} |= "[PROCESSANDO]"
+{filename=~".*backend.*"} |= "ClickUp"
+{filename=~".*backend.*"} |= "Git"
+{filename=~".*backend.*"} |= "Delivery ID: 172"
+```
+
+### Filtrar por data
+
+No canto superior direito do Grafana, clique no seletor de tempo:
+- **Last 1 hour** / **Last 24 hours** / **Last 7 days** - periodos pre-definidos
+- **Custom time range** - definir data inicio e fim especificas
+
+### Formato dos Logs de Sincronizacao
+
+**Git Sync:**
+```
+=== INICIO: Sincronizacao PRs Git ===
+[PROCESSANDO] DeliveryItem ID: X, Delivery ID: X, Task Code: XXX, PR: github.com/...
+[SUCESSO] DeliveryItem ID: X, Task Code: XXX | merged: false -> true | Status: DEVELOPMENT -> PRODUCTION
+[PULADO] DeliveryItem ID: X, Task Code: XXX | Motivo: PR ainda nao mergeado
+[ERRO] DeliveryItem ID: X, Task Code: XXX | Motivo: ...
+=== FIM: Sincronizacao PRs Git | Atualizados: X, Erros: X, Pulados: X, Total: X (Xms) ===
+```
+
+**ClickUp Sync:**
+```
+=== INICIO: Sincronizacao ClickUp ===
+[PROCESSANDO] Delivery ID: X, Task Code: XXX
+[SUCESSO] Delivery ID: X, Task Code: XXX | Status: null -> "em progresso"
+[PULADO] Delivery ID: X, Task Code: XXX | Motivo: Status ja sincronizado
+[ERRO] Delivery ID: X, Task Code: XXX | Motivo: ...
+=== FIM: Sincronizacao ClickUp | Atualizados: X, Erros: X, Pulados: X, Total: X (Xms) ===
+```
