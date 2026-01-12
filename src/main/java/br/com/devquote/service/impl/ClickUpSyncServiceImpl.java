@@ -28,12 +28,13 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
     @Override
     @Transactional
     public void syncDeliveriesToClickUp() {
+        long startTime = System.currentTimeMillis();
+        log.info("=== INICIO: Sincronizacao ClickUp ===");
+
         if (!parameterHelper.isIntegrationEnabled()) {
             log.info("Integracao com ClickUp desabilitada. Pulando sincronizacao.");
             return;
         }
-
-        log.info("Iniciando sincronizacao de entregas com ClickUp");
 
         List<Delivery> eligibleDeliveries = deliveryRepository.findEligibleForClickUpSync(
                 FlowType.DESENVOLVIMENTO.name()
@@ -43,6 +44,7 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
 
         if (eligibleDeliveries.isEmpty()) {
             log.info("Nenhuma entrega elegivel para sincronizacao");
+            log.info("=== FIM: Sincronizacao ClickUp | Nenhuma entrega para processar ===");
             return;
         }
 
@@ -51,8 +53,15 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
         AtomicInteger skippedCount = new AtomicInteger(0);
 
         for (Delivery delivery : eligibleDeliveries) {
+            String taskCode = delivery.getTask() != null ? delivery.getTask().getCode() : null;
+
+            log.info("[PROCESSANDO] Delivery ID: {}, Task Code: {}",
+                    delivery.getId(), taskCode != null ? taskCode : "N/A");
+
             try {
+                String statusAnterior = delivery.getClickupLastSyncedStatus();
                 boolean updated = processDelivery(delivery);
+
                 if (updated) {
                     updatedCount.incrementAndGet();
                 } else {
@@ -60,12 +69,14 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
                 }
             } catch (Exception e) {
                 errorCount.incrementAndGet();
-                log.error("Erro ao processar Delivery {}: {}", delivery.getId(), e.getMessage(), e);
+                log.error("[ERRO] Delivery ID: {}, Task Code: {} | Motivo: {}",
+                        delivery.getId(), taskCode != null ? taskCode : "N/A", e.getMessage());
             }
         }
 
-        log.info("Sincronizacao concluida: {} atualizados, {} erros, {} pulados de {} total",
-                updatedCount.get(), errorCount.get(), skippedCount.get(), eligibleDeliveries.size());
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("=== FIM: Sincronizacao ClickUp | Atualizados: {}, Erros: {}, Pulados: {}, Total: {} ({}ms) ===",
+                updatedCount.get(), errorCount.get(), skippedCount.get(), eligibleDeliveries.size(), duration);
     }
 
     @Override
@@ -83,35 +94,37 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
     }
 
     private boolean processDelivery(Delivery delivery) {
+        String taskCode = delivery.getTask() != null ? delivery.getTask().getCode() : null;
+
         if (delivery.getTask() == null) {
-            log.debug("Delivery {} nao possui Task associada", delivery.getId());
+            log.info("[PULADO] Delivery ID: {} | Motivo: Task nao associada", delivery.getId());
             return false;
         }
 
-        String taskCode = delivery.getTask().getCode();
         if (taskCode == null || taskCode.trim().isEmpty()) {
-            log.debug("Task da Delivery {} nao possui code", delivery.getId());
+            log.info("[PULADO] Delivery ID: {} | Motivo: Task sem codigo ClickUp", delivery.getId());
             return false;
         }
 
         if (!ClickUpStatusMapping.isSyncableStatus(delivery.getStatus())) {
-            log.debug("Status {} da Delivery {} nao e sincronizavel", delivery.getStatus(), delivery.getId());
+            log.info("[PULADO] Delivery ID: {}, Task Code: {} | Motivo: Status {} nao sincronizavel",
+                    delivery.getId(), taskCode, delivery.getStatus());
             return false;
         }
 
         String clickUpStatus = ClickUpStatusMapping.fromDeliveryStatus(delivery.getStatus());
         if (clickUpStatus == null) {
-            log.debug("Nao foi possivel mapear status {} para ClickUp", delivery.getStatus());
+            log.info("[PULADO] Delivery ID: {}, Task Code: {} | Motivo: Nao foi possivel mapear status {}",
+                    delivery.getId(), taskCode, delivery.getStatus());
             return false;
         }
 
-        if (clickUpStatus.equals(delivery.getClickupLastSyncedStatus())) {
-            log.debug("Delivery {} ja esta sincronizada com status '{}'", delivery.getId(), clickUpStatus);
+        String statusAnterior = delivery.getClickupLastSyncedStatus();
+        if (clickUpStatus.equals(statusAnterior)) {
+            log.info("[PULADO] Delivery ID: {}, Task Code: {} | Motivo: Status ja sincronizado ({})",
+                    delivery.getId(), taskCode, clickUpStatus);
             return false;
         }
-
-        log.info("Sincronizando Delivery {} (Task {}) para status '{}'",
-                delivery.getId(), taskCode, clickUpStatus);
 
         boolean success = clickUpClient.updateTaskStatus(taskCode, clickUpStatus);
 
@@ -120,12 +133,15 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
             delivery.setClickupSyncedAt(LocalDateTime.now());
             deliveryRepository.save(delivery);
 
-            log.info("Delivery {} sincronizada com sucesso. ClickUp status: '{}'",
-                    delivery.getId(), clickUpStatus);
+            log.info("[SUCESSO] Delivery ID: {}, Task Code: {} | Status: {} -> {}",
+                    delivery.getId(), taskCode,
+                    statusAnterior != null ? statusAnterior : "null",
+                    clickUpStatus);
             return true;
         }
 
-        log.warn("Falha ao sincronizar Delivery {} com ClickUp", delivery.getId());
+        log.error("[ERRO] Delivery ID: {}, Task Code: {} | Motivo: Falha na API do ClickUp",
+                delivery.getId(), taskCode);
         return false;
     }
 }

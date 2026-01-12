@@ -33,18 +33,20 @@ public class GitPullRequestSyncServiceImpl implements GitPullRequestSyncService 
     @Override
     @Transactional
     public void syncMergedPullRequests() {
+        long startTime = System.currentTimeMillis();
+        log.info("=== INICIO: Sincronizacao PRs Git ===");
+
         if (!parameterHelper.isIntegrationEnabled()) {
             log.info("Integracao com Git desabilitada. Pulando sincronizacao.");
             return;
         }
-
-        log.info("Iniciando sincronizacao de PRs mergeados");
 
         List<DeliveryItem> eligibleItems = deliveryItemRepository.findEligibleForGitSync();
         log.info("Encontrados {} itens elegiveis para verificacao", eligibleItems.size());
 
         if (eligibleItems.isEmpty()) {
             log.info("Nenhum item elegivel para sincronizacao");
+            log.info("=== FIM: Sincronizacao PRs Git | Nenhum item para processar ===");
             return;
         }
 
@@ -53,29 +55,47 @@ public class GitPullRequestSyncServiceImpl implements GitPullRequestSyncService 
         AtomicInteger skippedCount = new AtomicInteger(0);
 
         for (DeliveryItem item : eligibleItems) {
+            String taskCode = item.getDelivery() != null && item.getDelivery().getTask() != null
+                    ? item.getDelivery().getTask().getCode() : "N/A";
+            Long deliveryId = item.getDelivery() != null ? item.getDelivery().getId() : null;
+            String prUrl = item.getPullRequest() != null ? item.getPullRequest() : "N/A";
+
+            log.info("[PROCESSANDO] DeliveryItem ID: {}, Delivery ID: {}, Task Code: {}, PR: {}",
+                    item.getId(), deliveryId, taskCode, prUrl);
+
             try {
+                DeliveryStatus statusAnterior = item.getStatus();
                 boolean updated = processDeliveryItem(item);
+
                 if (updated) {
                     updatedCount.incrementAndGet();
+                    log.info("[SUCESSO] DeliveryItem ID: {}, Task Code: {} | merged: false -> true | Status: {} -> PRODUCTION",
+                            item.getId(), taskCode, statusAnterior);
+                } else {
+                    skippedCount.incrementAndGet();
+                    log.info("[PULADO] DeliveryItem ID: {}, Task Code: {} | Motivo: PR ainda nao mergeado",
+                            item.getId(), taskCode);
                 }
             } catch (GitProviderException e) {
                 if ("UNSUPPORTED_PROVIDER".equals(e.getCode())) {
                     skippedCount.incrementAndGet();
-                    log.debug("Provedor nao suportado para item {}: {}", item.getId(), item.getPullRequest());
+                    log.warn("[PULADO] DeliveryItem ID: {}, Task Code: {} | Motivo: Provedor nao suportado",
+                            item.getId(), taskCode);
                 } else {
                     errorCount.incrementAndGet();
-                    log.error("Erro ao processar DeliveryItem {}: {} - {}",
-                            item.getId(), e.getCode(), e.getMessage());
+                    log.error("[ERRO] DeliveryItem ID: {}, Task Code: {} | Motivo: {} - {}",
+                            item.getId(), taskCode, e.getCode(), e.getMessage());
                 }
             } catch (Exception e) {
                 errorCount.incrementAndGet();
-                log.error("Erro inesperado ao processar DeliveryItem {}: {}",
-                        item.getId(), e.getMessage(), e);
+                log.error("[ERRO] DeliveryItem ID: {}, Task Code: {} | Motivo: {}",
+                        item.getId(), taskCode, e.getMessage());
             }
         }
 
-        log.info("Sincronizacao concluida: {} atualizados, {} erros, {} pulados de {} total",
-                updatedCount.get(), errorCount.get(), skippedCount.get(), eligibleItems.size());
+        long duration = System.currentTimeMillis() - startTime;
+        log.info("=== FIM: Sincronizacao PRs Git | Atualizados: {}, Erros: {}, Pulados: {}, Total: {} ({}ms) ===",
+                updatedCount.get(), errorCount.get(), skippedCount.get(), eligibleItems.size(), duration);
     }
 
     @Override
@@ -103,28 +123,21 @@ public class GitPullRequestSyncServiceImpl implements GitPullRequestSyncService 
         String prUrl = item.getPullRequest();
 
         if (prUrl == null || prUrl.trim().isEmpty()) {
-            log.debug("URL de PR vazia para item {}", item.getId());
             return false;
         }
 
         if (!gitProviderFactory.isSupported(prUrl)) {
-            log.debug("Provedor nao suportado para URL: {}", prUrl);
             return false;
         }
 
         GitProviderClient provider = gitProviderFactory.getProvider(prUrl);
-        log.debug("Usando provedor {} para verificar PR: {}", provider.getProviderName(), prUrl);
-
         boolean isMerged = provider.checkIfMerged(prUrl);
 
         if (isMerged) {
-            log.info("PR mergeado detectado: {} - Atualizando DeliveryItem {} para PRODUCTION",
-                    prUrl, item.getId());
             updateDeliveryItemToProduction(item);
             return true;
         }
 
-        log.debug("PR {} ainda nao foi mergeado", prUrl);
         return false;
     }
 
@@ -143,8 +156,5 @@ public class GitPullRequestSyncServiceImpl implements GitPullRequestSyncService 
         delivery.updateStatus();
         delivery.updateDates();
         deliveryRepository.save(delivery);
-
-        log.info("DeliveryItem {} atualizado para PRODUCTION. Delivery {} status: {}",
-                item.getId(), delivery.getId(), delivery.getStatus());
     }
 }
