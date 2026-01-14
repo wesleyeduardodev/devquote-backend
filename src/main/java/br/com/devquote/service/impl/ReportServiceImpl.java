@@ -259,6 +259,7 @@ public class ReportServiceImpl implements ReportService {
         taskTypeTranslations.put("NEW_SERVER", "Novo Servidor");
         taskTypeTranslations.put("MONITORING", "Monitoramento");
         taskTypeTranslations.put("SUPPORT", "Suporte");
+        taskTypeTranslations.put("CODE_REVIEW", "Code Review");
 
         Map<String, OperationalReportRow> developmentRowMap = new LinkedHashMap<>();
 
