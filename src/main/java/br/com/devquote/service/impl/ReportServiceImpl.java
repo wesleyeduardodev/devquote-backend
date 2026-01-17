@@ -41,6 +41,7 @@ import java.io.ByteArrayOutputStream;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
@@ -694,20 +695,28 @@ public class ReportServiceImpl implements ReportService {
                 .build();
     }
 
-    private JasperReport loadJasperReport() throws JRException {
-        try {
-            ClassPathResource resource = new ClassPathResource("reports/operational_report.jasper");
-            return (JasperReport) JRLoader.loadObject(resource.getInputStream());
-        } catch (Exception e) {
-            log.error("Erro ao carregar template Jasper compilado, tentando carregar .jrxml", e);
-            try {
-                ClassPathResource resourceJrxml = new ClassPathResource("reports/operational_report.jrxml");
-                return JasperCompileManager.compileReport(resourceJrxml.getInputStream());
-            } catch (Exception ex) {
-                log.error("Erro ao compilar template Jasper", ex);
-                throw new RuntimeException("Não foi possível carregar o template do relatório", ex);
-            }
+    private JasperReport loadJasperReport() throws JRException, IOException {
+//        try {
+//            ClassPathResource resource = new ClassPathResource("reports/operational_report.jasper");
+//            return (JasperReport) JRLoader.loadObject(resource.getInputStream());
+//        } catch (Exception e) {
+//            log.error("Erro ao carregar template Jasper compilado, tentando carregar .jrxml", e);
+//            try {
+//                ClassPathResource resourceJrxml = new ClassPathResource("reports/operational_report.jrxml");
+//                return JasperCompileManager.compileReport(resourceJrxml.getInputStream());
+//            } catch (Exception ex) {
+//                log.error("Erro ao compilar template Jasper", ex);
+//                throw new RuntimeException("Não foi possível carregar o template do relatório", ex);
+//            }
+//        }
+        ClassPathResource jasper = new ClassPathResource("reports/operational_report.jasper");
+
+        if (jasper.exists()) {
+            return (JasperReport) JRLoader.loadObject(jasper.getInputStream());
         }
+
+        ClassPathResource jrxml = new ClassPathResource("reports/operational_report.jrxml");
+        return JasperCompileManager.compileReport(jrxml.getInputStream());
     }
 
     private Map<String, Object> buildReportParameters(OperationalReportData data) {
