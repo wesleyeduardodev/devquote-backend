@@ -1048,6 +1048,7 @@ public class ReportServiceImpl implements ReportService {
             case "NEW_SERVER" -> "Novo Servidor";
             case "MONITORING" -> "Monitoramento";
             case "SUPPORT" -> "Suporte";
+            case "CODE_REVIEW" -> "Code Review";
             default -> taskType;
         };
     }
