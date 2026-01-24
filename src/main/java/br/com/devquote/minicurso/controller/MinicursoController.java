@@ -83,7 +83,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @GetMapping("/inscricoes")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<List<InscricaoResponse>> listarInscricoes() {
         List<InscricaoResponse> inscricoes = inscricaoService.listarTodas();
         return ResponseEntity.ok(inscricoes);
@@ -91,7 +91,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @GetMapping("/inscricoes/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<InscricaoResponse> buscarInscricao(@PathVariable Long id) {
         InscricaoResponse response = inscricaoService.buscarPorId(id);
         return ResponseEntity.ok(response);
@@ -99,7 +99,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @DeleteMapping("/inscricoes/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<Void> excluirInscricao(@PathVariable Long id) {
         inscricaoService.excluir(id);
         return ResponseEntity.noContent().build();
@@ -107,7 +107,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @GetMapping("/inscricoes/export")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<byte[]> exportarInscricoes() {
         try {
             byte[] excelBytes = inscricaoService.exportarExcel();
@@ -128,7 +128,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @PutMapping("/evento")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<ConfiguracaoEventoResponse> atualizarEvento(@Valid @RequestBody ConfiguracaoEventoRequest request) {
         ConfiguracaoEventoResponse response = configuracaoEventoService.atualizar(request);
         return ResponseEntity.ok(response);
@@ -136,7 +136,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @PostMapping("/modulos")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<ModuloEventoResponse> criarModulo(@Valid @RequestBody ModuloEventoRequest request) {
         Long eventoId = configuracaoEventoService.obterEventoIdAtual();
         if (eventoId == null) {
@@ -148,7 +148,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @PutMapping("/modulos/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<ModuloEventoResponse> atualizarModulo(@PathVariable Long id, @Valid @RequestBody ModuloEventoRequest request) {
         ModuloEventoResponse response = moduloEventoService.atualizar(id, request);
         return ResponseEntity.ok(response);
@@ -156,7 +156,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @DeleteMapping("/modulos/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<Void> excluirModulo(@PathVariable Long id) {
         moduloEventoService.excluir(id);
         return ResponseEntity.noContent().build();
@@ -164,7 +164,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @PostMapping("/modulos/{moduloId}/itens")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<ItemModuloResponse> criarItem(@PathVariable Long moduloId, @Valid @RequestBody ItemModuloRequest request) {
         ItemModuloResponse response = itemModuloService.criar(moduloId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -172,7 +172,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @PutMapping("/itens/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<ItemModuloResponse> atualizarItem(@PathVariable Long id, @Valid @RequestBody ItemModuloRequest request) {
         ItemModuloResponse response = itemModuloService.atualizar(id, request);
         return ResponseEntity.ok(response);
@@ -180,7 +180,7 @@ public class MinicursoController implements MinicursoControllerDoc {
 
     @Override
     @DeleteMapping("/itens/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<Void> excluirItem(@PathVariable Long id) {
         itemModuloService.excluir(id);
         return ResponseEntity.noContent().build();
@@ -195,49 +195,49 @@ public class MinicursoController implements MinicursoControllerDoc {
     }
 
     @GetMapping("/admin/instrutores")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<List<InstrutorResponse>> listarTodosInstrutores() {
         List<InstrutorResponse> instrutores = instrutorService.listarTodos();
         return ResponseEntity.ok(instrutores);
     }
 
     @GetMapping("/admin/instrutores/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<InstrutorResponse> buscarInstrutor(@PathVariable Long id) {
         InstrutorResponse response = instrutorService.buscarPorId(id);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/admin/instrutores")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<InstrutorResponse> criarInstrutor(@Valid @RequestBody InstrutorRequest request) {
         InstrutorResponse response = instrutorService.criar(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/admin/instrutores/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<InstrutorResponse> atualizarInstrutor(@PathVariable Long id, @Valid @RequestBody InstrutorRequest request) {
         InstrutorResponse response = instrutorService.atualizar(id, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/admin/instrutores/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<Void> excluirInstrutor(@PathVariable Long id) {
         instrutorService.excluir(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping(value = "/admin/instrutores/{id}/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<InstrutorResponse> uploadFotoInstrutor(@PathVariable Long id, @RequestParam("foto") MultipartFile foto) {
         InstrutorResponse response = instrutorService.atualizarFoto(id, foto);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/admin/instrutores/{id}/foto")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
     public ResponseEntity<InstrutorResponse> removerFotoInstrutor(@PathVariable Long id) {
         InstrutorResponse response = instrutorService.removerFoto(id);
         return ResponseEntity.ok(response);
