@@ -5,6 +5,7 @@ import br.com.devquote.error.ResourceNotFoundException;
 import br.com.devquote.minicurso.adapter.InstrutorMinicursoAdapter;
 import br.com.devquote.minicurso.dto.request.InstrutorRequest;
 import br.com.devquote.minicurso.dto.response.InstrutorResponse;
+import br.com.devquote.minicurso.dto.response.ModuloSimplificadoResponse;
 import br.com.devquote.minicurso.entity.InstrutorMinicurso;
 import br.com.devquote.minicurso.entity.ModuloEvento;
 import br.com.devquote.minicurso.repository.InstrutorMinicursoRepository;
@@ -38,9 +39,9 @@ public class InstrutorMinicursoService {
 
     @Transactional(readOnly = true)
     public List<InstrutorResponse> listarTodos() {
-        return instrutorRepository.findAllWithModulosOrderByNomeAsc()
-                .stream()
-                .map(this::toResponseWithFotoUrl)
+        List<InstrutorMinicurso> instrutores = instrutorRepository.findAllByOrderByNomeAsc();
+        return instrutores.stream()
+                .map(this::toResponseWithFotoUrlSimple)
                 .collect(Collectors.toList());
     }
 
@@ -144,9 +145,13 @@ public class InstrutorMinicursoService {
     public void excluir(Long id) {
         InstrutorMinicurso instrutor = findById(id);
 
+        // Remover foto do storage
         if (instrutor.getFotoUrl() != null && !instrutor.getFotoUrl().isEmpty()) {
             fileStorageStrategy.deleteFile(instrutor.getFotoUrl());
         }
+
+        // Remover vinculos com modulos (query nativa)
+        instrutorRepository.deleteVinculosModulos(id);
 
         instrutorRepository.delete(instrutor);
         log.info("Instrutor {} excluido com sucesso", id);
@@ -169,6 +174,32 @@ public class InstrutorMinicursoService {
 
     private InstrutorResponse toResponseWithFotoUrl(InstrutorMinicurso instrutor) {
         InstrutorResponse response = InstrutorMinicursoAdapter.toResponseDTO(instrutor);
+
+        if (instrutor.getFotoUrl() != null && !instrutor.getFotoUrl().isEmpty()) {
+            String presignedUrl = fileStorageStrategy.getFileUrl(instrutor.getFotoUrl());
+            response.setFotoUrl(presignedUrl);
+        }
+
+        return response;
+    }
+
+    private InstrutorResponse toResponseWithFotoUrlSimple(InstrutorMinicurso instrutor) {
+        List<ModuloSimplificadoResponse> modulos = moduloRepository.findModulosByInstrutorId(instrutor.getId());
+
+        InstrutorResponse response = InstrutorResponse.builder()
+                .id(instrutor.getId())
+                .nome(instrutor.getNome())
+                .localTrabalho(instrutor.getLocalTrabalho())
+                .tempoCarreira(instrutor.getTempoCarreira())
+                .miniBio(instrutor.getMiniBio())
+                .fotoUrl(instrutor.getFotoUrl())
+                .email(instrutor.getEmail())
+                .linkedin(instrutor.getLinkedin())
+                .ativo(instrutor.getAtivo())
+                .createdAt(instrutor.getCreatedAt())
+                .updatedAt(instrutor.getUpdatedAt())
+                .modulos(modulos)
+                .build();
 
         if (instrutor.getFotoUrl() != null && !instrutor.getFotoUrl().isEmpty()) {
             String presignedUrl = fileStorageStrategy.getFileUrl(instrutor.getFotoUrl());

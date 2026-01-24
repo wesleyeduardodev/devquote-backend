@@ -2,6 +2,7 @@ package br.com.devquote.minicurso.repository;
 
 import br.com.devquote.minicurso.entity.InstrutorMinicurso;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -29,4 +30,8 @@ public interface InstrutorMinicursoRepository extends JpaRepository<InstrutorMin
     List<InstrutorMinicurso> findAllByOrderByNomeAsc();
 
     boolean existsByEmail(String email);
+
+    @Modifying
+    @Query(value = "DELETE FROM instrutor_modulo WHERE instrutor_id = :instrutorId", nativeQuery = true)
+    void deleteVinculosModulos(@Param("instrutorId") Long instrutorId);
 }
