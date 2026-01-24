@@ -1,0 +1,33 @@
+package br.com.devquote.minicurso.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class ModuloEventoRequest {
+
+    @NotBlank(message = "Titulo e obrigatorio")
+    @Size(max = 200, message = "Titulo deve ter no maximo 200 caracteres")
+    private String titulo;
+
+    private String descricao;
+
+    @NotNull(message = "Ordem e obrigatoria")
+    private Integer ordem;
+
+    private Integer cargaHoraria;
+
+    private Boolean ativo;
+
+    private List<Long> instrutoresIds;
+}
