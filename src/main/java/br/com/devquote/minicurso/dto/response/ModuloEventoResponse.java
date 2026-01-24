@@ -21,4 +21,5 @@ public class ModuloEventoResponse {
     private String cargaHorariaFormatada;
     private Boolean ativo;
     private List<ItemModuloResponse> itens;
+    private List<InstrutorSimplificadoResponse> instrutores;
 }

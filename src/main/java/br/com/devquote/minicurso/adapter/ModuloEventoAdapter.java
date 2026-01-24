@@ -1,18 +1,28 @@
 package br.com.devquote.minicurso.adapter;
 
 import br.com.devquote.minicurso.dto.request.ModuloEventoRequest;
+import br.com.devquote.minicurso.dto.response.InstrutorSimplificadoResponse;
 import br.com.devquote.minicurso.dto.response.ItemModuloResponse;
 import br.com.devquote.minicurso.dto.response.ModuloEventoResponse;
 import br.com.devquote.minicurso.entity.ConfiguracaoEvento;
+import br.com.devquote.minicurso.entity.InstrutorMinicurso;
 import br.com.devquote.minicurso.entity.ModuloEvento;
 import lombok.experimental.UtilityClass;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class ModuloEventoAdapter {
 
     public static ModuloEventoResponse toResponseDTO(ModuloEvento entity, List<ItemModuloResponse> itens) {
+        return toResponseDTO(entity, itens, null);
+    }
+
+    public static ModuloEventoResponse toResponseDTO(ModuloEvento entity, List<ItemModuloResponse> itens, List<InstrutorSimplificadoResponse> instrutores) {
         if (entity == null) {
             return null;
         }
@@ -26,7 +36,32 @@ public class ModuloEventoAdapter {
                 .cargaHorariaFormatada(formatarCargaHoraria(entity.getCargaHoraria()))
                 .ativo(entity.getAtivo())
                 .itens(itens)
+                .instrutores(instrutores)
                 .build();
+    }
+
+    public static List<InstrutorSimplificadoResponse> toInstrutoresSimplificados(Set<InstrutorMinicurso> instrutores) {
+        if (instrutores == null) {
+            return Collections.emptyList();
+        }
+
+        List<InstrutorMinicurso> instrutoresCopy;
+        try {
+            instrutoresCopy = new ArrayList<>(instrutores);
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+
+        if (instrutoresCopy.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return instrutoresCopy.stream()
+                .map(i -> InstrutorSimplificadoResponse.builder()
+                        .id(i.getId())
+                        .nome(i.getNome())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public static ModuloEvento toEntity(ModuloEventoRequest dto, ConfiguracaoEvento configuracaoEvento) {

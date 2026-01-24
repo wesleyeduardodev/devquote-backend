@@ -48,7 +48,8 @@ public class SecurityConfig {
             "/api/minicurso/inscricao",
             "/api/minicurso/inscricao/check",
             "/api/minicurso/inscricoes/count",
-            "/api/minicurso/evento"
+            "/api/minicurso/evento",
+            "/api/minicurso/instrutores"
     };
 
     private final UserDetailsService userDetailsService;
@@ -83,6 +84,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/minicurso/inscricoes/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/minicurso/modulos/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/minicurso/itens/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/minicurso/admin/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
 

@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
@@ -18,7 +19,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "modulo_evento")
@@ -56,4 +59,8 @@ public class ModuloEvento {
     @OrderBy("ordem ASC")
     @Builder.Default
     private List<ItemModulo> itens = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "modulos", fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<InstrutorMinicurso> instrutores = new HashSet<>();
 }

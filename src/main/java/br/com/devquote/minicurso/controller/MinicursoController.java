@@ -3,14 +3,17 @@ package br.com.devquote.minicurso.controller;
 import br.com.devquote.minicurso.controller.doc.MinicursoControllerDoc;
 import br.com.devquote.minicurso.dto.request.ConfiguracaoEventoRequest;
 import br.com.devquote.minicurso.dto.request.InscricaoRequest;
+import br.com.devquote.minicurso.dto.request.InstrutorRequest;
 import br.com.devquote.minicurso.dto.request.ItemModuloRequest;
 import br.com.devquote.minicurso.dto.request.ModuloEventoRequest;
 import br.com.devquote.minicurso.dto.response.ConfiguracaoEventoResponse;
 import br.com.devquote.minicurso.dto.response.InscricaoResponse;
+import br.com.devquote.minicurso.dto.response.InstrutorResponse;
 import br.com.devquote.minicurso.dto.response.ItemModuloResponse;
 import br.com.devquote.minicurso.dto.response.ModuloEventoResponse;
 import br.com.devquote.minicurso.service.ConfiguracaoEventoService;
 import br.com.devquote.minicurso.service.InscricaoMinicursoService;
+import br.com.devquote.minicurso.service.InstrutorMinicursoService;
 import br.com.devquote.minicurso.service.ItemModuloService;
 import br.com.devquote.minicurso.service.ModuloEventoService;
 import jakarta.validation.Valid;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -47,6 +51,7 @@ public class MinicursoController implements MinicursoControllerDoc {
     private final ConfiguracaoEventoService configuracaoEventoService;
     private final ModuloEventoService moduloEventoService;
     private final ItemModuloService itemModuloService;
+    private final InstrutorMinicursoService instrutorService;
 
     @Override
     @PostMapping("/inscricao")
@@ -179,5 +184,62 @@ public class MinicursoController implements MinicursoControllerDoc {
     public ResponseEntity<Void> excluirItem(@PathVariable Long id) {
         itemModuloService.excluir(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ==================== ENDPOINTS DE INSTRUTORES ====================
+
+    @GetMapping("/instrutores")
+    public ResponseEntity<List<InstrutorResponse>> listarInstrutoresAtivos() {
+        List<InstrutorResponse> instrutores = instrutorService.listarAtivos();
+        return ResponseEntity.ok(instrutores);
+    }
+
+    @GetMapping("/admin/instrutores")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<InstrutorResponse>> listarTodosInstrutores() {
+        List<InstrutorResponse> instrutores = instrutorService.listarTodos();
+        return ResponseEntity.ok(instrutores);
+    }
+
+    @GetMapping("/admin/instrutores/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<InstrutorResponse> buscarInstrutor(@PathVariable Long id) {
+        InstrutorResponse response = instrutorService.buscarPorId(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/admin/instrutores")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<InstrutorResponse> criarInstrutor(@Valid @RequestBody InstrutorRequest request) {
+        InstrutorResponse response = instrutorService.criar(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/admin/instrutores/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<InstrutorResponse> atualizarInstrutor(@PathVariable Long id, @Valid @RequestBody InstrutorRequest request) {
+        InstrutorResponse response = instrutorService.atualizar(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/admin/instrutores/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> excluirInstrutor(@PathVariable Long id) {
+        instrutorService.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/admin/instrutores/{id}/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<InstrutorResponse> uploadFotoInstrutor(@PathVariable Long id, @RequestParam("foto") MultipartFile foto) {
+        InstrutorResponse response = instrutorService.atualizarFoto(id, foto);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/admin/instrutores/{id}/foto")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<InstrutorResponse> removerFotoInstrutor(@PathVariable Long id) {
+        InstrutorResponse response = instrutorService.removerFoto(id);
+        return ResponseEntity.ok(response);
     }
 }
