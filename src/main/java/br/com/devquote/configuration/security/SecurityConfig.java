@@ -1,7 +1,7 @@
 package br.com.devquote.configuration.security;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import br.com.devquote.service.SystemParameterService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -21,7 +21,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -54,9 +53,7 @@ public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
     private final AuthTokenFilter authTokenFilter;
-
-    @Value("#{'${devquote.cors.allowed-origins:}'.split(',')}")
-    private List<String> allowedOriginsFromYaml;
+    private final SystemParameterService systemParameterService;
 
     @Bean
     @Order(2)
@@ -107,21 +104,17 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        List<String> origins = new ArrayList<>();
-        if (allowedOriginsFromYaml != null) {
-            for (String o : allowedOriginsFromYaml) {
-                if (o != null && !o.isBlank()) {
-                    origins.add(o.trim());
-                }
-            }
-        }
-        if (origins.isEmpty()) {
-            origins.add("http://localhost:5173");
-            origins.add("http://localhost:3000");
-            origins.add("http://localhost:8080");
-            origins.add("http://localhost:5500");
-            origins.add("http://127.0.0.1:5500");
-            origins.add("null");
+        List<String> origins;
+        try {
+            origins = systemParameterService.getList("DEVQUOTE_CORS_ALLOWED_ORIGINS");
+        } catch (Exception e) {
+            origins = List.of(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "http://localhost:8080",
+                "http://localhost:5500",
+                "http://127.0.0.1:5500"
+            );
         }
 
         CorsConfiguration configuration = new CorsConfiguration();
