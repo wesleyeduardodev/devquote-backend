@@ -44,7 +44,11 @@ public class SecurityConfig {
             "/error",
             "/actuator/health",
             "/actuator/prometheus",
-            "/actuator/metrics/**"
+            "/actuator/metrics/**",
+            "/api/minicurso/inscricao",
+            "/api/minicurso/inscricao/check",
+            "/api/minicurso/inscricoes/count",
+            "/api/minicurso/evento"
     };
 
     private final UserDetailsService userDetailsService;
@@ -76,6 +80,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/deliveries/**").authenticated()
                         .requestMatchers("/api/requesters/**").authenticated()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/minicurso/inscricoes/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/minicurso/modulos/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/minicurso/itens/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
 
@@ -110,6 +117,9 @@ public class SecurityConfig {
             origins.add("http://localhost:5173");
             origins.add("http://localhost:3000");
             origins.add("http://localhost:8080");
+            origins.add("http://localhost:5500");
+            origins.add("http://127.0.0.1:5500");
+            origins.add("null");
         }
 
         CorsConfiguration configuration = new CorsConfiguration();
