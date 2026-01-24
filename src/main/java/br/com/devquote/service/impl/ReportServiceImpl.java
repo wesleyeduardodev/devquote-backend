@@ -1186,6 +1186,7 @@ public class ReportServiceImpl implements ReportService {
                 .taskId(task.getId())
                 .taskCode(task.getCode())
                 .taskTitle(task.getTitle())
+                .taskAmount(task.getAmount())
                 .flowType(delivery.getFlowType() != null ? delivery.getFlowType().name() : null)
                 .flowTypeLabel(getFlowTypeLabel(delivery.getFlowType() != null ? delivery.getFlowType().name() : null))
                 .environment(delivery.getEnvironment() != null ? delivery.getEnvironment().name() : null)
@@ -1273,6 +1274,7 @@ public class ReportServiceImpl implements ReportService {
         parameters.put("taskId", data.getTaskId());
         parameters.put("taskCode", data.getTaskCode());
         parameters.put("taskTitle", data.getTaskTitle());
+        parameters.put("taskAmount", data.getTaskAmount());
         parameters.put("flowTypeLabel", data.getFlowTypeLabel());
         parameters.put("environmentLabel", data.getEnvironmentLabel());
         parameters.put("statusLabel", data.getStatusLabel());
