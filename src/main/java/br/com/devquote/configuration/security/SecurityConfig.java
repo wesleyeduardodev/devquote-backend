@@ -1,4 +1,5 @@
 package br.com.devquote.configuration.security;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import br.com.devquote.service.SystemParameterService;
 import lombok.RequiredArgsConstructor;
@@ -85,7 +86,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                .headers(h -> h.frameOptions(f -> f.disable()))
+                .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
