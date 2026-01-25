@@ -41,6 +41,7 @@ import java.io.ByteArrayOutputStream;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
@@ -259,6 +260,7 @@ public class ReportServiceImpl implements ReportService {
         taskTypeTranslations.put("NEW_SERVER", "Novo Servidor");
         taskTypeTranslations.put("MONITORING", "Monitoramento");
         taskTypeTranslations.put("SUPPORT", "Suporte");
+        taskTypeTranslations.put("CODE_REVIEW", "Code Review");
 
         Map<String, OperationalReportRow> developmentRowMap = new LinkedHashMap<>();
 
@@ -693,20 +695,28 @@ public class ReportServiceImpl implements ReportService {
                 .build();
     }
 
-    private JasperReport loadJasperReport() throws JRException {
-        try {
-            ClassPathResource resource = new ClassPathResource("reports/operational_report.jasper");
-            return (JasperReport) JRLoader.loadObject(resource.getInputStream());
-        } catch (Exception e) {
-            log.error("Erro ao carregar template Jasper compilado, tentando carregar .jrxml", e);
-            try {
-                ClassPathResource resourceJrxml = new ClassPathResource("reports/operational_report.jrxml");
-                return JasperCompileManager.compileReport(resourceJrxml.getInputStream());
-            } catch (Exception ex) {
-                log.error("Erro ao compilar template Jasper", ex);
-                throw new RuntimeException("Não foi possível carregar o template do relatório", ex);
-            }
+    private JasperReport loadJasperReport() throws JRException, IOException {
+//        try {
+//            ClassPathResource resource = new ClassPathResource("reports/operational_report.jasper");
+//            return (JasperReport) JRLoader.loadObject(resource.getInputStream());
+//        } catch (Exception e) {
+//            log.error("Erro ao carregar template Jasper compilado, tentando carregar .jrxml", e);
+//            try {
+//                ClassPathResource resourceJrxml = new ClassPathResource("reports/operational_report.jrxml");
+//                return JasperCompileManager.compileReport(resourceJrxml.getInputStream());
+//            } catch (Exception ex) {
+//                log.error("Erro ao compilar template Jasper", ex);
+//                throw new RuntimeException("Não foi possível carregar o template do relatório", ex);
+//            }
+//        }
+        ClassPathResource jasper = new ClassPathResource("reports/operational_report.jasper");
+
+        if (jasper.exists()) {
+            return (JasperReport) JRLoader.loadObject(jasper.getInputStream());
         }
+
+        ClassPathResource jrxml = new ClassPathResource("reports/operational_report.jrxml");
+        return JasperCompileManager.compileReport(jrxml.getInputStream());
     }
 
     private Map<String, Object> buildReportParameters(OperationalReportData data) {
@@ -1038,6 +1048,7 @@ public class ReportServiceImpl implements ReportService {
             case "NEW_SERVER" -> "Novo Servidor";
             case "MONITORING" -> "Monitoramento";
             case "SUPPORT" -> "Suporte";
+            case "CODE_REVIEW" -> "Code Review";
             default -> taskType;
         };
     }
@@ -1175,6 +1186,7 @@ public class ReportServiceImpl implements ReportService {
                 .taskId(task.getId())
                 .taskCode(task.getCode())
                 .taskTitle(task.getTitle())
+                .taskAmount(task.getAmount())
                 .flowType(delivery.getFlowType() != null ? delivery.getFlowType().name() : null)
                 .flowTypeLabel(getFlowTypeLabel(delivery.getFlowType() != null ? delivery.getFlowType().name() : null))
                 .environment(delivery.getEnvironment() != null ? delivery.getEnvironment().name() : null)
@@ -1262,6 +1274,7 @@ public class ReportServiceImpl implements ReportService {
         parameters.put("taskId", data.getTaskId());
         parameters.put("taskCode", data.getTaskCode());
         parameters.put("taskTitle", data.getTaskTitle());
+        parameters.put("taskAmount", data.getTaskAmount());
         parameters.put("flowTypeLabel", data.getFlowTypeLabel());
         parameters.put("environmentLabel", data.getEnvironmentLabel());
         parameters.put("statusLabel", data.getStatusLabel());

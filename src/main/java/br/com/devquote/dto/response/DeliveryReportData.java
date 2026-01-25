@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +22,8 @@ public class DeliveryReportData {
     private String taskCode;
 
     private String taskTitle;
+
+    private BigDecimal taskAmount;
 
     private String flowType;
 
