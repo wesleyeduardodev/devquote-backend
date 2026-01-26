@@ -13,21 +13,21 @@ import java.util.Optional;
 @Repository
 public interface InstrutorMinicursoRepository extends JpaRepository<InstrutorMinicurso, Long> {
 
-    List<InstrutorMinicurso> findByAtivoTrueOrderByNomeAsc();
+    List<InstrutorMinicurso> findByAtivoTrueOrderByOrdemAscNomeAsc();
 
-    @Query("SELECT DISTINCT i FROM InstrutorMinicurso i JOIN i.modulos m WHERE m.id = :moduloId AND i.ativo = true")
+    @Query("SELECT DISTINCT i FROM InstrutorMinicurso i JOIN i.modulos m WHERE m.id = :moduloId AND i.ativo = true ORDER BY i.ordem ASC, i.nome ASC")
     List<InstrutorMinicurso> findByModulosIdAndAtivoTrue(@Param("moduloId") Long moduloId);
 
-    @Query("SELECT i FROM InstrutorMinicurso i WHERE i.modulos IS EMPTY AND i.ativo = true ORDER BY i.nome ASC")
+    @Query("SELECT i FROM InstrutorMinicurso i WHERE i.modulos IS EMPTY AND i.ativo = true ORDER BY i.ordem ASC, i.nome ASC")
     List<InstrutorMinicurso> findInstrutoresGeraisAtivos();
 
-    @Query("SELECT DISTINCT i FROM InstrutorMinicurso i LEFT JOIN FETCH i.modulos ORDER BY i.nome ASC")
-    List<InstrutorMinicurso> findAllWithModulosOrderByNomeAsc();
+    @Query("SELECT DISTINCT i FROM InstrutorMinicurso i LEFT JOIN FETCH i.modulos ORDER BY i.ordem ASC, i.nome ASC")
+    List<InstrutorMinicurso> findAllWithModulosOrderByOrdemAsc();
 
     @Query("SELECT i FROM InstrutorMinicurso i LEFT JOIN FETCH i.modulos WHERE i.id = :id")
     Optional<InstrutorMinicurso> findByIdWithModulos(@Param("id") Long id);
 
-    List<InstrutorMinicurso> findAllByOrderByNomeAsc();
+    List<InstrutorMinicurso> findAllByOrderByOrdemAscNomeAsc();
 
     boolean existsByEmail(String email);
 

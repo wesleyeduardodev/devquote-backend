@@ -33,6 +33,7 @@ public class InstrutorMinicursoAdapter {
                 .email(entity.getEmail())
                 .linkedin(entity.getLinkedin())
                 .ativo(entity.getAtivo())
+                .ordem(entity.getOrdem())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .modulos(modulos)
@@ -52,6 +53,7 @@ public class InstrutorMinicursoAdapter {
                 .email(dto.getEmail())
                 .linkedin(dto.getLinkedin())
                 .ativo(dto.getAtivo() != null ? dto.getAtivo() : true)
+                .ordem(dto.getOrdem())
                 .build();
     }
 
@@ -69,6 +71,7 @@ public class InstrutorMinicursoAdapter {
         if (dto.getAtivo() != null) {
             entity.setAtivo(dto.getAtivo());
         }
+        entity.setOrdem(dto.getOrdem());
     }
 
     public static List<ModuloSimplificadoResponse> toModulosSimplificados(Set<ModuloEvento> modulos) {

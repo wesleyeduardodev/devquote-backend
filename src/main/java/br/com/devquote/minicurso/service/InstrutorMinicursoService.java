@@ -39,7 +39,7 @@ public class InstrutorMinicursoService {
 
     @Transactional(readOnly = true)
     public List<InstrutorResponse> listarTodos() {
-        List<InstrutorMinicurso> instrutores = instrutorRepository.findAllByOrderByNomeAsc();
+        List<InstrutorMinicurso> instrutores = instrutorRepository.findAllByOrderByOrdemAscNomeAsc();
         return instrutores.stream()
                 .map(this::toResponseWithFotoUrlSimple)
                 .collect(Collectors.toList());
@@ -47,7 +47,7 @@ public class InstrutorMinicursoService {
 
     @Transactional(readOnly = true)
     public List<InstrutorResponse> listarAtivos() {
-        return instrutorRepository.findByAtivoTrueOrderByNomeAsc()
+        return instrutorRepository.findByAtivoTrueOrderByOrdemAscNomeAsc()
                 .stream()
                 .map(this::toResponseWithFotoUrl)
                 .collect(Collectors.toList());
@@ -196,6 +196,7 @@ public class InstrutorMinicursoService {
                 .email(instrutor.getEmail())
                 .linkedin(instrutor.getLinkedin())
                 .ativo(instrutor.getAtivo())
+                .ordem(instrutor.getOrdem())
                 .createdAt(instrutor.getCreatedAt())
                 .updatedAt(instrutor.getUpdatedAt())
                 .modulos(modulos)

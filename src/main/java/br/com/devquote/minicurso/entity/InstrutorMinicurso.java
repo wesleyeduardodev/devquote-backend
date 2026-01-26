@@ -62,6 +62,9 @@ public class InstrutorMinicurso {
     @Builder.Default
     private Boolean ativo = true;
 
+    @Column
+    private Integer ordem;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

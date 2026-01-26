@@ -23,6 +23,7 @@ public class InstrutorResponse {
     private String email;
     private String linkedin;
     private Boolean ativo;
+    private Integer ordem;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<ModuloSimplificadoResponse> modulos;

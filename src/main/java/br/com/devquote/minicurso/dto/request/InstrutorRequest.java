@@ -38,5 +38,7 @@ public class InstrutorRequest {
 
     private Boolean ativo;
 
+    private Integer ordem;
+
     private List<Long> modulosIds;
 }
