@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +105,7 @@ public class InscricaoMinicursoService {
 
     public byte[] exportarExcel() throws IOException {
         List<InscricaoMinicurso> inscricoes = inscricaoRepository.findAll();
+        inscricoes.sort(Comparator.comparing(InscricaoMinicurso::getNome, String.CASE_INSENSITIVE_ORDER));
 
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -151,6 +153,7 @@ public class InscricaoMinicursoService {
 
     public byte[] exportarPdf() throws JRException {
         List<InscricaoMinicurso> inscricoes = inscricaoRepository.findAll();
+        inscricoes.sort(Comparator.comparing(InscricaoMinicurso::getNome, String.CASE_INSENSITIVE_ORDER));
 
         InputStream reportStream = getClass().getResourceAsStream("/reports/inscricoes_minicurso_report.jrxml");
         JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);

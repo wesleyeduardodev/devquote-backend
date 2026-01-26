@@ -66,9 +66,9 @@
             </textField>
 
             <textField>
-                <reportElement x="0" y="62" width="802" height="12" forecolor="#FFFFFF" uuid="e5f6a7b8-c9d0-1234-5678-90abcdef0123"/>
-                <textElement textAlignment="Center">
-                    <font fontName="DejaVu Sans" size="8"/>
+                <reportElement x="0" y="60" width="802" height="16" forecolor="#FFFFFF" uuid="e5f6a7b8-c9d0-1234-5678-90abcdef0123"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="9"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Gerado em: " + java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format($P{dataGeracao})]]></textFieldExpression>
             </textField>
@@ -85,7 +85,7 @@
             </rectangle>
 
             <staticText>
-                <reportElement x="0" y="0" width="40" height="25" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcdef012345"/>
+                <reportElement x="0" y="0" width="35" height="25" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcdef012345"/>
                 <box leftPadding="5">
                     <pen lineColor="#4B5563"/>
                     <rightPen lineWidth="0.5" lineColor="#4B5563"/>
@@ -97,7 +97,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="40" y="0" width="140" height="25" forecolor="#FFFFFF" uuid="b8c9d0e1-f2a3-4567-890a-bcdef0123456"/>
+                <reportElement x="35" y="0" width="125" height="25" forecolor="#FFFFFF" uuid="b8c9d0e1-f2a3-4567-890a-bcdef0123456"/>
                 <box leftPadding="5">
                     <pen lineColor="#4B5563"/>
                     <rightPen lineWidth="0.5" lineColor="#4B5563"/>
@@ -109,7 +109,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="180" y="0" width="160" height="25" forecolor="#FFFFFF" uuid="c9d0e1f2-a3b4-5678-90ab-cdef01234567"/>
+                <reportElement x="160" y="0" width="150" height="25" forecolor="#FFFFFF" uuid="c9d0e1f2-a3b4-5678-90ab-cdef01234567"/>
                 <box leftPadding="5">
                     <pen lineColor="#4B5563"/>
                     <rightPen lineWidth="0.5" lineColor="#4B5563"/>
@@ -121,7 +121,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="340" y="0" width="90" height="25" forecolor="#FFFFFF" uuid="d0e1f2a3-b4c5-6789-0abc-def012345678"/>
+                <reportElement x="310" y="0" width="85" height="25" forecolor="#FFFFFF" uuid="d0e1f2a3-b4c5-6789-0abc-def012345678"/>
                 <box leftPadding="5">
                     <pen lineColor="#4B5563"/>
                     <rightPen lineWidth="0.5" lineColor="#4B5563"/>
@@ -133,7 +133,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="430" y="0" width="120" height="25" forecolor="#FFFFFF" uuid="e1f2a3b4-c5d6-7890-abcd-ef0123456789"/>
+                <reportElement x="395" y="0" width="105" height="25" forecolor="#FFFFFF" uuid="e1f2a3b4-c5d6-7890-abcd-ef0123456789"/>
                 <box leftPadding="5">
                     <pen lineColor="#4B5563"/>
                     <rightPen lineWidth="0.5" lineColor="#4B5563"/>
@@ -145,7 +145,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="550" y="0" width="60" height="25" forecolor="#FFFFFF" uuid="f2a3b4c5-d6e7-8901-bcde-f01234567890"/>
+                <reportElement x="500" y="0" width="55" height="25" forecolor="#FFFFFF" uuid="f2a3b4c5-d6e7-8901-bcde-f01234567890"/>
                 <box leftPadding="5">
                     <pen lineColor="#4B5563"/>
                     <rightPen lineWidth="0.5" lineColor="#4B5563"/>
@@ -157,7 +157,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="610" y="0" width="70" height="25" forecolor="#FFFFFF" uuid="a3b4c5d6-e7f8-9012-cdef-012345678901"/>
+                <reportElement x="555" y="0" width="70" height="25" forecolor="#FFFFFF" uuid="a3b4c5d6-e7f8-9012-cdef-012345678901"/>
                 <box leftPadding="5">
                     <pen lineColor="#4B5563"/>
                     <rightPen lineWidth="0.5" lineColor="#4B5563"/>
@@ -169,7 +169,7 @@
             </staticText>
 
             <staticText>
-                <reportElement x="680" y="0" width="80" height="25" forecolor="#FFFFFF" uuid="b4c5d6e7-f890-1234-def0-123456789012"/>
+                <reportElement x="625" y="0" width="105" height="25" forecolor="#FFFFFF" uuid="b4c5d6e7-f890-1234-def0-123456789012"/>
                 <box leftPadding="5">
                     <pen lineColor="#4B5563"/>
                     <rightPen lineWidth="0.5" lineColor="#4B5563"/>
@@ -177,18 +177,18 @@
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
-                <text><![CDATA[Data Inscr.]]></text>
+                <text><![CDATA[Data Inscricao]]></text>
             </staticText>
 
             <staticText>
-                <reportElement x="760" y="0" width="42" height="25" forecolor="#FFFFFF" uuid="c5d6e7f8-9012-3456-ef01-234567890123"/>
+                <reportElement x="730" y="0" width="72" height="25" forecolor="#FFFFFF" uuid="c5d6e7f8-9012-3456-ef01-234567890123"/>
                 <box leftPadding="5">
                     <pen lineColor="#4B5563"/>
                 </box>
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
-                <text><![CDATA[Conf.]]></text>
+                <text><![CDATA[Confirmado]]></text>
             </staticText>
         </band>
     </columnHeader>
@@ -213,7 +213,7 @@
             </rectangle>
 
             <textField>
-                <reportElement x="0" y="0" width="40" height="18" uuid="f8901234-5678-9012-1234-567890123456"/>
+                <reportElement x="0" y="0" width="35" height="18" uuid="f8901234-5678-9012-1234-567890123456"/>
                 <box leftPadding="5">
                     <pen lineWidth="0.5" lineColor="#E5E7EB"/>
                 </box>
@@ -224,7 +224,7 @@
             </textField>
 
             <textField textAdjust="ScaleFont" isBlankWhenNull="true">
-                <reportElement x="40" y="0" width="140" height="18" uuid="a9012345-6789-0123-2345-678901234567"/>
+                <reportElement x="35" y="0" width="125" height="18" uuid="a9012345-6789-0123-2345-678901234567"/>
                 <box leftPadding="5">
                     <pen lineWidth="0.5" lineColor="#E5E7EB"/>
                 </box>
@@ -235,7 +235,7 @@
             </textField>
 
             <textField textAdjust="ScaleFont" isBlankWhenNull="true">
-                <reportElement x="180" y="0" width="160" height="18" uuid="b0123456-7890-1234-3456-789012345678"/>
+                <reportElement x="160" y="0" width="150" height="18" uuid="b0123456-7890-1234-3456-789012345678"/>
                 <box leftPadding="5">
                     <pen lineWidth="0.5" lineColor="#E5E7EB"/>
                 </box>
@@ -246,7 +246,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="340" y="0" width="90" height="18" uuid="c1234567-8901-2345-4567-890123456789"/>
+                <reportElement x="310" y="0" width="85" height="18" uuid="c1234567-8901-2345-4567-890123456789"/>
                 <box leftPadding="5">
                     <pen lineWidth="0.5" lineColor="#E5E7EB"/>
                 </box>
@@ -257,7 +257,7 @@
             </textField>
 
             <textField textAdjust="ScaleFont" isBlankWhenNull="true">
-                <reportElement x="430" y="0" width="120" height="18" uuid="d2345678-9012-3456-5678-901234567890"/>
+                <reportElement x="395" y="0" width="105" height="18" uuid="d2345678-9012-3456-5678-901234567890"/>
                 <box leftPadding="5">
                     <pen lineWidth="0.5" lineColor="#E5E7EB"/>
                 </box>
@@ -268,7 +268,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="550" y="0" width="60" height="18" uuid="e3456789-0123-4567-6789-012345678901"/>
+                <reportElement x="500" y="0" width="55" height="18" uuid="e3456789-0123-4567-6789-012345678901"/>
                 <box leftPadding="5">
                     <pen lineWidth="0.5" lineColor="#E5E7EB"/>
                 </box>
@@ -279,7 +279,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="610" y="0" width="70" height="18" uuid="f4567890-1234-5678-7890-123456789012"/>
+                <reportElement x="555" y="0" width="70" height="18" uuid="f4567890-1234-5678-7890-123456789012"/>
                 <box leftPadding="5">
                     <pen lineWidth="0.5" lineColor="#E5E7EB"/>
                 </box>
@@ -290,18 +290,18 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="680" y="0" width="80" height="18" uuid="a5678901-2345-6789-8901-234567890123"/>
+                <reportElement x="625" y="0" width="105" height="18" uuid="a5678901-2345-6789-8901-234567890123"/>
                 <box leftPadding="5">
                     <pen lineWidth="0.5" lineColor="#E5E7EB"/>
                 </box>
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{createdAt} != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format($F{createdAt}) : "-"]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{createdAt} != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format($F{createdAt}) : "-"]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="760" y="0" width="42" height="18" uuid="b6789012-3456-7890-9012-345678901234"/>
+                <reportElement x="730" y="0" width="72" height="18" uuid="b6789012-3456-7890-9012-345678901234"/>
                 <box leftPadding="5">
                     <pen lineWidth="0.5" lineColor="#E5E7EB"/>
                 </box>
