@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="inscricoes_minicurso_report"
+              pageWidth="842"
+              pageHeight="595"
+              orientation="Landscape"
+              columnWidth="802"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20"
+              uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
+
+    <property name="ireport.zoom" value="1.0"/>
+    <property name="ireport.x" value="0"/>
+    <property name="ireport.y" value="0"/>
+
+    <style name="TableHeader" backcolor="#5B6FE8" forecolor="#FFFFFF" fontName="DejaVu Sans" fontSize="9" isBold="true"/>
+    <style name="TableRow" fontName="DejaVu Sans" fontSize="8"/>
+    <style name="TableRowAlt" backcolor="#F9FAFB" fontName="DejaVu Sans" fontSize="8"/>
+
+    <parameter name="titulo" class="java.lang.String"/>
+    <parameter name="dataGeracao" class="java.time.LocalDateTime"/>
+    <parameter name="totalRegistros" class="java.lang.Integer"/>
+
+    <field name="id" class="java.lang.Long"/>
+    <field name="nome" class="java.lang.String"/>
+    <field name="email" class="java.lang.String"/>
+    <field name="telefone" class="java.lang.String"/>
+    <field name="curso" class="java.lang.String"/>
+    <field name="periodo" class="java.lang.String"/>
+    <field name="nivelProgramacao" class="java.lang.String"/>
+    <field name="createdAt" class="java.time.LocalDateTime"/>
+    <field name="confirmado" class="java.lang.Boolean"/>
+
+    <variable name="rowCount" class="java.lang.Integer" calculation="Count">
+        <variableExpression><![CDATA[$F{id}]]></variableExpression>
+    </variable>
+
+    <title>
+        <band height="80" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="0" width="802" height="80" backcolor="#5B6FE8" uuid="b2c3d4e5-f6a7-8901-2345-67890abcdef0"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="0" y="10" width="802" height="25" forecolor="#FFFFFF" uuid="c3d4e5f6-a7b8-9012-3456-7890abcdef01"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="18" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Mini Curso IA para Programadores]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="0" y="38" width="802" height="20" forecolor="#FFFFFF" uuid="d4e5f6a7-b8c9-0123-4567-890abcdef012"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="14" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{titulo}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="62" width="802" height="12" forecolor="#FFFFFF" uuid="e5f6a7b8-c9d0-1234-5678-90abcdef0123"/>
+                <textElement textAlignment="Center">
+                    <font fontName="DejaVu Sans" size="8"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Gerado em: " + java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format($P{dataGeracao})]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <columnHeader>
+        <band height="25" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="0" width="802" height="25" backcolor="#374151" uuid="f6a7b8c9-d0e1-2345-6789-0abcdef01234"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <staticText>
+                <reportElement x="0" y="0" width="40" height="25" forecolor="#FFFFFF" uuid="a7b8c9d0-e1f2-3456-7890-abcdef012345"/>
+                <box leftPadding="5">
+                    <pen lineColor="#4B5563"/>
+                    <rightPen lineWidth="0.5" lineColor="#4B5563"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[ID]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="40" y="0" width="140" height="25" forecolor="#FFFFFF" uuid="b8c9d0e1-f2a3-4567-890a-bcdef0123456"/>
+                <box leftPadding="5">
+                    <pen lineColor="#4B5563"/>
+                    <rightPen lineWidth="0.5" lineColor="#4B5563"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Nome]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="180" y="0" width="160" height="25" forecolor="#FFFFFF" uuid="c9d0e1f2-a3b4-5678-90ab-cdef01234567"/>
+                <box leftPadding="5">
+                    <pen lineColor="#4B5563"/>
+                    <rightPen lineWidth="0.5" lineColor="#4B5563"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Email]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="340" y="0" width="90" height="25" forecolor="#FFFFFF" uuid="d0e1f2a3-b4c5-6789-0abc-def012345678"/>
+                <box leftPadding="5">
+                    <pen lineColor="#4B5563"/>
+                    <rightPen lineWidth="0.5" lineColor="#4B5563"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Telefone]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="430" y="0" width="120" height="25" forecolor="#FFFFFF" uuid="e1f2a3b4-c5d6-7890-abcd-ef0123456789"/>
+                <box leftPadding="5">
+                    <pen lineColor="#4B5563"/>
+                    <rightPen lineWidth="0.5" lineColor="#4B5563"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Curso]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="550" y="0" width="60" height="25" forecolor="#FFFFFF" uuid="f2a3b4c5-d6e7-8901-bcde-f01234567890"/>
+                <box leftPadding="5">
+                    <pen lineColor="#4B5563"/>
+                    <rightPen lineWidth="0.5" lineColor="#4B5563"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Periodo]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="610" y="0" width="70" height="25" forecolor="#FFFFFF" uuid="a3b4c5d6-e7f8-9012-cdef-012345678901"/>
+                <box leftPadding="5">
+                    <pen lineColor="#4B5563"/>
+                    <rightPen lineWidth="0.5" lineColor="#4B5563"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Nivel]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="680" y="0" width="80" height="25" forecolor="#FFFFFF" uuid="b4c5d6e7-f890-1234-def0-123456789012"/>
+                <box leftPadding="5">
+                    <pen lineColor="#4B5563"/>
+                    <rightPen lineWidth="0.5" lineColor="#4B5563"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Data Inscr.]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="760" y="0" width="42" height="25" forecolor="#FFFFFF" uuid="c5d6e7f8-9012-3456-ef01-234567890123"/>
+                <box leftPadding="5">
+                    <pen lineColor="#4B5563"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="8" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Conf.]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="18" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="0" width="802" height="18" backcolor="#FFFFFF" uuid="d6e7f890-1234-5678-f012-345678901234">
+                    <printWhenExpression><![CDATA[$V{rowCount} % 2 == 1]]></printWhenExpression>
+                </reportElement>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+            <rectangle>
+                <reportElement x="0" y="0" width="802" height="18" backcolor="#F9FAFB" uuid="e7f89012-3456-7890-0123-456789012345">
+                    <printWhenExpression><![CDATA[$V{rowCount} % 2 == 0]]></printWhenExpression>
+                </reportElement>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <textField>
+                <reportElement x="0" y="0" width="40" height="18" uuid="f8901234-5678-9012-1234-567890123456"/>
+                <box leftPadding="5">
+                    <pen lineWidth="0.5" lineColor="#E5E7EB"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{id}]]></textFieldExpression>
+            </textField>
+
+            <textField textAdjust="ScaleFont" isBlankWhenNull="true">
+                <reportElement x="40" y="0" width="140" height="18" uuid="a9012345-6789-0123-2345-678901234567"/>
+                <box leftPadding="5">
+                    <pen lineWidth="0.5" lineColor="#E5E7EB"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{nome}]]></textFieldExpression>
+            </textField>
+
+            <textField textAdjust="ScaleFont" isBlankWhenNull="true">
+                <reportElement x="180" y="0" width="160" height="18" uuid="b0123456-7890-1234-3456-789012345678"/>
+                <box leftPadding="5">
+                    <pen lineWidth="0.5" lineColor="#E5E7EB"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{email}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="340" y="0" width="90" height="18" uuid="c1234567-8901-2345-4567-890123456789"/>
+                <box leftPadding="5">
+                    <pen lineWidth="0.5" lineColor="#E5E7EB"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{telefone} != null ? $F{telefone} : "-"]]></textFieldExpression>
+            </textField>
+
+            <textField textAdjust="ScaleFont" isBlankWhenNull="true">
+                <reportElement x="430" y="0" width="120" height="18" uuid="d2345678-9012-3456-5678-901234567890"/>
+                <box leftPadding="5">
+                    <pen lineWidth="0.5" lineColor="#E5E7EB"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{curso}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="550" y="0" width="60" height="18" uuid="e3456789-0123-4567-6789-012345678901"/>
+                <box leftPadding="5">
+                    <pen lineWidth="0.5" lineColor="#E5E7EB"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{periodo} != null ? $F{periodo} : "-"]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="610" y="0" width="70" height="18" uuid="f4567890-1234-5678-7890-123456789012"/>
+                <box leftPadding="5">
+                    <pen lineWidth="0.5" lineColor="#E5E7EB"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{nivelProgramacao}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="680" y="0" width="80" height="18" uuid="a5678901-2345-6789-8901-234567890123"/>
+                <box leftPadding="5">
+                    <pen lineWidth="0.5" lineColor="#E5E7EB"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{createdAt} != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy").format($F{createdAt}) : "-"]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="760" y="0" width="42" height="18" uuid="b6789012-3456-7890-9012-345678901234"/>
+                <box leftPadding="5">
+                    <pen lineWidth="0.5" lineColor="#E5E7EB"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[Boolean.TRUE.equals($F{confirmado}) ? "Sim" : "Nao"]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="20">
+            <textField>
+                <reportElement x="680" y="5" width="80" height="10" uuid="e9012345-6789-0123-2345-678901234567"/>
+                <textElement textAlignment="Right">
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Pagina " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement x="760" y="5" width="42" height="10" uuid="f0123456-7890-1234-3456-789012345678"/>
+                <textElement>
+                    <font fontName="DejaVu Sans" size="7"/>
+                </textElement>
+                <textFieldExpression><![CDATA[" de " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <summary>
+        <band height="40" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="5" width="802" height="30" backcolor="#E5E7EB" uuid="c7890123-4567-8901-0123-456789012345"/>
+                <graphicElement>
+                    <pen lineWidth="0"/>
+                </graphicElement>
+            </rectangle>
+
+            <textField>
+                <reportElement x="0" y="5" width="802" height="30" uuid="d8901234-5678-9012-1234-567890123456"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font fontName="DejaVu Sans" size="11" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Total de Inscricoes: " + $P{totalRegistros}]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+</jasperReport>

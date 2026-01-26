@@ -8,6 +8,13 @@ import br.com.devquote.minicurso.entity.InscricaoMinicurso;
 import br.com.devquote.minicurso.repository.ConfiguracaoEventoRepository;
 import br.com.devquote.minicurso.repository.InscricaoMinicursoRepository;
 import lombok.RequiredArgsConstructor;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
@@ -20,8 +27,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -136,5 +147,22 @@ public class InscricaoMinicursoService {
             workbook.write(outputStream);
             return outputStream.toByteArray();
         }
+    }
+
+    public byte[] exportarPdf() throws JRException {
+        List<InscricaoMinicurso> inscricoes = inscricaoRepository.findAll();
+
+        InputStream reportStream = getClass().getResourceAsStream("/reports/inscricoes_minicurso_report.jrxml");
+        JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("titulo", "Lista de Inscricoes");
+        parameters.put("dataGeracao", LocalDateTime.now());
+        parameters.put("totalRegistros", inscricoes.size());
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(inscricoes);
+        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+
+        return JasperExportManager.exportReportToPdf(jasperPrint);
     }
 }

@@ -35,7 +35,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import net.sf.jasperreports.engine.JRException;
+
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -122,6 +125,26 @@ public class MinicursoController implements MinicursoControllerDoc {
 
             return new ResponseEntity<>(excelBytes, headers, HttpStatus.OK);
         } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @Override
+    @GetMapping("/inscricoes/export-pdf")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ADMIN_CURSO')")
+    public ResponseEntity<byte[]> exportarInscricoesPdf() {
+        try {
+            byte[] pdfBytes = inscricaoService.exportarPdf();
+
+            String filename = "inscricoes_minicurso_" + LocalDate.now() + ".pdf";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", filename);
+            headers.setContentLength(pdfBytes.length);
+
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+        } catch (JRException e) {
             return ResponseEntity.internalServerError().build();
         }
     }

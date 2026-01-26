@@ -79,6 +79,12 @@ public interface MinicursoControllerDoc {
     })
     ResponseEntity<byte[]> exportarInscricoes();
 
+    @Operation(summary = "Exportar inscricoes para PDF", description = "Endpoint admin para exportar relatorio PDF de inscricoes")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Arquivo PDF gerado")
+    })
+    ResponseEntity<byte[]> exportarInscricoesPdf();
+
     @Operation(summary = "Atualizar configuracao do evento", description = "Endpoint admin para atualizar dados do evento")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Configuracao atualizada")
