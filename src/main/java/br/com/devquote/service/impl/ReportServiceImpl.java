@@ -1180,6 +1180,8 @@ public class ReportServiceImpl implements ReportService {
         Task task = delivery.getTask();
 
         List<ContentBlock> deliveryNotesBlocks = HtmlImageExtractor.parseHtmlToBlocks(delivery.getNotes(), fileStorageStrategy);
+        String desc = task.getDescription() != null ? task.getDescription() : "";
+        List<ContentBlock> taskDescriptionBlocks = HtmlImageExtractor.parseHtmlToBlocks(desc, fileStorageStrategy);
 
         return DeliveryReportData.builder()
                 .id(delivery.getId())
@@ -1187,6 +1189,7 @@ public class ReportServiceImpl implements ReportService {
                 .taskCode(task.getCode())
                 .taskTitle(task.getTitle())
                 .taskAmount(task.getAmount())
+                .taskDescriptionBlocks(taskDescriptionBlocks)
                 .flowType(delivery.getFlowType() != null ? delivery.getFlowType().name() : null)
                 .flowTypeLabel(getFlowTypeLabel(delivery.getFlowType() != null ? delivery.getFlowType().name() : null))
                 .environment(delivery.getEnvironment() != null ? delivery.getEnvironment().name() : null)
@@ -1274,6 +1277,8 @@ public class ReportServiceImpl implements ReportService {
         parameters.put("taskId", data.getTaskId());
         parameters.put("taskCode", data.getTaskCode());
         parameters.put("taskTitle", data.getTaskTitle());
+        parameters.put("taskDescriptionBlocks", new JRBeanCollectionDataSource(
+                data.getTaskDescriptionBlocks() != null ? data.getTaskDescriptionBlocks() : new ArrayList<>()));
         parameters.put("taskAmount", data.getTaskAmount());
         parameters.put("flowTypeLabel", data.getFlowTypeLabel());
         parameters.put("environmentLabel", data.getEnvironmentLabel());

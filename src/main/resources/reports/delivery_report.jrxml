@@ -29,6 +29,7 @@
 	<parameter name="desenvolvedorEmail" class="java.lang.String"/>
 	<parameter name="desenvolvedorTelefone" class="java.lang.String"/>
 	<parameter name="taskAmount" class="java.math.BigDecimal"/>
+	<parameter name="taskDescriptionBlocks" class="net.sf.jasperreports.engine.JRDataSource"/>
 	<title>
 		<band height="80" splitType="Stretch">
 			<rectangle>
@@ -188,35 +189,53 @@
 				<text><![CDATA[TAREFA VINCULADA]]></text>
 			</staticText>
 		</band>
-		<band height="40" splitType="Stretch">
+		<band height="88" splitType="Stretch">
 			<staticText>
-				<reportElement x="5" y="5" width="80" height="14" uuid="d2345678-9012-3456-5678-90abcdef0123"/>
+				<reportElement x="5" y="5" width="55" height="14" uuid="d2345678-9012-3456-5678-90abcdef0123"/>
 				<textElement>
 					<font fontName="DejaVu Sans" size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Codigo:]]></text>
 			</staticText>
 			<textField isBlankWhenNull="true">
-				<reportElement x="85" y="5" width="200" height="14" uuid="e3456789-0123-4567-6789-0abcdef01234"/>
+				<reportElement x="60" y="5" width="495" height="14" uuid="e3456789-0123-4567-6789-0abcdef01234"/>
 				<textElement>
 					<font fontName="DejaVu Sans" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{taskCode}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="5" y="22" width="80" height="14" uuid="f4567890-1234-5678-7890-abcdef012345"/>
+				<reportElement x="5" y="22" width="50" height="14" uuid="f4567890-1234-5678-7890-abcdef012345">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
 				<textElement>
 					<font fontName="DejaVu Sans" size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Titulo:]]></text>
 			</staticText>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement x="85" y="22" width="465" height="14" uuid="a5678901-2345-6789-8901-bcdef0123456"/>
+				<reportElement x="55" y="22" width="500" height="14" uuid="a5678901-2345-6789-8901-bcdef0123456"/>
 				<textElement>
 					<font fontName="DejaVu Sans" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{taskTitle}]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement x="5" y="39" width="65" height="11" uuid="b08c2a1b-8c34-45a7-8965-84d56935ae28">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="DejaVu Sans" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Descrição:]]></text>
+			</staticText>
+			<subreport>
+				<reportElement stretchType="ElementGroupHeight" x="5" y="55" width="550" height="11" uuid="c6814e52-cd53-49aa-99be-5df9f118ba73">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<dataSourceExpression><![CDATA[$P{taskDescriptionBlocks}]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{CONTENT_BLOCKS_SUBREPORT}]]></subreportExpression>
+			</subreport>
 		</band>
 		<band height="18" splitType="Stretch">
 			<printWhenExpression><![CDATA[$P{hasNotesContent} != null && $P{hasNotesContent}]]></printWhenExpression>

@@ -23,6 +23,8 @@ public class DeliveryReportData {
 
     private String taskTitle;
 
+    private List<ContentBlock> taskDescriptionBlocks;
+
     private BigDecimal taskAmount;
 
     private String flowType;
