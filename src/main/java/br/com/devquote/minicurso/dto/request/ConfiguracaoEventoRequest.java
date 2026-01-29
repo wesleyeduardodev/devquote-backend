@@ -36,4 +36,12 @@ public class ConfiguracaoEventoRequest {
     private Integer quantidadeVagas;
 
     private Boolean inscricoesAbertas;
+
+    private Boolean exibirFaleConosco;
+
+    @Size(max = 150, message = "Email de contato deve ter no máximo 150 caracteres")
+    private String emailContato;
+
+    @Size(max = 20, message = "WhatsApp de contato deve ter no máximo 20 caracteres")
+    private String whatsappContato;
 }

@@ -31,6 +31,9 @@ public class ConfiguracaoEventoResponse {
     private String local;
     private Integer quantidadeVagas;
     private Boolean inscricoesAbertas;
+    private Boolean exibirFaleConosco;
+    private String emailContato;
+    private String whatsappContato;
     private Integer vagasDisponiveis;
     private Integer cargaHorariaTotal;
     private String cargaHorariaTotalFormatada;

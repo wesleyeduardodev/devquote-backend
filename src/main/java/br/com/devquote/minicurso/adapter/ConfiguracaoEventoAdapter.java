@@ -36,6 +36,9 @@ public class ConfiguracaoEventoAdapter {
                 .local(entity.getLocal())
                 .quantidadeVagas(entity.getQuantidadeVagas())
                 .inscricoesAbertas(entity.getInscricoesAbertas())
+                .exibirFaleConosco(entity.getExibirFaleConosco())
+                .emailContato(entity.getEmailContato())
+                .whatsappContato(entity.getWhatsappContato())
                 .vagasDisponiveis(vagasDisponiveis)
                 .cargaHorariaTotal(cargaHorariaTotal)
                 .cargaHorariaTotalFormatada(ModuloEventoAdapter.formatarCargaHoraria(cargaHorariaTotal))
@@ -57,6 +60,11 @@ public class ConfiguracaoEventoAdapter {
         if (dto.getInscricoesAbertas() != null) {
             entity.setInscricoesAbertas(dto.getInscricoesAbertas());
         }
+        if (dto.getExibirFaleConosco() != null) {
+            entity.setExibirFaleConosco(dto.getExibirFaleConosco());
+        }
+        entity.setEmailContato(dto.getEmailContato());
+        entity.setWhatsappContato(dto.getWhatsappContato());
     }
 
     private static int calcularCargaHorariaTotal(List<ModuloEventoResponse> modulos) {

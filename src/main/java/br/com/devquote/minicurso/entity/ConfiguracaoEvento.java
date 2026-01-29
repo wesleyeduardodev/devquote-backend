@@ -57,6 +57,16 @@ public class ConfiguracaoEvento {
     @Builder.Default
     private Boolean inscricoesAbertas = true;
 
+    @Column(name = "exibir_fale_conosco", nullable = false)
+    @Builder.Default
+    private Boolean exibirFaleConosco = false;
+
+    @Column(name = "email_contato", length = 150)
+    private String emailContato;
+
+    @Column(name = "whatsapp_contato", length = 20)
+    private String whatsappContato;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
