@@ -99,14 +99,14 @@ jobs:
           echo "Updating backend image tag to ${{ steps.tags.outputs.IMAGE_TAG }}..."
 
           # Atualizar tenant Wesley
-          if [ -f "k8s/tenants/wesley/backend/deployment.yaml" ]; then
-            sed -i "s|image: wesleyeduardodev/devquote-backend:.*|image: wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}|g" k8s/tenants/wesley/backend/deployment.yaml
+          if [ -f "tenants/wesley/backend/deployment.yaml" ]; then
+            sed -i "s|image: wesleyeduardodev/devquote-backend:.*|image: wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}|g" tenants/wesley/backend/deployment.yaml
             echo "Updated Wesley backend deployment"
           fi
 
           # Atualizar tenant Joao
-          if [ -f "k8s/tenants/joao/backend/deployment.yaml" ]; then
-            sed -i "s|image: wesleyeduardodev/devquote-backend:.*|image: wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}|g" k8s/tenants/joao/backend/deployment.yaml
+          if [ -f "tenants/joao/backend/deployment.yaml" ]; then
+            sed -i "s|image: wesleyeduardodev/devquote-backend:.*|image: wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}|g" tenants/joao/backend/deployment.yaml
             echo "Updated Joao backend deployment"
           fi
 
@@ -121,7 +121,7 @@ jobs:
           git diff --name-only
 
           # Commit e push
-          git add -A k8s/
+          git add -A k8s/ tenants/
 
           if git diff --staged --quiet; then
             echo "No changes to commit"
