@@ -95,21 +95,38 @@ jobs:
           git clone https://${{ secrets.GH_PAT }}@github.com/${{ env.INFRA_REPO }}.git infra-repo
           cd infra-repo
 
-          # Atualizar tag da imagem do backend diretamente no deployment
+          # Atualizar tag da imagem do backend em TODOS os tenants
           echo "Updating backend image tag to ${{ steps.tags.outputs.IMAGE_TAG }}..."
-          sed -i "s|image: wesleyeduardodev/devquote-backend:.*|image: wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}|g" k8s/backend/deployment.yaml
+
+          # Atualizar tenant Wesley
+          if [ -f "k8s/tenants/wesley/backend/deployment.yaml" ]; then
+            sed -i "s|image: wesleyeduardodev/devquote-backend:.*|image: wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}|g" k8s/tenants/wesley/backend/deployment.yaml
+            echo "Updated Wesley backend deployment"
+          fi
+
+          # Atualizar tenant Joao
+          if [ -f "k8s/tenants/joao/backend/deployment.yaml" ]; then
+            sed -i "s|image: wesleyeduardodev/devquote-backend:.*|image: wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}|g" k8s/tenants/joao/backend/deployment.yaml
+            echo "Updated Joao backend deployment"
+          fi
+
+          # Manter compatibilidade com estrutura antiga (remover depois da migracao)
+          if [ -f "k8s/backend/deployment.yaml" ]; then
+            sed -i "s|image: wesleyeduardodev/devquote-backend:.*|image: wesleyeduardodev/devquote-backend:${{ steps.tags.outputs.IMAGE_TAG }}|g" k8s/backend/deployment.yaml
+            echo "Updated legacy backend deployment"
+          fi
 
           # Verificar mudanças
-          echo "Changes made to k8s/backend/deployment.yaml:"
-          git diff k8s/backend/deployment.yaml
+          echo "Changes made:"
+          git diff --name-only
 
           # Commit e push
-          git add k8s/backend/deployment.yaml
+          git add -A k8s/
 
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Update backend to ${{ steps.tags.outputs.IMAGE_TAG }} (commit: ${{ github.sha }})"
+            git commit -m "Update backend to ${{ steps.tags.outputs.IMAGE_TAG }} [all tenants]"
             echo "Pushing changes to infra repository..."
             git push
             echo "Infrastructure repository updated successfully!"

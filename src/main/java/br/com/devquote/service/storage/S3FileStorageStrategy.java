@@ -27,6 +27,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
 
     private String bucketName;
     private String region;
+    private String prefix;
 
     public S3FileStorageStrategy(SystemParameterService systemParameterService) {
 
@@ -34,6 +35,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
 
         this.bucketName = systemParameterService.getString("AWS_S3_BUCKET_NAME", "devquote-storage");
         this.region = systemParameterService.getString("AWS_S3_REGION", "us-east-1");
+        this.prefix = systemParameterService.getString("AWS_S3_PREFIX", "");
 
         String accessKey = systemParameterService.getString("AWS_ACCESS_KEY_ID");
         String secretKey = systemParameterService.getString("AWS_SECRET_ACCESS_KEY");
@@ -51,7 +53,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
                 .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
                 .build();
 
-        log.info("S3FileStorageStrategy initialized for region: {} and bucket: {}", region, bucketName);
+        log.info("S3FileStorageStrategy initialized for region: {}, bucket: {}, prefix: {}", region, bucketName, prefix.isEmpty() ? "(none)" : prefix);
     }
 
     @Override
@@ -205,7 +207,11 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
     }
 
     private String buildKey(String path) {
-
-        return path.replaceAll("//+", "/").replaceAll("^/+", "");
+        String cleanPath = path.replaceAll("//+", "/").replaceAll("^/+", "");
+        if (prefix == null || prefix.isEmpty()) {
+            return cleanPath;
+        }
+        String cleanPrefix = prefix.endsWith("/") ? prefix : prefix + "/";
+        return cleanPrefix + cleanPath;
     }
 }
