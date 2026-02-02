@@ -65,6 +65,37 @@ logging:
   file:
     name: ${LOG_FILE:logs/application.log}
 
+aws:
+  s3:
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    bucket-name: ${AWS_S3_BUCKET_NAME:devquote-storage}
+    region: ${AWS_S3_REGION:us-east-1}
+    prefix: ${AWS_S3_PREFIX:}
+
+mail:
+  host: ${MAIL_HOST:smtp.gmail.com}
+  port: ${MAIL_PORT:587}
+  username: ${MAIL_USERNAME:}
+  password: ${MAIL_PASSWORD:}
+  from: ${MAIL_FROM:}
+  smtp:
+    auth: ${MAIL_SMTP_AUTH:true}
+    starttls: ${MAIL_SMTP_STARTTLS:true}
+    ssl-trust: ${MAIL_SMTP_SSL_TRUST:smtp.gmail.com}
+
+jwt:
+  secret: ${JWT_SECRET:}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+integrations:
+  github:
+    enabled: ${GITHUB_INTEGRATION_ENABLED:false}
+    token: ${GITHUB_TOKEN:}
+  clickup:
+    enabled: ${CLICKUP_INTEGRATION_ENABLED:false}
+    token: ${CLICKUP_TOKEN:}
+
 management:
   endpoints:
     web:

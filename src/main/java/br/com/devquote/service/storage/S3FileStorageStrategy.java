@@ -1,5 +1,6 @@
 package br.com.devquote.service.storage;
-import br.com.devquote.service.SystemParameterService;
+
+import br.com.devquote.configuration.AwsS3Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,44 +24,38 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
-    private final SystemParameterService systemParameterService;
+    private final String bucketName;
+    private final String prefix;
 
-    private String bucketName;
-    private String region;
-    private String prefix;
+    public S3FileStorageStrategy(AwsS3Properties awsS3Properties) {
+        this.bucketName = awsS3Properties.getBucketName();
+        this.prefix = awsS3Properties.getPrefix() != null ? awsS3Properties.getPrefix() : "";
 
-    public S3FileStorageStrategy(SystemParameterService systemParameterService) {
-
-        this.systemParameterService = systemParameterService;
-
-        this.bucketName = systemParameterService.getString("AWS_S3_BUCKET_NAME", "devquote-storage");
-        this.region = systemParameterService.getString("AWS_S3_REGION", "us-east-1");
-        this.prefix = systemParameterService.getString("AWS_S3_PREFIX", "");
-
-        String accessKey = systemParameterService.getString("AWS_ACCESS_KEY_ID");
-        String secretKey = systemParameterService.getString("AWS_SECRET_ACCESS_KEY");
-
-        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
+        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(
+                awsS3Properties.getAccessKey(),
+                awsS3Properties.getSecretKey()
+        );
 
         this.s3Client = S3Client.builder()
-                .region(Region.of(region))
+                .region(Region.of(awsS3Properties.getRegion()))
                 .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
                 .httpClient(UrlConnectionHttpClient.builder().build())
                 .build();
 
         this.s3Presigner = S3Presigner.builder()
-                .region(Region.of(region))
+                .region(Region.of(awsS3Properties.getRegion()))
                 .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
                 .build();
 
-        log.info("S3FileStorageStrategy initialized for region: {}, bucket: {}, prefix: {}", region, bucketName, prefix.isEmpty() ? "(none)" : prefix);
+        log.info("S3FileStorageStrategy initialized for region: {}, bucket: {}, prefix: {}",
+                awsS3Properties.getRegion(), bucketName, prefix.isEmpty() ? "(none)" : prefix);
     }
 
     @Override
     public String uploadFile(MultipartFile file, String path) throws IOException {
         try {
             String key = buildKey(path);
-            
+
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
@@ -69,10 +64,10 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
                     .build();
 
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-            
+
             log.info("File uploaded successfully to S3: {}", key);
             return key;
-            
+
         } catch (Exception e) {
             log.error("Error uploading file to S3: {}", e.getMessage(), e);
             throw new IOException("Failed to upload file to S3", e);
@@ -95,7 +90,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
             String url = s3Presigner.presignGetObject(presignRequest).url().toString();
             log.debug("Generated presigned URL for file: {}", filePath);
             return url;
-            
+
         } catch (Exception e) {
             log.error("Error generating presigned URL for file: {}", filePath, e);
             return null;
@@ -111,7 +106,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
                     .build();
 
             return s3Client.getObject(getObjectRequest);
-            
+
         } catch (Exception e) {
             log.error("Error getting file stream from S3: {}", filePath, e);
             throw new IOException("Failed to get file stream from S3", e);
@@ -129,7 +124,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
             s3Client.deleteObject(deleteObjectRequest);
             log.info("File deleted successfully from S3: {}", filePath);
             return true;
-            
+
         } catch (Exception e) {
             log.error("Error deleting file from S3: {}", filePath, e);
             return false;
@@ -139,7 +134,6 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
     @Override
     public boolean deleteFolder(String folderPath) {
         try {
-
             if (!folderPath.endsWith("/")) {
                 folderPath += "/";
             }
@@ -150,7 +144,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
                     .build();
 
             ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
-            
+
             if (listResponse.contents().isEmpty()) {
                 log.info("No objects found in folder: {}", folderPath);
                 return true;
@@ -171,16 +165,16 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
                     .build();
 
             DeleteObjectsResponse deleteResponse = s3Client.deleteObjects(deleteRequest);
-            
+
             int deletedCount = deleteResponse.deleted().size();
             log.info("Successfully deleted {} objects from folder: {}", deletedCount, folderPath);
-            
+
             if (!deleteResponse.errors().isEmpty()) {
                 log.warn("Some objects failed to delete from folder {}: {}", folderPath, deleteResponse.errors());
             }
-            
+
             return deleteResponse.errors().isEmpty();
-            
+
         } catch (Exception e) {
             log.error("Error deleting folder from S3: {}", folderPath, e);
             return false;
@@ -197,7 +191,7 @@ public class S3FileStorageStrategy implements FileStorageStrategy {
 
             s3Client.headObject(headObjectRequest);
             return true;
-            
+
         } catch (NoSuchKeyException e) {
             return false;
         } catch (Exception e) {

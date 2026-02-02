@@ -1,6 +1,7 @@
 package br.com.devquote.configuration.security;
+
+import br.com.devquote.configuration.JwtProperties;
 import br.com.devquote.entity.User;
-import br.com.devquote.service.SystemParameterService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -17,24 +18,21 @@ import java.util.Date;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    private final SystemParameterService systemParameterService;
+    private final JwtProperties jwtProperties;
 
     public String generateJwtToken(Authentication authentication) {
         User userPrincipal = (User) authentication.getPrincipal();
 
-        Long jwtExpirationMs = systemParameterService.getLong("APP_JWTEXPIRATIONMS", 86400000L);
-
         return Jwts.builder()
                 .setSubject(userPrincipal.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .setExpiration(new Date((new Date()).getTime() + jwtProperties.getExpirationMs()))
                 .signWith(key(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     private Key key() {
-        String jwtSecret = systemParameterService.getString("APP_JWTSECRET");
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtProperties.getSecret()));
     }
 
     public String getUserNameFromJwtToken(String token) {
@@ -44,7 +42,7 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(authToken); // usa parseClaimsJws
+            Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(authToken);
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
