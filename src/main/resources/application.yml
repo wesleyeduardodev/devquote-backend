@@ -31,18 +31,16 @@ spring:
       max-request-size: 10MB
 
   cache:
-    type: redis
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      timeout: 2000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
+    type: ${CACHE_TYPE:caffeine}
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=600s
+  # Redis (descomentar para usar Redis no futuro)
+  # data:
+  #   redis:
+  #     host: ${REDIS_HOST:localhost}
+  #     port: ${REDIS_PORT:6379}
+  #     password: ${REDIS_PASSWORD:}
+  #     timeout: 2000ms
 
 server:
   port: ${PORT:${SERVER_PORT:8080}}
