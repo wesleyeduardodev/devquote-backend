@@ -17,9 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,15 +35,6 @@ public class ConfiguracaoEvento {
 
     @Column(nullable = false, length = 200)
     private String titulo;
-
-    @Column(name = "data_evento")
-    private LocalDate dataEvento;
-
-    @Column(name = "horario_inicio")
-    private LocalTime horarioInicio;
-
-    @Column(name = "horario_fim")
-    private LocalTime horarioFim;
 
     @Column(length = 200)
     private String local;
@@ -72,6 +61,11 @@ public class ConfiguracaoEvento {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "configuracaoEvento", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("ordem ASC")
+    @Builder.Default
+    private List<DataEvento> datasEvento = new ArrayList<>();
 
     @OneToMany(mappedBy = "configuracaoEvento", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("ordem ASC")
