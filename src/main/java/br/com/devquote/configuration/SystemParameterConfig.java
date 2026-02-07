@@ -1,6 +1,4 @@
 package br.com.devquote.configuration;
-
-import br.com.devquote.service.SystemParameterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -9,7 +7,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
 import java.util.List;
 import java.util.Properties;
 
@@ -18,7 +15,7 @@ import java.util.Properties;
 @RequiredArgsConstructor
 public class SystemParameterConfig {
 
-    private final SystemParameterService systemParameterService;
+    private final CorsProperties corsProperties;
     private final MailProperties mailProperties;
 
     @Bean
@@ -52,20 +49,16 @@ public class SystemParameterConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                try {
-                    List<String> allowedOrigins = systemParameterService.getList("DEVQUOTE_CORS_ALLOWED_ORIGINS");
+                List<String> allowedOrigins = corsProperties.getAllowedOrigins();
 
-                    registry.addMapping("/api/**")
-                            .allowedOrigins(allowedOrigins.toArray(new String[0]))
-                            .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-                            .allowedHeaders("*")
-                            .allowCredentials(true)
-                            .maxAge(3600);
+                registry.addMapping("/api/**")
+                        .allowedOrigins(allowedOrigins.toArray(new String[0]))
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true)
+                        .maxAge(3600);
 
-                    log.info("CORS configurado via SystemParameter: allowedOrigins={}", allowedOrigins);
-                } catch (Exception e) {
-                    log.error("Erro ao configurar CORS via SystemParameter", e);
-                }
+                log.info("CORS configurado via application.yml: allowedOrigins={}", allowedOrigins);
             }
         };
     }

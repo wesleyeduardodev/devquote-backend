@@ -1,7 +1,7 @@
 package br.com.devquote.configuration.security;
+import br.com.devquote.configuration.CorsProperties;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import br.com.devquote.service.SystemParameterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,7 +54,7 @@ public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
     private final AuthTokenFilter authTokenFilter;
-    private final SystemParameterService systemParameterService;
+    private final CorsProperties corsProperties;
 
     @Bean
     @Order(2)
@@ -105,21 +105,8 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        List<String> origins;
-        try {
-            origins = systemParameterService.getList("DEVQUOTE_CORS_ALLOWED_ORIGINS");
-        } catch (Exception e) {
-            origins = List.of(
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "http://localhost:8080",
-                "http://localhost:5500",
-                "http://127.0.0.1:5500"
-            );
-        }
-
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(origins);
+        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));

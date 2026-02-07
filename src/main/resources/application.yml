@@ -42,6 +42,10 @@ spring:
   #     password: ${REDIS_PASSWORD:}
   #     timeout: 2000ms
 
+devquote:
+  cors:
+    allowed-origins: ${DEVQUOTE_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:63342,http://localhost:3000,http://localhost:4200,http://localhost:8080}
+
 server:
   port: ${PORT:${SERVER_PORT:8080}}
   error:
