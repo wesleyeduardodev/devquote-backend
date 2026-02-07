@@ -1,5 +1,6 @@
 package br.com.devquote.minicurso.service;
 
+import br.com.devquote.error.BusinessException;
 import br.com.devquote.minicurso.adapter.InscricaoMinicursoAdapter;
 import br.com.devquote.minicurso.dto.request.InscricaoRequest;
 import br.com.devquote.minicurso.dto.response.InscricaoResponse;
@@ -50,7 +51,7 @@ public class InscricaoMinicursoService {
         String emailNormalizado = request.getEmail().toLowerCase().trim();
 
         if (inscricaoRepository.existsByEmail(emailNormalizado)) {
-            throw new RuntimeException("Email ja cadastrado");
+            throw new BusinessException("Este e-mail já está inscrito.", "EMAIL_DUPLICADO");
         }
 
         ConfiguracaoEvento config = configuracaoEventoRepository.findFirstByOrderByIdDesc()
@@ -58,13 +59,13 @@ public class InscricaoMinicursoService {
 
         if (config != null) {
             if (!Boolean.TRUE.equals(config.getInscricoesAbertas())) {
-                throw new RuntimeException("Inscricoes encerradas");
+                throw new BusinessException("As inscrições para este evento foram encerradas.", "INSCRICOES_ENCERRADAS");
             }
 
             if (config.getQuantidadeVagas() != null) {
                 long totalInscritos = inscricaoRepository.count();
                 if (totalInscritos >= config.getQuantidadeVagas()) {
-                    throw new RuntimeException("Vagas esgotadas");
+                    throw new BusinessException("Todas as vagas para este evento foram preenchidas.", "VAGAS_ESGOTADAS");
                 }
             }
         }
