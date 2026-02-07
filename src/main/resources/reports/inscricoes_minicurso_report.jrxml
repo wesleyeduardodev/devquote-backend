@@ -153,7 +153,7 @@
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
-                <text><![CDATA[Periodo]]></text>
+                <text><![CDATA[Período]]></text>
             </staticText>
 
             <staticText>
@@ -165,7 +165,7 @@
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
-                <text><![CDATA[Nivel]]></text>
+                <text><![CDATA[Nível]]></text>
             </staticText>
 
             <staticText>
@@ -177,7 +177,7 @@
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="8" isBold="true"/>
                 </textElement>
-                <text><![CDATA[Data Inscricao]]></text>
+                <text><![CDATA[Data Inscrição]]></text>
             </staticText>
 
             <staticText>
@@ -308,7 +308,7 @@
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
-                <textFieldExpression><![CDATA[Boolean.TRUE.equals($F{confirmado}) ? "Sim" : "Nao"]]></textFieldExpression>
+                <textFieldExpression><![CDATA[Boolean.TRUE.equals($F{confirmado}) ? "Sim" : "Não"]]></textFieldExpression>
             </textField>
         </band>
     </detail>
@@ -320,7 +320,7 @@
                 <textElement textAlignment="Right">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
-                <textFieldExpression><![CDATA["Pagina " + $V{PAGE_NUMBER}]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}]]></textFieldExpression>
             </textField>
             <textField evaluationTime="Report">
                 <reportElement x="760" y="5" width="42" height="10" uuid="f0123456-7890-1234-3456-789012345678"/>
@@ -346,7 +346,7 @@
                 <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="11" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA["Total de Inscricoes: " + $P{totalRegistros}]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Total de Inscrições: " + $P{totalRegistros}]]></textFieldExpression>
             </textField>
         </band>
     </summary>

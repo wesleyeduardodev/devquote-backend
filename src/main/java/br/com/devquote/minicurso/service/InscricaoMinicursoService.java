@@ -111,7 +111,7 @@ public class InscricaoMinicursoService {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-            Sheet sheet = workbook.createSheet("Inscricoes");
+            Sheet sheet = workbook.createSheet("Inscrições");
 
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
@@ -119,7 +119,7 @@ public class InscricaoMinicursoService {
             headerStyle.setFont(headerFont);
 
             Row headerRow = sheet.createRow(0);
-            String[] headers = {"ID", "Nome", "Email", "Telefone", "Curso", "Periodo", "Nivel", "Expectativa", "Data Inscricao", "Confirmado"};
+            String[] headers = {"ID", "Nome", "Email", "Telefone", "Curso", "Período", "Nível", "Expectativa", "Data Inscrição", "Confirmado"};
 
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -140,7 +140,7 @@ public class InscricaoMinicursoService {
                 row.createCell(6).setCellValue(inscricao.getNivelProgramacao());
                 row.createCell(7).setCellValue(inscricao.getExpectativa() != null ? inscricao.getExpectativa() : "");
                 row.createCell(8).setCellValue(inscricao.getCreatedAt() != null ? inscricao.getCreatedAt().format(DATE_FORMATTER) : "");
-                row.createCell(9).setCellValue(Boolean.TRUE.equals(inscricao.getConfirmado()) ? "Sim" : "Nao");
+                row.createCell(9).setCellValue(Boolean.TRUE.equals(inscricao.getConfirmado()) ? "Sim" : "Não");
             }
 
             for (int i = 0; i < headers.length; i++) {
@@ -160,7 +160,7 @@ public class InscricaoMinicursoService {
         JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
 
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("titulo", "Lista de Inscricoes");
+        parameters.put("titulo", "Lista de Inscrições");
         parameters.put("dataGeracao", LocalDateTime.now());
         parameters.put("totalRegistros", inscricoes.size());
 
