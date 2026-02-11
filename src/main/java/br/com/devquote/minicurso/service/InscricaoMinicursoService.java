@@ -57,6 +57,8 @@ public class InscricaoMinicursoService {
         ConfiguracaoEvento config = configuracaoEventoRepository.findFirstByOrderByIdDesc()
                 .orElse(null);
 
+        boolean confirmado = true;
+
         if (config != null) {
             if (!Boolean.TRUE.equals(config.getInscricoesAbertas())) {
                 throw new BusinessException("As inscrições para este evento foram encerradas.", "INSCRICOES_ENCERRADAS");
@@ -65,12 +67,13 @@ public class InscricaoMinicursoService {
             if (config.getQuantidadeVagas() != null) {
                 long totalInscritos = inscricaoRepository.count();
                 if (totalInscritos >= config.getQuantidadeVagas()) {
-                    throw new BusinessException("Todas as vagas para este evento foram preenchidas.", "VAGAS_ESGOTADAS");
+                    confirmado = false;
                 }
             }
         }
 
         InscricaoMinicurso entity = InscricaoMinicursoAdapter.toEntity(request);
+        entity.setConfirmado(confirmado);
         entity = inscricaoRepository.save(entity);
 
         return InscricaoMinicursoAdapter.toResponseDTO(entity);
@@ -104,6 +107,26 @@ public class InscricaoMinicursoService {
         return inscricaoRepository.count();
     }
 
+    public void promoverListaEspera(int quantidadeVagas) {
+        long confirmados = inscricaoRepository.countByConfirmado(true);
+        if (confirmados >= quantidadeVagas) {
+            return;
+        }
+
+        long vagasLivres = quantidadeVagas - confirmados;
+        List<InscricaoMinicurso> listaEspera = inscricaoRepository.findByConfirmadoOrderByCreatedAtAsc(false);
+
+        listaEspera.stream()
+                .limit(vagasLivres)
+                .forEach(inscricao -> inscricao.setConfirmado(true));
+
+        inscricaoRepository.saveAll(
+                listaEspera.stream()
+                        .limit(vagasLivres)
+                        .collect(Collectors.toList())
+        );
+    }
+
     public byte[] exportarExcel() throws IOException {
         List<InscricaoMinicurso> inscricoes = inscricaoRepository.findAll();
         inscricoes.sort(Comparator.comparing(InscricaoMinicurso::getNome, String.CASE_INSENSITIVE_ORDER));
@@ -119,7 +142,7 @@ public class InscricaoMinicursoService {
             headerStyle.setFont(headerFont);
 
             Row headerRow = sheet.createRow(0);
-            String[] headers = {"ID", "Nome", "Email", "Telefone", "Curso", "Período", "Nível", "Expectativa", "Data Inscrição", "Confirmado"};
+            String[] headers = {"ID", "Nome", "Email", "Telefone", "Curso", "Período", "Nível", "Expectativa", "Data Inscrição", "Status"};
 
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -140,7 +163,7 @@ public class InscricaoMinicursoService {
                 row.createCell(6).setCellValue(inscricao.getNivelProgramacao());
                 row.createCell(7).setCellValue(inscricao.getExpectativa() != null ? inscricao.getExpectativa() : "");
                 row.createCell(8).setCellValue(inscricao.getCreatedAt() != null ? inscricao.getCreatedAt().format(DATE_FORMATTER) : "");
-                row.createCell(9).setCellValue(Boolean.TRUE.equals(inscricao.getConfirmado()) ? "Sim" : "Não");
+                row.createCell(9).setCellValue(Boolean.TRUE.equals(inscricao.getConfirmado()) ? "Confirmado" : "Lista de espera");
             }
 
             for (int i = 0; i < headers.length; i++) {

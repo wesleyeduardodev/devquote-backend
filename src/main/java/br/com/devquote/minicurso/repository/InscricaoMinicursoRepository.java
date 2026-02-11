@@ -4,6 +4,7 @@ import br.com.devquote.minicurso.entity.InscricaoMinicurso;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -12,4 +13,8 @@ public interface InscricaoMinicursoRepository extends JpaRepository<InscricaoMin
     boolean existsByEmail(String email);
 
     Optional<InscricaoMinicurso> findByEmail(String email);
+
+    long countByConfirmado(Boolean confirmado);
+
+    List<InscricaoMinicurso> findByConfirmadoOrderByCreatedAtAsc(Boolean confirmado);
 }

@@ -28,6 +28,7 @@ public class ConfiguracaoEventoService {
 
     private final ConfiguracaoEventoRepository configuracaoEventoRepository;
     private final InscricaoMinicursoRepository inscricaoMinicursoRepository;
+    private final InscricaoMinicursoService inscricaoMinicursoService;
     private final ModuloEventoService moduloEventoService;
     private final DataEventoRepository dataEventoRepository;
 
@@ -74,6 +75,10 @@ public class ConfiguracaoEventoService {
         config = configuracaoEventoRepository.save(config);
 
         sincronizarDatasEvento(config, request.getDatasEvento());
+
+        if (config.getQuantidadeVagas() != null) {
+            inscricaoMinicursoService.promoverListaEspera(config.getQuantidadeVagas());
+        }
 
         long totalInscritos = inscricaoMinicursoRepository.count();
         List<ModuloEventoResponse> modulos = moduloEventoService.listarPorEvento(config.getId());
