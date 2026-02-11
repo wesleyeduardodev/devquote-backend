@@ -41,11 +41,12 @@ public class ConfiguracaoEventoService {
         }
 
         long totalInscritos = inscricaoMinicursoRepository.count();
+        long totalListaEspera = inscricaoMinicursoRepository.countByConfirmado(false);
         List<ModuloEventoResponse> modulos = moduloEventoService.listarAtivosPorEvento(config.getId());
         List<DataEventoResponse> datasEvento = DataEventoAdapter.toResponseDTOList(
                 dataEventoRepository.findByConfiguracaoEventoIdOrderByOrdemAsc(config.getId()));
 
-        return ConfiguracaoEventoAdapter.toResponseDTO(config, totalInscritos, modulos, datasEvento);
+        return ConfiguracaoEventoAdapter.toResponseDTO(config, totalInscritos, totalListaEspera, modulos, datasEvento);
     }
 
     public ConfiguracaoEventoResponse obterConfiguracaoCompleta() {
@@ -57,11 +58,12 @@ public class ConfiguracaoEventoService {
         }
 
         long totalInscritos = inscricaoMinicursoRepository.count();
+        long totalListaEspera = inscricaoMinicursoRepository.countByConfirmado(false);
         List<ModuloEventoResponse> modulos = moduloEventoService.listarPorEvento(config.getId());
         List<DataEventoResponse> datasEvento = DataEventoAdapter.toResponseDTOList(
                 dataEventoRepository.findByConfiguracaoEventoIdOrderByOrdemAsc(config.getId()));
 
-        return ConfiguracaoEventoAdapter.toResponseDTO(config, totalInscritos, modulos, datasEvento);
+        return ConfiguracaoEventoAdapter.toResponseDTO(config, totalInscritos, totalListaEspera, modulos, datasEvento);
     }
 
     public ConfiguracaoEventoResponse atualizar(ConfiguracaoEventoRequest request) {
@@ -81,11 +83,12 @@ public class ConfiguracaoEventoService {
         }
 
         long totalInscritos = inscricaoMinicursoRepository.count();
+        long totalListaEspera = inscricaoMinicursoRepository.countByConfirmado(false);
         List<ModuloEventoResponse> modulos = moduloEventoService.listarPorEvento(config.getId());
         List<DataEventoResponse> datasEvento = DataEventoAdapter.toResponseDTOList(
                 dataEventoRepository.findByConfiguracaoEventoIdOrderByOrdemAsc(config.getId()));
 
-        return ConfiguracaoEventoAdapter.toResponseDTO(config, totalInscritos, modulos, datasEvento);
+        return ConfiguracaoEventoAdapter.toResponseDTO(config, totalInscritos, totalListaEspera, modulos, datasEvento);
     }
 
     public Long obterEventoIdAtual() {

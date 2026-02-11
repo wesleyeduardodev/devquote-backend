@@ -17,6 +17,7 @@ public class ConfiguracaoEventoAdapter {
     public static ConfiguracaoEventoResponse toResponseDTO(
             ConfiguracaoEvento entity,
             long totalInscritos,
+            long totalListaEspera,
             List<ModuloEventoResponse> modulos,
             List<DataEventoResponse> datasEvento) {
 
@@ -42,6 +43,7 @@ public class ConfiguracaoEventoAdapter {
                 .emailContato(entity.getEmailContato())
                 .whatsappContato(entity.getWhatsappContato())
                 .vagasDisponiveis(vagasDisponiveis)
+                .totalListaEspera(totalListaEspera)
                 .cargaHorariaTotal(cargaHorariaTotal)
                 .cargaHorariaTotalFormatada(ModuloEventoAdapter.formatarCargaHoraria(cargaHorariaTotal))
                 .modulos(modulos)

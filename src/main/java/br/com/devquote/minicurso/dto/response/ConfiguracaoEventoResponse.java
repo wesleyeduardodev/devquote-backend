@@ -23,6 +23,7 @@ public class ConfiguracaoEventoResponse {
     private String emailContato;
     private String whatsappContato;
     private Integer vagasDisponiveis;
+    private Long totalListaEspera;
     private Integer cargaHorariaTotal;
     private String cargaHorariaTotalFormatada;
     private List<ModuloEventoResponse> modulos;
