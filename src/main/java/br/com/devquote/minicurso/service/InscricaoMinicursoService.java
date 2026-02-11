@@ -18,6 +18,7 @@ import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -129,7 +130,7 @@ public class InscricaoMinicursoService {
 
     public byte[] exportarExcel() throws IOException {
         List<InscricaoMinicurso> inscricoes = inscricaoRepository.findAll();
-        inscricoes.sort(Comparator.comparing(InscricaoMinicurso::getNome, String.CASE_INSENSITIVE_ORDER));
+        inscricoes.sort(Comparator.comparing(InscricaoMinicurso::getCreatedAt));
 
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -140,6 +141,10 @@ public class InscricaoMinicursoService {
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             headerStyle.setFont(headerFont);
+
+            CreationHelper createHelper = workbook.getCreationHelper();
+            CellStyle dateStyle = workbook.createCellStyle();
+            dateStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/MM/yyyy HH:mm:ss"));
 
             Row headerRow = sheet.createRow(0);
             String[] headers = {"ID", "Nome", "Email", "Telefone", "Curso", "Período", "Nível", "Expectativa", "Data Inscrição", "Status"};
@@ -162,12 +167,17 @@ public class InscricaoMinicursoService {
                 row.createCell(5).setCellValue(inscricao.getPeriodo() != null ? inscricao.getPeriodo() : "");
                 row.createCell(6).setCellValue(inscricao.getNivelProgramacao());
                 row.createCell(7).setCellValue(inscricao.getExpectativa() != null ? inscricao.getExpectativa() : "");
-                row.createCell(8).setCellValue(inscricao.getCreatedAt() != null ? inscricao.getCreatedAt().format(DATE_FORMATTER) : "");
+                Cell dateCell = row.createCell(8);
+                if (inscricao.getCreatedAt() != null) {
+                    dateCell.setCellValue(java.sql.Timestamp.valueOf(inscricao.getCreatedAt()));
+                    dateCell.setCellStyle(dateStyle);
+                }
                 row.createCell(9).setCellValue(Boolean.TRUE.equals(inscricao.getConfirmado()) ? "Confirmado" : "Lista de espera");
             }
 
-            for (int i = 0; i < headers.length; i++) {
-                sheet.autoSizeColumn(i);
+            int[] columnWidths = {8, 32, 38, 16, 30, 14, 18, 40, 22, 16};
+            for (int i = 0; i < columnWidths.length; i++) {
+                sheet.setColumnWidth(i, columnWidths[i] * 256);
             }
 
             workbook.write(outputStream);
@@ -177,7 +187,7 @@ public class InscricaoMinicursoService {
 
     public byte[] exportarPdf() throws JRException {
         List<InscricaoMinicurso> inscricoes = inscricaoRepository.findAll();
-        inscricoes.sort(Comparator.comparing(InscricaoMinicurso::getNome, String.CASE_INSENSITIVE_ORDER));
+        inscricoes.sort(Comparator.comparing(InscricaoMinicurso::getCreatedAt));
 
         InputStream reportStream = getClass().getResourceAsStream("/reports/inscricoes_minicurso_report.jrxml");
         JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);

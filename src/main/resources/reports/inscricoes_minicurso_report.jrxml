@@ -297,7 +297,7 @@
                 <textElement verticalAlignment="Middle">
                     <font fontName="DejaVu Sans" size="7"/>
                 </textElement>
-                <textFieldExpression><![CDATA[$F{createdAt} != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format($F{createdAt}) : "-"]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$F{createdAt} != null ? java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format($F{createdAt}) : "-"]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
