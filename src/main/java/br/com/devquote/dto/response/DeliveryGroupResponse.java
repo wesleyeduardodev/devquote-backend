@@ -21,6 +21,8 @@ public class DeliveryGroupResponse {
 
     private String taskType;
 
+    private String taskLink;
+
     private String deliveryStatus;
 
     private BigDecimal taskValue;
