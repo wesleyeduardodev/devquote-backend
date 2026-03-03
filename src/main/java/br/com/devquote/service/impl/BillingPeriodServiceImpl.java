@@ -130,7 +130,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     @Override
     public BillingPeriodResponse update(Long id, BillingPeriodRequest dto) {
         BillingPeriod entity = billingPeriodRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("BillingPeriod not found"));
+                .orElseThrow(() -> new RuntimeException("BillingPeriod not found. test."));
         BillingPeriodAdapter.updateEntityFromDto(dto, entity);
         entity = billingPeriodRepository.save(entity);
         return BillingPeriodAdapter.toResponseDTO(entity);
