@@ -39,10 +39,12 @@ public class Delivery {
     private DeliveryStatus status = DeliveryStatus.PENDING;
 
     @OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OrderBy("sortOrder ASC, id ASC")
     @Builder.Default
     private List<DeliveryItem> items = new ArrayList<>();
 
     @OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OrderBy("sortOrder ASC, id ASC")
     @Builder.Default
     private List<DeliveryOperationalItem> operationalItems = new ArrayList<>();
 
