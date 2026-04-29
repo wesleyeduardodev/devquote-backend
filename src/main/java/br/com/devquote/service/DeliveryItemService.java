@@ -1,5 +1,6 @@
 package br.com.devquote.service;
 import br.com.devquote.dto.request.DeliveryItemRequest;
+import br.com.devquote.dto.request.ReorderItemRequest;
 import br.com.devquote.dto.response.DeliveryItemResponse;
 import br.com.devquote.enums.DeliveryStatus;
 import org.springframework.data.domain.Page;
@@ -56,4 +57,6 @@ public interface DeliveryItemService {
     List<DeliveryItemResponse> createMultipleItems(Long deliveryId, List<DeliveryItemRequest> items);
 
     List<DeliveryItemResponse> updateMultipleItems(List<Long> itemIds, List<DeliveryItemRequest> items);
+
+    void reorder(Long deliveryId, List<ReorderItemRequest> items);
 }

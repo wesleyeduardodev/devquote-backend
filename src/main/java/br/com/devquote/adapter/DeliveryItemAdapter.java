@@ -38,6 +38,7 @@ public final class DeliveryItemAdapter {
                         entity.getDelivery().getTask().getCode() : null)
                 .merged(entity.getMerged())
                 .mergedAt(entity.getMergedAt())
+                .sortOrder(entity.getSortOrder())
                 .build();
     }
 
@@ -61,6 +62,7 @@ public final class DeliveryItemAdapter {
                 .notes(dto.getNotes())
                 .startedAt(dto.getStartedAt() != null ? dto.getStartedAt() : LocalDateTime.now())
                 .finishedAt(dto.getFinishedAt())
+                .sortOrder(dto.getSortOrder())
                 .build();
     }
 
@@ -77,5 +79,8 @@ public final class DeliveryItemAdapter {
         entity.setNotes(dto.getNotes());
         entity.setStartedAt(dto.getStartedAt());
         entity.setFinishedAt(dto.getFinishedAt());
+        if (dto.getSortOrder() != null) {
+            entity.setSortOrder(dto.getSortOrder());
+        }
     }
 }

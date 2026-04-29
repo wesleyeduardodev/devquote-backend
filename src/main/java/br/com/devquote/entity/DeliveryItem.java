@@ -52,4 +52,7 @@ public class DeliveryItem extends BaseEntity {
 
     @Column(name = "merged_at")
     private LocalDateTime mergedAt;
+
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder;
 }

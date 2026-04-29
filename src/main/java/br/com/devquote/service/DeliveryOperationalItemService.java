@@ -1,5 +1,6 @@
 package br.com.devquote.service;
 import br.com.devquote.dto.request.DeliveryOperationalItemRequest;
+import br.com.devquote.dto.request.ReorderItemRequest;
 import br.com.devquote.dto.response.DeliveryOperationalItemResponse;
 import java.util.List;
 
@@ -14,4 +15,6 @@ public interface DeliveryOperationalItemService {
     List<DeliveryOperationalItemResponse> findByDeliveryId(Long deliveryId);
 
     void delete(Long id);
+
+    void reorder(Long deliveryId, List<ReorderItemRequest> items);
 }

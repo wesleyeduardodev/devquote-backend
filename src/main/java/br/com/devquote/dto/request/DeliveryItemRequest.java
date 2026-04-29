@@ -38,4 +38,6 @@ public class DeliveryItemRequest {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime finishedAt;
+
+    private Integer sortOrder;
 }

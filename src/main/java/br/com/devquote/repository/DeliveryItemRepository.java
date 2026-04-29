@@ -19,19 +19,19 @@ public interface DeliveryItemRepository extends JpaRepository<DeliveryItem, Long
     Optional<DeliveryItem> findById(Long id);
 
     @EntityGraph(attributePaths = {"delivery", "delivery.task", "project"})
-    @Query("SELECT di FROM DeliveryItem di WHERE di.delivery.id = :deliveryId ORDER BY di.id")
+    @Query("SELECT di FROM DeliveryItem di WHERE di.delivery.id = :deliveryId ORDER BY di.sortOrder ASC, di.id ASC")
     List<DeliveryItem> findByDeliveryId(@Param("deliveryId") Long deliveryId);
 
     @EntityGraph(attributePaths = {"delivery", "delivery.task", "project"})
-    @Query("SELECT di FROM DeliveryItem di WHERE di.delivery.task.id = :taskId ORDER BY di.id")
+    @Query("SELECT di FROM DeliveryItem di WHERE di.delivery.task.id = :taskId ORDER BY di.sortOrder ASC, di.id ASC")
     List<DeliveryItem> findByTaskId(@Param("taskId") Long taskId);
 
     @EntityGraph(attributePaths = {"delivery", "delivery.task", "project"})
-    @Query("SELECT di FROM DeliveryItem di WHERE di.project.id = :projectId ORDER BY di.id")
+    @Query("SELECT di FROM DeliveryItem di WHERE di.project.id = :projectId ORDER BY di.sortOrder ASC, di.id ASC")
     List<DeliveryItem> findByProjectId(@Param("projectId") Long projectId);
 
     @EntityGraph(attributePaths = {"delivery", "delivery.task", "project"})
-    @Query("SELECT di FROM DeliveryItem di WHERE di.status = :status ORDER BY di.id")
+    @Query("SELECT di FROM DeliveryItem di WHERE di.status = :status ORDER BY di.sortOrder ASC, di.id ASC")
     List<DeliveryItem> findByStatus(@Param("status") DeliveryStatus status);
 
     @Query("SELECT COUNT(di) FROM DeliveryItem di WHERE di.delivery.id = :deliveryId")
@@ -106,7 +106,7 @@ public interface DeliveryItemRepository extends JpaRepository<DeliveryItem, Long
         INNER JOIN delivery d ON di.delivery_id = d.id
         INNER JOIN task t ON d.task_id = t.id
         WHERE t.id = :taskId
-        ORDER BY di.id
+        ORDER BY di.sort_order ASC, di.id ASC
         """, nativeQuery = true)
     List<Object[]> findItemsByTaskIdOptimized(@Param("taskId") Long taskId);
 
@@ -118,4 +118,7 @@ public interface DeliveryItemRepository extends JpaRepository<DeliveryItem, Long
           AND (di.merged IS NULL OR di.merged = false)
         """)
     List<DeliveryItem> findEligibleForGitSync();
+
+    @Query("SELECT COALESCE(MAX(di.sortOrder), 0) FROM DeliveryItem di WHERE di.delivery.id = :deliveryId")
+    Integer findMaxSortOrderByDeliveryId(@Param("deliveryId") Long deliveryId);
 }

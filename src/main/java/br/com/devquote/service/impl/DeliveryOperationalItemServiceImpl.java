@@ -1,5 +1,6 @@
 package br.com.devquote.service.impl;
 import br.com.devquote.dto.request.DeliveryOperationalItemRequest;
+import br.com.devquote.dto.request.ReorderItemRequest;
 import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
 import br.com.devquote.dto.response.DeliveryOperationalItemResponse;
 import br.com.devquote.entity.Delivery;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,6 +41,12 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
         Delivery delivery = deliveryRepository.findById(request.getDeliveryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
 
+        Integer sortOrder = request.getSortOrder();
+        if (sortOrder == null) {
+            Integer maxSortOrder = operationalItemRepository.findMaxSortOrderByDeliveryId(delivery.getId());
+            sortOrder = (maxSortOrder == null ? 0 : maxSortOrder) + 1;
+        }
+
         DeliveryOperationalItem item = DeliveryOperationalItem.builder()
                 .delivery(delivery)
                 .title(request.getTitle())
@@ -45,6 +54,7 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
                 .status(OperationalItemStatus.fromString(request.getStatus()))
                 .startedAt(request.getStartedAt() != null ? request.getStartedAt() : LocalDateTime.now())
                 .finishedAt(request.getFinishedAt())
+                .sortOrder(sortOrder)
                 .build();
 
         if (OperationalItemStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
@@ -73,6 +83,9 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
         item.setStatus(OperationalItemStatus.fromString(request.getStatus()));
         item.setStartedAt(request.getStartedAt());
         item.setFinishedAt(request.getFinishedAt());
+        if (request.getSortOrder() != null) {
+            item.setSortOrder(request.getSortOrder());
+        }
 
         if (OperationalItemStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
             throw new IllegalArgumentException("Data de conclusão é obrigatória para itens operacionais com status 'Entregue'");
@@ -161,9 +174,27 @@ public class DeliveryOperationalItemServiceImpl implements DeliveryOperationalIt
                 .status(item.getStatus().name())
                 .startedAt(item.getStartedAt())
                 .finishedAt(item.getFinishedAt())
+                .sortOrder(item.getSortOrder())
                 .attachments(attachmentResponses)
                 .createdAt(item.getCreatedAt())
                 .updatedAt(item.getUpdatedAt())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void reorder(Long deliveryId, List<ReorderItemRequest> items) {
+        if (items == null || items.isEmpty()) return;
+        List<Long> ids = items.stream().map(ReorderItemRequest::getId).toList();
+        Map<Long, DeliveryOperationalItem> entities = operationalItemRepository.findAllById(ids).stream()
+                .filter(it -> it.getDelivery().getId().equals(deliveryId))
+                .collect(Collectors.toMap(DeliveryOperationalItem::getId, Function.identity()));
+        for (ReorderItemRequest item : items) {
+            DeliveryOperationalItem entity = entities.get(item.getId());
+            if (entity != null && item.getSortOrder() != null) {
+                entity.setSortOrder(item.getSortOrder());
+            }
+        }
+        operationalItemRepository.saveAll(entities.values());
     }
 }

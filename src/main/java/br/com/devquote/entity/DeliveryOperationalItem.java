@@ -37,6 +37,9 @@ public class DeliveryOperationalItem extends BaseEntity {
     @Column(name = "finished_at")
     private LocalDateTime finishedAt;
 
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder;
+
     @OneToMany(mappedBy = "deliveryOperationalItem", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<DeliveryOperationalAttachment> attachments = new ArrayList<>();

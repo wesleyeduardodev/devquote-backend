@@ -1,6 +1,7 @@
 package br.com.devquote.service.impl;
 import br.com.devquote.adapter.DeliveryItemAdapter;
 import br.com.devquote.dto.request.DeliveryItemRequest;
+import br.com.devquote.dto.request.ReorderItemRequest;
 import br.com.devquote.dto.response.DeliveryItemResponse;
 import br.com.devquote.entity.Delivery;
 import br.com.devquote.entity.DeliveryItem;
@@ -28,6 +29,9 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
@@ -68,6 +72,11 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                 .orElseThrow(() -> new RuntimeException("Project not found with id: " + dto.getProjectId()));
 
         DeliveryItem item = DeliveryItemAdapter.toEntity(dto, delivery, project);
+
+        if (item.getSortOrder() == null) {
+            Integer maxSortOrder = deliveryItemRepository.findMaxSortOrderByDeliveryId(delivery.getId());
+            item.setSortOrder((maxSortOrder == null ? 0 : maxSortOrder) + 1);
+        }
 
         if (DeliveryStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
             throw new IllegalArgumentException("Data de conclusão é obrigatória para itens com status 'Entregue'");
@@ -291,6 +300,8 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                 .orElseThrow(() -> new RuntimeException("Delivery not found with id: " + deliveryId));
 
         List<DeliveryItem> createdItems = new ArrayList<>();
+        Integer maxSortOrder = deliveryItemRepository.findMaxSortOrderByDeliveryId(deliveryId);
+        int nextSortOrder = (maxSortOrder == null ? 0 : maxSortOrder) + 1;
 
         for (DeliveryItemRequest itemDto : items) {
             if (!deliveryId.equals(itemDto.getDeliveryId())) {
@@ -301,6 +312,10 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
                     .orElseThrow(() -> new RuntimeException("Project not found with id: " + itemDto.getProjectId()));
 
             DeliveryItem item = DeliveryItemAdapter.toEntity(itemDto, delivery, project);
+
+            if (item.getSortOrder() == null) {
+                item.setSortOrder(nextSortOrder++);
+            }
 
             if (DeliveryStatus.DELIVERED.equals(item.getStatus()) && item.getFinishedAt() == null) {
                 throw new IllegalArgumentException("Data de conclusão é obrigatória para itens com status 'Entregue'");
@@ -374,6 +389,23 @@ public class DeliveryItemServiceImpl implements DeliveryItemService {
 
         log.debug("Updated {} delivery items", itemIds.size());
         return DeliveryItemAdapter.toResponseDTOList(updatedItems);
+    }
+
+    @Override
+    @Transactional
+    public void reorder(Long deliveryId, List<ReorderItemRequest> items) {
+        if (items == null || items.isEmpty()) return;
+        List<Long> ids = items.stream().map(ReorderItemRequest::getId).toList();
+        Map<Long, DeliveryItem> entities = deliveryItemRepository.findAllById(ids).stream()
+                .filter(it -> it.getDelivery().getId().equals(deliveryId))
+                .collect(Collectors.toMap(DeliveryItem::getId, Function.identity()));
+        for (ReorderItemRequest item : items) {
+            DeliveryItem entity = entities.get(item.getId());
+            if (entity != null && item.getSortOrder() != null) {
+                entity.setSortOrder(item.getSortOrder());
+            }
+        }
+        deliveryItemRepository.saveAll(entities.values());
     }
 
     @Override

@@ -1,6 +1,7 @@
 package br.com.devquote.controller;
 import br.com.devquote.adapter.PageAdapter;
 import br.com.devquote.dto.request.DeliveryItemRequest;
+import br.com.devquote.dto.request.ReorderRequest;
 import br.com.devquote.dto.response.DeliveryItemResponse;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.enums.DeliveryStatus;
@@ -266,6 +267,20 @@ public class DeliveryItemController {
     ) {
         long count = deliveryItemService.countByDeliveryIdAndStatus(deliveryId, status);
         return ResponseEntity.ok(count);
+    }
+
+    @PatchMapping("/reorder")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Reorder delivery items in batch")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Reorder applied"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    public ResponseEntity<Void> reorder(
+            @Parameter(description = "Delivery ID and list of {id, sortOrder}") @Valid @RequestBody ReorderRequest request
+    ) {
+        deliveryItemService.reorder(request.getDeliveryId(), request.getItems());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/export/excel")

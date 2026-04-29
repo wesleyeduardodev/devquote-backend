@@ -39,4 +39,6 @@ public class DeliveryItemResponse {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime mergedAt;
+
+    private Integer sortOrder;
 }

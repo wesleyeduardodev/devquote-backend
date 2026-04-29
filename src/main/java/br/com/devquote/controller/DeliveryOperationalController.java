@@ -2,6 +2,7 @@ package br.com.devquote.controller;
 
 import br.com.devquote.controller.doc.DeliveryOperationalControllerDoc;
 import br.com.devquote.dto.request.DeliveryOperationalItemRequest;
+import br.com.devquote.dto.request.ReorderRequest;
 import br.com.devquote.dto.response.DeliveryOperationalAttachmentResponse;
 import br.com.devquote.dto.response.DeliveryOperationalItemResponse;
 import br.com.devquote.service.DeliveryOperationalAttachmentService;
@@ -57,6 +58,13 @@ public class DeliveryOperationalController implements DeliveryOperationalControl
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<Void> deleteItem(@PathVariable Long id) {
         operationalItemService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/items/reorder")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<Void> reorderItems(@RequestBody @Valid ReorderRequest request) {
+        operationalItemService.reorder(request.getDeliveryId(), request.getItems());
         return ResponseEntity.noContent().build();
     }
 
