@@ -8,14 +8,17 @@ import java.util.List;
 @Repository
 public interface SubTaskRepository extends JpaRepository<SubTask, Long> {
 
-    @Query("SELECT s FROM SubTask s WHERE s.task.id = :taskId ORDER BY s.id ASC")
+    @Query("SELECT s FROM SubTask s WHERE s.task.id = :taskId ORDER BY s.sortOrder ASC, s.id ASC")
     List<SubTask> findByTaskId(Long taskId);
 
     void deleteByTaskId(Long taskId);
 
-    @Query("SELECT s FROM SubTask s ORDER BY s.id ASC")
+    @Query("SELECT s FROM SubTask s ORDER BY s.task.id ASC, s.sortOrder ASC, s.id ASC")
     List<SubTask> findAllOrderedById();
 
-    @Query("SELECT s FROM SubTask s WHERE s.task.id IN :taskIds ORDER BY s.id ASC")
+    @Query("SELECT s FROM SubTask s WHERE s.task.id IN :taskIds ORDER BY s.task.id ASC, s.sortOrder ASC, s.id ASC")
     List<SubTask> findByTaskIdIn(List<Long> taskIds);
+
+    @Query("SELECT COALESCE(MAX(s.sortOrder), 0) FROM SubTask s WHERE s.task.id = :taskId")
+    Integer findMaxSortOrderByTaskId(Long taskId);
 }

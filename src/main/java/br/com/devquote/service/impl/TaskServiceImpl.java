@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -529,9 +530,14 @@ public class TaskServiceImpl implements TaskService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        return safe.stream()
-                .map(stDto -> subTaskRepository.save(SubTaskAdapter.toEntity(stDto, task)))
-                .toList();
+        List<SubTask> persisted = new ArrayList<>(safe.size());
+        for (int i = 0; i < safe.size(); i++) {
+            SubTaskRequest stDto = safe.get(i);
+            SubTask entity = SubTaskAdapter.toEntity(stDto, task);
+            entity.setSortOrder(i + 1);
+            persisted.add(subTaskRepository.save(entity));
+        }
+        return persisted;
     }
 
     private TaskWithSubTasksResponse buildTaskWithSubTasksResponse(Task task, List<SubTask> subTasks) {
@@ -564,18 +570,28 @@ public class TaskServiceImpl implements TaskService {
     private List<SubTask> upsertAndDeleteSubTasks(Task task, List<SubTaskUpdateRequest> subTaskDtos) {
         List<SubTaskUpdateRequest> safe = subTaskDtos == null ? List.of() : subTaskDtos;
 
-        List<SubTask> upserted = safe.stream()
+        List<SubTaskUpdateRequest> active = safe.stream()
                 .filter(st -> !st.isExcluded())
-                .map(st -> {
-                    if (st.getId() != null) {
-                        SubTask entity = subTaskRepository.findById(st.getId())
-                                .orElseThrow(() -> new RuntimeException("SubTask not found: " + st.getId()));
-                        SubTaskAdapter.updateEntityFromDto(st, entity, task);
-                        return subTaskRepository.save(entity);
-                    }
-                    return subTaskRepository.save(SubTaskAdapter.toEntity(st, task));
-                })
                 .toList();
+
+        List<SubTask> upserted = new ArrayList<>(active.size());
+        for (int i = 0; i < active.size(); i++) {
+            SubTaskUpdateRequest st = active.get(i);
+            int sortOrder = i + 1;
+            SubTask saved;
+            if (st.getId() != null) {
+                SubTask entity = subTaskRepository.findById(st.getId())
+                        .orElseThrow(() -> new RuntimeException("SubTask not found: " + st.getId()));
+                SubTaskAdapter.updateEntityFromDto(st, entity, task);
+                entity.setSortOrder(sortOrder);
+                saved = subTaskRepository.save(entity);
+            } else {
+                SubTask entity = SubTaskAdapter.toEntity(st, task);
+                entity.setSortOrder(sortOrder);
+                saved = subTaskRepository.save(entity);
+            }
+            upserted.add(saved);
+        }
 
         safe.stream()
                 .filter(st -> st.isExcluded() && st.getId() != null)

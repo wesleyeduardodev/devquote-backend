@@ -31,6 +31,9 @@ public class SubTask {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

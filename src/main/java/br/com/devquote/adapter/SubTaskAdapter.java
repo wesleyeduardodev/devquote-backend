@@ -22,6 +22,7 @@ public class SubTaskAdapter {
                 .title(entity.getTitle())
                 .description(entity.getDescription())
                 .amount(entity.getAmount())
+                .sortOrder(entity.getSortOrder())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -37,6 +38,7 @@ public class SubTaskAdapter {
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .amount(dto.getAmount())
+                .sortOrder(dto.getSortOrder())
                 .build();
     }
 
@@ -52,6 +54,9 @@ public class SubTaskAdapter {
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
         entity.setAmount(dto.getAmount());
+        if (dto.getSortOrder() != null) {
+            entity.setSortOrder(dto.getSortOrder());
+        }
     }
 
     public static void updateEntityFromDto(SubTaskUpdateRequest dto, SubTask entity, Task task) {
@@ -66,6 +71,9 @@ public class SubTaskAdapter {
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
         entity.setAmount(dto.getAmount());
+        if (dto.getSortOrder() != null) {
+            entity.setSortOrder(dto.getSortOrder());
+        }
     }
 
     public static List<SubTaskResponse> toResponseDTOList(List<SubTask> entities) {
@@ -88,6 +96,7 @@ public class SubTaskAdapter {
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .amount(dto.getAmount())
+                .sortOrder(dto.getSortOrder())
                 .build();
     }
 }

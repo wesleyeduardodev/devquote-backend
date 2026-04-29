@@ -41,6 +41,10 @@ public class SubTaskServiceImpl implements SubTaskService {
         Task task = taskRepository.findById(dto.getTaskId())
                 .orElseThrow(() -> new RuntimeException("Task not found"));
         SubTask entity = SubTaskAdapter.toEntity(dto, task);
+        if (entity.getSortOrder() == null) {
+            Integer maxSortOrder = subTaskRepository.findMaxSortOrderByTaskId(task.getId());
+            entity.setSortOrder((maxSortOrder == null ? 0 : maxSortOrder) + 1);
+        }
         entity = subTaskRepository.save(entity);
         return SubTaskAdapter.toResponseDTO(entity);
     }

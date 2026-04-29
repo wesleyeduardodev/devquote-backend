@@ -22,6 +22,8 @@ public class SubTaskResponse {
 
     private BigDecimal amount;
 
+    private Integer sortOrder;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
