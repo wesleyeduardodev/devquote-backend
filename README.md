@@ -105,77 +105,59 @@ MAIL_HOST / MAIL_PORT / MAIL_USERNAME / MAIL_PASSWORD
 DEVQUOTE_EMAIL_ENABLED / DEVQUOTE_EMAIL_FROM
 ```
 
-Banco: `jdbc:postgresql://localhost:5434/devquote` (user: postgres, pass: root)
+Banco: `jdbc:postgresql://localhost:5435/devquote_wesley` (user: `devquote_wesley_user`, pass: `devquote_wesley`)
 Redis: `localhost:6379`
 
-## Docker Compose (Containers Separados)
+## Docker Compose (infra local)
 
-O projeto possui arquivos docker-compose separados para cada serviço, permitindo subir apenas o que for necessário.
+O `docker-compose.yml` **fica na raiz do monorepo** (`../docker-compose.yml`), não aqui — ele sobe a infra compartilhada (Postgres + Redis) e serve aos 3 subprojetos. O backend roda fora do compose (IntelliJ ou `./mvnw spring-boot:run`).
 
-### Arquivos Disponíveis
+### Estrutura
 
-| Arquivo | Serviço | Porta |
-|---------|---------|-------|
-| `docker-compose.yml` | Todos (postgres + redis + api) | 5434, 6379, 8080 |
-| `docker-compose.postgres.yml` | PostgreSQL 17 | 5434 |
-| `docker-compose.redis.yml` | Redis 7 | 6379 |
-| `docker-compose.api.yml` | Backend Spring Boot | 8080 |
+| Service | Imagem | Bind (host → container) |
+|---|---|---|
+| `postgres` | `postgres:17` | `5435 → 5432` (5435 evita conflito com outro Postgres local) |
+| `redis` | `redis:7-alpine` | `6379 → 6379` |
 
-### Passo 1: Criar a Rede Compartilhada
+Postgres local espelha estrutura de produção: DB `devquote_wesley`, user `devquote_wesley_user`. Assim um dump de prod restaura sem rename.
 
-Antes de subir qualquer container separado, crie a rede que será compartilhada entre eles:
+### Subir tudo
 
 ```bash
-docker network create devquote-network
+cd ..                                       # ir para a raiz do monorepo
+docker compose up -d                        # postgres + redis
 ```
 
-### Passo 2: Subir os Containers
+### Subir só um serviço
 
-**Subir apenas o PostgreSQL:**
 ```bash
-docker compose -f docker-compose.postgres.yml up -d
+docker compose up -d postgres
+docker compose up -d redis
 ```
 
-**Subir apenas o Redis:**
-```bash
-docker compose -f docker-compose.redis.yml up -d
-```
+### Comandos úteis
 
-**Subir apenas a API (requer postgres e redis rodando):**
-```bash
-docker compose -f docker-compose.api.yml up -d
-```
-
-**Subir PostgreSQL + Redis juntos:**
-```bash
-docker compose -f docker-compose.postgres.yml -f docker-compose.redis.yml up -d
-```
-
-### Comandos Uteis
-
-**Verificar containers rodando:**
 ```bash
 docker ps --filter "name=devquote"
-```
-
-**Ver logs de um container:**
-```bash
 docker logs -f devquote-postgres
 docker logs -f devquote-redis
-docker logs -f devquote-backend
+docker compose down                         # para tudo (mantém volumes)
+docker compose down -v                      # para tudo + apaga volumes (perde o banco local)
+
+# Acesso ao Postgres local
+docker exec -it devquote-postgres psql -U devquote_wesley_user -d devquote_wesley
 ```
 
-**Parar containers:**
-```bash
-docker-compose -f docker-compose.postgres.yml down
-docker-compose -f docker-compose.redis.yml down
-docker-compose -f docker-compose.api.yml down
+### Restaurar dump de produção no Postgres local
+
+Skill automatizada: `restore-backup-db` (em `~/.claude/skills/`). Dispara via Claude Code com:
+```
+/restore-backup-db host=wesley.devquote.com.br port=30433 user=devquote_wesley_user pass=... db=devquote_wesley container=devquote-postgres ssl=0
 ```
 
-**Verificar rede:**
-```bash
-docker network inspect devquote-network
-```
+Variáveis de ambiente para o IntelliJ:
+- `../varaiveis_intelij_local.txt` — aponta para o Postgres do container local (este compose). Integrações (email/GitHub/ClickUp) **desligadas** por padrão.
+- `../varaiveis_intelij_prod.txt` — aponta para o Postgres de produção via NodePort do K3s. **Cuidado**: writes vão pra prod.
 
 ## 📊 Status Atual
 
