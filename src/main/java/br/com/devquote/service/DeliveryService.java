@@ -25,13 +25,33 @@ public interface DeliveryService {
     void deleteByTaskId(Long taskId);
 
     Page<DeliveryResponse> findAllPaginated(Long id,
+                                            Long taskId,
                                             String taskName,
                                             String taskCode,
                                             String flowType,
+                                            String taskType,
+                                            String environment,
                                             String status,
+                                            String startDate,
+                                            String endDate,
                                             String createdAt,
                                             String updatedAt,
                                             Pageable pageable);
+
+    java.math.BigDecimal getTotalAmount(Long id,
+                                        Long taskId,
+                                        String taskName,
+                                        String taskCode,
+                                        String flowType,
+                                        String taskType,
+                                        String environment,
+                                        String status,
+                                        String startDate,
+                                        String endDate,
+                                        String createdAt,
+                                        String updatedAt);
+
+    br.com.devquote.dto.response.DeliveryStats getStats();
 
     Page<DeliveryGroupResponse> findAllGroupedByTask(Long taskId,
                                                       String taskName,

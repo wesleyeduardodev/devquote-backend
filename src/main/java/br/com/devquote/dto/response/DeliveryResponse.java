@@ -1,6 +1,7 @@
 package br.com.devquote.dto.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class DeliveryResponse {
     private String taskName;
     private String taskCode;
     private String taskType;
+    private BigDecimal taskValue;
     private String flowType;
     private String environment;
     private String status;

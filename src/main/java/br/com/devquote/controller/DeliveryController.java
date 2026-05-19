@@ -52,10 +52,15 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long id,
+            @RequestParam(required = false) Long taskId,
             @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String taskCode,
             @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(required = false) String environment,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
             @RequestParam(required = false) MultiValueMap<String, String> params
@@ -69,10 +74,40 @@ public class DeliveryController implements DeliveryControllerDoc {
         );
 
         Page<DeliveryResponse> pageResult = deliveryService.findAllPaginated(
-                id, taskName, taskCode, flowType, status, createdAt, updatedAt, pageable
+                id, taskId, taskName, taskCode, flowType, taskType, environment, status,
+                startDate, endDate, createdAt, updatedAt, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
+    }
+
+    @GetMapping("/stats")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<br.com.devquote.dto.response.DeliveryStats> getStats() {
+        return ResponseEntity.ok(deliveryService.getStats());
+    }
+
+    @GetMapping("/total-amount")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<java.util.Map<String, java.math.BigDecimal>> getTotalAmount(
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) Long taskId,
+            @RequestParam(required = false) String taskName,
+            @RequestParam(required = false) String taskCode,
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(required = false) String environment,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String createdAt,
+            @RequestParam(required = false) String updatedAt
+    ) {
+        java.math.BigDecimal totalAmount = deliveryService.getTotalAmount(
+                id, taskId, taskName, taskCode, flowType, taskType, environment, status,
+                startDate, endDate, createdAt, updatedAt
+        );
+        return ResponseEntity.ok(java.util.Map.of("totalAmount", totalAmount));
     }
 
     @Override

@@ -314,10 +314,15 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     public Page<DeliveryResponse> findAllPaginated(Long id,
+                                                   Long taskId,
                                                    String taskName,
                                                    String taskCode,
                                                    String flowType,
+                                                   String taskType,
+                                                   String environment,
                                                    String status,
+                                                   String startDate,
+                                                   String endDate,
                                                    String createdAt,
                                                    String updatedAt,
                                                    Pageable pageable) {
@@ -325,7 +330,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
 
         Page<Long> idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                id, taskName, taskCode, flowType, null, null, statusEnum, null, null, createdAt, updatedAt, pageable
+                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, pageable
         );
 
         if (idsPage.isEmpty()) {
@@ -339,6 +344,47 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .toList();
 
         return new PageImpl<>(responses, pageable, idsPage.getTotalElements());
+    }
+
+    @Override
+    public java.math.BigDecimal getTotalAmount(Long id,
+                                               Long taskId,
+                                               String taskName,
+                                               String taskCode,
+                                               String flowType,
+                                               String taskType,
+                                               String environment,
+                                               String status,
+                                               String startDate,
+                                               String endDate,
+                                               String createdAt,
+                                               String updatedAt) {
+        DeliveryStatus statusEnum = convertStatusStringToEnum(status);
+        java.math.BigDecimal sum = deliveryRepository.sumTaskAmountByOptionalFields(
+                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate
+        );
+        return sum != null ? sum : java.math.BigDecimal.ZERO;
+    }
+
+    @Override
+    public br.com.devquote.dto.response.DeliveryStats getStats() {
+        Object[] data = deliveryRepository.findDeliveryStatsSummary();
+
+        long total = data != null && data.length > 0 && data[0] != null ? ((Number) data[0]).longValue() : 0L;
+        long totalPending = data != null && data.length > 1 && data[1] != null ? ((Number) data[1]).longValue() : 0L;
+        long totalInProgress = data != null && data.length > 2 && data[2] != null ? ((Number) data[2]).longValue() : 0L;
+        long totalRejected = data != null && data.length > 3 && data[3] != null ? ((Number) data[3]).longValue() : 0L;
+        long totalProduction = data != null && data.length > 4 && data[4] != null ? ((Number) data[4]).longValue() : 0L;
+        long totalWithoutItems = data != null && data.length > 5 && data[5] != null ? ((Number) data[5]).longValue() : 0L;
+
+        return br.com.devquote.dto.response.DeliveryStats.builder()
+                .total(total)
+                .totalPending(totalPending)
+                .totalInProgress(totalInProgress)
+                .totalRejected(totalRejected)
+                .totalProduction(totalProduction)
+                .totalWithoutItems(totalWithoutItems)
+                .build();
     }
 
     private DeliveryStatus convertStatusStringToEnum(String statusString) {
@@ -409,7 +455,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             if (taskId != null || taskName != null || taskCode != null || flowType != null || taskType != null || environment != null || statusEnum != null || startDate != null || endDate != null) {
                 log.debug("Using filtered query for IDs");
                 idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                        taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, pageable
+                        null, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, pageable
                 );
             } else {
                 log.debug("Using simple query for IDs");
