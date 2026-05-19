@@ -6,6 +6,7 @@ import br.com.devquote.dto.request.TaskRequest;
 import br.com.devquote.dto.request.TaskWithSubTasksCreateRequest;
 import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequest;
 import br.com.devquote.dto.response.PagedResponse;
+import br.com.devquote.dto.response.TaskAmountSumResponse;
 import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.dto.response.TaskStatsResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
@@ -93,6 +94,38 @@ public class TaskController implements TaskControllerDoc {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskStatsResponse> stats() {
         return ResponseEntity.ok(taskService.getStats());
+    }
+
+    @GetMapping("/total-amount")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TaskAmountSumResponse> totalAmount(
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) Long requesterId,
+            @RequestParam(required = false) String requesterName,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String link,
+            @RequestParam(required = false) String createdAt,
+            @RequestParam(required = false) String updatedAt,
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(required = false) String environment,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) Boolean hasDelivery,
+            @RequestParam(required = false) Boolean hasQuoteInBilling
+    ) {
+        FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
+                ? null
+                : FlowType.fromString(flowType);
+
+        java.math.BigDecimal total = taskService.getTotalAmount(
+                id, requesterId, requesterName, title, description, code, link,
+                createdAt, updatedAt, flowTypeEnum, taskType, environment,
+                startDate, endDate, hasDelivery, hasQuoteInBilling
+        );
+        return ResponseEntity.ok(TaskAmountSumResponse.builder().totalAmount(total).build());
     }
 
     @GetMapping("/unlinked-billing")

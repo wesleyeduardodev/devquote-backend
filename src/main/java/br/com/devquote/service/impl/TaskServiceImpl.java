@@ -92,6 +92,31 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public java.math.BigDecimal getTotalAmount(Long id,
+                                                Long requesterId,
+                                                String requesterName,
+                                                String title,
+                                                String description,
+                                                String code,
+                                                String link,
+                                                String createdAt,
+                                                String updatedAt,
+                                                FlowType flowType,
+                                                String taskType,
+                                                String environment,
+                                                String startDate,
+                                                String endDate,
+                                                Boolean hasDelivery,
+                                                Boolean hasBilling) {
+        java.math.BigDecimal total = taskRepository.sumAmountByOptionalFields(
+                id, requesterId, requesterName, title, description, code, link,
+                createdAt, updatedAt, flowType, taskType, environment,
+                startDate, endDate, hasDelivery, hasBilling
+        );
+        return total != null ? total : java.math.BigDecimal.ZERO;
+    }
+
+    @Override
     public TaskResponse findById(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tarefa", id));

@@ -17,6 +17,13 @@ public interface TaskService {
 
     TaskStatsResponse getStats();
 
+    java.math.BigDecimal getTotalAmount(
+            Long id, Long requesterId, String requesterName, String title, String description,
+            String code, String link, String createdAt, String updatedAt,
+            br.com.devquote.enums.FlowType flowType, String taskType, String environment,
+            String startDate, String endDate, Boolean hasDelivery, Boolean hasBilling
+    );
+
     TaskResponse findById(Long id);
 
     TaskResponse create(TaskRequest dto);
