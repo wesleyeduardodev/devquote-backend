@@ -65,6 +65,8 @@ public interface TaskControllerDoc {
             @RequestParam(required = false) String environment,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) Boolean hasDelivery,
+            @RequestParam(required = false) Boolean hasQuoteInBilling,
             @RequestParam MultiValueMap<String, String> params
     );
 

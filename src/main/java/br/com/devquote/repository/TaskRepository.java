@@ -16,8 +16,20 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findAllOrderedById();
     
     boolean existsByCode(String code);
-    
+
     boolean existsByCodeAndIdNot(String code, Long id);
+
+    @Query("""
+            SELECT COUNT(t) FROM Task t
+            WHERE NOT EXISTS (SELECT 1 FROM Delivery d WHERE d.task.id = t.id)
+            """)
+    long countTasksWithoutDelivery();
+
+    @Query("""
+            SELECT COUNT(t) FROM Task t
+            WHERE NOT EXISTS (SELECT 1 FROM BillingPeriodTask bpt WHERE bpt.task.id = t.id)
+            """)
+    long countTasksWithoutBilling();
 
     @Query("""
             SELECT t FROM Task t
@@ -35,6 +47,12 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:environment IS NULL OR :environment = '' OR CAST(t.environment AS string) = :environment)
               AND (:startDate IS NULL OR :startDate = '' OR CAST(t.createdAt AS date) >= CAST(:startDate AS date))
               AND (:endDate IS NULL OR :endDate = '' OR CAST(t.createdAt AS date) <= CAST(:endDate AS date))
+              AND (:hasDelivery IS NULL OR
+                   (:hasDelivery = TRUE  AND EXISTS (SELECT 1 FROM Delivery d WHERE d.task.id = t.id)) OR
+                   (:hasDelivery = FALSE AND NOT EXISTS (SELECT 1 FROM Delivery d WHERE d.task.id = t.id)))
+              AND (:hasBilling IS NULL OR
+                   (:hasBilling = TRUE  AND EXISTS (SELECT 1 FROM BillingPeriodTask bpt WHERE bpt.task.id = t.id)) OR
+                   (:hasBilling = FALSE AND NOT EXISTS (SELECT 1 FROM BillingPeriodTask bpt WHERE bpt.task.id = t.id)))
             """)
     Page<Task> findByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -51,6 +69,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("environment") String environment,
             @Param("startDate") String startDate,
             @Param("endDate") String endDate,
+            @Param("hasDelivery") Boolean hasDelivery,
+            @Param("hasBilling") Boolean hasBilling,
             Pageable pageable
     );
 

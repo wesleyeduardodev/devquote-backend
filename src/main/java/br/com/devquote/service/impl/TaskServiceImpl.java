@@ -6,6 +6,7 @@ import br.com.devquote.error.BusinessException;
 import br.com.devquote.error.ResourceNotFoundException;
 import br.com.devquote.dto.request.*;
 import br.com.devquote.dto.response.TaskResponse;
+import br.com.devquote.dto.response.TaskStatsResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.entity.*;
 import br.com.devquote.repository.RequesterRepository;
@@ -76,6 +77,18 @@ public class TaskServiceImpl implements TaskService {
         }
 
         return tasks;
+    }
+
+    @Override
+    public TaskStatsResponse getStats() {
+        long total = taskRepository.count();
+        long withoutDelivery = taskRepository.countTasksWithoutDelivery();
+        long withoutBilling = taskRepository.countTasksWithoutBilling();
+        return TaskStatsResponse.builder()
+                .total(total)
+                .totalWithoutDelivery(withoutDelivery)
+                .totalWithoutBilling(withoutBilling)
+                .build();
     }
 
     @Override
@@ -420,10 +433,12 @@ public class TaskServiceImpl implements TaskService {
                                                String environment,
                                                String startDate,
                                                String endDate,
+                                               Boolean hasDelivery,
+                                               Boolean hasBilling,
                                                Pageable pageable) {
 
         Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, taskType, environment, startDate, endDate, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, taskType, environment, startDate, endDate, hasDelivery, hasBilling, pageable
         );
         return buildTaskResponsePage(page, pageable);
     }

@@ -3,6 +3,7 @@ import br.com.devquote.dto.request.TaskRequest;
 import br.com.devquote.dto.request.TaskWithSubTasksCreateRequest;
 import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequest;
 import br.com.devquote.dto.response.TaskResponse;
+import br.com.devquote.dto.response.TaskStatsResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.enums.FlowType;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,8 @@ import java.util.List;
 public interface TaskService {
 
     List<TaskResponse> findAll();
+
+    TaskStatsResponse getStats();
 
     TaskResponse findById(Long id);
 
@@ -44,6 +47,8 @@ public interface TaskService {
                                         String environment,
                                         String startDate,
                                         String endDate,
+                                        Boolean hasDelivery,
+                                        Boolean hasBilling,
                                         Pageable pageable);
 
     Page<TaskResponse> findUnlinkedBillingByOptionalFieldsPaginated(Long id,

@@ -7,6 +7,7 @@ import br.com.devquote.dto.request.TaskWithSubTasksCreateRequest;
 import br.com.devquote.dto.request.TaskWithSubTasksUpdateRequest;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.dto.response.TaskResponse;
+import br.com.devquote.dto.response.TaskStatsResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.enums.FlowType;
 import br.com.devquote.service.TaskService;
@@ -65,6 +66,8 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String environment,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) Boolean hasDelivery,
+            @RequestParam(required = false) Boolean hasQuoteInBilling,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -80,10 +83,16 @@ public class TaskController implements TaskControllerDoc {
                 : FlowType.fromString(flowType);
 
         Page<TaskResponse> pageResult = taskService.findAllPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, taskType, environment, startDate, endDate, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, taskType, environment, startDate, endDate, hasDelivery, hasQuoteInBilling, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
+    }
+
+    @GetMapping("/stats")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TaskStatsResponse> stats() {
+        return ResponseEntity.ok(taskService.getStats());
     }
 
     @GetMapping("/unlinked-billing")
