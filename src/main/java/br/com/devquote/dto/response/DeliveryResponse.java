@@ -16,6 +16,7 @@ public class DeliveryResponse {
     private String taskName;
     private String taskCode;
     private String taskType;
+    private String taskLink;
     private BigDecimal taskValue;
     private String flowType;
     private String environment;
