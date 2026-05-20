@@ -9,8 +9,12 @@ public class DeliveryStats {
 
     private long total;
     private long totalPending;
-    private long totalInProgress;
+    private long totalDevelopment;
+    private long totalDelivered;
+    private long totalHomologation;
+    private long totalApproved;
     private long totalRejected;
     private long totalProduction;
+    private long totalCancelled;
     private long totalWithoutItems;
 }

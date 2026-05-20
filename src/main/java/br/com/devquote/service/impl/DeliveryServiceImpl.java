@@ -325,12 +325,13 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                    String endDate,
                                                    String createdAt,
                                                    String updatedAt,
+                                                   Boolean hasItems,
                                                    Pageable pageable) {
 
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
 
         Page<Long> idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, pageable
+                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, hasItems, pageable
         );
 
         if (idsPage.isEmpty()) {
@@ -358,31 +359,41 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                String startDate,
                                                String endDate,
                                                String createdAt,
-                                               String updatedAt) {
+                                               String updatedAt,
+                                               Boolean hasItems) {
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
         java.math.BigDecimal sum = deliveryRepository.sumTaskAmountByOptionalFields(
-                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate
+                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, hasItems
         );
         return sum != null ? sum : java.math.BigDecimal.ZERO;
     }
 
     @Override
     public br.com.devquote.dto.response.DeliveryStats getStats() {
-        Object[] data = deliveryRepository.findDeliveryStatsSummary();
+        List<Object[]> rows = deliveryRepository.findDeliveryStatsSummary();
+        Object[] data = (rows != null && !rows.isEmpty()) ? rows.get(0) : null;
 
         long total = data != null && data.length > 0 && data[0] != null ? ((Number) data[0]).longValue() : 0L;
         long totalPending = data != null && data.length > 1 && data[1] != null ? ((Number) data[1]).longValue() : 0L;
-        long totalInProgress = data != null && data.length > 2 && data[2] != null ? ((Number) data[2]).longValue() : 0L;
-        long totalRejected = data != null && data.length > 3 && data[3] != null ? ((Number) data[3]).longValue() : 0L;
-        long totalProduction = data != null && data.length > 4 && data[4] != null ? ((Number) data[4]).longValue() : 0L;
-        long totalWithoutItems = data != null && data.length > 5 && data[5] != null ? ((Number) data[5]).longValue() : 0L;
+        long totalDevelopment = data != null && data.length > 2 && data[2] != null ? ((Number) data[2]).longValue() : 0L;
+        long totalDelivered = data != null && data.length > 3 && data[3] != null ? ((Number) data[3]).longValue() : 0L;
+        long totalHomologation = data != null && data.length > 4 && data[4] != null ? ((Number) data[4]).longValue() : 0L;
+        long totalApproved = data != null && data.length > 5 && data[5] != null ? ((Number) data[5]).longValue() : 0L;
+        long totalRejected = data != null && data.length > 6 && data[6] != null ? ((Number) data[6]).longValue() : 0L;
+        long totalProduction = data != null && data.length > 7 && data[7] != null ? ((Number) data[7]).longValue() : 0L;
+        long totalCancelled = data != null && data.length > 8 && data[8] != null ? ((Number) data[8]).longValue() : 0L;
+        long totalWithoutItems = data != null && data.length > 9 && data[9] != null ? ((Number) data[9]).longValue() : 0L;
 
         return br.com.devquote.dto.response.DeliveryStats.builder()
                 .total(total)
                 .totalPending(totalPending)
-                .totalInProgress(totalInProgress)
+                .totalDevelopment(totalDevelopment)
+                .totalDelivered(totalDelivered)
+                .totalHomologation(totalHomologation)
+                .totalApproved(totalApproved)
                 .totalRejected(totalRejected)
                 .totalProduction(totalProduction)
+                .totalCancelled(totalCancelled)
                 .totalWithoutItems(totalWithoutItems)
                 .build();
     }
@@ -455,7 +466,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             if (taskId != null || taskName != null || taskCode != null || flowType != null || taskType != null || environment != null || statusEnum != null || startDate != null || endDate != null) {
                 log.debug("Using filtered query for IDs");
                 idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                        null, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, pageable
+                        null, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, null, pageable
                 );
             } else {
                 log.debug("Using simple query for IDs");

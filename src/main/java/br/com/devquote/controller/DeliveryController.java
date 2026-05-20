@@ -63,6 +63,7 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
+            @RequestParam(required = false) Boolean hasItems,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -75,7 +76,7 @@ public class DeliveryController implements DeliveryControllerDoc {
 
         Page<DeliveryResponse> pageResult = deliveryService.findAllPaginated(
                 id, taskId, taskName, taskCode, flowType, taskType, environment, status,
-                startDate, endDate, createdAt, updatedAt, pageable
+                startDate, endDate, createdAt, updatedAt, hasItems, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
@@ -101,11 +102,12 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String createdAt,
-            @RequestParam(required = false) String updatedAt
+            @RequestParam(required = false) String updatedAt,
+            @RequestParam(required = false) Boolean hasItems
     ) {
         java.math.BigDecimal totalAmount = deliveryService.getTotalAmount(
                 id, taskId, taskName, taskCode, flowType, taskType, environment, status,
-                startDate, endDate, createdAt, updatedAt
+                startDate, endDate, createdAt, updatedAt, hasItems
         );
         return ResponseEntity.ok(java.util.Map.of("totalAmount", totalAmount));
     }

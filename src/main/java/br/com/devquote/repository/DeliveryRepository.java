@@ -44,6 +44,9 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
            AND (:status IS NULL OR d.status = :status)
            AND (:startDate IS NULL OR :startDate = '' OR CAST(d.startedAt AS date) >= CAST(:startDate AS date))
            AND (:endDate IS NULL OR :endDate = '' OR CAST(d.finishedAt AS date) <= CAST(:endDate AS date))
+           AND (:hasItems IS NULL
+                OR (:hasItems = TRUE  AND (SIZE(d.items) > 0 OR SIZE(d.operationalItems) > 0))
+                OR (:hasItems = FALSE AND SIZE(d.items) = 0 AND SIZE(d.operationalItems) = 0))
         """)
     Page<Long> findIdsByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -58,6 +61,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             @Param("endDate") String endDate,
             @Param("createdAt") String createdAt,
             @Param("updatedAt") String updatedAt,
+            @Param("hasItems") Boolean hasItems,
             Pageable pageable
     );
 
@@ -75,6 +79,9 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
            AND (:status IS NULL OR d.status = :status)
            AND (:startDate IS NULL OR :startDate = '' OR CAST(d.startedAt AS date) >= CAST(:startDate AS date))
            AND (:endDate IS NULL OR :endDate = '' OR CAST(d.finishedAt AS date) <= CAST(:endDate AS date))
+           AND (:hasItems IS NULL
+                OR (:hasItems = TRUE  AND (SIZE(d.items) > 0 OR SIZE(d.operationalItems) > 0))
+                OR (:hasItems = FALSE AND SIZE(d.items) = 0 AND SIZE(d.operationalItems) = 0))
         """)
     java.math.BigDecimal sumTaskAmountByOptionalFields(
             @Param("id") Long id,
@@ -86,23 +93,28 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             @Param("environment") String environment,
             @Param("status") br.com.devquote.enums.DeliveryStatus status,
             @Param("startDate") String startDate,
-            @Param("endDate") String endDate
+            @Param("endDate") String endDate,
+            @Param("hasItems") Boolean hasItems
     );
 
     @Query(value = """
         SELECT
             COUNT(d.id) as total,
             SUM(CASE WHEN d.status = 'PENDING' THEN 1 ELSE 0 END) as total_pending,
-            SUM(CASE WHEN d.status IN ('DEVELOPMENT', 'HOMOLOGATION') THEN 1 ELSE 0 END) as total_in_progress,
+            SUM(CASE WHEN d.status = 'DEVELOPMENT' THEN 1 ELSE 0 END) as total_development,
+            SUM(CASE WHEN d.status = 'DELIVERED' THEN 1 ELSE 0 END) as total_delivered,
+            SUM(CASE WHEN d.status = 'HOMOLOGATION' THEN 1 ELSE 0 END) as total_homologation,
+            SUM(CASE WHEN d.status = 'APPROVED' THEN 1 ELSE 0 END) as total_approved,
             SUM(CASE WHEN d.status = 'REJECTED' THEN 1 ELSE 0 END) as total_rejected,
             SUM(CASE WHEN d.status = 'PRODUCTION' THEN 1 ELSE 0 END) as total_production,
+            SUM(CASE WHEN d.status = 'CANCELLED' THEN 1 ELSE 0 END) as total_cancelled,
             SUM(CASE
                 WHEN NOT EXISTS (SELECT 1 FROM delivery_item di WHERE di.delivery_id = d.id)
                  AND NOT EXISTS (SELECT 1 FROM delivery_operational_item doi WHERE doi.delivery_id = d.id)
                 THEN 1 ELSE 0 END) as total_without_items
         FROM delivery d
         """, nativeQuery = true)
-    Object[] findDeliveryStatsSummary();
+    List<Object[]> findDeliveryStatsSummary();
 
     @EntityGraph(attributePaths = {"task", "items", "items.project"})
     @Query("SELECT d FROM Delivery d WHERE d.task.id = :taskId")

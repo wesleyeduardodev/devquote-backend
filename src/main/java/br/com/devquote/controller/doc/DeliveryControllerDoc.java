@@ -54,6 +54,7 @@ public interface DeliveryControllerDoc {
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
+            @RequestParam(required = false) Boolean hasItems,
             @RequestParam MultiValueMap<String, String> params
     );
 

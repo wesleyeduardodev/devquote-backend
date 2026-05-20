@@ -36,6 +36,7 @@ public interface DeliveryService {
                                             String endDate,
                                             String createdAt,
                                             String updatedAt,
+                                            Boolean hasItems,
                                             Pageable pageable);
 
     java.math.BigDecimal getTotalAmount(Long id,
@@ -49,7 +50,8 @@ public interface DeliveryService {
                                         String startDate,
                                         String endDate,
                                         String createdAt,
-                                        String updatedAt);
+                                        String updatedAt,
+                                        Boolean hasItems);
 
     br.com.devquote.dto.response.DeliveryStats getStats();
 
