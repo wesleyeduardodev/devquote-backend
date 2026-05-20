@@ -130,11 +130,13 @@ public class ReportController {
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content)
     })
     public ResponseEntity<byte[]> generateDeliveryReport(
-            @Parameter(description = "ID da entrega") @PathVariable Long id) {
+            @Parameter(description = "ID da entrega") @PathVariable Long id,
+            Authentication authentication) {
 
         log.info("Requisição de relatório PDF da entrega ID: {}", id);
 
-        byte[] pdfBytes = reportService.generateDeliveryReportPdf(id);
+        boolean showValues = hasRoleAdminOrManager(authentication);
+        byte[] pdfBytes = reportService.generateDeliveryReportPdf(id, showValues);
 
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         String filename = String.format("entrega_%d_%s.pdf", id, timestamp);

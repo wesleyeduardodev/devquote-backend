@@ -1075,14 +1075,14 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public byte[] generateDeliveryReportPdf(Long deliveryId) {
+    public byte[] generateDeliveryReportPdf(Long deliveryId, boolean showValues) {
         try {
-            log.info("Gerando relatorio PDF da entrega ID: {}", deliveryId);
+            log.info("Gerando relatorio PDF da entrega ID: {} - showValues: {}", deliveryId, showValues);
 
             Delivery delivery = deliveryRepository.findById(deliveryId)
                     .orElseThrow(() -> new RuntimeException("Entrega nao encontrada: " + deliveryId));
 
-            DeliveryReportData reportData = buildDeliveryReportData(delivery);
+            DeliveryReportData reportData = buildDeliveryReportData(delivery, showValues);
 
             JasperReport contentBlocksSubreport = loadContentBlocksSubreport();
 
@@ -1125,7 +1125,7 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
-    private DeliveryReportData buildDeliveryReportData(Delivery delivery) {
+    private DeliveryReportData buildDeliveryReportData(Delivery delivery, boolean showValues) {
         List<DeliveryItemReportRow> itemRows = new ArrayList<>();
         int order = 1;
 
@@ -1188,7 +1188,7 @@ public class ReportServiceImpl implements ReportService {
                 .taskId(task.getId())
                 .taskCode(task.getCode())
                 .taskTitle(task.getTitle())
-                .taskAmount(task.getAmount())
+                .taskAmount(showValues ? task.getAmount() : null)
                 .taskDescriptionBlocks(taskDescriptionBlocks)
                 .flowType(delivery.getFlowType() != null ? delivery.getFlowType().name() : null)
                 .flowTypeLabel(getFlowTypeLabel(delivery.getFlowType() != null ? delivery.getFlowType().name() : null))

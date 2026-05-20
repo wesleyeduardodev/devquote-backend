@@ -284,7 +284,7 @@
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans" size="11" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Valor: " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(($P{taskAmount}))]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{taskAmount} == null ? "" : "Valor: " + java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR")).format(($P{taskAmount}))]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>

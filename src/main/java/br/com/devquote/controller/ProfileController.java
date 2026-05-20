@@ -10,8 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -38,7 +40,12 @@ public class ProfileController implements ProfileControllerDoc {
             @RequestParam(required = false) String description,
             @RequestParam(required = false) Integer level,
             @RequestParam(required = false) Boolean active,
-            @RequestParam(required = false) List<String> sort) {
+            @RequestParam(required = false) MultiValueMap<String, String> allParams) {
+
+        // Lê os valores brutos de "sort" (sem o split automático por vírgula que o Spring
+        // aplica em @RequestParam List<String>, que quebrava o formato "campo,direção").
+        List<String> sort = allParams != null ? allParams.get("sort") : null;
+        Set<String> allowedFields = Set.of("id", "code", "name", "description", "level", "active");
 
         Sort sortObj = Sort.by(Sort.Direction.ASC, "level", "name");
         if (sort != null && !sort.isEmpty()) {
@@ -51,8 +58,11 @@ public class ProfileController implements ProfileControllerDoc {
                                 : Sort.Direction.ASC;
                         return new Sort.Order(direction, field);
                     })
+                    .filter(o -> allowedFields.contains(o.getProperty()))
                     .toList();
-            sortObj = Sort.by(orders);
+            if (!orders.isEmpty()) {
+                sortObj = Sort.by(orders);
+            }
         }
 
         Pageable pageable = PageRequest.of(page, size, sortObj);

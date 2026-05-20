@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -50,7 +51,7 @@ public interface ProfileControllerDoc {
             @RequestParam(required = false) String description,
             @RequestParam(required = false) Integer level,
             @RequestParam(required = false) Boolean active,
-            @RequestParam(required = false) List<String> sort);
+            @RequestParam(required = false) MultiValueMap<String, String> allParams);
 
     @Operation(summary = "Get profile by ID")
     @ApiResponses({

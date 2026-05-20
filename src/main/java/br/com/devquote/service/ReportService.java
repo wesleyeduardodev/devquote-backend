@@ -8,5 +8,5 @@ public interface ReportService {
 
     byte[] generateTaskReportPdf(Long taskId, boolean showValues);
 
-    byte[] generateDeliveryReportPdf(Long deliveryId);
+    byte[] generateDeliveryReportPdf(Long deliveryId, boolean showValues);
 }

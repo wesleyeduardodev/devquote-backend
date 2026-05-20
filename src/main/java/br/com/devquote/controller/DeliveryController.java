@@ -10,6 +10,7 @@ import br.com.devquote.dto.response.DeliveryStatusCount;
 import br.com.devquote.dto.response.PagedResponse;
 import br.com.devquote.service.DeliveryService;
 import br.com.devquote.service.DeliveryAttachmentService;
+import br.com.devquote.utils.SecurityUtils;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,37 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     private final DeliveryService deliveryService;
     private final DeliveryAttachmentService deliveryAttachmentService;
+    private final SecurityUtils securityUtils;
+
+    /** Remove o valor da tarefa (taskValue) quando o usuário é USER. */
+    private DeliveryResponse sanitizeAmounts(DeliveryResponse d) {
+        if (d != null && securityUtils.cannotViewMonetaryValues()) d.setTaskValue(null);
+        return d;
+    }
+
+    private Page<DeliveryResponse> sanitizeAmounts(Page<DeliveryResponse> page) {
+        if (page != null && securityUtils.cannotViewMonetaryValues()) {
+            page.getContent().forEach(d -> { if (d != null) d.setTaskValue(null); });
+        }
+        return page;
+    }
+
+    private DeliveryGroupResponse sanitizeAmounts(DeliveryGroupResponse g) {
+        if (g != null && securityUtils.cannotViewMonetaryValues()) {
+            g.setTaskValue(null);
+            if (g.getDeliveries() != null) {
+                g.getDeliveries().forEach(d -> { if (d != null) d.setTaskValue(null); });
+            }
+        }
+        return g;
+    }
+
+    private Page<DeliveryGroupResponse> sanitizeGroupAmounts(Page<DeliveryGroupResponse> page) {
+        if (page != null && securityUtils.cannotViewMonetaryValues()) {
+            page.getContent().forEach(this::sanitizeAmounts);
+        }
+        return page;
+    }
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
             "id", "task.id", "task.title", "task.code", "status", "createdAt", "updatedAt"
@@ -79,7 +111,7 @@ public class DeliveryController implements DeliveryControllerDoc {
                 startDate, endDate, createdAt, updatedAt, hasItems, pageable
         );
 
-        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(sanitizeAmounts(pageResult)));
     }
 
     @GetMapping("/stats")
@@ -105,6 +137,9 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) String updatedAt,
             @RequestParam(required = false) Boolean hasItems
     ) {
+        if (securityUtils.cannotViewMonetaryValues()) {
+            return ResponseEntity.ok(java.util.Map.of("totalAmount", java.math.BigDecimal.ZERO));
+        }
         java.math.BigDecimal totalAmount = deliveryService.getTotalAmount(
                 id, taskId, taskName, taskCode, flowType, taskType, environment, status,
                 startDate, endDate, createdAt, updatedAt, hasItems
@@ -116,7 +151,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<DeliveryResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(deliveryService.findById(id));
+        return ResponseEntity.ok(sanitizeAmounts(deliveryService.findById(id)));
     }
 
     @Override
@@ -218,7 +253,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTask(
                 taskId, taskName, taskCode, flowType, taskType, environment, status, startDate, endDate, createdAt, updatedAt, pageable
         );
-        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(sanitizeGroupAmounts(deliveryGroups)));
     }
 
     @GetMapping("/grouped-by-task")
@@ -244,14 +279,14 @@ public class DeliveryController implements DeliveryControllerDoc {
         Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTask(
                 taskId, taskName, taskCode, flowType, taskType, environment, status, startDate, endDate, createdAt, updatedAt, pageable
         );
-        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(sanitizeGroupAmounts(deliveryGroups)));
     }
 
     @GetMapping("/group/{taskId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<DeliveryGroupResponse> getGroupDetails(@PathVariable Long taskId) {
         DeliveryGroupResponse groupDetails = deliveryService.findGroupDetailsByTaskId(taskId);
-        return ResponseEntity.ok(groupDetails);
+        return ResponseEntity.ok(sanitizeAmounts(groupDetails));
     }
 
     @GetMapping("/grouped/optimized")
@@ -271,14 +306,14 @@ public class DeliveryController implements DeliveryControllerDoc {
         Page<DeliveryGroupResponse> deliveryGroups = deliveryService.findAllGroupedByTaskOptimized(
                 taskName, taskCode, status, createdAt, updatedAt, pageable
         );
-        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(deliveryGroups));
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(sanitizeGroupAmounts(deliveryGroups)));
     }
 
     @GetMapping("/group/{taskId}/optimized")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<DeliveryGroupResponse> getGroupDetailsOptimized(@PathVariable Long taskId) {
         DeliveryGroupResponse groupDetails = deliveryService.findGroupDetailsByTaskIdOptimized(taskId);
-        return ResponseEntity.ok(groupDetails);
+        return ResponseEntity.ok(sanitizeAmounts(groupDetails));
     }
 
     @GetMapping("/by-task/{taskId}")
@@ -288,7 +323,7 @@ public class DeliveryController implements DeliveryControllerDoc {
         if (delivery == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(delivery);
+        return ResponseEntity.ok(sanitizeAmounts(delivery));
     }
 
     @GetMapping("/statistics")
@@ -316,7 +351,9 @@ public class DeliveryController implements DeliveryControllerDoc {
     public ResponseEntity<byte[]> exportDeliveriesToExcel(
             @RequestParam(required = false) String flowType,
             @RequestParam(required = false, defaultValue = "false") boolean canViewAmounts) throws IOException {
-        byte[] excelData = deliveryService.exportToExcel(flowType, canViewAmounts);
+        // Enforce server-side: USER nunca vê valores, independentemente do parâmetro do cliente.
+        boolean showAmounts = securityUtils.canViewMonetaryValues();
+        byte[] excelData = deliveryService.exportToExcel(flowType, showAmounts);
 
         String filename = "relatorio_entregas_" +
                          LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) +
@@ -334,7 +371,9 @@ public class DeliveryController implements DeliveryControllerDoc {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<byte[]> exportDeliveriesOnlyToExcel(
             @RequestParam(required = false, defaultValue = "false") boolean canViewAmounts) throws IOException {
-        byte[] excelData = deliveryService.exportDeliveriesOnlyToExcel(canViewAmounts);
+        // Enforce server-side: USER nunca vê valores, independentemente do parâmetro do cliente.
+        boolean showAmounts = securityUtils.canViewMonetaryValues();
+        byte[] excelData = deliveryService.exportDeliveriesOnlyToExcel(showAmounts);
 
         String filename = "relatorio_entregas_" +
                          LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm-ss")) +

@@ -13,6 +13,7 @@ import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.enums.FlowType;
 import br.com.devquote.service.TaskService;
 import br.com.devquote.service.TaskAttachmentService;
+import br.com.devquote.utils.SecurityUtils;
 import br.com.devquote.utils.SortUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +44,26 @@ public class TaskController implements TaskControllerDoc {
 
     private final TaskService taskService;
     private final TaskAttachmentService taskAttachmentService;
+    private final SecurityUtils securityUtils;
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
             "id", "requesterId", "requesterName", "title", "description", "code", "link", "createdAt", "updatedAt"
     );
+
+    /** Remove valores monetários (amount da tarefa e das subtarefas) quando o usuário é USER. */
+    private TaskResponse sanitizeAmounts(TaskResponse task) {
+        if (task == null || securityUtils.canViewMonetaryValues()) return task;
+        task.setAmount(null);
+        if (task.getSubTasks() != null) {
+            task.getSubTasks().forEach(s -> s.setAmount(null));
+        }
+        return task;
+    }
+
+    private Page<TaskResponse> sanitizeAmounts(Page<TaskResponse> page) {
+        if (page == null || securityUtils.canViewMonetaryValues()) return page;
+        page.getContent().forEach(this::sanitizeAmounts);
+        return page;
+    }
 
     @Override
     @GetMapping
@@ -87,7 +105,7 @@ public class TaskController implements TaskControllerDoc {
                 id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, taskType, environment, startDate, endDate, hasDelivery, hasQuoteInBilling, pageable
         );
 
-        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(sanitizeAmounts(pageResult)));
     }
 
     @GetMapping("/stats")
@@ -119,6 +137,10 @@ public class TaskController implements TaskControllerDoc {
         FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
                 ? null
                 : FlowType.fromString(flowType);
+
+        if (securityUtils.cannotViewMonetaryValues()) {
+            return ResponseEntity.ok(TaskAmountSumResponse.builder().totalAmount(java.math.BigDecimal.ZERO).build());
+        }
 
         java.math.BigDecimal total = taskService.getTotalAmount(
                 id, requesterId, requesterName, title, description, code, link,
@@ -161,7 +183,7 @@ public class TaskController implements TaskControllerDoc {
                 id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, pageable
         );
 
-        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(sanitizeAmounts(pageResult)));
     }
 
     @GetMapping("/unlinked-delivery")
@@ -197,14 +219,14 @@ public class TaskController implements TaskControllerDoc {
                 id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, pageable
         );
 
-        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(pageResult));
+        return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(sanitizeAmounts(pageResult)));
     }
 
     @Override
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(taskService.findById(id));
+        return ResponseEntity.ok(sanitizeAmounts(taskService.findById(id)));
     }
 
     @Override
