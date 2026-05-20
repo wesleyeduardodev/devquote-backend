@@ -176,11 +176,24 @@ public class UserManagementService {
     }
 
     @Transactional
-    public void resetPassword(Long userId) {
+    public String resetPassword(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setPassword(passwordEncoder.encode("usuario123"));
+        String newPassword = generateRandomPassword();
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+        return newPassword;
+    }
+
+    private String generateRandomPassword() {
+        // Caracteres legíveis (sem 0/O/1/l/I para evitar ambiguidade ao digitar).
+        final String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        java.security.SecureRandom random = new java.security.SecureRandom();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 
     private UserDto convertToDto(User user) {

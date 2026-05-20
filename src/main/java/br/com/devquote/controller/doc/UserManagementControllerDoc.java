@@ -94,11 +94,11 @@ public interface UserManagementControllerDoc {
             )
             @RequestBody List<Long> ids);
 
-    @Operation(summary = "Reset user password to default")
+    @Operation(summary = "Reset user password and return the new generated password")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Password reset successfully"),
+            @ApiResponse(responseCode = "200", description = "Password reset successfully; returns { password }"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    ResponseEntity<Void> resetPassword(
+    ResponseEntity<java.util.Map<String, String>> resetPassword(
             @Parameter(description = "User ID", required = true) @PathVariable Long id);
 }

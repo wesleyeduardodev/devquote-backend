@@ -94,8 +94,8 @@ public class UserManagementController implements UserManagementControllerDoc {
 
     @PostMapping("/{id}/reset-password")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> resetPassword(@PathVariable Long id) {
-        userManagementService.resetPassword(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<java.util.Map<String, String>> resetPassword(@PathVariable Long id) {
+        String newPassword = userManagementService.resetPassword(id);
+        return ResponseEntity.ok(java.util.Map.of("password", newPassword));
     }
 }
