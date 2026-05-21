@@ -6,7 +6,7 @@ public enum ClickUpStatusMapping {
 
     DEVELOPMENT("em progresso"),
     DELIVERED("desenvolvimento concluído"),
-    PRODUCTION("complete");
+    PRODUCTION("validação em produção");
 
     private final String clickUpStatus;
 

@@ -12,6 +12,7 @@ public enum ClickUpStatusOrder {
     DESENVOLVIMENTO_CONCLUIDO("desenvolvimento concluído", 5),
     PRONTO_PARA_TESTES("pronto para testes", 6),
     TESTES_CONCLUIDOS("testes concluídos", 7),
+    VALIDACAO_EM_PRODUCAO("validação em produção", 8),
     COMPLETE("complete", 100),
     CONCLUIDO("concluído", 100);
 
