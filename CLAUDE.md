@@ -36,7 +36,10 @@ Vars para IntelliJ: `../varaiveis_intelij_local.txt` (local) ou `../varaiveis_in
 ## Gotchas
 
 - **`spring.jpa.hibernate.ddl-auto=update`** em prod, sem Flyway/Liquibase. Mudanças aditivas (nova coluna opcional, nova entidade) aplicam sozinhas no próximo restart. **Drops/renames precisam de SQL manual** em cada tenant — avisar o dono antes.
-- **Permissões granulares (`ResourcePermission`, `FieldPermission`) NÃO são aplicadas no backend.** Só perfil (`ROLE_ADMIN/MANAGER/USER`) é checado. Granular só roda no frontend. Endpoint sensível novo → no mínimo exigir `ROLE_ADMIN`.
+- **Permissões granulares (`ResourcePermission`, `FieldPermission`) NÃO são aplicadas no backend.** Só perfil (`ROLE_ADMIN/MANAGER/USER`) é checado. Endpoint sensível novo → no mínimo exigir `ROLE_ADMIN`.
+- **Valores monetários são filtrados por perfil no backend.** Use `SecurityUtils.canViewMonetaryValues()` (true para ADMIN ou MANAGER; false para USER). Aplicado em: `TaskController` (anula `amount`/subtask amounts + `total-amount`=0 p/ USER), `DeliveryController` (anula `taskValue` + `total-amount`=0), relatórios PDF (task e delivery recebem `showValues`) e exports Excel (derivam `canViewAmounts` do perfil, ignorando flag do cliente). **Ao criar endpoint/relatório que exponha valor, gatear por `SecurityUtils`.**
+- **`BillingPeriod.status` é String PT-BR** (`PENDENTE/FATURADO/PAGO/ATRASADO/CANCELADO`), não enum. Filtros e agregações usam esses literais.
+- **`@RequestParam List<String> sort` quebra** com formato `campo,direção` (o Spring faz split por vírgula → trata "asc" como campo). Ler sort via `MultiValueMap<String,String> params` + `params.get("sort")` (padrão de Task/Delivery/Profile controllers).
 - **Sem refresh token.** JWT 24h fixo. Não criar feature que assuma sessão > 24h sem alinhar.
 - **Cache em uso é Caffeine**, não Redis (Redis está comentado em `application.yml`). Cluster com >1 réplica seria problemático.
 - **Sync ClickUp/GitHub sem retry/circuit breaker.** Falha → log `[ERRO]` e segue.
@@ -66,5 +69,7 @@ Sem profiles `dev/prod` separados. Tudo via env var com defaults para localhost.
 | Alterar entidade | `entity/` + lembrar de ddl-auto (ver gotcha acima) |
 | Nova integração externa | `client/` + parâmetros via `*Helper` (banco), nunca hardcoded |
 | Job agendado novo | `job/` + `@Scheduled` + manter formato de logs de sync |
-| Permissão granular | Frontend (`ScreenGuard`/`ResourceGuard`/`FieldGuard`). Backend só valida perfil. |
+| Permissão de acesso | Backend valida só perfil (`@PreAuthorize`). |
+| Expor/ocultar valor monetário | `SecurityUtils.canViewMonetaryValues()` (ADMIN/MANAGER) no controller/relatório |
 | Template de email | `src/main/resources/templates/email/*.html` (Thymeleaf) |
+| Dashboard | `DashboardServiceImpl` só retorna `recentActivities`; métricas/valores vêm de `/tasks/stats`, `/deliveries/stats`, `/billing-periods` (o frontend agrega) |
