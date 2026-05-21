@@ -51,26 +51,26 @@ public class BillingPeriodController implements BillingPeriodControllerDoc {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BillingPeriodResponse> create(@RequestBody @Valid BillingPeriodRequest dto) {
         return new ResponseEntity<>(billingPeriodService.create(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BillingPeriodResponse> update(@PathVariable Long id, @RequestBody @Valid BillingPeriodRequest dto) {
         return ResponseEntity.ok(billingPeriodService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         billingPeriodService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         billingPeriodService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
@@ -124,14 +124,14 @@ public class BillingPeriodController implements BillingPeriodControllerDoc {
     }
 
     @DeleteMapping("/{id}/delete-with-tasks")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteWithAllLinkedTasks(@PathVariable Long id) {
         billingPeriodService.deleteWithAllLinkedTasks(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BillingPeriodResponse> updateStatus(
             @PathVariable Long id,
             @RequestParam String status) {

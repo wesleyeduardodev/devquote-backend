@@ -39,26 +39,26 @@ public class BillingPeriodTaskController implements BillingPeriodTaskControllerD
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BillingPeriodTaskResponse> create(@RequestBody @Valid BillingPeriodTaskRequest dto) {
         return new ResponseEntity<>(billingPeriodTaskService.create(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BillingPeriodTaskResponse> update(@PathVariable Long id, @RequestBody @Valid BillingPeriodTaskRequest dto) {
         return ResponseEntity.ok(billingPeriodTaskService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         billingPeriodTaskService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         billingPeriodTaskService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
@@ -98,13 +98,13 @@ public class BillingPeriodTaskController implements BillingPeriodTaskControllerD
     }
 
     @PostMapping("/bulk-link")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BillingPeriodTaskResponse>> bulkLink(@RequestBody List<BillingPeriodTaskRequest> requests) {
         return ResponseEntity.ok(billingPeriodTaskService.bulkCreate(requests));
     }
 
     @DeleteMapping("/billing-period/{billingPeriodId}/bulk-unlink")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> bulkUnlink(
             @PathVariable Long billingPeriodId,
             @RequestBody List<Long> taskIds) {

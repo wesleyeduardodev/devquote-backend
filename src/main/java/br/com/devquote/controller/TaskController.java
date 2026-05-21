@@ -231,28 +231,28 @@ public class TaskController implements TaskControllerDoc {
 
     @Override
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TaskResponse> create(@RequestBody @Valid TaskRequest dto) {
         return new ResponseEntity<>(taskService.create(dto), HttpStatus.CREATED);
     }
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TaskResponse> update(@PathVariable Long id, @RequestBody @Valid TaskRequest dto) {
         return ResponseEntity.ok(taskService.update(id, dto));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         taskService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         taskService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
@@ -285,14 +285,14 @@ public class TaskController implements TaskControllerDoc {
     }
 
     @PostMapping("/full")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasks(
             @RequestBody @Valid TaskWithSubTasksCreateRequest dto) {
         return new ResponseEntity<>(taskService.createWithSubTasks(dto), HttpStatus.CREATED);
     }
     
     @PostMapping(value = "/full/with-files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TaskWithSubTasksResponse> createWithSubTasksAndFiles(
             @RequestPart("task") @Valid TaskWithSubTasksCreateRequest dto,
             @RequestParam(value = "files", required = false) List<MultipartFile> files) {
@@ -311,7 +311,7 @@ public class TaskController implements TaskControllerDoc {
     }
 
     @PutMapping("/full/{taskId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TaskWithSubTasksResponse> updateWithSubTasks(
             @PathVariable Long taskId,
             @RequestBody @Valid TaskWithSubTasksUpdateRequest dto) {
@@ -319,7 +319,7 @@ public class TaskController implements TaskControllerDoc {
     }
 
     @DeleteMapping("/full/{taskId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTaskWithSubTasks(@PathVariable Long taskId) {
         taskService.deleteTaskWithSubTasks(taskId);
         return ResponseEntity.noContent().build();
@@ -396,7 +396,7 @@ public class TaskController implements TaskControllerDoc {
     }
 
     @PostMapping("/{id}/send-task-email")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> sendTaskEmail(
             @PathVariable Long id,
             @RequestBody(required = false) SendFinancialEmailRequest request

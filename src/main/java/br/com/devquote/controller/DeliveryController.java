@@ -156,13 +156,13 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @Override
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DeliveryResponse> create(@RequestBody @Valid DeliveryRequest dto) {
         return new ResponseEntity<>(deliveryService.create(dto), HttpStatus.CREATED);
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DeliveryResponse> createWithFiles(
             @RequestParam("dto") String dtoJson,
             @RequestParam(value = "files", required = false) List<MultipartFile> files) {
@@ -187,13 +187,13 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @Override
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DeliveryResponse> update(@PathVariable Long id, @RequestBody @Valid DeliveryRequest dto) {
         return ResponseEntity.ok(deliveryService.update(id, dto));
     }
 
     @PatchMapping("/{id}/notes")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DeliveryResponse> updateNotes(
             @PathVariable Long id,
             @RequestBody @Valid DeliveryNotesRequest request) {
@@ -201,7 +201,7 @@ public class DeliveryController implements DeliveryControllerDoc {
     }
 
     @PatchMapping("/{id}/environment")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DeliveryResponse> updateEnvironment(
             @PathVariable Long id,
             @RequestBody @Valid DeliveryEnvironmentRequest request) {
@@ -210,14 +210,14 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @Override
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deliveryService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/bulk")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBulk(@RequestBody List<Long> ids) {
         deliveryService.deleteBulk(ids);
         return ResponseEntity.noContent().build();
