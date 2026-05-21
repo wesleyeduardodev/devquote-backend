@@ -13,7 +13,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriUtils;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -169,6 +172,65 @@ public class ClickUpClientImpl implements ClickUpClient {
         }
 
         return statusNames;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> getListTasksFiltered(String listId, List<String> statuses, String devFieldId, String devOptionId) {
+        List<Map<String, Object>> all = new ArrayList<>();
+        if (listId == null || listId.trim().isEmpty()) {
+            return all;
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", parameterHelper.getClickUpToken());
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        String customFields = null;
+        if (devFieldId != null && !devFieldId.trim().isEmpty()
+                && devOptionId != null && !devOptionId.trim().isEmpty()) {
+            customFields = "[{\"field_id\":\"" + devFieldId + "\",\"operator\":\"=\",\"value\":\"" + devOptionId + "\"}]";
+        }
+
+        for (int page = 0; page < 50; page++) {
+            try {
+                StringBuilder query = new StringBuilder();
+                query.append("page=").append(page)
+                        .append("&include_closed=true")
+                        .append("&subtasks=false");
+                if (statuses != null) {
+                    for (String s : statuses) {
+                        query.append("&statuses%5B%5D=").append(UriUtils.encodeQueryParam(s, StandardCharsets.UTF_8));
+                    }
+                }
+                if (customFields != null) {
+                    query.append("&custom_fields=").append(UriUtils.encodeQueryParam(customFields, StandardCharsets.UTF_8));
+                }
+
+                URI uri = URI.create(CLICKUP_API_BASE + "/list/" + listId + "/task?" + query);
+
+                ResponseEntity<Map> response = clickUpRestTemplate.exchange(uri, HttpMethod.GET, entity, Map.class);
+                Map<String, Object> body = response.getBody();
+                if (body == null) {
+                    break;
+                }
+                List<Map<String, Object>> tasks = (List<Map<String, Object>>) body.get("tasks");
+                if (tasks == null || tasks.isEmpty()) {
+                    break;
+                }
+                all.addAll(tasks);
+
+                Object lastPage = body.get("last_page");
+                if (Boolean.TRUE.equals(lastPage) || tasks.size() < 100) {
+                    break;
+                }
+            } catch (Exception e) {
+                log.error("Erro ao buscar tarefas da list {} (page {}): {}", listId, page, e.getMessage());
+                break;
+            }
+        }
+
+        return all;
     }
 
     @Override

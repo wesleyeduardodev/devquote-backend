@@ -15,5 +15,11 @@ public interface ClickUpClient {
 
     List<String> getAvailableStatuses(String taskId);
 
+    /**
+     * Busca tarefas de uma list filtrando por status e (opcionalmente) por um custom field
+     * drop_down (ex.: Desenvolvedor = opção). Pagina internamente. Retorna os mapas crus.
+     */
+    List<Map<String, Object>> getListTasksFiltered(String listId, List<String> statuses, String devFieldId, String devOptionId);
+
     String getProviderName();
 }

@@ -225,6 +225,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     ProblemDetail handleIllegalState(IllegalStateException ex, HttpServletRequest req) {
+        log.error("ILLEGAL_STATE {} {} - Mensagem: {}",
+                req.getMethod(), req.getRequestURI(), ex.getMessage(), ex);
         return ProblemDetailsUtils.baseProblem(
                 HttpStatus.CONFLICT,
                 "Invalid state",
