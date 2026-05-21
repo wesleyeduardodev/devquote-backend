@@ -78,9 +78,15 @@ public class ClickUpTaskBoardProvider implements TaskBoardProvider {
             priority = asString(((Map<String, Object>) prioObj).get("priority"));
         }
 
+        String description = asString(t.get("description"));
+        if (description == null || description.trim().isEmpty()) {
+            description = asString(t.get("text_content"));
+        }
+
         return BoardTask.builder()
                 .id(id)
                 .name(name)
+                .description(description)
                 .url("https://app.clickup.com/t/" + id)
                 .statusName(statusName)
                 .orderValue(extractOrder(t, orderFieldId))

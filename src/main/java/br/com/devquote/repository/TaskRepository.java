@@ -19,6 +19,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     boolean existsByCodeAndIdNot(String code, Long id);
 
+    @Query("SELECT t.code FROM Task t WHERE t.code IN :codes")
+    List<String> findExistingCodes(@Param("codes") java.util.Collection<String> codes);
+
     @Query("""
             SELECT COUNT(t) FROM Task t
             WHERE NOT EXISTS (SELECT 1 FROM Delivery d WHERE d.task.id = t.id)

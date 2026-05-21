@@ -5,6 +5,7 @@ import br.com.devquote.client.board.TaskBoardProvider;
 import br.com.devquote.client.board.TaskBoardProviderFactory;
 import br.com.devquote.dto.response.PriorityBoardResponse;
 import br.com.devquote.helper.TaskBoardParameterHelper;
+import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.PriorityBoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,10 +17,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
 
     private final TaskBoardProviderFactory providerFactory;
     private final TaskBoardParameterHelper config;
+    private final TaskRepository taskRepository;
 
     @Override
     @Cacheable(value = "priorityBoard", key = "'board'")
@@ -46,6 +51,13 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
 
         TaskBoardProvider provider = active.get();
         List<BoardTask> tasks = provider.fetchPriorityTasks();
+
+        // Quais códigos (id do ClickUp) já existem como Task no DevQuote
+        Set<String> existingCodes = new HashSet<>();
+        List<String> ids = tasks.stream().map(BoardTask::getId).filter(java.util.Objects::nonNull).collect(Collectors.toList());
+        if (!ids.isEmpty()) {
+            existingCodes.addAll(taskRepository.findExistingCodes(ids));
+        }
 
         List<String> statusOrder = config.getPriorityStatuses();
         String primaryStatus = config.getPrimaryStatus();
@@ -71,11 +83,13 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
                 mapped.add(PriorityBoardResponse.Task.builder()
                         .id(t.getId())
                         .name(t.getName())
+                        .description(t.getDescription())
                         .url(t.getUrl())
                         .ordem(t.getOrderValue())
                         .priority(t.getPriority())
                         .type(t.getType())
                         .tags(t.getTags())
+                        .existsInDevQuote(t.getId() != null && existingCodes.contains(t.getId()))
                         .build());
             }
 

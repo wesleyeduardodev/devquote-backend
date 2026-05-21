@@ -36,10 +36,12 @@ public class PriorityBoardResponse {
     public static class Task {
         private String id;
         private String name;
+        private String description;
         private String url;
         private Double ordem;
         private String priority;
         private String type;
         private List<String> tags;
+        private boolean existsInDevQuote;
     }
 }
