@@ -24,11 +24,12 @@ public class CacheConfiguration {
     public CacheManager cacheManager(Caffeine<Object, Object> caffeine) {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
         cacheManager.setCaffeine(caffeine);
-        // Cache do board de prioridades (ClickUp): TTL curto, atualizado pelo botão "Atualizar".
+        // Cache do board de prioridades (ClickUp): 10 min para evitar chamadas repetidas;
+        // o botão "Atualizar" força refresh (evict), então o usuário controla a atualização.
         cacheManager.registerCustomCache("priorityBoard",
                 Caffeine.newBuilder()
                         .maximumSize(50)
-                        .expireAfterWrite(60, TimeUnit.SECONDS)
+                        .expireAfterWrite(10, TimeUnit.MINUTES)
                         .recordStats()
                         .build());
         return cacheManager;
