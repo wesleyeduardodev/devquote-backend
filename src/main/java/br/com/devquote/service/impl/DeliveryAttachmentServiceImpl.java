@@ -241,7 +241,7 @@ public class DeliveryAttachmentServiceImpl implements DeliveryAttachmentService 
         String extension = filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
         List<String> allowedExtensions = List.of(
             "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
-            "txt", "csv", "json",
+            "txt", "csv", "json", "sql",
             "jpg", "jpeg", "png", "gif", "webp",
             "mp4", "avi", "mov", "wmv",
             "zip", "rar", "7z"
