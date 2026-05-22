@@ -2,6 +2,8 @@ package br.com.devquote.adapter;
 import br.com.devquote.dto.request.TaskRequest;
 import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.entity.Requester;
+import br.com.devquote.entity.Server;
+import br.com.devquote.entity.SystemModule;
 import br.com.devquote.entity.Task;
 import br.com.devquote.enums.Environment;
 import br.com.devquote.enums.FlowType;
@@ -29,8 +31,11 @@ public class TaskAdapter {
                 .hasSubTasks(entity.getHasSubTasks())
                 .amount(entity.getAmount())
                 .taskType(entity.getTaskType())
-                .serverOrigin(entity.getServerOrigin())
-                .systemModule(entity.getSystemModule())
+                .moduleId(entity.getModule() != null ? entity.getModule().getId() : null)
+                .moduleName(entity.getModule() != null ? entity.getModule().getName() : null)
+                .serverId(entity.getServer() != null ? entity.getServer().getId() : null)
+                .serverName(entity.getServer() != null ? entity.getServer().getName() : null)
+                .serverLink(entity.getServer() != null ? entity.getServer().getLink() : null)
                 .priority(entity.getPriority())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -43,7 +48,7 @@ public class TaskAdapter {
                 .build();
     }
 
-    public static Task toEntity(TaskRequest dto, Requester requester) {
+    public static Task toEntity(TaskRequest dto, Requester requester, SystemModule module, Server server) {
         if (dto == null) {
             return null;
         }
@@ -60,13 +65,13 @@ public class TaskAdapter {
                 .hasSubTasks(dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false)
                 .amount(dto.getAmount())
                 .taskType(dto.getTaskType())
-                .serverOrigin(dto.getServerOrigin())
-                .systemModule(dto.getSystemModule())
+                .module(module)
+                .server(server)
                 .priority(dto.getPriority() != null ? dto.getPriority() : "MEDIUM")
                 .build();
     }
 
-    public static void updateEntityFromDto(TaskRequest dto, Task entity, Requester requester) {
+    public static void updateEntityFromDto(TaskRequest dto, Task entity, Requester requester, SystemModule module, Server server) {
         if (dto == null || entity == null) {
             return;
         }
@@ -85,8 +90,8 @@ public class TaskAdapter {
         entity.setHasSubTasks(dto.getHasSubTasks() != null ? dto.getHasSubTasks() : false);
         entity.setAmount(dto.getAmount());
         entity.setTaskType(dto.getTaskType());
-        entity.setServerOrigin(dto.getServerOrigin());
-        entity.setSystemModule(dto.getSystemModule());
+        entity.setModule(module);
+        entity.setServer(server);
         entity.setPriority(dto.getPriority() != null ? dto.getPriority() : "MEDIUM");
     }
 }

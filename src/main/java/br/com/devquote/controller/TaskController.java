@@ -87,6 +87,8 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) Boolean hasDelivery,
             @RequestParam(required = false) Boolean hasQuoteInBilling,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) Long serverId,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -102,7 +104,7 @@ public class TaskController implements TaskControllerDoc {
                 : FlowType.fromString(flowType);
 
         Page<TaskResponse> pageResult = taskService.findAllPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, taskType, environment, startDate, endDate, hasDelivery, hasQuoteInBilling, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowTypeEnum, taskType, environment, startDate, endDate, hasDelivery, hasQuoteInBilling, moduleId, serverId, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(sanitizeAmounts(pageResult)));
@@ -132,7 +134,9 @@ public class TaskController implements TaskControllerDoc {
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) Boolean hasDelivery,
-            @RequestParam(required = false) Boolean hasQuoteInBilling
+            @RequestParam(required = false) Boolean hasQuoteInBilling,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) Long serverId
     ) {
         FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
                 ? null
@@ -145,7 +149,7 @@ public class TaskController implements TaskControllerDoc {
         java.math.BigDecimal total = taskService.getTotalAmount(
                 id, requesterId, requesterName, title, description, code, link,
                 createdAt, updatedAt, flowTypeEnum, taskType, environment,
-                startDate, endDate, hasDelivery, hasQuoteInBilling
+                startDate, endDate, hasDelivery, hasQuoteInBilling, moduleId, serverId
         );
         return ResponseEntity.ok(TaskAmountSumResponse.builder().totalAmount(total).build());
     }

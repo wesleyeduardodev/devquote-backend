@@ -590,14 +590,16 @@ public class ExcelReportUtils {
                     "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Valor da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
                     "Status Geral da Entrega", "Observações da Entrega", "Data Início Entrega", "Data Fim Entrega",
                     "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
-                    "Pull Request", "Observações do Item", "Data Início Item", "Data Fim Item"
+                    "Pull Request", "Observações do Item", "Data Início Item", "Data Fim Item",
+                    "Módulo", "Servidor"
             };
         } else {
             headers = new String[]{
                     "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
                     "Status Geral da Entrega", "Observações da Entrega", "Data Início Entrega", "Data Fim Entrega",
                     "Projeto/Repositório", "Status do Item", "Branch", "Branch Origem",
-                    "Pull Request", "Observações do Item", "Data Início Item", "Data Fim Item"
+                    "Pull Request", "Observações do Item", "Data Início Item", "Data Fim Item",
+                    "Módulo", "Servidor"
             };
         }
 
@@ -652,6 +654,8 @@ public class ExcelReportUtils {
                 setCellValue(row, 17, deliveryData.get("item_notes"), dataStyle);
                 setCellValue(row, 18, deliveryData.get("item_started_at"), dateStyle);
                 setCellValue(row, 19, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 20, deliveryData.get("module_name"), dataStyle);
+                setCellValue(row, 21, deliveryData.get("server_name"), dataStyle);
             } else {
                 setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
                 setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
@@ -674,6 +678,8 @@ public class ExcelReportUtils {
                 setCellValue(row, 16, deliveryData.get("item_notes"), dataStyle);
                 setCellValue(row, 17, deliveryData.get("item_started_at"), dateStyle);
                 setCellValue(row, 18, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 19, deliveryData.get("module_name"), dataStyle);
+                setCellValue(row, 20, deliveryData.get("server_name"), dataStyle);
             }
         }
 
@@ -724,14 +730,16 @@ public class ExcelReportUtils {
                     "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Valor da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
                     "Status Geral da Entrega", "Observações da Entrega", "Data Início Entrega", "Data Fim Entrega",
                     "Título do Item", "Descrição do Item", "Status do Item",
-                    "Data Início Item", "Data Fim Item"
+                    "Data Início Item", "Data Fim Item",
+                    "Módulo", "Servidor"
             };
         } else {
             headers = new String[]{
                     "ID Tarefa", "Código da Tarefa", "Título da Tarefa", "Tipo de Tarefa", "Ambiente", "Qtd. Subtarefas", "Solicitante",
                     "Status Geral da Entrega", "Observações da Entrega", "Data Início Entrega", "Data Fim Entrega",
                     "Título do Item", "Descrição do Item", "Status do Item",
-                    "Data Início Item", "Data Fim Item"
+                    "Data Início Item", "Data Fim Item",
+                    "Módulo", "Servidor"
             };
         }
 
@@ -783,6 +791,8 @@ public class ExcelReportUtils {
                 setOperationalItemStatusCell(row, 14, deliveryData.get("item_status"), dataStyle);
                 setCellValue(row, 15, deliveryData.get("item_started_at"), dateStyle);
                 setCellValue(row, 16, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 17, deliveryData.get("module_name"), dataStyle);
+                setCellValue(row, 18, deliveryData.get("server_name"), dataStyle);
             } else {
                 setCellValue(row, 0, deliveryData.get("task_id"), dataStyle);
                 setCellValue(row, 1, deliveryData.get("task_code"), dataStyle);
@@ -802,6 +812,8 @@ public class ExcelReportUtils {
                 setOperationalItemStatusCell(row, 13, deliveryData.get("item_status"), dataStyle);
                 setCellValue(row, 14, deliveryData.get("item_started_at"), dateStyle);
                 setCellValue(row, 15, deliveryData.get("item_finished_at"), dateStyle);
+                setCellValue(row, 16, deliveryData.get("module_name"), dataStyle);
+                setCellValue(row, 17, deliveryData.get("server_name"), dataStyle);
             }
         }
 
@@ -865,7 +877,8 @@ public class ExcelReportUtils {
                     "Fluxo", "Ambiente", "Valor da Tarefa", "Qtd. Subtarefas", "Solicitante",
                     "Status Geral da Entrega", "Observações da Entrega",
                     "Data Início Entrega", "Data Fim Entrega",
-                    "Data Criação", "Data Atualização"
+                    "Data Criação", "Data Atualização",
+                    "Módulo", "Servidor"
             };
         } else {
             headers = new String[]{
@@ -873,7 +886,8 @@ public class ExcelReportUtils {
                     "Fluxo", "Ambiente", "Qtd. Subtarefas", "Solicitante",
                     "Status Geral da Entrega", "Observações da Entrega",
                     "Data Início Entrega", "Data Fim Entrega",
-                    "Data Criação", "Data Atualização"
+                    "Data Criação", "Data Atualização",
+                    "Módulo", "Servidor"
             };
         }
 
@@ -905,6 +919,8 @@ public class ExcelReportUtils {
                 setCellValue(row, 13, deliveryData.get("delivery_finished_at"), dateStyle);
                 setCellValue(row, 14, deliveryData.get("delivery_created_at"), dateStyle);
                 setCellValue(row, 15, deliveryData.get("delivery_updated_at"), dateStyle);
+                setCellValue(row, 16, deliveryData.get("module_name"), dataStyle);
+                setCellValue(row, 17, deliveryData.get("server_name"), dataStyle);
             } else {
                 setCellValue(row, 0, deliveryData.get("delivery_id"), dataStyle);
                 setCellValue(row, 1, deliveryData.get("task_id"), dataStyle);
@@ -921,6 +937,8 @@ public class ExcelReportUtils {
                 setCellValue(row, 12, deliveryData.get("delivery_finished_at"), dateStyle);
                 setCellValue(row, 13, deliveryData.get("delivery_created_at"), dateStyle);
                 setCellValue(row, 14, deliveryData.get("delivery_updated_at"), dateStyle);
+                setCellValue(row, 15, deliveryData.get("module_name"), dataStyle);
+                setCellValue(row, 16, deliveryData.get("server_name"), dataStyle);
             }
         }
 

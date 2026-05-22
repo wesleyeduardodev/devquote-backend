@@ -62,11 +62,13 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private Environment environment;
 
-    @Column(name = "server_origin", length = 100)
-    private String serverOrigin;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "module_id")
+    private SystemModule module;
 
-    @Column(name = "system_module", length = 100)
-    private String systemModule;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "server_id")
+    private Server server;
 
     @Column(name = "priority", length = 20)
     @Builder.Default

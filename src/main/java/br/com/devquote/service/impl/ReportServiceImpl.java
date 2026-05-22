@@ -905,8 +905,8 @@ public class ReportServiceImpl implements ReportService {
                 .environmentLabel(getEnvironmentLabel(task.getEnvironment() != null ? task.getEnvironment().name() : null))
                 .priority(task.getPriority())
                 .priorityLabel(getPriorityLabel(task.getPriority()))
-                .systemModule(task.getSystemModule())
-                .serverOrigin(task.getServerOrigin())
+                .systemModule(task.getModule() != null ? task.getModule().getName() : null)
+                .serverOrigin(task.getServer() != null ? task.getServer().getName() : null)
                 .link(task.getLink())
                 .meetingLink(task.getMeetingLink())
                 .requesterName(task.getRequester() != null ? task.getRequester().getName() : null)
@@ -1189,6 +1189,8 @@ public class ReportServiceImpl implements ReportService {
                 .taskCode(task.getCode())
                 .taskTitle(task.getTitle())
                 .taskAmount(showValues ? task.getAmount() : null)
+                .moduleName(task.getModule() != null ? task.getModule().getName() : null)
+                .serverName(task.getServer() != null ? task.getServer().getName() : null)
                 .taskDescriptionBlocks(taskDescriptionBlocks)
                 .flowType(delivery.getFlowType() != null ? delivery.getFlowType().name() : null)
                 .flowTypeLabel(getFlowTypeLabel(delivery.getFlowType() != null ? delivery.getFlowType().name() : null))
@@ -1280,6 +1282,8 @@ public class ReportServiceImpl implements ReportService {
         parameters.put("taskDescriptionBlocks", new JRBeanCollectionDataSource(
                 data.getTaskDescriptionBlocks() != null ? data.getTaskDescriptionBlocks() : new ArrayList<>()));
         parameters.put("taskAmount", data.getTaskAmount());
+        parameters.put("moduleName", data.getModuleName());
+        parameters.put("serverName", data.getServerName());
         parameters.put("flowTypeLabel", data.getFlowTypeLabel());
         parameters.put("environmentLabel", data.getEnvironmentLabel());
         parameters.put("statusLabel", data.getStatusLabel());

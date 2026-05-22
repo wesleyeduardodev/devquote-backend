@@ -18,6 +18,11 @@ public class DeliveryResponse {
     private String taskType;
     private String taskLink;
     private BigDecimal taskValue;
+    private Long moduleId;
+    private String moduleName;
+    private Long serverId;
+    private String serverName;
+    private String serverLink;
     private String flowType;
     private String environment;
     private String status;

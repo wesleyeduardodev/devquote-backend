@@ -29,6 +29,8 @@
 	<parameter name="desenvolvedorEmail" class="java.lang.String"/>
 	<parameter name="desenvolvedorTelefone" class="java.lang.String"/>
 	<parameter name="taskAmount" class="java.math.BigDecimal"/>
+	<parameter name="moduleName" class="java.lang.String"/>
+	<parameter name="serverName" class="java.lang.String"/>
 	<parameter name="taskDescriptionBlocks" class="net.sf.jasperreports.engine.JRDataSource"/>
 	<title>
 		<band height="80" splitType="Stretch">
@@ -69,7 +71,7 @@
 		</band>
 	</title>
 	<detail>
-		<band height="130" splitType="Stretch">
+		<band height="150" splitType="Stretch">
 			<staticText>
 				<reportElement mode="Opaque" x="0" y="5" width="555" height="18" backcolor="#E8EAED" uuid="f6a7b8c9-d0e1-2345-6789-0abcde101234"/>
 				<box leftPadding="5">
@@ -178,8 +180,36 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$P{totalItems}]]></textFieldExpression>
 			</textField>
+				<staticText>
+					<reportElement x="280" y="79" width="65" height="14" uuid="1a2b3c4d-0001-0001-0001-000000000001"/>
+					<textElement>
+						<font fontName="DejaVu Sans" size="9" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Modulo:]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="345" y="79" width="200" height="14" uuid="1a2b3c4d-0001-0001-0001-000000000002"/>
+					<textElement>
+						<font fontName="DejaVu Sans" size="9"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{moduleName} != null ? $P{moduleName} : "-"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="5" y="96" width="80" height="14" uuid="1a2b3c4d-0001-0001-0001-000000000003"/>
+					<textElement>
+						<font fontName="DejaVu Sans" size="9" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Servidor:]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="85" y="96" width="460" height="14" uuid="1a2b3c4d-0001-0001-0001-000000000004"/>
+					<textElement>
+						<font fontName="DejaVu Sans" size="9"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{serverName} != null ? $P{serverName} : "-"]]></textFieldExpression>
+				</textField>
 			<staticText>
-				<reportElement mode="Opaque" x="0" y="100" width="555" height="18" backcolor="#E8EAED" uuid="c1234567-8901-2345-4567-890abcdef012"/>
+				<reportElement mode="Opaque" x="0" y="118" width="555" height="18" backcolor="#E8EAED" uuid="c1234567-8901-2345-4567-890abcdef012"/>
 				<box leftPadding="5">
 					<pen lineWidth="0.5" lineColor="#D1D5DB"/>
 				</box>

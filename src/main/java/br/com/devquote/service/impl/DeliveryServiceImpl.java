@@ -326,12 +326,14 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                    String createdAt,
                                                    String updatedAt,
                                                    Boolean hasItems,
+                                                   Long moduleId,
+                                                   Long serverId,
                                                    Pageable pageable) {
 
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
 
         Page<Long> idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, hasItems, pageable
+                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, hasItems, moduleId, serverId, pageable
         );
 
         if (idsPage.isEmpty()) {
@@ -360,10 +362,12 @@ public class DeliveryServiceImpl implements DeliveryService {
                                                String endDate,
                                                String createdAt,
                                                String updatedAt,
-                                               Boolean hasItems) {
+                                               Boolean hasItems,
+                                               Long moduleId,
+                                               Long serverId) {
         DeliveryStatus statusEnum = convertStatusStringToEnum(status);
         java.math.BigDecimal sum = deliveryRepository.sumTaskAmountByOptionalFields(
-                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, hasItems
+                id, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, hasItems, moduleId, serverId
         );
         return sum != null ? sum : java.math.BigDecimal.ZERO;
     }
@@ -466,7 +470,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             if (taskId != null || taskName != null || taskCode != null || flowType != null || taskType != null || environment != null || statusEnum != null || startDate != null || endDate != null) {
                 log.debug("Using filtered query for IDs");
                 idsPage = deliveryRepository.findIdsByOptionalFieldsPaginated(
-                        null, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, null, pageable
+                        null, taskId, taskName, taskCode, flowType, taskType, environment, statusEnum, startDate, endDate, createdAt, updatedAt, null, null, null, pageable
                 );
             } else {
                 log.debug("Using simple query for IDs");
@@ -635,7 +639,9 @@ public class DeliveryServiceImpl implements DeliveryService {
                 di.pull_request as item_pull_request,
                 di.notes as item_notes,
                 di.started_at as item_started_at,
-                di.finished_at as item_finished_at
+                di.finished_at as item_finished_at,
+                (SELECT m.name FROM module m WHERE m.id = t.module_id) as module_name,
+                (SELECT s.name FROM server s WHERE s.id = t.server_id) as server_name
             FROM delivery d
             INNER JOIN task t ON d.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
@@ -671,6 +677,8 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("item_notes", ExcelReportUtils.stripHtml(row[17]));
             map.put("item_started_at", row[18]);
             map.put("item_finished_at", row[19]);
+            map.put("module_name", row[20]);
+            map.put("server_name", row[21]);
             return map;
         }).collect(Collectors.toList());
 
@@ -698,7 +706,9 @@ public class DeliveryServiceImpl implements DeliveryService {
                 doi.description as item_description,
                 doi.status as item_status,
                 doi.started_at as item_started_at,
-                doi.finished_at as item_finished_at
+                doi.finished_at as item_finished_at,
+                (SELECT m.name FROM module m WHERE m.id = t.module_id) as module_name,
+                (SELECT s.name FROM server s WHERE s.id = t.server_id) as server_name
             FROM delivery d
             INNER JOIN task t ON d.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
@@ -730,6 +740,8 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("item_status", row[14]);
             map.put("item_started_at", row[15]);
             map.put("item_finished_at", row[16]);
+            map.put("module_name", row[17]);
+            map.put("server_name", row[18]);
             return map;
         }).collect(Collectors.toList());
 
@@ -757,7 +769,9 @@ public class DeliveryServiceImpl implements DeliveryService {
                 d.started_at as delivery_started_at,
                 d.finished_at as delivery_finished_at,
                 d.created_at as delivery_created_at,
-                d.updated_at as delivery_updated_at
+                d.updated_at as delivery_updated_at,
+                (SELECT m.name FROM module m WHERE m.id = t.module_id) as module_name,
+                (SELECT s.name FROM server s WHERE s.id = t.server_id) as server_name
             FROM delivery d
             INNER JOIN task t ON d.task_id = t.id
             INNER JOIN requester r ON t.requester_id = r.id
@@ -786,6 +800,8 @@ public class DeliveryServiceImpl implements DeliveryService {
             map.put("delivery_finished_at", row[13]);
             map.put("delivery_created_at", row[14]);
             map.put("delivery_updated_at", row[15]);
+            map.put("module_name", row[16]);
+            map.put("server_name", row[17]);
             return map;
         }).collect(Collectors.toList());
 

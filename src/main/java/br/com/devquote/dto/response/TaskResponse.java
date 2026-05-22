@@ -51,9 +51,15 @@ public class TaskResponse {
 
     private String taskType;
 
-    private String serverOrigin;
+    private Long moduleId;
 
-    private String systemModule;
+    private String moduleName;
+
+    private Long serverId;
+
+    private String serverName;
+
+    private String serverLink;
 
     private String priority;
 

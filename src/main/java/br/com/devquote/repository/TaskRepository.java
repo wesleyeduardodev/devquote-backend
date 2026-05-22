@@ -56,6 +56,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:hasBilling IS NULL OR
                    (:hasBilling = TRUE  AND EXISTS (SELECT 1 FROM BillingPeriodTask bpt WHERE bpt.task.id = t.id)) OR
                    (:hasBilling = FALSE AND NOT EXISTS (SELECT 1 FROM BillingPeriodTask bpt WHERE bpt.task.id = t.id)))
+              AND (:moduleId IS NULL OR t.module.id = :moduleId)
+              AND (:serverId IS NULL OR t.server.id = :serverId)
             """)
     java.math.BigDecimal sumAmountByOptionalFields(
             @Param("id") Long id,
@@ -73,7 +75,9 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("startDate") String startDate,
             @Param("endDate") String endDate,
             @Param("hasDelivery") Boolean hasDelivery,
-            @Param("hasBilling") Boolean hasBilling
+            @Param("hasBilling") Boolean hasBilling,
+            @Param("moduleId") Long moduleId,
+            @Param("serverId") Long serverId
     );
 
     @Query("""
@@ -98,6 +102,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
               AND (:hasBilling IS NULL OR
                    (:hasBilling = TRUE  AND EXISTS (SELECT 1 FROM BillingPeriodTask bpt WHERE bpt.task.id = t.id)) OR
                    (:hasBilling = FALSE AND NOT EXISTS (SELECT 1 FROM BillingPeriodTask bpt WHERE bpt.task.id = t.id)))
+              AND (:moduleId IS NULL OR t.module.id = :moduleId)
+              AND (:serverId IS NULL OR t.server.id = :serverId)
             """)
     Page<Task> findByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -116,6 +122,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("endDate") String endDate,
             @Param("hasDelivery") Boolean hasDelivery,
             @Param("hasBilling") Boolean hasBilling,
+            @Param("moduleId") Long moduleId,
+            @Param("serverId") Long serverId,
             Pageable pageable
     );
 

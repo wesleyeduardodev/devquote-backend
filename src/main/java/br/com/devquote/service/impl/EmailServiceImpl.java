@@ -256,8 +256,8 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("taskType", translateTaskType(task.getTaskType()));
         context.setVariable("taskEnvironment", translateEnvironment(task.getEnvironment()));
         context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
-        context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
-        context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
+        context.setVariable("taskSystemModule", task.getModule() != null ? task.getModule().getName() : "");
+        context.setVariable("taskServerOrigin", task.getServer() != null ? task.getServer().getName() : "");
         context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
         context.setVariable("taskMeetingLink", task.getMeetingLink() != null ? task.getMeetingLink() : "");
         context.setVariable("taskNotes", "");
@@ -773,8 +773,8 @@ public class EmailServiceImpl implements EmailService {
             context.setVariable("taskType", translateTaskType(task.getTaskType()));
             context.setVariable("taskEnvironment", translateEnvironment(task.getEnvironment()));
             context.setVariable("taskFlowType", task.getFlowType() != null ? task.getFlowType().name() : "");
-            context.setVariable("taskSystemModule", task.getSystemModule() != null ? task.getSystemModule() : "");
-            context.setVariable("taskServerOrigin", task.getServerOrigin() != null ? task.getServerOrigin() : "");
+            context.setVariable("taskSystemModule", task.getModule() != null ? task.getModule().getName() : "");
+            context.setVariable("taskServerOrigin", task.getServer() != null ? task.getServer().getName() : "");
             context.setVariable("taskLink", task.getLink() != null ? task.getLink() : "");
             context.setVariable("taskMeetingLink", task.getMeetingLink() != null ? task.getMeetingLink() : "");
             context.setVariable("taskNotes", "");

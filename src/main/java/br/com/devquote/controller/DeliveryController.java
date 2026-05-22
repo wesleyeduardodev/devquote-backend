@@ -96,6 +96,8 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
             @RequestParam(required = false) Boolean hasItems,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) Long serverId,
             @RequestParam(required = false) MultiValueMap<String, String> params
     ) {
         List<String> sortParams = params != null ? params.get("sort") : null;
@@ -108,7 +110,7 @@ public class DeliveryController implements DeliveryControllerDoc {
 
         Page<DeliveryResponse> pageResult = deliveryService.findAllPaginated(
                 id, taskId, taskName, taskCode, flowType, taskType, environment, status,
-                startDate, endDate, createdAt, updatedAt, hasItems, pageable
+                startDate, endDate, createdAt, updatedAt, hasItems, moduleId, serverId, pageable
         );
 
         return ResponseEntity.ok(PageAdapter.toPagedResponseDTO(sanitizeAmounts(pageResult)));
@@ -135,14 +137,16 @@ public class DeliveryController implements DeliveryControllerDoc {
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
-            @RequestParam(required = false) Boolean hasItems
+            @RequestParam(required = false) Boolean hasItems,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) Long serverId
     ) {
         if (securityUtils.cannotViewMonetaryValues()) {
             return ResponseEntity.ok(java.util.Map.of("totalAmount", java.math.BigDecimal.ZERO));
         }
         java.math.BigDecimal totalAmount = deliveryService.getTotalAmount(
                 id, taskId, taskName, taskCode, flowType, taskType, environment, status,
-                startDate, endDate, createdAt, updatedAt, hasItems
+                startDate, endDate, createdAt, updatedAt, hasItems, moduleId, serverId
         );
         return ResponseEntity.ok(java.util.Map.of("totalAmount", totalAmount));
     }

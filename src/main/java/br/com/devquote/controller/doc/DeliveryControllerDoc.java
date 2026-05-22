@@ -55,6 +55,8 @@ public interface DeliveryControllerDoc {
             @RequestParam(required = false) String createdAt,
             @RequestParam(required = false) String updatedAt,
             @RequestParam(required = false) Boolean hasItems,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) Long serverId,
             @RequestParam MultiValueMap<String, String> params
     );
 

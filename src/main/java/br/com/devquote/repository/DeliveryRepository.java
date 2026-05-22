@@ -47,6 +47,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
            AND (:hasItems IS NULL
                 OR (:hasItems = TRUE  AND (SIZE(d.items) > 0 OR SIZE(d.operationalItems) > 0))
                 OR (:hasItems = FALSE AND SIZE(d.items) = 0 AND SIZE(d.operationalItems) = 0))
+           AND (:moduleId IS NULL OR t.module.id = :moduleId)
+           AND (:serverId IS NULL OR t.server.id = :serverId)
         """)
     Page<Long> findIdsByOptionalFieldsPaginated(
             @Param("id") Long id,
@@ -62,6 +64,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             @Param("createdAt") String createdAt,
             @Param("updatedAt") String updatedAt,
             @Param("hasItems") Boolean hasItems,
+            @Param("moduleId") Long moduleId,
+            @Param("serverId") Long serverId,
             Pageable pageable
     );
 
@@ -82,6 +86,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
            AND (:hasItems IS NULL
                 OR (:hasItems = TRUE  AND (SIZE(d.items) > 0 OR SIZE(d.operationalItems) > 0))
                 OR (:hasItems = FALSE AND SIZE(d.items) = 0 AND SIZE(d.operationalItems) = 0))
+           AND (:moduleId IS NULL OR t.module.id = :moduleId)
+           AND (:serverId IS NULL OR t.server.id = :serverId)
         """)
     java.math.BigDecimal sumTaskAmountByOptionalFields(
             @Param("id") Long id,
@@ -94,7 +100,9 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
             @Param("status") br.com.devquote.enums.DeliveryStatus status,
             @Param("startDate") String startDate,
             @Param("endDate") String endDate,
-            @Param("hasItems") Boolean hasItems
+            @Param("hasItems") Boolean hasItems,
+            @Param("moduleId") Long moduleId,
+            @Param("serverId") Long serverId
     );
 
     @Query(value = """

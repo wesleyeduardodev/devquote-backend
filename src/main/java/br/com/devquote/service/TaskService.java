@@ -21,7 +21,8 @@ public interface TaskService {
             Long id, Long requesterId, String requesterName, String title, String description,
             String code, String link, String createdAt, String updatedAt,
             br.com.devquote.enums.FlowType flowType, String taskType, String environment,
-            String startDate, String endDate, Boolean hasDelivery, Boolean hasBilling
+            String startDate, String endDate, Boolean hasDelivery, Boolean hasBilling,
+            Long moduleId, Long serverId
     );
 
     TaskResponse findById(Long id);
@@ -56,6 +57,8 @@ public interface TaskService {
                                         String endDate,
                                         Boolean hasDelivery,
                                         Boolean hasBilling,
+                                        Long moduleId,
+                                        Long serverId,
                                         Pageable pageable);
 
     Page<TaskResponse> findUnlinkedBillingByOptionalFieldsPaginated(Long id,

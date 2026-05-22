@@ -9,7 +9,9 @@ import br.com.devquote.dto.response.TaskResponse;
 import br.com.devquote.dto.response.TaskStatsResponse;
 import br.com.devquote.dto.response.TaskWithSubTasksResponse;
 import br.com.devquote.entity.*;
+import br.com.devquote.repository.ModuleRepository;
 import br.com.devquote.repository.RequesterRepository;
+import br.com.devquote.repository.ServerRepository;
 import br.com.devquote.repository.SubTaskRepository;
 import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.*;
@@ -44,6 +46,8 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final RequesterRepository requesterRepository;
+    private final ModuleRepository moduleRepository;
+    private final ServerRepository serverRepository;
     private final SubTaskRepository subTaskRepository;
     private final BillingPeriodTaskService billingPeriodTaskService;
     private final SecurityUtils securityUtils;
@@ -107,11 +111,13 @@ public class TaskServiceImpl implements TaskService {
                                                 String startDate,
                                                 String endDate,
                                                 Boolean hasDelivery,
-                                                Boolean hasBilling) {
+                                                Boolean hasBilling,
+                                                Long moduleId,
+                                                Long serverId) {
         java.math.BigDecimal total = taskRepository.sumAmountByOptionalFields(
                 id, requesterId, requesterName, title, description, code, link,
                 createdAt, updatedAt, flowType, taskType, environment,
-                startDate, endDate, hasDelivery, hasBilling
+                startDate, endDate, hasDelivery, hasBilling, moduleId, serverId
         );
         return total != null ? total : java.math.BigDecimal.ZERO;
     }
@@ -162,7 +168,7 @@ public class TaskServiceImpl implements TaskService {
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitante", dto.getRequesterId()));
 
-        Task entity = TaskAdapter.toEntity(dto, requester);
+        Task entity = TaskAdapter.toEntity(dto, requester, resolveModule(dto.getModuleId()), resolveServer(dto.getServerId()));
         entity.setCreatedBy(currentUser);
         entity.setUpdatedBy(currentUser);
 
@@ -200,7 +206,7 @@ public class TaskServiceImpl implements TaskService {
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitante", dto.getRequesterId()));
 
-        TaskAdapter.updateEntityFromDto(dto, entity, requester);
+        TaskAdapter.updateEntityFromDto(dto, entity, requester, resolveModule(dto.getModuleId()), resolveServer(dto.getServerId()));
         entity.setUpdatedBy(currentUser);
 
         try {
@@ -361,10 +367,10 @@ public class TaskServiceImpl implements TaskService {
                 .hasSubTasks(newHasSubTasks)
                 .amount(dto.getAmount())
                 .taskType(dto.getTaskType())
-                .serverOrigin(dto.getServerOrigin())
-                .systemModule(dto.getSystemModule())
+                .serverId(dto.getServerId())
+                .moduleId(dto.getModuleId())
                 .priority(dto.getPriority())
-                .build(), task, requester);
+                .build(), task, requester, resolveModule(dto.getModuleId()), resolveServer(dto.getServerId()));
 
         task.setUpdatedBy(currentUser);
 
@@ -460,10 +466,12 @@ public class TaskServiceImpl implements TaskService {
                                                String endDate,
                                                Boolean hasDelivery,
                                                Boolean hasBilling,
+                                               Long moduleId,
+                                               Long serverId,
                                                Pageable pageable) {
 
         Page<Task> page = taskRepository.findByOptionalFieldsPaginated(
-                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, taskType, environment, startDate, endDate, hasDelivery, hasBilling, pageable
+                id, requesterId, requesterName, title, description, code, link, createdAt, updatedAt, flowType, taskType, environment, startDate, endDate, hasDelivery, hasBilling, moduleId, serverId, pageable
         );
         return buildTaskResponsePage(page, pageable);
     }
@@ -536,6 +544,22 @@ public class TaskServiceImpl implements TaskService {
         return new PageImpl<>(dtos, pageable, page.getTotalElements());
     }
 
+    private SystemModule resolveModule(Long moduleId) {
+        if (moduleId == null) {
+            return null;
+        }
+        return moduleRepository.findById(moduleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Módulo", moduleId));
+    }
+
+    private Server resolveServer(Long serverId) {
+        if (serverId == null) {
+            return null;
+        }
+        return serverRepository.findById(serverId)
+                .orElseThrow(() -> new ResourceNotFoundException("Servidor", serverId));
+    }
+
     private Task buildAndPersistTask(TaskWithSubTasksCreateRequest dto, Requester requester) {
         User currentUser = securityUtils.getCurrentUser();
         if (currentUser == null) {
@@ -554,10 +578,10 @@ public class TaskServiceImpl implements TaskService {
                 .hasSubTasks(dto.getHasSubTasks())
                 .amount(dto.getAmount())
                 .taskType(dto.getTaskType())
-                .serverOrigin(dto.getServerOrigin())
-                .systemModule(dto.getSystemModule())
+                .serverId(dto.getServerId())
+                .moduleId(dto.getModuleId())
                 .priority(dto.getPriority())
-                .build(), requester);
+                .build(), requester, resolveModule(dto.getModuleId()), resolveServer(dto.getServerId()));
 
         task.setCreatedBy(currentUser);
         task.setUpdatedBy(currentUser);
@@ -594,8 +618,11 @@ public class TaskServiceImpl implements TaskService {
                 .hasSubTasks(task.getHasSubTasks())
                 .amount(task.getAmount())
                 .taskType(task.getTaskType())
-                .serverOrigin(task.getServerOrigin())
-                .systemModule(task.getSystemModule())
+                .moduleId(task.getModule() != null ? task.getModule().getId() : null)
+                .moduleName(task.getModule() != null ? task.getModule().getName() : null)
+                .serverId(task.getServer() != null ? task.getServer().getId() : null)
+                .serverName(task.getServer() != null ? task.getServer().getName() : null)
+                .serverLink(task.getServer() != null ? task.getServer().getLink() : null)
                 .priority(task.getPriority())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
@@ -746,8 +773,8 @@ public class TaskServiceImpl implements TaskService {
                 r.name as requester_name,
                 cb.username as created_by_user,
                 ub.username as updated_by_user,
-                t.server_origin,
-                t.system_module,
+                (SELECT s.name FROM server s WHERE s.id = t.server_id) as server_origin,
+                (SELECT m.name FROM module m WHERE m.id = t.module_id) as system_module,
                 t.link as task_link,
                 t.meeting_link,
                 t.amount as task_amount,
@@ -842,8 +869,8 @@ public class TaskServiceImpl implements TaskService {
                 r.name as requester_name,
                 cb.username as created_by_user,
                 ub.username as updated_by_user,
-                t.server_origin,
-                t.system_module,
+                (SELECT s.name FROM server s WHERE s.id = t.server_id) as server_origin,
+                (SELECT m.name FROM module m WHERE m.id = t.module_id) as system_module,
                 t.link as task_link,
                 t.meeting_link,
                 t.amount as task_amount,
@@ -915,8 +942,8 @@ public class TaskServiceImpl implements TaskService {
                 
                 cb.username as created_by_name,
                 ub.username as updated_by_name,
-                t.server_origin as task_server_origin,
-                t.system_module as task_system_module,
+                (SELECT s.name FROM server s WHERE s.id = t.server_id) as task_server_origin,
+                (SELECT m.name FROM module m WHERE m.id = t.module_id) as task_system_module,
                 
                 CASE WHEN EXISTS(SELECT 1 FROM delivery d2 WHERE d2.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_delivery,
                 CASE WHEN EXISTS(SELECT 1 FROM billing_period_task bpt WHERE bpt.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_quote_in_billing,
@@ -1027,8 +1054,8 @@ public class TaskServiceImpl implements TaskService {
                 
                 cb.username as created_by_name,
                 ub.username as updated_by_name,
-                t.server_origin as task_server_origin,
-                t.system_module as task_system_module,
+                (SELECT s.name FROM server s WHERE s.id = t.server_id) as task_server_origin,
+                (SELECT m.name FROM module m WHERE m.id = t.module_id) as task_system_module,
                 
                 CASE WHEN EXISTS(SELECT 1 FROM delivery d2 WHERE d2.task_id = t.id) THEN 'Sim' ELSE 'Não' END as has_delivery,
                 

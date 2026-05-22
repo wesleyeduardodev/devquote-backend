@@ -27,6 +27,10 @@ public class DeliveryReportData {
 
     private BigDecimal taskAmount;
 
+    private String moduleName;
+
+    private String serverName;
+
     private String flowType;
 
     private String flowTypeLabel;
