@@ -24,6 +24,11 @@ public class HtmlImageExtractor {
             Pattern.CASE_INSENSITIVE
     );
 
+    private static final Pattern PRE_BLOCK_PATTERN = Pattern.compile(
+            "<pre[^>]*>(.*?)</pre>",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL
+    );
+
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -122,7 +127,19 @@ public class HtmlImageExtractor {
             return html;
         }
 
-        String result = html.replaceAll("<img[^>]*>", "[imagem]");
+        // Protege blocos de código (<pre>) antes das limpezas que colapsam espaços/quebras,
+        // pois SQL e afins dependem de indentação e quebras de linha.
+        List<String> codeBlocks = new ArrayList<>();
+        Matcher preMatcher = PRE_BLOCK_PATTERN.matcher(html);
+        StringBuffer protectedBuffer = new StringBuffer();
+        while (preMatcher.find()) {
+            codeBlocks.add(formatCodeBlock(preMatcher.group(1)));
+            String token = "@@DQCODE" + (codeBlocks.size() - 1) + "@@";
+            preMatcher.appendReplacement(protectedBuffer, Matcher.quoteReplacement(token));
+        }
+        preMatcher.appendTail(protectedBuffer);
+
+        String result = protectedBuffer.toString().replaceAll("<img[^>]*>", "[imagem]");
 
         result = result.replaceAll("</p>", "<br/>");
         result = result.replaceAll("</div>", "<br/>");
@@ -144,7 +161,33 @@ public class HtmlImageExtractor {
         result = result.replaceAll("^\\s*(<br/>\\s*)+", "");
         result = result.replaceAll("(<br/>\\s*)+$", "");
 
-        return result.trim();
+        result = result.trim();
+
+        // Reinsere os blocos de código já formatados (monoespaçado, com indentação e quebras preservadas).
+        for (int i = 0; i < codeBlocks.size(); i++) {
+            result = result.replace("@@DQCODE" + i + "@@", codeBlocks.get(i));
+        }
+
+        return result;
+    }
+
+    private static String formatCodeBlock(String codeHtml) {
+        if (codeHtml == null || codeHtml.isEmpty()) {
+            return "";
+        }
+
+        String code = codeHtml.replaceAll("(?i)</?code[^>]*>", "");
+        code = code.replace("\r\n", "\n").replace("\r", "\n");
+        code = code.replaceAll("(?i)<br\\s*/?>", "\n");
+        code = code.replace("\t", "    ");
+        code = code.replaceAll("^\\n+", "").replaceAll("\\n+$", "");
+
+        // Preserva indentação (espaços -> &nbsp;) e quebras de linha (\n -> <br/>).
+        // Mantém entidades já existentes (&lt;, &gt;, &amp;...) para o markup HTML renderizar literalmente.
+        code = code.replace(" ", "&nbsp;");
+        code = code.replace("\n", "<br/>");
+
+        return "<font face=\"DejaVu Sans Mono\">" + code + "</font>";
     }
 
     private static String convertStylesToFontTags(String html) {
