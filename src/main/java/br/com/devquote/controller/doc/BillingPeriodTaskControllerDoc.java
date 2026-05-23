@@ -2,6 +2,7 @@ package br.com.devquote.controller.doc;
 
 import br.com.devquote.dto.request.BillingPeriodTaskRequest;
 import br.com.devquote.dto.response.BillingPeriodTaskResponse;
+import br.com.devquote.dto.response.TaskBillingLookupResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -105,6 +106,15 @@ public interface BillingPeriodTaskControllerDoc {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = BillingPeriodTaskRequest.class)))
             )
             @RequestBody List<BillingPeriodTaskRequest> requests);
+
+    @Operation(summary = "Find the billing period that contains a task by its code")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Billing period found for the task"),
+            @ApiResponse(responseCode = "404", description = "Task not linked to any billing period")
+    })
+    ResponseEntity<TaskBillingLookupResponse> findByTaskCode(
+            @Parameter(description = "Task code (exact match, case-insensitive)", required = true)
+            @RequestParam("code") String code);
 
     @Operation(summary = "Unlink multiple tasks from a billing period")
     @ApiResponses({

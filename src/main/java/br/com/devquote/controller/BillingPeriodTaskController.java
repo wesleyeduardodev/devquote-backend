@@ -3,6 +3,7 @@ package br.com.devquote.controller;
 import br.com.devquote.controller.doc.BillingPeriodTaskControllerDoc;
 import br.com.devquote.dto.request.BillingPeriodTaskRequest;
 import br.com.devquote.dto.response.BillingPeriodTaskResponse;
+import br.com.devquote.dto.response.TaskBillingLookupResponse;
 import br.com.devquote.enums.FlowType;
 import br.com.devquote.service.BillingPeriodTaskService;
 import jakarta.validation.Valid;
@@ -101,6 +102,14 @@ public class BillingPeriodTaskController implements BillingPeriodTaskControllerD
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BillingPeriodTaskResponse>> bulkLink(@RequestBody List<BillingPeriodTaskRequest> requests) {
         return ResponseEntity.ok(billingPeriodTaskService.bulkCreate(requests));
+    }
+
+    @GetMapping("/by-task-code")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<TaskBillingLookupResponse> findByTaskCode(@RequestParam("code") String code) {
+        return billingPeriodTaskService.findByTaskCode(code)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/billing-period/{billingPeriodId}/bulk-unlink")

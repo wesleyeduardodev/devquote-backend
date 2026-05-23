@@ -2,6 +2,7 @@ package br.com.devquote.service.impl;
 import br.com.devquote.adapter.BillingPeriodTaskAdapter;
 import br.com.devquote.dto.request.BillingPeriodTaskRequest;
 import br.com.devquote.dto.response.BillingPeriodTaskResponse;
+import br.com.devquote.dto.response.TaskBillingLookupResponse;
 import br.com.devquote.entity.Task;
 import br.com.devquote.entity.BillingPeriod;
 import br.com.devquote.entity.BillingPeriodTask;
@@ -138,6 +139,28 @@ public class BillingPeriodTaskServiceImpl implements BillingPeriodTaskService {
     public Optional<BillingPeriodTaskResponse> findByTaskId(Long taskId) {
         return billingPeriodTaskRepository.findByTaskId(taskId)
                 .map(BillingPeriodTaskAdapter::toResponseDTO);
+    }
+
+    @Override
+    public Optional<TaskBillingLookupResponse> findByTaskCode(String code) {
+        if (code == null || code.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return billingPeriodTaskRepository.findByTaskCode(code.trim())
+                .map(bpt -> {
+                    Task t = bpt.getTask();
+                    BillingPeriod bp = bpt.getBillingPeriod();
+                    return TaskBillingLookupResponse.builder()
+                            .taskId(t.getId())
+                            .taskCode(t.getCode())
+                            .taskTitle(t.getTitle())
+                            .billingPeriodId(bp.getId())
+                            .month(bp.getMonth())
+                            .year(bp.getYear())
+                            .status(bp.getStatus())
+                            .paymentDate(bp.getPaymentDate())
+                            .build();
+                });
     }
 
     @Override

@@ -1,6 +1,7 @@
 package br.com.devquote.service;
 import br.com.devquote.dto.request.BillingPeriodTaskRequest;
 import br.com.devquote.dto.response.BillingPeriodTaskResponse;
+import br.com.devquote.dto.response.TaskBillingLookupResponse;
 import br.com.devquote.enums.FlowType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,4 +38,6 @@ public interface BillingPeriodTaskService {
     boolean existsByTaskId(Long taskId);
 
     Optional<BillingPeriodTaskResponse> findByTaskId(Long taskId);
+
+    Optional<TaskBillingLookupResponse> findByTaskCode(String code);
 }

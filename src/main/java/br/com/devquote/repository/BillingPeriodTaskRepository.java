@@ -54,8 +54,16 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
     void deleteByBillingPeriodId(@Param("billingPeriodId") Long billingPeriodId);
 
     boolean existsByTaskId(Long taskId);
-    
+
     Optional<BillingPeriodTask> findByTaskId(Long taskId);
+
+    @Query("""
+        SELECT bpt FROM BillingPeriodTask bpt
+        JOIN FETCH bpt.task t
+        JOIN FETCH bpt.billingPeriod bp
+        WHERE LOWER(t.code) = LOWER(:code)
+        """)
+    Optional<BillingPeriodTask> findByTaskCode(@Param("code") String code);
 
     @Query(value = """
         SELECT bpt.id as billing_period_task_id,
