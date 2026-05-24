@@ -50,6 +50,12 @@ public class TaskBoardParameterHelper {
         return systemParameterService.getString("CLICKUP_ORDER_FIELD_ID", "");
     }
 
+    /** ID do custom field "Branch" no ClickUp. Quando preenchido, o sync de Delivery
+     *  propaga os PRs dos items pra esse campo + descrição da task. Vazio = pula. */
+    public String getClickUpBranchFieldId() {
+        return systemParameterService.getString("CLICKUP_BRANCH_FIELD_ID", "");
+    }
+
     public String getPrimaryStatus() {
         return systemParameterService.getString("CLICKUP_PRIMARY_STATUS", "a iniciar - dev interno");
     }

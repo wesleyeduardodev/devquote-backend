@@ -331,6 +331,83 @@ public class ClickUpClientImpl implements ClickUpClient {
     }
 
     @Override
+    public boolean updateTaskCustomField(String taskId, String fieldId, String value) {
+        if (taskId == null || taskId.isBlank() || fieldId == null || fieldId.isBlank()) {
+            return false;
+        }
+        String url = String.format("%s/task/%s/field/%s", CLICKUP_API_BASE, taskId, fieldId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", parameterHelper.getClickUpToken());
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("value", value == null ? "" : value);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response = clickUpRestTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return true;
+            }
+            log.warn("Resposta inesperada ao atualizar custom field {} da task {}: {}", fieldId, taskId, response.getStatusCode());
+            return false;
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("Task ou field nao encontrado no ClickUp: task={}, field={}", taskId, fieldId);
+            return false;
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Erro HTTP ao atualizar custom field {} da task {} - Status: {} - Body: {}",
+                    fieldId, taskId, e.getStatusCode(), e.getResponseBodyAsString());
+            return false;
+        } catch (Exception e) {
+            log.error("Erro inesperado ao atualizar custom field {} da task {}: {}", fieldId, taskId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateTaskDescription(String taskId, String description) {
+        if (taskId == null || taskId.isBlank()) {
+            return false;
+        }
+        String url = String.format("%s/task/%s", CLICKUP_API_BASE, taskId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", parameterHelper.getClickUpToken());
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // ClickUp tem 2 campos: 'description' (texto puro) e 'markdown_description'
+        // (renderizado como rich text). Quando setamos 'markdown_description', os
+        // comentários HTML (<!-- -->) usados como marcadores idempotentes ficam
+        // INVISÍVEIS na UI. Setamos só esse campo — ClickUp deriva o 'description'
+        // automaticamente removendo a formatação.
+        Map<String, Object> body = new HashMap<>();
+        body.put("markdown_description", description == null ? "" : description);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        try {
+            ResponseEntity<String> response = clickUpRestTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return true;
+            }
+            log.warn("Resposta inesperada ao atualizar descricao da task {}: {}", taskId, response.getStatusCode());
+            return false;
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("Task nao encontrada no ClickUp ao atualizar descricao: {}", taskId);
+            return false;
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Erro HTTP ao atualizar descricao da task {} - Status: {} - Body: {}",
+                    taskId, e.getStatusCode(), e.getResponseBodyAsString());
+            return false;
+        } catch (Exception e) {
+            log.error("Erro inesperado ao atualizar descricao da task {}: {}", taskId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    @Override
     public String getProviderName() {
         return "ClickUp";
     }

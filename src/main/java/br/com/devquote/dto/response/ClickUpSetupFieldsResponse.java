@@ -29,6 +29,9 @@ public class ClickUpSetupFieldsResponse {
     /** ID do field detectado como "Ordem" (match por nome). Null se não detectou. */
     private String suggestedOrderFieldId;
 
+    /** ID do field detectado como "Branch" (match por nome). Null se não detectou. */
+    private String suggestedBranchFieldId;
+
     @Data
     @Builder
     @NoArgsConstructor

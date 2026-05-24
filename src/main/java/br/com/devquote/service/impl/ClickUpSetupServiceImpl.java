@@ -45,6 +45,9 @@ public class ClickUpSetupServiceImpl implements ClickUpSetupService {
     private static final List<String> ORDER_FIELD_ALIASES = List.of(
             "ordem", "order", "priority", "prioridade"
     );
+    private static final List<String> BRANCH_FIELD_ALIASES = List.of(
+            "branch", "branches", "pr", "pull request", "merge request"
+    );
 
     private final RestTemplate clickUpRestTemplate;
     private final SystemParameterService systemParameterService;
@@ -211,6 +214,7 @@ public class ClickUpSetupServiceImpl implements ClickUpSetupService {
         // Auto-detect dos fields esperados
         ClickUpSetupFieldsResponse.Field developerField = findByNameAlias(all, DEV_FIELD_ALIASES);
         ClickUpSetupFieldsResponse.Field orderField = findByNameAlias(all, ORDER_FIELD_ALIASES);
+        ClickUpSetupFieldsResponse.Field branchField = findByNameAlias(all, BRANCH_FIELD_ALIASES);
 
         // Auto-detect da opção do user dentro do dev field, baseado no username
         String developerOptionId = null;
@@ -241,6 +245,7 @@ public class ClickUpSetupServiceImpl implements ClickUpSetupService {
                 .suggestedDeveloperFieldId(developerField != null ? developerField.getId() : null)
                 .suggestedDeveloperOptionId(developerOptionId)
                 .suggestedOrderFieldId(orderField != null ? orderField.getId() : null)
+                .suggestedBranchFieldId(branchField != null ? branchField.getId() : null)
                 .build();
     }
 
@@ -260,6 +265,10 @@ public class ClickUpSetupServiceImpl implements ClickUpSetupService {
         if (request.getOrderFieldId() != null && !request.getOrderFieldId().isBlank()) {
             upsert("CLICKUP_ORDER_FIELD_ID", request.getOrderFieldId(),
                     "Custom field Ordem (number) que ordena as tarefas no board.");
+        }
+        if (request.getBranchFieldId() != null && !request.getBranchFieldId().isBlank()) {
+            upsert("CLICKUP_BRANCH_FIELD_ID", request.getBranchFieldId(),
+                    "Custom field Branch (text) que recebe os PRs da entrega no sync.");
         }
 
         // Os opcionais (TASK_BOARD_PROVIDER, CLICKUP_PRIMARY_STATUS, CLICKUP_PRIORITY_STATUSES,
@@ -378,6 +387,7 @@ public class ClickUpSetupServiceImpl implements ClickUpSetupService {
             "CLICKUP_DEVELOPER_FIELD_ID",
             "CLICKUP_DEVELOPER_OPTION_ID",
             "CLICKUP_ORDER_FIELD_ID",
+            "CLICKUP_BRANCH_FIELD_ID",
             // Provider e preferências do board (criados via UI / preferences)
             "TASK_BOARD_PROVIDER",
             "CLICKUP_PRIMARY_STATUS",

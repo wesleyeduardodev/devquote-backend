@@ -2,6 +2,7 @@ package br.com.devquote.controller;
 
 import br.com.devquote.client.clickup.ClickUpClient;
 import br.com.devquote.controller.doc.ClickUpSyncControllerDoc;
+import br.com.devquote.dto.response.SyncPullRequestsResponse;
 import br.com.devquote.service.ClickUpSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,6 +86,19 @@ public class ClickUpSyncController implements ClickUpSyncControllerDoc {
 
             return ResponseEntity.internalServerError().body(response);
         }
+    }
+
+    /**
+     * Sincroniza os PRs dos items de uma Delivery específica pro ClickUp.
+     * Atualiza o custom field "Branch" + adiciona/atualiza/remove o bloco de PRs na descrição.
+     * Com no-op detection — não escreve no ClickUp se nada mudou.
+     */
+    @PostMapping("/deliveries/{deliveryId}/pull-requests")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<SyncPullRequestsResponse> syncPullRequestsForDelivery(@PathVariable Long deliveryId) {
+        log.info("Sync manual de PRs da Delivery {} pro ClickUp", deliveryId);
+        SyncPullRequestsResponse result = clickUpSyncService.syncPullRequestsForDelivery(deliveryId);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/task/{taskCode}")

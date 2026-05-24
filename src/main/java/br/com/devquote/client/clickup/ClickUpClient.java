@@ -34,5 +34,19 @@ public interface ClickUpClient {
      */
     Map<String, Object> getCurrentUser();
 
+    /**
+     * Atualiza o valor de um custom field de uma task.
+     * Endpoint: POST /task/{taskId}/field/{fieldId} com body {"value": "..."}
+     * Retorna true se 2xx.
+     */
+    boolean updateTaskCustomField(String taskId, String fieldId, String value);
+
+    /**
+     * Atualiza a descrição (texto) de uma task.
+     * Endpoint: PUT /task/{taskId} com body {"description": "..."}
+     * Retorna true se 2xx.
+     */
+    boolean updateTaskDescription(String taskId, String description);
+
     String getProviderName();
 }

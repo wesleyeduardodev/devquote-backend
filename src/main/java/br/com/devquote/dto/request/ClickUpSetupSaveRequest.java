@@ -23,4 +23,8 @@ public class ClickUpSetupSaveRequest {
 
     /** Opcional — pode ser null/vazio se a lista não tiver campo de ordenação. */
     private String orderFieldId;
+
+    /** Opcional — ID do custom field "Branch" no ClickUp. Quando preenchido, o sync de
+     *  Delivery escreve os PRs dos items nesse field + adiciona bloco na descrição. */
+    private String branchFieldId;
 }
