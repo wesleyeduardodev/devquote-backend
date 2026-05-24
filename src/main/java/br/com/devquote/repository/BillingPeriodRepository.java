@@ -34,7 +34,7 @@ public interface BillingPeriodRepository extends JpaRepository<BillingPeriod, Lo
         WHERE (:year IS NULL OR bp.year = :year)
           AND (:month IS NULL OR bp.month = :month)
           AND (:status IS NULL OR bp.status = :status)
-        ORDER BY bp.id DESC
+        ORDER BY bp.year DESC, bp.month DESC
         """)
     List<BillingPeriod> findByFilters(
         @Param("year") Integer year,

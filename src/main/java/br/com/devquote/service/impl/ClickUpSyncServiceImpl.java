@@ -257,11 +257,11 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
             }
         }
 
-        // 4) Descrição — só anexa o bloco se há PRs (sem strip/idempotência: se o user
-        // clicar 3x, vão aparecer 3 blocos — comportamento esperado. Pra atualizar, o
-        // user apaga o trecho manualmente no ClickUp antes do próximo sync).
-        // Se prCount==0, não toca na descrição.
-        if (prCount > 0) {
+        // 4) Descrição — só anexa o bloco quando há 2+ PRs (com 1 PR, o campo Branch
+        // sozinho já é o suficiente; com 0, nada a anexar). Sem strip/idempotência:
+        // cada chamada = +1 bloco no fim. Pra atualizar, o user apaga manualmente no
+        // ClickUp antes do próximo sync.
+        if (prCount >= 2) {
             String currentDesc = (String) taskMap.get("markdown_description");
             if (currentDesc == null) currentDesc = (String) taskMap.get("description");
             String newDesc = appendPrBlock(currentDesc, descBlockBody);
@@ -273,7 +273,8 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
                 log.warn("[branch-sync] Delivery {} | Falha ao atualizar descrição", delivery.getId());
             }
         } else {
-            log.info("[branch-sync] Delivery {} | Sem PRs — descrição não modificada", delivery.getId());
+            log.info("[branch-sync] Delivery {} | {} PR(s) — descrição não modificada (só Branch)",
+                    delivery.getId(), prCount);
         }
 
         return SyncPullRequestsResponse.builder()
@@ -309,11 +310,12 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
             return "Nada a sincronizar (sem PRs nos items).";
         }
         if (prCount == 1) {
-            StringBuilder sb = new StringBuilder("Sincronizado: 1 PR.");
-            if (branchUpdated) sb.append(" Campo Branch atualizado.");
-            if (descUpdated) sb.append(" Bloco anexado na descrição.");
-            if (!hasBranchField && !branchUpdated) sb.append(" (Campo Branch não configurado — só descrição.)");
-            return sb.toString();
+            if (!hasBranchField) {
+                return "Sincronizado: 1 PR. (Campo Branch não configurado — nada foi escrito.)";
+            }
+            return branchUpdated
+                    ? "Sincronizado: 1 PR no campo Branch."
+                    : "Tudo já estava sincronizado no campo Branch.";
         }
         StringBuilder sb = new StringBuilder("Sincronizado: " + prCount + " PRs.");
         if (descUpdated) sb.append(" Bloco anexado na descrição.");
