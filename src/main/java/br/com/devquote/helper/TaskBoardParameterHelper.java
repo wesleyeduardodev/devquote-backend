@@ -23,9 +23,10 @@ public class TaskBoardParameterHelper {
     private static final String DEFAULT_STATUSES =
             "a iniciar - dev interno,em progresso,desenvolvimento concluído,pronto para testes,testes concluídos,validação em produção,em análise - suporte,backlog";
 
-    // Status considerados "finalizados" — ocultos do board pra não poluir
-    // (board é pra ver o que ainda precisa de atenção, não revisar arquivado).
-    private static final String DEFAULT_HIDDEN_STATUSES = "complete,concluído";
+    // Default: NENHUM status oculto — mostra tudo o que vier do ClickUp.
+    // O user esconde o que não quiser ver via botão 👁️ no /priorities
+    // (1 click cria/atualiza o CLICKUP_HIDDEN_STATUSES no banco).
+    private static final String DEFAULT_HIDDEN_STATUSES = "";
 
     private final SystemParameterService systemParameterService;
 
