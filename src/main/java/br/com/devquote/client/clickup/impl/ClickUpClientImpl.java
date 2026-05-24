@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -32,6 +33,9 @@ public class ClickUpClientImpl implements ClickUpClient {
 
     private final RestTemplate clickUpRestTemplate;
     private final ClickUpParameterHelper parameterHelper;
+
+    // Cache do current user — chaveado pelo token (se o token mudar, descobre de novo).
+    private final Map<String, Map<String, Object>> currentUserCache = new ConcurrentHashMap<>();
 
     @Override
     public boolean updateTaskStatus(String taskId, String status) {
@@ -196,7 +200,12 @@ public class ClickUpClientImpl implements ClickUpClient {
             try {
                 StringBuilder query = new StringBuilder();
                 query.append("page=").append(page)
-                        .append("&include_closed=true")
+                        // include_closed=false: a API NÃO retorna tarefas "closed"
+                        // (geralmente status COMPLETE/CONCLUÍDO). Isso evita trazer
+                        // milhares de tarefas históricas que iriam ser filtradas
+                        // depois pelo CLICKUP_HIDDEN_STATUSES — economia enorme de
+                        // tempo de resposta.
+                        .append("&include_closed=false")
                         .append("&subtasks=false");
                 if (statuses != null) {
                     for (String s : statuses) {
@@ -231,6 +240,94 @@ public class ClickUpClientImpl implements ClickUpClient {
         }
 
         return all;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> getListTasksByAssignee(String listId, List<String> statuses, String assigneeUserId) {
+        List<Map<String, Object>> all = new ArrayList<>();
+        if (listId == null || listId.trim().isEmpty()
+                || assigneeUserId == null || assigneeUserId.trim().isEmpty()) {
+            return all;
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", parameterHelper.getClickUpToken());
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        for (int page = 0; page < 50; page++) {
+            try {
+                StringBuilder query = new StringBuilder();
+                query.append("page=").append(page)
+                        .append("&include_closed=true")
+                        .append("&subtasks=false")
+                        .append("&assignees%5B%5D=").append(UriUtils.encodeQueryParam(assigneeUserId, StandardCharsets.UTF_8));
+                if (statuses != null) {
+                    for (String s : statuses) {
+                        query.append("&statuses%5B%5D=").append(UriUtils.encodeQueryParam(s, StandardCharsets.UTF_8));
+                    }
+                }
+
+                URI uri = URI.create(CLICKUP_API_BASE + "/list/" + listId + "/task?" + query);
+
+                ResponseEntity<Map> response = clickUpRestTemplate.exchange(uri, HttpMethod.GET, entity, Map.class);
+                Map<String, Object> body = response.getBody();
+                if (body == null) {
+                    break;
+                }
+                List<Map<String, Object>> tasks = (List<Map<String, Object>>) body.get("tasks");
+                if (tasks == null || tasks.isEmpty()) {
+                    break;
+                }
+                all.addAll(tasks);
+
+                Object lastPage = body.get("last_page");
+                if (Boolean.TRUE.equals(lastPage) || tasks.size() < 100) {
+                    break;
+                }
+            } catch (Exception e) {
+                log.error("Erro ao buscar tarefas por assignee na list {} (page {}): {}", listId, page, e.getMessage());
+                break;
+            }
+        }
+
+        return all;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getCurrentUser() {
+        String token = parameterHelper.getClickUpToken();
+        if (token == null || token.trim().isEmpty()) {
+            return null;
+        }
+
+        // Cache por token — chamada única por instância pra cada token
+        Map<String, Object> cached = currentUserCache.get(token);
+        if (cached != null) {
+            return cached;
+        }
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", token);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            URI uri = URI.create(CLICKUP_API_BASE + "/user");
+            ResponseEntity<Map> response = clickUpRestTemplate.exchange(uri, HttpMethod.GET, entity, Map.class);
+            Map<String, Object> body = response.getBody();
+            if (body == null) return null;
+
+            Object userObj = body.get("user");
+            if (!(userObj instanceof Map)) return null;
+
+            Map<String, Object> user = (Map<String, Object>) userObj;
+            currentUserCache.put(token, user);
+            return user;
+        } catch (Exception e) {
+            log.warn("Falha ao buscar usuario atual do ClickUp (token invalido?): {}", e.getMessage());
+            return null;
+        }
     }
 
     @Override

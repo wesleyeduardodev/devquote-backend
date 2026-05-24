@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,22 +43,78 @@ public class ClickUpTaskBoardProvider implements TaskBoardProvider {
     }
 
     @Override
+    public Map<String, Object> getCurrentUser() {
+        if (!clickUpParameterHelper.isIntegrationEnabled()) return null;
+        return clickUpClient.getCurrentUser();
+    }
+
+    @Override
     public List<BoardTask> fetchPriorityTasks() {
+        return fetchPriorityTasks(false);
+    }
+
+    @Override
+    public List<BoardTask> fetchPriorityTasks(boolean includeAssignee) {
         if (!isConfigured()) {
             return Collections.emptyList();
         }
 
+        long t0 = System.currentTimeMillis();
         String orderFieldId = config.getClickUpOrderFieldId();
-        List<Map<String, Object>> raw = clickUpClient.getListTasksFiltered(
-                config.getClickUpListId(),
-                config.getPriorityStatuses(),
+        String listId = config.getClickUpListId();
+
+        // 1) Sempre busca pelo custom field Desenvolvedor (prioridade primária).
+        long tDev0 = System.currentTimeMillis();
+        List<Map<String, Object>> rawByDev = clickUpClient.getListTasksFiltered(
+                listId,
+                null,
                 config.getClickUpDeveloperFieldId(),
                 config.getClickUpDeveloperOptionId());
+        long tDev = System.currentTimeMillis() - tDev0;
+        log.info("[priority-board] Dev field trouxe {} tarefa(s) em {}ms", rawByDev.size(), tDev);
 
-        List<BoardTask> result = new ArrayList<>();
-        for (Map<String, Object> t : raw) {
+        // 2) Se o caller pediu pra incluir Responsável e há userId, busca também e faz UNION dedup.
+        Map<String, Map<String, Object>> merged = new LinkedHashMap<>();
+        for (Map<String, Object> t : rawByDev) {
+            Object id = t.get("id");
+            if (id != null) merged.put(id.toString(), t);
+        }
+        if (includeAssignee) {
+            // Prioridade: override no parâmetro CLICKUP_BOARD_ASSIGNEE_USER_ID.
+            // Fallback automático: user dono do token (descoberto via /api/v2/user).
+            String userId = config.getBoardAssigneeUserId();
+            String origem = "param";
+            if (userId == null || userId.trim().isEmpty()) {
+                Map<String, Object> currentUser = clickUpClient.getCurrentUser();
+                if (currentUser != null && currentUser.get("id") != null) {
+                    userId = currentUser.get("id").toString();
+                    origem = "auto-detect (token)";
+                }
+            }
+            if (userId != null && !userId.trim().isEmpty()) {
+                long tAs0 = System.currentTimeMillis();
+                List<Map<String, Object>> rawByAssignee = clickUpClient.getListTasksByAssignee(
+                        listId, null, userId);
+                long tAs = System.currentTimeMillis() - tAs0;
+                int novosUnicos = 0;
+                for (Map<String, Object> t : rawByAssignee) {
+                    Object id = t.get("id");
+                    if (id == null) continue;
+                    if (merged.putIfAbsent(id.toString(), t) == null) novosUnicos++;
+                }
+                log.info("[priority-board] Assignee userId={} ({}) trouxe {} tarefa(s) em {}ms — {} novas após dedup",
+                        userId, origem, rawByAssignee.size(), tAs, novosUnicos);
+            } else {
+                log.info("[priority-board] includeAssignee=true mas sem userId disponível — pulando 2ª chamada");
+            }
+        }
+
+        List<BoardTask> result = new ArrayList<>(merged.size());
+        for (Map<String, Object> t : merged.values()) {
             result.add(mapTask(t, orderFieldId));
         }
+        log.info("[priority-board] Total final: {} tarefa(s) únicas em {}ms (includeAssignee={})",
+                result.size(), System.currentTimeMillis() - t0, includeAssignee);
         return result;
     }
 

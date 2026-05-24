@@ -1,6 +1,7 @@
 package br.com.devquote.client.board;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Provedor de board de tarefas (ClickUp hoje; Jira/outros no futuro).
@@ -18,6 +19,23 @@ public interface TaskBoardProvider {
     /** True se há config suficiente (token + ids) para consultar o board. */
     boolean isConfigured();
 
-    /** Busca as tarefas de prioridade do dono, já filtradas pelos status configurados. */
+    /** Busca as tarefas de prioridade do dono (custom field Desenvolvedor). */
     List<BoardTask> fetchPriorityTasks();
+
+    /**
+     * Busca as tarefas de prioridade do dono, opcionalmente incluindo tarefas
+     * onde o dono é o Responsável (assignee). Implementações que não conhecem
+     * o conceito de assignee podem ignorar o flag.
+     */
+    default List<BoardTask> fetchPriorityTasks(boolean includeAssignee) {
+        return fetchPriorityTasks();
+    }
+
+    /**
+     * Retorna info do user conectado (dono do token), pra a UI mostrar feedback.
+     * Default null pra providers que não conhecem essa noção.
+     */
+    default Map<String, Object> getCurrentUser() {
+        return null;
+    }
 }

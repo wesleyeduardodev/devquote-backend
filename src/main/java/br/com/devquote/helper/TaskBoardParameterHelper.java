@@ -16,8 +16,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TaskBoardParameterHelper {
 
+    // Ordem do board (Opção A — primary no topo, auxiliares no fim).
+    // Agora serve apenas como "ordem preferencial": a busca no ClickUp
+    // não filtra por status, traz tudo que tem o developer. Status que
+    // não estão aqui caem no fim do board, na ordem que aparecerem.
     private static final String DEFAULT_STATUSES =
-            "a iniciar - dev interno,em progresso,desenvolvimento concluído,pronto para testes,testes concluídos,validação em produção";
+            "a iniciar - dev interno,em progresso,desenvolvimento concluído,pronto para testes,testes concluídos,validação em produção,em análise - suporte,backlog";
+
+    // Status considerados "finalizados" — ocultos do board pra não poluir
+    // (board é pra ver o que ainda precisa de atenção, não revisar arquivado).
+    private static final String DEFAULT_HIDDEN_STATUSES = "complete,concluído";
 
     private final SystemParameterService systemParameterService;
 
@@ -45,6 +53,12 @@ public class TaskBoardParameterHelper {
         return systemParameterService.getString("CLICKUP_PRIMARY_STATUS", "a iniciar - dev interno");
     }
 
+    /** User ID numérico do ClickUp pra filtrar tarefas onde o user é Responsável (assignee).
+     *  Quando vazio, o board não combina por responsável — só pelo custom field Developer. */
+    public String getBoardAssigneeUserId() {
+        return systemParameterService.getString("CLICKUP_BOARD_ASSIGNEE_USER_ID", "");
+    }
+
     public List<String> getPriorityStatuses() {
         String csv = systemParameterService.getString("CLICKUP_PRIORITY_STATUSES", DEFAULT_STATUSES);
         if (csv == null || csv.trim().isEmpty()) {
@@ -53,6 +67,34 @@ public class TaskBoardParameterHelper {
         return Arrays.stream(csv.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Status ocultados do board (lower-case, comparados case-insensitive).
+     *
+     * Regras:
+     *  - Parâmetro NÃO cadastrado → usa default ({@link #DEFAULT_HIDDEN_STATUSES}).
+     *  - Parâmetro cadastrado com valor VAZIO → não oculta nada (mostra TUDO).
+     *  - Parâmetro com valor → usa o CSV configurado.
+     */
+    public List<String> getHiddenStatuses() {
+        String csv;
+        try {
+            csv = systemParameterService.getString("CLICKUP_HIDDEN_STATUSES");
+        } catch (Exception e) {
+            // Não cadastrado → default
+            csv = DEFAULT_HIDDEN_STATUSES;
+        }
+        if (csv == null) csv = "";  // valor null no banco trata igual a vazio
+        if (csv.trim().isEmpty()) {
+            // Cadastrado vazio → lista vazia → não oculta nada
+            return new java.util.ArrayList<>();
+        }
+        return Arrays.stream(csv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(String::toLowerCase)
                 .collect(Collectors.toList());
     }
 }

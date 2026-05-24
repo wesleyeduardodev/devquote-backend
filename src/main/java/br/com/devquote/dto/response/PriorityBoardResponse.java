@@ -18,6 +18,19 @@ public class PriorityBoardResponse {
     private String fetchedAt;
     private List<Group> groups;
 
+    /** User dono do token configurado — útil pra UI mostrar "Conectado como X". Null quando não detectado. */
+    private CurrentUser currentUser;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CurrentUser {
+        private String id;
+        private String username;
+        private String email;
+    }
+
     @Data
     @Builder
     @NoArgsConstructor

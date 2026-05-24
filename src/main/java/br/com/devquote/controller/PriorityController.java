@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -21,14 +22,16 @@ public class PriorityController {
 
     @GetMapping("/board")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PriorityBoardResponse> getBoard() {
-        return ResponseEntity.ok(priorityBoardService.getBoard());
+    public ResponseEntity<PriorityBoardResponse> getBoard(
+            @RequestParam(name = "includeAssignee", defaultValue = "true") boolean includeAssignee) {
+        return ResponseEntity.ok(priorityBoardService.getBoard(includeAssignee));
     }
 
     @PostMapping("/board/refresh")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PriorityBoardResponse> refresh() {
+    public ResponseEntity<PriorityBoardResponse> refresh(
+            @RequestParam(name = "includeAssignee", defaultValue = "true") boolean includeAssignee) {
         priorityBoardService.evict();
-        return ResponseEntity.ok(priorityBoardService.getBoard());
+        return ResponseEntity.ok(priorityBoardService.getBoard(includeAssignee));
     }
 }
