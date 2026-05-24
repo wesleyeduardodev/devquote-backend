@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,21 +34,7 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
     private final ClickUpParameterHelper parameterHelper;
     private final TaskBoardParameterHelper boardConfig;
 
-    // Marcador VISÍVEL pra idempotência: o cabeçalho em negrito identifica o bloco
-    // no mergeDescription (acha por regex, substitui in-place, ou remove se vazio).
-    // Marcador antigo (<!-- ... -->) é detectado e limpo pra migração transparente.
     private static final String PR_BLOCK_HEADER = "**PRs da entrega:**";
-
-    // Bloco com o cabeçalho VISÍVEL: o header em negrito + bulletpoints "- ProjetoX: url".
-    private static final Pattern NEW_BLOCK_WITH_SEP = Pattern.compile(
-            "(?ms)\\n*\\n---\\n\\Q" + PR_BLOCK_HEADER + "\\E(?:\\r?\\n- [^\\r\\n]*)*");
-    private static final Pattern NEW_BLOCK_NO_SEP = Pattern.compile(
-            "(?m)^\\Q" + PR_BLOCK_HEADER + "\\E(?:\\r?\\n- [^\\r\\n]*)*");
-    // Marcadores HTML antigos — só usados pra migrar descrições já sincronizadas.
-    private static final Pattern LEGACY_BLOCK_WITH_SEP = Pattern.compile(
-            "(?s)\\n*\\n---\\n<!-- devquote:prs:begin -->.*?<!-- devquote:prs:end -->");
-    private static final Pattern LEGACY_BLOCK_NO_SEP = Pattern.compile(
-            "(?s)<!-- devquote:prs:begin -->.*?<!-- devquote:prs:end -->");
 
     @Override
     @Transactional
@@ -272,21 +257,23 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
             }
         }
 
-        // 4) Descrição — lê markdown_description (o que ClickUp realmente renderiza
-        // como rich text). Fallback pra 'description' caso o ClickUp não tenha o markdown.
-        String currentDesc = (String) taskMap.get("markdown_description");
-        if (currentDesc == null) currentDesc = (String) taskMap.get("description");
-        String newDesc = mergeDescription(currentDesc, descBlockBody);
-        if (!Objects.equals(safe(currentDesc), safe(newDesc))) {
+        // 4) Descrição — só anexa o bloco se há PRs (sem strip/idempotência: se o user
+        // clicar 3x, vão aparecer 3 blocos — comportamento esperado. Pra atualizar, o
+        // user apaga o trecho manualmente no ClickUp antes do próximo sync).
+        // Se prCount==0, não toca na descrição.
+        if (prCount > 0) {
+            String currentDesc = (String) taskMap.get("markdown_description");
+            if (currentDesc == null) currentDesc = (String) taskMap.get("description");
+            String newDesc = appendPrBlock(currentDesc, descBlockBody);
             boolean ok = clickUpClient.updateTaskDescription(taskCode, newDesc);
             if (ok) {
                 descriptionUpdated = true;
-                log.info("[branch-sync] Delivery {} | Descrição atualizada", delivery.getId());
+                log.info("[branch-sync] Delivery {} | Bloco de PRs anexado na descrição", delivery.getId());
             } else {
                 log.warn("[branch-sync] Delivery {} | Falha ao atualizar descrição", delivery.getId());
             }
         } else {
-            log.debug("[branch-sync] Delivery {} | Descrição já sincronizada, no-op", delivery.getId());
+            log.info("[branch-sync] Delivery {} | Sem PRs — descrição não modificada", delivery.getId());
         }
 
         return SyncPullRequestsResponse.builder()
@@ -317,66 +304,36 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
     }
 
     private static String buildMessage(int prCount, boolean branchUpdated, boolean descUpdated, boolean hasBranchField) {
-        if (!branchUpdated && !descUpdated) {
-            if (prCount == 0) return "Nada a sincronizar (sem PRs nos items).";
-            return "Tudo já estava sincronizado no ClickUp.";
-        }
         if (prCount == 0) {
-            return "Branch e descrição limpos no ClickUp (entrega sem PRs).";
+            if (branchUpdated) return "Campo Branch limpo (entrega sem PRs).";
+            return "Nada a sincronizar (sem PRs nos items).";
         }
         if (prCount == 1) {
             StringBuilder sb = new StringBuilder("Sincronizado: 1 PR.");
             if (branchUpdated) sb.append(" Campo Branch atualizado.");
-            if (descUpdated) sb.append(" Descrição atualizada.");
+            if (descUpdated) sb.append(" Bloco anexado na descrição.");
             if (!hasBranchField && !branchUpdated) sb.append(" (Campo Branch não configurado — só descrição.)");
             return sb.toString();
         }
         StringBuilder sb = new StringBuilder("Sincronizado: " + prCount + " PRs.");
-        if (descUpdated) sb.append(" Descrição atualizada.");
+        if (descUpdated) sb.append(" Bloco anexado na descrição.");
         if (branchUpdated) sb.append(" Campo Branch limpo (regra: Branch só recebe quando há 1 PR).");
         return sb.toString();
     }
 
     /**
-     * Estratégia "strip-then-append": tira todos os blocos existentes (formato novo e
-     * legado com `<!-- -->`) e, se há conteúdo novo, anexa um bloco fresco no fim.
-     * Isso garante idempotência (nunca duplica) e migração transparente do formato antigo.
-     *
-     *   - Se descBlockBody VAZIO: remove qualquer bloco existente e retorna o resto.
-     *   - Se descBlockBody preenchido: remove blocos existentes, depois anexa o novo
-     *     com separador "\n\n---\n" (ou só o bloco se a descrição original era vazia).
+     * Anexa o bloco de PRs no fim da descrição. Sem idempotência: cada chamada =
+     * +1 bloco no fim (decisão consciente — usuário limpa manualmente se quiser
+     * substituir, e isso evita complexidade de regex que falha com formatação do ClickUp).
      */
-    static String mergeDescription(String current, String descBlockBody) {
-        boolean removing = descBlockBody == null || descBlockBody.isBlank();
-
-        String cleaned = stripAllBlocks(current);
-
-        if (removing) {
-            return cleaned;
-        }
-
+    static String appendPrBlock(String current, String descBlockBody) {
         String newBlock = PR_BLOCK_HEADER + "\n" + descBlockBody;
 
-        if (cleaned.isBlank()) {
+        if (current == null || current.isBlank()) {
             return newBlock;
         }
 
-        String trimmed = cleaned.replaceAll("\\s+$", "");
+        String trimmed = current.replaceAll("\\s+$", "");
         return trimmed + "\n\n---\n" + newBlock;
-    }
-
-    /**
-     * Remove TODOS os blocos de PRs (formato novo "**PRs da entrega:**" e formato
-     * legado "<!-- devquote:prs:begin --> ... <!-- devquote:prs:end -->"), com seus
-     * separadores "---" precedentes quando existem. Idempotente: chamar 2x = 1x.
-     */
-    private static String stripAllBlocks(String current) {
-        if (current == null) return "";
-        String s = current;
-        s = LEGACY_BLOCK_WITH_SEP.matcher(s).replaceAll("");
-        s = LEGACY_BLOCK_NO_SEP.matcher(s).replaceAll("");
-        s = NEW_BLOCK_WITH_SEP.matcher(s).replaceAll("");
-        s = NEW_BLOCK_NO_SEP.matcher(s).replaceAll("");
-        return s;
     }
 }
