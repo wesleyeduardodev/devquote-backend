@@ -3,10 +3,15 @@ package br.com.devquote.service.impl;
 import br.com.devquote.client.board.BoardTask;
 import br.com.devquote.client.board.TaskBoardProvider;
 import br.com.devquote.client.board.TaskBoardProviderFactory;
+import br.com.devquote.dto.request.BoardPreferencesRequest;
+import br.com.devquote.dto.request.SystemParameterRequest;
 import br.com.devquote.dto.response.PriorityBoardResponse;
+import br.com.devquote.entity.SystemParameter;
 import br.com.devquote.helper.TaskBoardParameterHelper;
+import br.com.devquote.repository.SystemParameterRepository;
 import br.com.devquote.repository.TaskRepository;
 import br.com.devquote.service.PriorityBoardService;
+import br.com.devquote.service.SystemParameterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -33,6 +38,8 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
     private final TaskBoardProviderFactory providerFactory;
     private final TaskBoardParameterHelper config;
     private final TaskRepository taskRepository;
+    private final SystemParameterService systemParameterService;
+    private final SystemParameterRepository systemParameterRepository;
 
     @Override
     @Cacheable(value = "priorityBoard", key = "'board-' + #includeAssignee")
@@ -77,10 +84,11 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
         }
         // Depois inclui as tarefas — agrupando pelo nome real que veio do ClickUp,
         // mas se já existir um bucket case-insensitive (do statusOrder), reusa.
+        // IMPORTANTE: ocultos NÃO são removidos aqui — eles ainda entram no response
+        // com flag `hidden=true` pra UI poder oferecer "ver ocultos".
         for (BoardTask t : tasks) {
             String status = t.getStatusName();
             if (status == null || status.trim().isEmpty()) continue;
-            if (hidden.contains(status.toLowerCase())) continue;
 
             // procura bucket existente case-insensitive
             String bucketKey = byStatus.keySet().stream()
@@ -127,6 +135,7 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
             groups.add(PriorityBoardResponse.Group.builder()
                     .status(entry.getKey())
                     .primary(entry.getKey() != null && entry.getKey().equalsIgnoreCase(primaryStatus))
+                    .hidden(entry.getKey() != null && hidden.contains(entry.getKey().toLowerCase()))
                     .count(mapped.size())
                     .tasks(mapped)
                     .build());
@@ -156,5 +165,47 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
     @CacheEvict(value = "priorityBoard", allEntries = true)
     public void evict() {
         log.info("Cache 'priorityBoard' invalidado (refresh manual).");
+    }
+
+    @Override
+    @CacheEvict(value = "priorityBoard", allEntries = true)
+    public void updatePreferences(BoardPreferencesRequest request) {
+        if (request == null) return;
+
+        if (request.getOrderedStatuses() != null) {
+            String csv = String.join(",", request.getOrderedStatuses());
+            upsertParam("CLICKUP_PRIORITY_STATUSES", csv,
+                    "Ordem dos grupos no board (CSV). Editável via drag-and-drop em /priorities.");
+            log.info("[board-prefs] Nova ordem: {}", csv);
+        }
+
+        if (request.getPrimaryStatus() != null) {
+            upsertParam("CLICKUP_PRIMARY_STATUS", request.getPrimaryStatus(),
+                    "Status com badge \"Principal\" no board. Editável via UI em /priorities.");
+            log.info("[board-prefs] Novo principal: {}", request.getPrimaryStatus());
+        }
+
+        if (request.getHiddenStatuses() != null) {
+            String csv = String.join(",", request.getHiddenStatuses());
+            upsertParam("CLICKUP_HIDDEN_STATUSES", csv,
+                    "Status ocultados do board (CSV). Vazio = mostra tudo. Editável via UI em /priorities.");
+            log.info("[board-prefs] Novos ocultos: [{}]", csv);
+        }
+    }
+
+    private void upsertParam(String name, String value, String description) {
+        if (value == null) value = "";
+        Optional<SystemParameter> existing = systemParameterRepository.findByName(name);
+        SystemParameterRequest dto = SystemParameterRequest.builder()
+                .name(name)
+                .value(value)
+                .description(description)
+                .isEncrypted(false)
+                .build();
+        if (existing.isPresent()) {
+            systemParameterService.update(existing.get().getId(), dto);
+        } else {
+            systemParameterService.create(dto);
+        }
     }
 }

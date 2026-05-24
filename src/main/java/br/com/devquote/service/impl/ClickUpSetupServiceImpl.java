@@ -262,18 +262,11 @@ public class ClickUpSetupServiceImpl implements ClickUpSetupService {
                     "Custom field Ordem (number) que ordena as tarefas no board.");
         }
 
-        // ===== Opcionais com defaults (cria SOMENTE se não existir — preserva customização) =====
-        createIfMissing("TASK_BOARD_PROVIDER", "CLICKUP",
-                "Provider do board de prioridades (CLICKUP, JIRA, ...).");
-        createIfMissing("CLICKUP_PRIMARY_STATUS", "a iniciar - dev interno",
-                "Status com badge \"Principal\" no board (destaque visual).");
-        createIfMissing("CLICKUP_PRIORITY_STATUSES",
-                "a iniciar - dev interno,em progresso,desenvolvimento concluído,pronto para testes,testes concluídos,validação em produção,em análise - suporte,backlog",
-                "Ordem dos grupos no board (CSV, primeiros aparecem no topo).");
-        createIfMissing("CLICKUP_BOARD_ASSIGNEE_USER_ID", "",
-                "User ID do ClickUp pra filtrar tarefas onde sou Responsável. Vazio = auto-detect via token.");
-        createIfMissing("CLICKUP_HIDDEN_STATUSES", "complete,concluído",
-                "Lista CSV de status ocultos do board. Vazio = mostra todos. Default esconde finalizados.");
+        // Os opcionais (TASK_BOARD_PROVIDER, CLICKUP_PRIMARY_STATUS, CLICKUP_PRIORITY_STATUSES,
+        // CLICKUP_BOARD_ASSIGNEE_USER_ID, CLICKUP_HIDDEN_STATUSES) NÃO são criados aqui.
+        // Defaults sensatos vivem no código (TaskBoardParameterHelper). Quando o user
+        // interagir com a UI do board (drag pra reordenar, marcar principal, ocultar),
+        // os parâmetros são criados sob demanda pela rota PUT /priorities/board/preferences.
 
         // Invalida cache do board pra próxima leitura usar a config nova
         priorityBoardService.evict();
@@ -371,5 +364,39 @@ public class ClickUpSetupServiceImpl implements ClickUpSetupService {
                 .description(description)
                 .isEncrypted(false)
                 .build());
+    }
+
+    /**
+     * Todos os parâmetros relacionados à integração ClickUp/board de prioridades.
+     * Reset apaga todos eles — começa 100% do zero, como um tenant novo.
+     */
+    private static final List<String> ALL_CLICKUP_PARAM_NAMES = List.of(
+            // Núcleo da integração (criados pelo wizard)
+            "CLICKUP_INTEGRATION_ENABLED",
+            "CLICKUP_TOKEN",
+            "CLICKUP_BOARD_LIST_ID",
+            "CLICKUP_DEVELOPER_FIELD_ID",
+            "CLICKUP_DEVELOPER_OPTION_ID",
+            "CLICKUP_ORDER_FIELD_ID",
+            // Provider e preferências do board (criados via UI / preferences)
+            "TASK_BOARD_PROVIDER",
+            "CLICKUP_PRIMARY_STATUS",
+            "CLICKUP_PRIORITY_STATUSES",
+            "CLICKUP_BOARD_ASSIGNEE_USER_ID",
+            "CLICKUP_HIDDEN_STATUSES"
+    );
+
+    @Override
+    public void reset() {
+        int deleted = 0;
+        for (String name : ALL_CLICKUP_PARAM_NAMES) {
+            Optional<SystemParameter> existing = systemParameterRepository.findByName(name);
+            if (existing.isPresent()) {
+                systemParameterService.delete(existing.get().getId());
+                deleted++;
+            }
+        }
+        priorityBoardService.evict();
+        log.info("[clickup-setup] Reset executado — {} parâmetro(s) ClickUp removido(s). Volta ao estado de tenant novo.", deleted);
     }
 }

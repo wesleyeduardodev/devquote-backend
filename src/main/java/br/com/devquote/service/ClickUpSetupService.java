@@ -35,4 +35,11 @@ public interface ClickUpSetupService {
 
     /** Persiste os 5 parâmetros no system_parameter (cria ou atualiza). */
     void save(ClickUpSetupSaveRequest request);
+
+    /**
+     * Apaga os parâmetros do núcleo da integração ClickUp (token, listId, devField,
+     * devOption, orderField, integrationEnabled) — força o user a reconfigurar o wizard
+     * do zero. Preferências do board (ordem/principal/ocultos) são preservadas.
+     */
+    void reset();
 }

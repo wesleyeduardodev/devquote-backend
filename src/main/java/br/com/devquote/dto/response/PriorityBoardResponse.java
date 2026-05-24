@@ -38,6 +38,8 @@ public class PriorityBoardResponse {
     public static class Group {
         private String status;
         private boolean primary;
+        /** Marcado como hidden via CLICKUP_HIDDEN_STATUSES — não some, só sinaliza pra UI esconder por padrão. */
+        private boolean hidden;
         private int count;
         private List<Task> tasks;
     }

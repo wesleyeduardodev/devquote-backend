@@ -82,4 +82,13 @@ public class ClickUpSetupController {
         service.save(request);
         return ResponseEntity.noContent().build();
     }
+
+    /** Apaga os parâmetros do núcleo (token, listId, devField, devOption, orderField, enabled).
+     *  Preferências do board (ordem/principal/ocultos) são preservadas. */
+    @org.springframework.web.bind.annotation.DeleteMapping("/reset")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> reset() {
+        service.reset();
+        return ResponseEntity.noContent().build();
+    }
 }
