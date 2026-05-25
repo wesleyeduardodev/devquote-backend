@@ -94,7 +94,7 @@ public class ClickUpSyncController implements ClickUpSyncControllerDoc {
      * Com no-op detection — não escreve no ClickUp se nada mudou.
      */
     @PostMapping("/deliveries/{deliveryId}/pull-requests")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SyncPullRequestsResponse> syncPullRequestsForDelivery(@PathVariable Long deliveryId) {
         log.info("Sync manual de PRs da Delivery {} pro ClickUp", deliveryId);
         SyncPullRequestsResponse result = clickUpSyncService.syncPullRequestsForDelivery(deliveryId);
