@@ -203,13 +203,17 @@
 	<summary>
 		<band height="50">
 			<rectangle>
-				<reportElement x="0" y="10" width="555" height="25" backcolor="#6366F1" uuid="a95b097b-f2b8-404c-a654-fb230c61c34c"/>
+				<reportElement x="0" y="10" width="555" height="25" backcolor="#6366F1" uuid="a95b097b-f2b8-404c-a654-fb230c61c34c">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($P{showValues})]]></printWhenExpression>
+					</reportElement>
 				<graphicElement>
 					<pen lineWidth="0.0"/>
 				</graphicElement>
 			</rectangle>
 			<textField>
-				<reportElement x="10" y="10" width="545" height="25" forecolor="#FFFFFF" uuid="eec51c89-ff34-4999-9f7d-11d5f8b3fb0b"/>
+				<reportElement x="10" y="10" width="545" height="25" forecolor="#FFFFFF" uuid="eec51c89-ff34-4999-9f7d-11d5f8b3fb0b">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($P{showValues})]]></printWhenExpression>
+					</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans" size="12" isBold="true"/>
 				</textElement>
