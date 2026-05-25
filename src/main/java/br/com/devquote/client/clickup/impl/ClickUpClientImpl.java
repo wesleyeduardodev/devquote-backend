@@ -206,7 +206,13 @@ public class ClickUpClientImpl implements ClickUpClient {
                         // depois pelo CLICKUP_HIDDEN_STATUSES — economia enorme de
                         // tempo de resposta.
                         .append("&include_closed=false")
-                        .append("&subtasks=false");
+                        // subtasks=true: a regra do board é "vem se for Desenvolvedor
+                        // OU Responsável da task". Se filtrar subtasks fora, uma task
+                        // que casa com o filtro mas mora debaixo de uma pai some do
+                        // board. A API do ClickUp continua aplicando os filtros
+                        // (custom_fields/assignees) também nas subtasks — então só
+                        // vem o que de fato casa.
+                        .append("&subtasks=true");
                 if (statuses != null) {
                     for (String s : statuses) {
                         query.append("&statuses%5B%5D=").append(UriUtils.encodeQueryParam(s, StandardCharsets.UTF_8));
@@ -260,7 +266,7 @@ public class ClickUpClientImpl implements ClickUpClient {
                 StringBuilder query = new StringBuilder();
                 query.append("page=").append(page)
                         .append("&include_closed=true")
-                        .append("&subtasks=false")
+                        .append("&subtasks=true")
                         .append("&assignees%5B%5D=").append(UriUtils.encodeQueryParam(assigneeUserId, StandardCharsets.UTF_8));
                 if (statuses != null) {
                     for (String s : statuses) {
