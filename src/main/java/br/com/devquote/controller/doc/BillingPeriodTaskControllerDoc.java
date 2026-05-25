@@ -75,9 +75,13 @@ public interface BillingPeriodTaskControllerDoc {
     @Operation(summary = "Get tasks by billing period ID")
     @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully")
     @Parameter(name = "flowType", description = "Filter by flow type: TODOS, DESENVOLVIMENTO, OPERACIONAL", example = "DESENVOLVIMENTO")
+    @Parameter(name = "moduleId", description = "Filter by task module ID", example = "3")
+    @Parameter(name = "taskType", description = "Filter by task type (BUG, ENHANCEMENT, ...)", example = "BUG")
     ResponseEntity<List<BillingPeriodTaskResponse>> findByBillingPeriod(
             @Parameter(description = "Billing period ID", required = true) @PathVariable Long billingPeriodId,
-            @RequestParam(required = false) String flowType);
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) String taskType);
 
     @Operation(summary = "Get tasks by billing period ID with pagination")
     @ApiResponse(responseCode = "200", description = "Paginated tasks retrieved successfully")
@@ -86,13 +90,17 @@ public interface BillingPeriodTaskControllerDoc {
     @Parameter(name = "sortBy", description = "Field to sort by", example = "id")
     @Parameter(name = "sortDirection", description = "Sort direction: asc or desc", example = "desc")
     @Parameter(name = "flowType", description = "Filter by flow type", example = "DESENVOLVIMENTO")
+    @Parameter(name = "moduleId", description = "Filter by task module ID", example = "3")
+    @Parameter(name = "taskType", description = "Filter by task type", example = "BUG")
     ResponseEntity<Page<BillingPeriodTaskResponse>> findByBillingPeriodPaginated(
             @Parameter(description = "Billing period ID", required = true) @PathVariable Long billingPeriodId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDirection,
-            @RequestParam(required = false) String flowType);
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) String taskType);
 
     @Operation(summary = "Link multiple tasks to a billing period")
     @ApiResponses({

@@ -178,18 +178,33 @@ public class BillingPeriodTaskServiceImpl implements BillingPeriodTaskService {
     }
 
     @Override
+    public List<BillingPeriodTaskResponse> findByBillingPeriodAndFilters(Long billingPeriodId, FlowType flowType, Long moduleId, String taskType) {
+        String normalizedTaskType = (taskType == null || taskType.isBlank()) ? null : taskType;
+        return billingPeriodTaskRepository.findByBillingPeriodIdAndFilters(billingPeriodId, flowType, moduleId, normalizedTaskType).stream()
+                .map(BillingPeriodTaskAdapter::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable) {
         return findTaskLinksPaginated(billingPeriodId, pageable);
     }
 
     @Override
     public Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable, FlowType flowType) {
+        return findByBillingPeriodPaginated(billingPeriodId, pageable, flowType, null, null);
+    }
 
-        if (flowType == null) {
-            return findByBillingPeriodPaginated(billingPeriodId, pageable);
+    @Override
+    public Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable, FlowType flowType, Long moduleId, String taskType) {
+        String normalizedTaskType = (taskType == null || taskType.isBlank()) ? null : taskType;
+
+        if (flowType == null && moduleId == null && normalizedTaskType == null) {
+            return findTaskLinksPaginated(billingPeriodId, pageable);
         }
 
-        Page<Long> idsPage = billingPeriodTaskRepository.findIdsByBillingPeriodIdAndFlowTypePaginated(billingPeriodId, flowType, pageable);
+        Page<Long> idsPage = billingPeriodTaskRepository.findIdsByBillingPeriodIdAndFiltersPaginated(
+                billingPeriodId, flowType, moduleId, normalizedTaskType, pageable);
 
         if (idsPage.getContent().isEmpty()) {
             return Page.empty(pageable);

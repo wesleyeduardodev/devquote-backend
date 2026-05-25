@@ -12,7 +12,9 @@ public interface BillingPeriodService {
 
     List<BillingPeriodResponse> findAll();
 
-    List<BillingPeriodResponse> findAllWithFilters(Integer year, Integer month, String status, FlowType flowType);
+    List<BillingPeriodResponse> findAllWithFilters(Integer year, Integer month, String status, FlowType flowType, Long moduleId, String taskType);
+
+    List<Integer> findAvailableYears();
 
     List<BillingPeriodResponse> findAllWithTotals();
 
@@ -30,7 +32,7 @@ public interface BillingPeriodService {
 
     Map<String, Object> getStatistics();
 
-    byte[] exportToExcel(Integer month, Integer year, String status, String flowType) throws IOException;
+    byte[] exportToExcel(Integer month, Integer year, String status, String flowType, Long moduleId, String taskType) throws IOException;
 
     void deleteWithAllLinkedTasks(Long id);
 

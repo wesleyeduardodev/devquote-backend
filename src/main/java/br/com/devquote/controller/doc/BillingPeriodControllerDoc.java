@@ -27,13 +27,21 @@ public interface BillingPeriodControllerDoc {
     @ApiResponse(responseCode = "200", description = "Billing periods retrieved successfully")
     @Parameter(name = "year", description = "Filter by year", example = "2024")
     @Parameter(name = "month", description = "Filter by month (1-12)", example = "11")
-    @Parameter(name = "status", description = "Filter by status: PENDING, SENT, PAID, CANCELLED", example = "PENDING")
+    @Parameter(name = "status", description = "Filter by status: PENDENTE, FATURADO, PAGO, ATRASADO, CANCELADO", example = "PENDENTE")
     @Parameter(name = "flowType", description = "Filter by flow type: TODOS, DESENVOLVIMENTO, OPERACIONAL", example = "DESENVOLVIMENTO")
+    @Parameter(name = "moduleId", description = "Filter by linked task module ID; periods with no matching task are hidden", example = "3")
+    @Parameter(name = "taskType", description = "Filter by linked task type (BUG, ENHANCEMENT, ...); periods with no matching task are hidden", example = "BUG")
     ResponseEntity<List<BillingPeriodResponse>> list(
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String flowType);
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) String taskType);
+
+    @Operation(summary = "List distinct years that have at least one billing period")
+    @ApiResponse(responseCode = "200", description = "Available years retrieved successfully")
+    ResponseEntity<List<Integer>> availableYears();
 
     @Operation(summary = "Get billing period by ID")
     @ApiResponses({
@@ -113,13 +121,17 @@ public interface BillingPeriodControllerDoc {
     })
     @Parameter(name = "month", description = "Filter by month", example = "11")
     @Parameter(name = "year", description = "Filter by year", example = "2024")
-    @Parameter(name = "status", description = "Filter by status", example = "PENDING")
+    @Parameter(name = "status", description = "Filter by status", example = "PENDENTE")
     @Parameter(name = "flowType", description = "Filter by flow type", example = "DESENVOLVIMENTO")
+    @Parameter(name = "moduleId", description = "Filter by linked task module ID", example = "3")
+    @Parameter(name = "taskType", description = "Filter by linked task type", example = "BUG")
     ResponseEntity<byte[]> exportToExcel(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String flowType) throws IOException;
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) String taskType) throws IOException;
 
     @Operation(summary = "Delete billing period and all linked tasks")
     @ApiResponses({

@@ -29,6 +29,9 @@ public interface BillingPeriodRepository extends JpaRepository<BillingPeriod, Lo
     @Query("SELECT bp.status as status, COUNT(bp) as count FROM BillingPeriod bp GROUP BY bp.status")
     List<Object[]> getStatusStatistics();
 
+    @Query("SELECT DISTINCT bp.year FROM BillingPeriod bp ORDER BY bp.year DESC")
+    List<Integer> findDistinctYears();
+
     @Query("""
         SELECT bp FROM BillingPeriod bp
         WHERE (:year IS NULL OR bp.year = :year)

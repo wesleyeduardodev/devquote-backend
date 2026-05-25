@@ -23,9 +23,13 @@ public interface BillingPeriodTaskService {
 
     List<BillingPeriodTaskResponse> findByBillingPeriodAndFlowType(Long billingPeriodId, FlowType flowType);
 
+    List<BillingPeriodTaskResponse> findByBillingPeriodAndFilters(Long billingPeriodId, FlowType flowType, Long moduleId, String taskType);
+
     Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable);
 
     Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable, FlowType flowType);
+
+    Page<BillingPeriodTaskResponse> findByBillingPeriodPaginated(Long billingPeriodId, Pageable pageable, FlowType flowType, Long moduleId, String taskType);
 
     List<BillingPeriodTaskResponse> bulkCreate(List<BillingPeriodTaskRequest> requests);
 

@@ -89,15 +89,19 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     }
 
     @Override
-    public List<BillingPeriodResponse> findAllWithFilters(Integer year, Integer month, String status, FlowType flowType) {
+    public List<BillingPeriodResponse> findAllWithFilters(Integer year, Integer month, String status, FlowType flowType, Long moduleId, String taskType) {
         List<BillingPeriod> periods = billingPeriodRepository.findByFilters(year, month, status);
+        boolean hasTaskLevelFilter = moduleId != null || (taskType != null && !taskType.isBlank());
+
         return periods.stream()
             .map(period -> {
                 BillingPeriodResponse response = BillingPeriodAdapter.toResponseDTO(period);
                 List<BillingPeriodTask> filteredTasks =
-                    billingPeriodTaskRepository.findByBillingPeriodIdAndFlowType(
+                    billingPeriodTaskRepository.findByBillingPeriodIdAndFilters(
                         period.getId(),
-                        flowType
+                        flowType,
+                        moduleId,
+                        (taskType == null || taskType.isBlank()) ? null : taskType
                     );
 
                 BigDecimal totalAmount = filteredTasks.stream()
@@ -110,7 +114,13 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
 
                 return response;
             })
+            .filter(response -> !hasTaskLevelFilter || response.getTaskCount() != null && response.getTaskCount() > 0)
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Integer> findAvailableYears() {
+        return billingPeriodRepository.findDistinctYears();
     }
 
     @Override
@@ -226,7 +236,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     }
 
     @Override
-    public byte[] exportToExcel(Integer month, Integer year, String status, String flowType) throws IOException {
+    public byte[] exportToExcel(Integer month, Integer year, String status, String flowType, Long moduleId, String taskType) throws IOException {
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append("""
             SELECT
@@ -264,6 +274,12 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
         if (flowType != null && !flowType.trim().isEmpty() && !flowType.equalsIgnoreCase("TODOS")) {
             sqlBuilder.append(" AND t.flow_type = ?").append(++paramCount);
         }
+        if (moduleId != null) {
+            sqlBuilder.append(" AND t.module_id = ?").append(++paramCount);
+        }
+        if (taskType != null && !taskType.trim().isEmpty()) {
+            sqlBuilder.append(" AND t.task_type = ?").append(++paramCount);
+        }
 
         sqlBuilder.append(" ORDER BY bp.year DESC, bp.month DESC, t.id DESC");
 
@@ -280,7 +296,13 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
             query.setParameter(paramIndex++, status);
         }
         if (flowType != null && !flowType.trim().isEmpty() && !flowType.equalsIgnoreCase("TODOS")) {
-            query.setParameter(paramIndex, flowType);
+            query.setParameter(paramIndex++, flowType);
+        }
+        if (moduleId != null) {
+            query.setParameter(paramIndex++, moduleId);
+        }
+        if (taskType != null && !taskType.trim().isEmpty()) {
+            query.setParameter(paramIndex, taskType);
         }
 
         @SuppressWarnings("unchecked")

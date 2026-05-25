@@ -35,13 +35,21 @@ public class BillingPeriodController implements BillingPeriodControllerDoc {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String flowType) {
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) String taskType) {
 
         FlowType flowTypeEnum = (flowType == null || flowType.isEmpty() || flowType.equals("TODOS"))
             ? null
             : FlowType.fromString(flowType);
 
-        return ResponseEntity.ok(billingPeriodService.findAllWithFilters(year, month, status, flowTypeEnum));
+        return ResponseEntity.ok(billingPeriodService.findAllWithFilters(year, month, status, flowTypeEnum, moduleId, taskType));
+    }
+
+    @GetMapping("/available-years")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<List<Integer>> availableYears() {
+        return ResponseEntity.ok(billingPeriodService.findAvailableYears());
     }
 
     @GetMapping("/{id}")
@@ -112,9 +120,11 @@ public class BillingPeriodController implements BillingPeriodControllerDoc {
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String flowType) throws IOException {
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) String taskType) throws IOException {
 
-        byte[] excelData = billingPeriodService.exportToExcel(month, year, status, flowType);
+        byte[] excelData = billingPeriodService.exportToExcel(month, year, status, flowType, moduleId, taskType);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);

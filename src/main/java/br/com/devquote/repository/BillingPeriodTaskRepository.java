@@ -39,6 +39,23 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
         Pageable pageable
     );
 
+    @Query("""
+        SELECT bpt.id FROM BillingPeriodTask bpt
+        JOIN bpt.task t
+        LEFT JOIN t.module m
+        WHERE bpt.billingPeriod.id = :billingPeriodId
+          AND (:flowType IS NULL OR t.flowType = :flowType)
+          AND (:moduleId IS NULL OR m.id = :moduleId)
+          AND (:taskType IS NULL OR t.taskType = :taskType)
+        """)
+    Page<Long> findIdsByBillingPeriodIdAndFiltersPaginated(
+        @Param("billingPeriodId") Long billingPeriodId,
+        @Param("flowType") FlowType flowType,
+        @Param("moduleId") Long moduleId,
+        @Param("taskType") String taskType,
+        Pageable pageable
+    );
+
     @Query("SELECT bpt FROM BillingPeriodTask bpt " +
            "JOIN FETCH bpt.task t " +
            "JOIN FETCH t.requester " +
@@ -116,5 +133,23 @@ public interface BillingPeriodTaskRepository extends JpaRepository<BillingPeriod
     List<BillingPeriodTask> findByBillingPeriodIdAndFlowType(
         @Param("billingPeriodId") Long billingPeriodId,
         @Param("flowType") FlowType flowType
+    );
+
+    @Query("""
+        SELECT bpt FROM BillingPeriodTask bpt
+        JOIN FETCH bpt.task t
+        JOIN FETCH t.requester
+        LEFT JOIN t.module m
+        WHERE bpt.billingPeriod.id = :billingPeriodId
+          AND (:flowType IS NULL OR t.flowType = :flowType)
+          AND (:moduleId IS NULL OR m.id = :moduleId)
+          AND (:taskType IS NULL OR t.taskType = :taskType)
+        ORDER BY bpt.id DESC
+        """)
+    List<BillingPeriodTask> findByBillingPeriodIdAndFilters(
+        @Param("billingPeriodId") Long billingPeriodId,
+        @Param("flowType") FlowType flowType,
+        @Param("moduleId") Long moduleId,
+        @Param("taskType") String taskType
     );
 }

@@ -69,13 +69,15 @@ public class BillingPeriodTaskController implements BillingPeriodTaskControllerD
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<List<BillingPeriodTaskResponse>> findByBillingPeriod(
             @PathVariable Long billingPeriodId,
-            @RequestParam(required = false) String flowType) {
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) String taskType) {
 
         FlowType flowTypeEnum = (flowType == null || flowType.equals("TODOS"))
             ? null
             : FlowType.fromString(flowType);
 
-        return ResponseEntity.ok(billingPeriodTaskService.findByBillingPeriodAndFlowType(billingPeriodId, flowTypeEnum));
+        return ResponseEntity.ok(billingPeriodTaskService.findByBillingPeriodAndFilters(billingPeriodId, flowTypeEnum, moduleId, taskType));
     }
 
     @GetMapping("/billing-period/{billingPeriodId}/paginated")
@@ -86,7 +88,9 @@ public class BillingPeriodTaskController implements BillingPeriodTaskControllerD
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDirection,
-            @RequestParam(required = false) String flowType) {
+            @RequestParam(required = false) String flowType,
+            @RequestParam(required = false) Long moduleId,
+            @RequestParam(required = false) String taskType) {
 
         Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -95,7 +99,7 @@ public class BillingPeriodTaskController implements BillingPeriodTaskControllerD
             ? null
             : FlowType.fromString(flowType);
 
-        return ResponseEntity.ok(billingPeriodTaskService.findByBillingPeriodPaginated(billingPeriodId, pageable, flowTypeEnum));
+        return ResponseEntity.ok(billingPeriodTaskService.findByBillingPeriodPaginated(billingPeriodId, pageable, flowTypeEnum, moduleId, taskType));
     }
 
     @PostMapping("/bulk-link")
