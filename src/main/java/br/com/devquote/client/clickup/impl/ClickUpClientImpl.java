@@ -374,8 +374,8 @@ public class ClickUpClientImpl implements ClickUpClient {
 
     @Override
     @SuppressWarnings("unchecked")
-    public String createTaskComment(String taskId, String commentText) {
-        if (taskId == null || taskId.isBlank()) {
+    public String createTaskComment(String taskId, List<Map<String, Object>> commentBlocks) {
+        if (taskId == null || taskId.isBlank() || commentBlocks == null || commentBlocks.isEmpty()) {
             return null;
         }
         String url = String.format("%s/task/%s/comment", CLICKUP_API_BASE, taskId);
@@ -385,7 +385,10 @@ public class ClickUpClientImpl implements ClickUpClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         Map<String, Object> body = new HashMap<>();
-        body.put("comment_text", commentText == null ? "" : commentText);
+        // O ClickUp aceita 2 formas: "comment_text" (plain text, sem formatação) e
+        // "comment" (array de blocos com attributes — bold/italic/link). Usamos a 2a
+        // pra renderizar negrito etc. corretamente.
+        body.put("comment", commentBlocks);
         // notify_all=false: evita disparar notificação a todos os assignees a cada
         // sync de PRs (é uma ação interna do bot, não tem por que notificar).
         body.put("notify_all", false);

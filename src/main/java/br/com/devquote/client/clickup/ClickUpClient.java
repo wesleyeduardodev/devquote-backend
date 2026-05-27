@@ -42,12 +42,13 @@ public interface ClickUpClient {
     boolean updateTaskCustomField(String taskId, String fieldId, String value);
 
     /**
-     * Cria um comentário na task. Usa `notify_all=false` para não enviar
-     * notificação a todos os assignees.
+     * Cria um comentário formatado na task (rich text via "comment block array").
+     * Cada bloco é um Map com "text" (String) e opcionalmente "attributes" (Map com
+     * chaves como "bold", "italic", "link"). Usa notify_all=false.
      * Endpoint: POST /task/{taskId}/comment
      * Retorna o `id` do comment criado (ou null em caso de erro).
      */
-    String createTaskComment(String taskId, String commentText);
+    String createTaskComment(String taskId, List<Map<String, Object>> commentBlocks);
 
     String getProviderName();
 }

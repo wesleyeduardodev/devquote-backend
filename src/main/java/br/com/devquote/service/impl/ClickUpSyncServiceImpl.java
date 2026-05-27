@@ -18,7 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -32,7 +35,7 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
     private final ClickUpParameterHelper parameterHelper;
     private final TaskBoardParameterHelper boardConfig;
 
-    private static final String PR_BLOCK_HEADER = "**PRs da entrega:**";
+    private static final String PR_BLOCK_HEADER = "PRs da entrega:";
 
     @Override
     @Transactional
@@ -230,15 +233,8 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
         }
 
         if (prCount >= 2) {
-            String prBulletsBody = withPr.stream()
-                    .map(i -> {
-                        String projectName = (i.getProject() != null && i.getProject().getName() != null)
-                                ? i.getProject().getName() : "(sem projeto)";
-                        return "- " + projectName + ": " + i.getPullRequest();
-                    })
-                    .collect(Collectors.joining("\n"));
-            String newCommentText = PR_BLOCK_HEADER + "\n" + prBulletsBody;
-            String newId = clickUpClient.createTaskComment(taskCode, newCommentText);
+            List<Map<String, Object>> blocks = buildPrCommentBlocks(withPr);
+            String newId = clickUpClient.createTaskComment(taskCode, blocks);
             if (newId != null) {
                 commentCreated = true;
                 log.info("[branch-sync] Delivery {} | Comentario de PRs criado (id={})", delivery.getId(), newId);
@@ -256,6 +252,37 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
                 .pullRequestCount(prCount)
                 .message(buildMessage(prCount, branchUpdated, commentCreated, hasBranchField))
                 .build();
+    }
+
+    /**
+     * Monta o array de blocos do comentário do ClickUp (formato "comment block array"):
+     *   - Header "PRs da entrega:" em negrito
+     *   - Linha em branco entre o header e cada PR (visual mais espaçado)
+     *   - Cada PR: "Projeto: url" (ClickUp auto-detecta URL e renderiza como link)
+     */
+    private static List<Map<String, Object>> buildPrCommentBlocks(List<DeliveryItem> withPr) {
+        List<Map<String, Object>> blocks = new ArrayList<>();
+
+        Map<String, Object> headerAttrs = new HashMap<>();
+        headerAttrs.put("bold", true);
+        blocks.add(textBlock(PR_BLOCK_HEADER, headerAttrs));
+
+        for (DeliveryItem item : withPr) {
+            String projectName = (item.getProject() != null && item.getProject().getName() != null)
+                    ? item.getProject().getName() : "(sem projeto)";
+            blocks.add(textBlock("\n\n" + projectName + ": " + item.getPullRequest(), null));
+        }
+
+        return blocks;
+    }
+
+    private static Map<String, Object> textBlock(String text, Map<String, Object> attributes) {
+        Map<String, Object> block = new HashMap<>();
+        block.put("text", text);
+        if (attributes != null && !attributes.isEmpty()) {
+            block.put("attributes", attributes);
+        }
+        return block;
     }
 
     private static String buildMessage(int prCount, boolean branchUpdated, boolean commentCreated, boolean hasBranchField) {
