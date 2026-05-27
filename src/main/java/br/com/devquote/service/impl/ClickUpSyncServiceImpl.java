@@ -35,7 +35,7 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
     private final ClickUpParameterHelper parameterHelper;
     private final TaskBoardParameterHelper boardConfig;
 
-    private static final String PR_BLOCK_HEADER = "PRs da entrega:";
+    private static final String PR_BLOCK_HEADER = "Branchs da Entrega";
 
     @Override
     @Transactional
