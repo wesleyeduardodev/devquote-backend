@@ -17,8 +17,8 @@ public class SyncPullRequestsResponse {
     /** True se o campo Branch foi escrito na task do ClickUp. False = no-op (já estava igual ou não configurado). */
     private boolean branchUpdated;
 
-    /** True se a descrição da task foi reescrita. False = no-op (já estava igual). */
-    private boolean descriptionUpdated;
+    /** True se um comentário com a lista de PRs foi criado ou atualizado. False = no-op (já estava igual). */
+    private boolean commentUpdated;
 
     /** Quantidade de items da delivery com PR preenchido (pode ser 0 — caso de "remoção"). */
     private int pullRequestCount;

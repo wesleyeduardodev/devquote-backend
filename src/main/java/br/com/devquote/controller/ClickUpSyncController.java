@@ -90,8 +90,9 @@ public class ClickUpSyncController implements ClickUpSyncControllerDoc {
 
     /**
      * Sincroniza os PRs dos items de uma Delivery específica pro ClickUp.
-     * Atualiza o custom field "Branch" + adiciona/atualiza/remove o bloco de PRs na descrição.
-     * Com no-op detection — não escreve no ClickUp se nada mudou.
+     * Atualiza o custom field "Branch" + cria/atualiza um comentário do bot na task
+     * com a lista de PRs. NUNCA mexe na descrição da task (evita quebrar conteúdo
+     * rich-text grande). Com no-op detection — não escreve no ClickUp se nada mudou.
      */
     @PostMapping("/deliveries/{deliveryId}/pull-requests")
     @PreAuthorize("hasRole('ADMIN')")

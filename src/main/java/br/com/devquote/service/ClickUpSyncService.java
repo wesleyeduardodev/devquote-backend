@@ -9,8 +9,9 @@ public interface ClickUpSyncService {
     boolean syncDeliveryToClickUp(Long deliveryId);
 
     /**
-     * Propaga os PRs dos items de uma delivery específica pro ClickUp (campo Branch + descrição).
-     * Manual, disparado pela UI. Implementa no-op detection (não escreve se nada mudou).
+     * Propaga os PRs dos items de uma delivery específica pro ClickUp (campo Branch +
+     * comentário na task com a lista de PRs). Manual, disparado pela UI. Implementa
+     * no-op detection (não escreve se nada mudou). NÃO modifica a descrição da task.
      */
     SyncPullRequestsResponse syncPullRequestsForDelivery(Long deliveryId);
 }

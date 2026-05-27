@@ -42,11 +42,12 @@ public interface ClickUpClient {
     boolean updateTaskCustomField(String taskId, String fieldId, String value);
 
     /**
-     * Atualiza a descrição (texto) de uma task.
-     * Endpoint: PUT /task/{taskId} com body {"description": "..."}
-     * Retorna true se 2xx.
+     * Cria um comentário na task. Usa `notify_all=false` para não enviar
+     * notificação a todos os assignees.
+     * Endpoint: POST /task/{taskId}/comment
+     * Retorna o `id` do comment criado (ou null em caso de erro).
      */
-    boolean updateTaskDescription(String taskId, String description);
+    String createTaskComment(String taskId, String commentText);
 
     String getProviderName();
 }

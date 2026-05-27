@@ -19,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -201,15 +199,11 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
     }
 
     /**
-     * Propaga os PRs dos DeliveryItems pro ClickUp com no-op detection:
-     *   - Campo Branch (custom field text): SÓ preenchido quando há EXATAMENTE 1 PR
-     *     (com 2+ PRs fica visualmente ruim concatenado; usa a descrição pra esses)
-     *   - Descrição da task: bloco "**PRs da entrega:**" + bullets "- Projeto: url"
-     *
-     * Antes de escrever, lê o estado atual da task no ClickUp e compara — só chama
-     * a API de write se algo realmente mudou. Suporta também o cenário de REMOÇÃO:
-     * se nenhum item tem PR (todos foram removidos), limpa o campo Branch e remove
-     * o bloco da descrição.
+     * Propaga os PRs dos DeliveryItems pro ClickUp:
+     *   - Campo Branch (custom field text): preenchido com a URL quando há
+     *     EXATAMENTE 1 PR; limpo quando há 0 ou 2+ PRs (com 2+ fica ruim concatenado).
+     *   - Comentário na task: cria um novo SÓ quando há 2+ PRs (com 1 PR o campo
+     *     Branch sozinho já dá conta; com 0, nada a dizer). NUNCA toca a descrição.
      */
     private SyncPullRequestsResponse syncPullRequestsToClickUp(Delivery delivery, String taskCode) {
         List<DeliveryItem> withPr = (delivery.getItems() == null)
@@ -219,123 +213,60 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
                         .collect(Collectors.toList());
         int prCount = withPr.size();
 
-        // 1a) Campo Branch — só preenche com 1 PR. Com 0 ou 2+, vai vazio (limpa).
         String branchValue = prCount == 1 ? withPr.get(0).getPullRequest() : "";
 
-        // 1b) Bloco da descrição — bullets "- Projeto: url" (vazio se sem PRs → remove bloco)
-        String descBlockBody = withPr.stream()
-                .map(i -> {
-                    String projectName = (i.getProject() != null && i.getProject().getName() != null)
-                            ? i.getProject().getName() : "(sem projeto)";
-                    return "- " + projectName + ": " + i.getPullRequest();
-                })
-                .collect(Collectors.joining("\n"));
-
-        // 2) Lê a task atual do ClickUp (uma vez, pra usar nas duas comparações)
-        Map<String, Object> taskMap = clickUpClient.getTask(taskCode);
-        if (taskMap == null) {
-            throw new ResourceNotFoundException("Tarefa não encontrada no ClickUp: " + taskCode);
-        }
-
         boolean branchUpdated = false;
-        boolean descriptionUpdated = false;
+        boolean commentCreated = false;
 
-        // 3) Campo Branch — só escreve se mudou e se field está configurado
         String branchFieldId = boardConfig.getClickUpBranchFieldId();
-        if (branchFieldId != null && !branchFieldId.isBlank()) {
-            String currentBranchValue = readCustomFieldValue(taskMap, branchFieldId);
-            if (!Objects.equals(safe(currentBranchValue), safe(branchValue))) {
-                boolean ok = clickUpClient.updateTaskCustomField(taskCode, branchFieldId, branchValue);
-                if (ok) {
-                    branchUpdated = true;
-                    log.info("[branch-sync] Delivery {} | Campo Branch atualizado ({} PR(s))", delivery.getId(), prCount);
-                } else {
-                    log.warn("[branch-sync] Delivery {} | Falha ao atualizar campo Branch", delivery.getId());
-                }
+        boolean hasBranchField = branchFieldId != null && !branchFieldId.isBlank();
+        if (hasBranchField) {
+            branchUpdated = clickUpClient.updateTaskCustomField(taskCode, branchFieldId, branchValue);
+            if (branchUpdated) {
+                log.info("[branch-sync] Delivery {} | Campo Branch atualizado ({} PR(s))", delivery.getId(), prCount);
             } else {
-                log.debug("[branch-sync] Delivery {} | Campo Branch já sincronizado, no-op", delivery.getId());
+                log.warn("[branch-sync] Delivery {} | Falha ao atualizar campo Branch", delivery.getId());
             }
         }
 
-        // 4) Descrição — só anexa o bloco quando há 2+ PRs (com 1 PR, o campo Branch
-        // sozinho já é o suficiente; com 0, nada a anexar). Sem strip/idempotência:
-        // cada chamada = +1 bloco no fim. Pra atualizar, o user apaga manualmente no
-        // ClickUp antes do próximo sync.
         if (prCount >= 2) {
-            String currentDesc = (String) taskMap.get("markdown_description");
-            if (currentDesc == null) currentDesc = (String) taskMap.get("description");
-            String newDesc = appendPrBlock(currentDesc, descBlockBody);
-            boolean ok = clickUpClient.updateTaskDescription(taskCode, newDesc);
-            if (ok) {
-                descriptionUpdated = true;
-                log.info("[branch-sync] Delivery {} | Bloco de PRs anexado na descrição", delivery.getId());
+            String prBulletsBody = withPr.stream()
+                    .map(i -> {
+                        String projectName = (i.getProject() != null && i.getProject().getName() != null)
+                                ? i.getProject().getName() : "(sem projeto)";
+                        return "- " + projectName + ": " + i.getPullRequest();
+                    })
+                    .collect(Collectors.joining("\n"));
+            String newCommentText = PR_BLOCK_HEADER + "\n" + prBulletsBody;
+            String newId = clickUpClient.createTaskComment(taskCode, newCommentText);
+            if (newId != null) {
+                commentCreated = true;
+                log.info("[branch-sync] Delivery {} | Comentario de PRs criado (id={})", delivery.getId(), newId);
             } else {
-                log.warn("[branch-sync] Delivery {} | Falha ao atualizar descrição", delivery.getId());
+                log.warn("[branch-sync] Delivery {} | Falha ao criar comentario de PRs", delivery.getId());
             }
         } else {
-            log.info("[branch-sync] Delivery {} | {} PR(s) — descrição não modificada (só Branch)",
+            log.info("[branch-sync] Delivery {} | {} PR(s) — comentario nao publicado (so Branch)",
                     delivery.getId(), prCount);
         }
 
         return SyncPullRequestsResponse.builder()
                 .branchUpdated(branchUpdated)
-                .descriptionUpdated(descriptionUpdated)
+                .commentUpdated(commentCreated)
                 .pullRequestCount(prCount)
-                .message(buildMessage(prCount, branchUpdated, descriptionUpdated,
-                        branchFieldId != null && !branchFieldId.isBlank()))
+                .message(buildMessage(prCount, branchUpdated, commentCreated, hasBranchField))
                 .build();
     }
 
-    private static String safe(String s) { return s == null ? "" : s; }
-
-    @SuppressWarnings("unchecked")
-    private static String readCustomFieldValue(Map<String, Object> taskMap, String fieldId) {
-        Object cf = taskMap.get("custom_fields");
-        if (!(cf instanceof List)) return "";
-        for (Object o : (List<Object>) cf) {
-            if (o instanceof Map) {
-                Map<String, Object> field = (Map<String, Object>) o;
-                if (fieldId.equals(field.get("id"))) {
-                    Object value = field.get("value");
-                    return value == null ? "" : value.toString();
-                }
-            }
-        }
-        return "";
-    }
-
-    private static String buildMessage(int prCount, boolean branchUpdated, boolean descUpdated, boolean hasBranchField) {
+    private static String buildMessage(int prCount, boolean branchUpdated, boolean commentCreated, boolean hasBranchField) {
         if (prCount == 0) {
-            if (branchUpdated) return "Campo Branch limpo (entrega sem PRs).";
-            return "Nada a sincronizar (sem PRs nos items).";
+            return branchUpdated ? "Campo Branch limpo (entrega sem PRs)." : "Nada a sincronizar (sem PRs nos items).";
         }
-        if (prCount == 1) {
-            if (!hasBranchField) {
-                return "Sincronizado: 1 PR. (Campo Branch não configurado — nada foi escrito.)";
-            }
-            return branchUpdated
-                    ? "Sincronizado: 1 PR no campo Branch."
-                    : "Tudo já estava sincronizado no campo Branch.";
+        StringBuilder sb = new StringBuilder("Sincronizado: " + prCount + (prCount == 1 ? " PR." : " PRs."));
+        if (hasBranchField && branchUpdated) {
+            sb.append(prCount == 1 ? " Campo Branch atualizado." : " Campo Branch limpo (regra: so recebe com 1 PR).");
         }
-        StringBuilder sb = new StringBuilder("Sincronizado: " + prCount + " PRs.");
-        if (descUpdated) sb.append(" Bloco anexado na descrição.");
-        if (branchUpdated) sb.append(" Campo Branch limpo (regra: Branch só recebe quando há 1 PR).");
+        if (commentCreated) sb.append(" Comentario publicado.");
         return sb.toString();
-    }
-
-    /**
-     * Anexa o bloco de PRs no fim da descrição. Sem idempotência: cada chamada =
-     * +1 bloco no fim (decisão consciente — usuário limpa manualmente se quiser
-     * substituir, e isso evita complexidade de regex que falha com formatação do ClickUp).
-     */
-    static String appendPrBlock(String current, String descBlockBody) {
-        String newBlock = PR_BLOCK_HEADER + "\n" + descBlockBody;
-
-        if (current == null || current.isBlank()) {
-            return newBlock;
-        }
-
-        String trimmed = current.replaceAll("\\s+$", "");
-        return trimmed + "\n\n---\n" + newBlock;
     }
 }
