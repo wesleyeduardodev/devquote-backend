@@ -121,8 +121,9 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
                  AND NOT EXISTS (SELECT 1 FROM delivery_operational_item doi WHERE doi.delivery_id = d.id)
                 THEN 1 ELSE 0 END) as total_without_items
         FROM delivery d
+        WHERE (:flowType IS NULL OR d.flow_type = :flowType)
         """, nativeQuery = true)
-    List<Object[]> findDeliveryStatsSummary();
+    List<Object[]> findDeliveryStatsSummary(@Param("flowType") String flowType);
 
     @EntityGraph(attributePaths = {"task", "items", "items.project"})
     @Query("SELECT d FROM Delivery d WHERE d.task.id = :taskId")

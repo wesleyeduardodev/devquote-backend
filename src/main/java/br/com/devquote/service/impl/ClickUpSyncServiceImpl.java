@@ -12,6 +12,7 @@ import br.com.devquote.helper.ClickUpParameterHelper;
 import br.com.devquote.helper.TaskBoardParameterHelper;
 import br.com.devquote.repository.DeliveryRepository;
 import br.com.devquote.service.ClickUpSyncService;
+import br.com.devquote.service.GitPullRequestSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
     private final ClickUpClient clickUpClient;
     private final ClickUpParameterHelper parameterHelper;
     private final TaskBoardParameterHelper boardConfig;
+    private final GitPullRequestSyncService gitPullRequestSyncService;
 
     private static final String PR_BLOCK_HEADER = "Branchs da Entrega";
 
@@ -98,6 +100,11 @@ public class ClickUpSyncServiceImpl implements ClickUpSyncService {
             log.warn("Integracao com ClickUp desabilitada");
             return false;
         }
+
+        // Mesmo ciclo dos antigos jobs (6h git-sync + 7h clickup-sync), so que pra 1 entrega:
+        // 1) Analisa PRs dos items via GitHub; se merged, marca local como PRODUCTION.
+        // 2) Empurra o status (agora fresco) pro ClickUp.
+        gitPullRequestSyncService.syncMergedPullRequestsForDelivery(deliveryId);
 
         Delivery delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new RuntimeException("Delivery nao encontrada: " + deliveryId));

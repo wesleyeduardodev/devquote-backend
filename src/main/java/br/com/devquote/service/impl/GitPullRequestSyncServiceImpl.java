@@ -119,6 +119,38 @@ public class GitPullRequestSyncServiceImpl implements GitPullRequestSyncService 
         return processDeliveryItem(item);
     }
 
+    @Override
+    @Transactional
+    public int syncMergedPullRequestsForDelivery(Long deliveryId) {
+        if (!parameterHelper.isIntegrationEnabled()) {
+            log.info("Integracao com Git desabilitada. Pulando sync de PRs da Delivery {}", deliveryId);
+            return 0;
+        }
+
+        List<DeliveryItem> items = deliveryItemRepository.findEligibleForGitSyncByDeliveryId(deliveryId);
+        if (items.isEmpty()) {
+            log.info("[git-sync/delivery] Delivery {} | Nenhum item elegivel (sem PR ou ja mergeado)", deliveryId);
+            return 0;
+        }
+
+        int updated = 0;
+        for (DeliveryItem item : items) {
+            try {
+                if (processDeliveryItem(item)) {
+                    updated++;
+                    log.info("[git-sync/delivery] Delivery {} | Item {} merged -> PRODUCTION", deliveryId, item.getId());
+                }
+            } catch (GitProviderException e) {
+                log.warn("[git-sync/delivery] Delivery {} | Item {} | Erro {}: {}",
+                        deliveryId, item.getId(), e.getCode(), e.getMessage());
+            } catch (Exception e) {
+                log.error("[git-sync/delivery] Delivery {} | Item {} | Erro: {}",
+                        deliveryId, item.getId(), e.getMessage());
+            }
+        }
+        return updated;
+    }
+
     private boolean processDeliveryItem(DeliveryItem item) {
         String prUrl = item.getPullRequest();
 

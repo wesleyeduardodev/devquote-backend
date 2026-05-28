@@ -118,8 +118,10 @@ public class DeliveryController implements DeliveryControllerDoc {
 
     @GetMapping("/stats")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
-    public ResponseEntity<br.com.devquote.dto.response.DeliveryStats> getStats() {
-        return ResponseEntity.ok(deliveryService.getStats());
+    public ResponseEntity<br.com.devquote.dto.response.DeliveryStats> getStats(
+            @RequestParam(required = false) String flowType
+    ) {
+        return ResponseEntity.ok(deliveryService.getStats(flowType));
     }
 
     @GetMapping("/total-amount")

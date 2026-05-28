@@ -373,8 +373,9 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
-    public br.com.devquote.dto.response.DeliveryStats getStats() {
-        List<Object[]> rows = deliveryRepository.findDeliveryStatsSummary();
+    public br.com.devquote.dto.response.DeliveryStats getStats(String flowType) {
+        String normalizedFlow = (flowType == null || flowType.isBlank()) ? null : flowType.trim();
+        List<Object[]> rows = deliveryRepository.findDeliveryStatsSummary(normalizedFlow);
         Object[] data = (rows != null && !rows.isEmpty()) ? rows.get(0) : null;
 
         long total = data != null && data.length > 0 && data[0] != null ? ((Number) data[0]).longValue() : 0L;

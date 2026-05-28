@@ -119,6 +119,16 @@ public interface DeliveryItemRepository extends JpaRepository<DeliveryItem, Long
         """)
     List<DeliveryItem> findEligibleForGitSync();
 
+    @EntityGraph(attributePaths = {"delivery", "delivery.task", "project"})
+    @Query("""
+        SELECT di FROM DeliveryItem di
+        WHERE di.delivery.id = :deliveryId
+          AND di.pullRequest IS NOT NULL
+          AND di.pullRequest <> ''
+          AND (di.merged IS NULL OR di.merged = false)
+        """)
+    List<DeliveryItem> findEligibleForGitSyncByDeliveryId(@Param("deliveryId") Long deliveryId);
+
     @Query("SELECT COALESCE(MAX(di.sortOrder), 0) FROM DeliveryItem di WHERE di.delivery.id = :deliveryId")
     Integer findMaxSortOrderByDeliveryId(@Param("deliveryId") Long deliveryId);
 }

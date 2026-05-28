@@ -57,7 +57,7 @@ public interface DeliveryService {
                                         Long moduleId,
                                         Long serverId);
 
-    br.com.devquote.dto.response.DeliveryStats getStats();
+    br.com.devquote.dto.response.DeliveryStats getStats(String flowType);
 
     Page<DeliveryGroupResponse> findAllGroupedByTask(Long taskId,
                                                       String taskName,

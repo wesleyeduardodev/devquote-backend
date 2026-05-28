@@ -57,10 +57,16 @@ Sem profiles `dev/prod` separados. Tudo via env var com defaults para localhost.
 
 ## Jobs agendados (`@Scheduled`, fuso America/Sao_Paulo)
 
-| Job | Cron | Endpoint manual |
-|---|---|---|
-| `GitPullRequestSyncJob` | `0 0 6 * * ?` (6h) | `POST /api/git-sync` |
-| `ClickUpSyncJob` | `0 0 7 * * ?` (7h) | `POST /api/clickup-sync` |
+Hoje **não há jobs agendados ativos**. Os antigos `GitPullRequestSyncJob` (6h) e `ClickUpSyncJob` (7h) foram removidos — sincronização passou a ser **só sob demanda, por entrega**, via UI da tela de Entregas (botões "Atualizar Branch" e "Atualizar Status" na coluna de ações, ou nas telas de Ver/Editar). Os endpoints manuais e em massa continuam disponíveis para chamada via API:
+
+| Operação | Endpoint |
+|---|---|
+| Sync PRs mergeados (em massa) | `POST /api/git-sync/sync` |
+| Sync ClickUp status (em massa) | `POST /api/clickup-sync/sync` |
+| Sync ClickUp status de 1 entrega | `POST /api/clickup-sync/sync/{deliveryId}` |
+| Sync PRs/branch de 1 entrega | `POST /api/clickup-sync/deliveries/{deliveryId}/pull-requests` |
+
+⚠️ **`POST /api/clickup-sync/sync/{deliveryId}` reproduz o ciclo completo dos antigos jobs (6h git-sync + 7h clickup-sync) para uma única entrega:** (1) analisa os PRs dos items da entrega via GitHub e marca os que viraram merged como `PRODUCTION` localmente, recalculando o status agregado da entrega; (2) empurra o status resultante pro ClickUp via `processDelivery()` (com `ClickUpStatusOrder.canAdvanceTo` — não regride). É o que o botão "Atualizar Status" na tela de Entregas dispara.
 
 ## Deploy
 
