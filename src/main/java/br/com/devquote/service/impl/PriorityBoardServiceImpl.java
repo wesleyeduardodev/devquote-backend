@@ -25,7 +25,9 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -59,11 +61,13 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
         TaskBoardProvider provider = active.get();
         List<BoardTask> tasks = provider.fetchPriorityTasks(includeAssignee);
 
-        // Quais códigos (id do ClickUp) já existem como Task no DevQuote
-        Set<String> existingCodes = new HashSet<>();
-        List<String> ids = tasks.stream().map(BoardTask::getId).filter(java.util.Objects::nonNull).collect(Collectors.toList());
+        // Quais códigos (id do ClickUp) já existem como Task no DevQuote — mapeia code -> id interno
+        Map<String, Long> existingByCode = new HashMap<>();
+        List<String> ids = tasks.stream().map(BoardTask::getId).filter(Objects::nonNull).collect(Collectors.toList());
         if (!ids.isEmpty()) {
-            existingCodes.addAll(taskRepository.findExistingCodes(ids));
+            for (Object[] row : taskRepository.findIdAndCodeByCodes(ids)) {
+                existingByCode.put((String) row[1], (Long) row[0]);
+            }
         }
 
         List<String> statusOrder = config.getPriorityStatuses();
@@ -119,6 +123,7 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
 
             List<PriorityBoardResponse.Task> mapped = new ArrayList<>();
             for (BoardTask t : groupTasks) {
+                Long devQuoteTaskId = t.getId() != null ? existingByCode.get(t.getId()) : null;
                 mapped.add(PriorityBoardResponse.Task.builder()
                         .id(t.getId())
                         .name(t.getName())
@@ -128,7 +133,8 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
                         .priority(t.getPriority())
                         .type(t.getType())
                         .tags(t.getTags())
-                        .existsInDevQuote(t.getId() != null && existingCodes.contains(t.getId()))
+                        .existsInDevQuote(devQuoteTaskId != null)
+                        .devQuoteTaskId(devQuoteTaskId)
                         .build());
             }
 

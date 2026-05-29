@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -20,7 +21,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     boolean existsByCodeAndIdNot(String code, Long id);
 
     @Query("SELECT t.code FROM Task t WHERE t.code IN :codes")
-    List<String> findExistingCodes(@Param("codes") java.util.Collection<String> codes);
+    List<String> findExistingCodes(@Param("codes") Collection<String> codes);
+
+    @Query("SELECT t.id, t.code FROM Task t WHERE t.code IN :codes")
+    List<Object[]> findIdAndCodeByCodes(@Param("codes") Collection<String> codes);
 
     @Query("""
             SELECT COUNT(t) FROM Task t

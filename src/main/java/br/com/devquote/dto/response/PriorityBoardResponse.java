@@ -58,5 +58,7 @@ public class PriorityBoardResponse {
         private String type;
         private List<String> tags;
         private boolean existsInDevQuote;
+        /** Id interno da Task no DevQuote quando já cadastrada (casado por code = id do ClickUp); null caso contrário. */
+        private Long devQuoteTaskId;
     }
 }
