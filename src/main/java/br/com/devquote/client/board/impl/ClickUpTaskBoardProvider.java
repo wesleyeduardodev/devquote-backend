@@ -51,7 +51,7 @@ public class ClickUpTaskBoardProvider implements TaskBoardProvider {
 
     @Override
     public List<BoardTask> fetchPriorityTasks() {
-        return fetchPriorityTasks(BoardFilterMode.DEV_AND_ASSIGNEE);
+        return fetchPriorityTasks(BoardFilterMode.DEV_OR_ASSIGNEE);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ClickUpTaskBoardProvider implements TaskBoardProvider {
         if (!isConfigured()) {
             return Collections.emptyList();
         }
-        if (mode == null) mode = BoardFilterMode.DEV_AND_ASSIGNEE;
+        if (mode == null) mode = BoardFilterMode.DEV_OR_ASSIGNEE;
 
         long t0 = System.currentTimeMillis();
         String orderFieldId = config.getClickUpOrderFieldId();
@@ -89,9 +89,15 @@ public class ClickUpTaskBoardProvider implements TaskBoardProvider {
             log.info("[priority-board] sem userId de Responsável disponível — conjunto assignee vazio");
         }
 
-        // Combina conforme o modo (caixas exclusivas). Preserva a ordem de inserção da fonte.
+        // Combina conforme o modo. Preserva a ordem de inserção da fonte (dev primeiro).
         Map<String, Map<String, Object>> selected = new LinkedHashMap<>();
         switch (mode) {
+            case DEV_OR_ASSIGNEE:
+                selected.putAll(devTasks);
+                for (Map.Entry<String, Map<String, Object>> e : assigneeTasks.entrySet()) {
+                    selected.putIfAbsent(e.getKey(), e.getValue());
+                }
+                break;
             case DEV_NOT_ASSIGNEE:
                 for (Map.Entry<String, Map<String, Object>> e : devTasks.entrySet()) {
                     if (!assigneeTasks.containsKey(e.getKey())) selected.put(e.getKey(), e.getValue());

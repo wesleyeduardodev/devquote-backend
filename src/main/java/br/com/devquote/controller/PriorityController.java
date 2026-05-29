@@ -27,14 +27,14 @@ public class PriorityController {
     @GetMapping("/board")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PriorityBoardResponse> getBoard(
-            @RequestParam(name = "mode", defaultValue = "DEV_AND_ASSIGNEE") BoardFilterMode mode) {
+            @RequestParam(name = "mode", defaultValue = "DEV_OR_ASSIGNEE") BoardFilterMode mode) {
         return ResponseEntity.ok(priorityBoardService.getBoard(mode));
     }
 
     @PostMapping("/board/refresh")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PriorityBoardResponse> refresh(
-            @RequestParam(name = "mode", defaultValue = "DEV_AND_ASSIGNEE") BoardFilterMode mode) {
+            @RequestParam(name = "mode", defaultValue = "DEV_OR_ASSIGNEE") BoardFilterMode mode) {
         priorityBoardService.evict();
         return ResponseEntity.ok(priorityBoardService.getBoard(mode));
     }

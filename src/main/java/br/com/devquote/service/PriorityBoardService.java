@@ -8,9 +8,9 @@ public interface PriorityBoardService {
 
     PriorityBoardResponse getBoard(BoardFilterMode mode);
 
-    /** Compat: equivalente a getBoard(BoardFilterMode.DEV_AND_ASSIGNEE). */
+    /** Compat: equivalente a getBoard(BoardFilterMode.DEV_OR_ASSIGNEE). */
     default PriorityBoardResponse getBoard() {
-        return getBoard(BoardFilterMode.DEV_AND_ASSIGNEE);
+        return getBoard(BoardFilterMode.DEV_OR_ASSIGNEE);
     }
 
     /**
