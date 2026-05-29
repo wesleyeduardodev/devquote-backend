@@ -3,6 +3,7 @@ package br.com.devquote.client.board.impl;
 import br.com.devquote.client.board.BoardTask;
 import br.com.devquote.client.board.TaskBoardProvider;
 import br.com.devquote.client.clickup.ClickUpClient;
+import br.com.devquote.enums.BoardFilterMode;
 import br.com.devquote.helper.ClickUpParameterHelper;
 import br.com.devquote.helper.TaskBoardParameterHelper;
 import lombok.RequiredArgsConstructor;
@@ -50,72 +51,88 @@ public class ClickUpTaskBoardProvider implements TaskBoardProvider {
 
     @Override
     public List<BoardTask> fetchPriorityTasks() {
-        return fetchPriorityTasks(false);
+        return fetchPriorityTasks(BoardFilterMode.DEV_AND_ASSIGNEE);
     }
 
     @Override
-    public List<BoardTask> fetchPriorityTasks(boolean includeAssignee) {
+    public List<BoardTask> fetchPriorityTasks(BoardFilterMode mode) {
         if (!isConfigured()) {
             return Collections.emptyList();
         }
+        if (mode == null) mode = BoardFilterMode.DEV_AND_ASSIGNEE;
 
         long t0 = System.currentTimeMillis();
         String orderFieldId = config.getClickUpOrderFieldId();
         String listId = config.getClickUpListId();
 
-        // 1) Sempre busca pelo custom field Desenvolvedor (prioridade primária).
+        // Os 3 modos são uma partição por Desenvolvedor × Responsável, então preciso dos DOIS
+        // conjuntos pra calcular interseção/diferença. Mapas keyed by id do ClickUp.
         long tDev0 = System.currentTimeMillis();
-        List<Map<String, Object>> rawByDev = clickUpClient.getListTasksFiltered(
-                listId,
-                null,
-                config.getClickUpDeveloperFieldId(),
-                config.getClickUpDeveloperOptionId());
-        long tDev = System.currentTimeMillis() - tDev0;
-        log.info("[priority-board] Dev field trouxe {} tarefa(s) em {}ms", rawByDev.size(), tDev);
-
-        // 2) Se o caller pediu pra incluir Responsável e há userId, busca também e faz UNION dedup.
-        Map<String, Map<String, Object>> merged = new LinkedHashMap<>();
-        for (Map<String, Object> t : rawByDev) {
+        Map<String, Map<String, Object>> devTasks = new LinkedHashMap<>();
+        for (Map<String, Object> t : clickUpClient.getListTasksFiltered(
+                listId, null, config.getClickUpDeveloperFieldId(), config.getClickUpDeveloperOptionId())) {
             Object id = t.get("id");
-            if (id != null) merged.put(id.toString(), t);
+            if (id != null) devTasks.put(id.toString(), t);
         }
-        if (includeAssignee) {
-            // Prioridade: override no parâmetro CLICKUP_BOARD_ASSIGNEE_USER_ID.
-            // Fallback automático: user dono do token (descoberto via /api/v2/user).
-            String userId = config.getBoardAssigneeUserId();
-            String origem = "param";
-            if (userId == null || userId.trim().isEmpty()) {
-                Map<String, Object> currentUser = clickUpClient.getCurrentUser();
-                if (currentUser != null && currentUser.get("id") != null) {
-                    userId = currentUser.get("id").toString();
-                    origem = "auto-detect (token)";
-                }
+        log.info("[priority-board] Dev field trouxe {} tarefa(s) em {}ms", devTasks.size(), System.currentTimeMillis() - tDev0);
+
+        Map<String, Map<String, Object>> assigneeTasks = new LinkedHashMap<>();
+        String userId = resolveAssigneeUserId();
+        if (userId != null) {
+            long tAs0 = System.currentTimeMillis();
+            for (Map<String, Object> t : clickUpClient.getListTasksByAssignee(listId, null, userId)) {
+                Object id = t.get("id");
+                if (id != null) assigneeTasks.put(id.toString(), t);
             }
-            if (userId != null && !userId.trim().isEmpty()) {
-                long tAs0 = System.currentTimeMillis();
-                List<Map<String, Object>> rawByAssignee = clickUpClient.getListTasksByAssignee(
-                        listId, null, userId);
-                long tAs = System.currentTimeMillis() - tAs0;
-                int novosUnicos = 0;
-                for (Map<String, Object> t : rawByAssignee) {
-                    Object id = t.get("id");
-                    if (id == null) continue;
-                    if (merged.putIfAbsent(id.toString(), t) == null) novosUnicos++;
-                }
-                log.info("[priority-board] Assignee userId={} ({}) trouxe {} tarefa(s) em {}ms — {} novas após dedup",
-                        userId, origem, rawByAssignee.size(), tAs, novosUnicos);
-            } else {
-                log.info("[priority-board] includeAssignee=true mas sem userId disponível — pulando 2ª chamada");
-            }
+            log.info("[priority-board] Assignee userId={} trouxe {} tarefa(s) em {}ms", userId, assigneeTasks.size(), System.currentTimeMillis() - tAs0);
+        } else {
+            log.info("[priority-board] sem userId de Responsável disponível — conjunto assignee vazio");
         }
 
-        List<BoardTask> result = new ArrayList<>(merged.size());
-        for (Map<String, Object> t : merged.values()) {
+        // Combina conforme o modo (caixas exclusivas). Preserva a ordem de inserção da fonte.
+        Map<String, Map<String, Object>> selected = new LinkedHashMap<>();
+        switch (mode) {
+            case DEV_NOT_ASSIGNEE:
+                for (Map.Entry<String, Map<String, Object>> e : devTasks.entrySet()) {
+                    if (!assigneeTasks.containsKey(e.getKey())) selected.put(e.getKey(), e.getValue());
+                }
+                break;
+            case ASSIGNEE_NOT_DEV:
+                for (Map.Entry<String, Map<String, Object>> e : assigneeTasks.entrySet()) {
+                    if (!devTasks.containsKey(e.getKey())) selected.put(e.getKey(), e.getValue());
+                }
+                break;
+            case DEV_AND_ASSIGNEE:
+            default:
+                for (Map.Entry<String, Map<String, Object>> e : devTasks.entrySet()) {
+                    if (assigneeTasks.containsKey(e.getKey())) selected.put(e.getKey(), e.getValue());
+                }
+                break;
+        }
+
+        List<BoardTask> result = new ArrayList<>(selected.size());
+        for (Map<String, Object> t : selected.values()) {
             result.add(mapTask(t, orderFieldId));
         }
-        log.info("[priority-board] Total final: {} tarefa(s) únicas em {}ms (includeAssignee={})",
-                result.size(), System.currentTimeMillis() - t0, includeAssignee);
+        log.info("[priority-board] Total final: {} tarefa(s) em {}ms (mode={})",
+                result.size(), System.currentTimeMillis() - t0, mode);
         return result;
+    }
+
+    /**
+     * Resolve o userId do Responsável: override em CLICKUP_BOARD_ASSIGNEE_USER_ID;
+     * fallback automático no dono do token (via /api/v2/user). Null se indisponível.
+     */
+    private String resolveAssigneeUserId() {
+        String userId = config.getBoardAssigneeUserId();
+        if (userId != null && !userId.trim().isEmpty()) {
+            return userId;
+        }
+        Map<String, Object> currentUser = clickUpClient.getCurrentUser();
+        if (currentUser != null && currentUser.get("id") != null) {
+            return currentUser.get("id").toString();
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")

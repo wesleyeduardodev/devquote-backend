@@ -2,6 +2,7 @@ package br.com.devquote.controller;
 
 import br.com.devquote.dto.request.BoardPreferencesRequest;
 import br.com.devquote.dto.response.PriorityBoardResponse;
+import br.com.devquote.enums.BoardFilterMode;
 import br.com.devquote.service.PriorityBoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,16 +27,16 @@ public class PriorityController {
     @GetMapping("/board")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PriorityBoardResponse> getBoard(
-            @RequestParam(name = "includeAssignee", defaultValue = "true") boolean includeAssignee) {
-        return ResponseEntity.ok(priorityBoardService.getBoard(includeAssignee));
+            @RequestParam(name = "mode", defaultValue = "DEV_AND_ASSIGNEE") BoardFilterMode mode) {
+        return ResponseEntity.ok(priorityBoardService.getBoard(mode));
     }
 
     @PostMapping("/board/refresh")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PriorityBoardResponse> refresh(
-            @RequestParam(name = "includeAssignee", defaultValue = "true") boolean includeAssignee) {
+            @RequestParam(name = "mode", defaultValue = "DEV_AND_ASSIGNEE") BoardFilterMode mode) {
         priorityBoardService.evict();
-        return ResponseEntity.ok(priorityBoardService.getBoard(includeAssignee));
+        return ResponseEntity.ok(priorityBoardService.getBoard(mode));
     }
 
     /**

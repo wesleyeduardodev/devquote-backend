@@ -7,6 +7,7 @@ import br.com.devquote.dto.request.BoardPreferencesRequest;
 import br.com.devquote.dto.request.SystemParameterRequest;
 import br.com.devquote.dto.response.PriorityBoardResponse;
 import br.com.devquote.entity.SystemParameter;
+import br.com.devquote.enums.BoardFilterMode;
 import br.com.devquote.helper.TaskBoardParameterHelper;
 import br.com.devquote.repository.SystemParameterRepository;
 import br.com.devquote.repository.TaskRepository;
@@ -44,8 +45,8 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
     private final SystemParameterRepository systemParameterRepository;
 
     @Override
-    @Cacheable(value = "priorityBoard", key = "'board-' + #includeAssignee")
-    public PriorityBoardResponse getBoard(boolean includeAssignee) {
+    @Cacheable(value = "priorityBoard", key = "'board-' + #mode")
+    public PriorityBoardResponse getBoard(BoardFilterMode mode) {
         String fetchedAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
         Optional<TaskBoardProvider> active = providerFactory.getActiveProvider();
@@ -59,7 +60,7 @@ public class PriorityBoardServiceImpl implements PriorityBoardService {
         }
 
         TaskBoardProvider provider = active.get();
-        List<BoardTask> tasks = provider.fetchPriorityTasks(includeAssignee);
+        List<BoardTask> tasks = provider.fetchPriorityTasks(mode);
 
         // Quais códigos (id do ClickUp) já existem como Task no DevQuote — mapeia code -> id interno
         Map<String, Long> existingByCode = new HashMap<>();

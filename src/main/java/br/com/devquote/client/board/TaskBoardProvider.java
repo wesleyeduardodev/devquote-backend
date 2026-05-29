@@ -1,5 +1,7 @@
 package br.com.devquote.client.board;
 
+import br.com.devquote.enums.BoardFilterMode;
+
 import java.util.List;
 import java.util.Map;
 
@@ -19,15 +21,15 @@ public interface TaskBoardProvider {
     /** True se há config suficiente (token + ids) para consultar o board. */
     boolean isConfigured();
 
-    /** Busca as tarefas de prioridade do dono (custom field Desenvolvedor). */
+    /** Busca as tarefas de prioridade do dono no modo padrão (Desenvolvedor E Responsável). */
     List<BoardTask> fetchPriorityTasks();
 
     /**
-     * Busca as tarefas de prioridade do dono, opcionalmente incluindo tarefas
-     * onde o dono é o Responsável (assignee). Implementações que não conhecem
-     * o conceito de assignee podem ignorar o flag.
+     * Busca as tarefas do board conforme o {@link BoardFilterMode} (partição exclusiva
+     * por Desenvolvedor × Responsável). Implementações que não conhecem o conceito de
+     * assignee podem ignorar o modo e cair no comportamento padrão.
      */
-    default List<BoardTask> fetchPriorityTasks(boolean includeAssignee) {
+    default List<BoardTask> fetchPriorityTasks(BoardFilterMode mode) {
         return fetchPriorityTasks();
     }
 

@@ -2,14 +2,15 @@ package br.com.devquote.service;
 
 import br.com.devquote.dto.request.BoardPreferencesRequest;
 import br.com.devquote.dto.response.PriorityBoardResponse;
+import br.com.devquote.enums.BoardFilterMode;
 
 public interface PriorityBoardService {
 
-    PriorityBoardResponse getBoard(boolean includeAssignee);
+    PriorityBoardResponse getBoard(BoardFilterMode mode);
 
-    /** Compat: equivalente a getBoard(false). */
+    /** Compat: equivalente a getBoard(BoardFilterMode.DEV_AND_ASSIGNEE). */
     default PriorityBoardResponse getBoard() {
-        return getBoard(false);
+        return getBoard(BoardFilterMode.DEV_AND_ASSIGNEE);
     }
 
     /**
