@@ -320,6 +320,11 @@ public class ReportServiceImpl implements ReportService {
                         .quantidadeDesenvolvimento(0L)
                         .quantidadeNaoEspecificado(0L)
                         .total(0L)
+                        .valorProducao(BigDecimal.ZERO)
+                        .valorHomologacao(BigDecimal.ZERO)
+                        .valorDesenvolvimento(BigDecimal.ZERO)
+                        .valorNaoEspecificado(BigDecimal.ZERO)
+                        .valorTotal(BigDecimal.ZERO)
                         .build();
                 rowMap.put(tipoTarefaRaw, reportRow);
             }
@@ -367,11 +372,11 @@ public class ReportServiceImpl implements ReportService {
                         .quantidadeDesenvolvimento(0L)
                         .quantidadeNaoEspecificado(0L)
                         .total(0L)
-                        .valorProducao(java.math.BigDecimal.ZERO)
-                        .valorHomologacao(java.math.BigDecimal.ZERO)
-                        .valorDesenvolvimento(java.math.BigDecimal.ZERO)
-                        .valorNaoEspecificado(java.math.BigDecimal.ZERO)
-                        .valorTotal(java.math.BigDecimal.ZERO)
+                        .valorProducao(BigDecimal.ZERO)
+                        .valorHomologacao(BigDecimal.ZERO)
+                        .valorDesenvolvimento(BigDecimal.ZERO)
+                        .valorNaoEspecificado(BigDecimal.ZERO)
+                        .valorTotal(BigDecimal.ZERO)
                         .build();
                 rowMap.put(tipoTarefaRaw, reportRow);
             }
@@ -419,6 +424,11 @@ public class ReportServiceImpl implements ReportService {
                         .quantidadeDesenvolvimento(0L)
                         .quantidadeNaoEspecificado(0L)
                         .total(0L)
+                        .valorProducao(BigDecimal.ZERO)
+                        .valorHomologacao(BigDecimal.ZERO)
+                        .valorDesenvolvimento(BigDecimal.ZERO)
+                        .valorNaoEspecificado(BigDecimal.ZERO)
+                        .valorTotal(BigDecimal.ZERO)
                         .build();
                 developmentRowMap.put(tipoTarefaRaw, reportRow);
             }
@@ -466,11 +476,11 @@ public class ReportServiceImpl implements ReportService {
                         .quantidadeDesenvolvimento(0L)
                         .quantidadeNaoEspecificado(0L)
                         .total(0L)
-                        .valorProducao(java.math.BigDecimal.ZERO)
-                        .valorHomologacao(java.math.BigDecimal.ZERO)
-                        .valorDesenvolvimento(java.math.BigDecimal.ZERO)
-                        .valorNaoEspecificado(java.math.BigDecimal.ZERO)
-                        .valorTotal(java.math.BigDecimal.ZERO)
+                        .valorProducao(BigDecimal.ZERO)
+                        .valorHomologacao(BigDecimal.ZERO)
+                        .valorDesenvolvimento(BigDecimal.ZERO)
+                        .valorNaoEspecificado(BigDecimal.ZERO)
+                        .valorTotal(BigDecimal.ZERO)
                         .build();
                 developmentRowMap.put(tipoTarefaRaw, reportRow);
             }
