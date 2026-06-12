@@ -53,6 +53,11 @@ public class GitPullRequestSyncServiceImpl implements GitPullRequestSyncService 
             return;
         }
 
+        if (!parameterHelper.hasGitHubToken()) {
+            log.info("Integracao com Git habilitada mas token nao configurado. Pulando sincronizacao.");
+            return;
+        }
+
         List<DeliveryItem> eligibleItems = itemsSupplier.get();
         log.info("Encontrados {} itens elegiveis para verificacao", eligibleItems.size());
 

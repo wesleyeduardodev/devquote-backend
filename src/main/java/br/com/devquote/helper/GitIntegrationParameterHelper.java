@@ -17,6 +17,11 @@ public class GitIntegrationParameterHelper {
         return Boolean.TRUE.equals(integrationsProperties.getGithub().getEnabled());
     }
 
+    public boolean hasGitHubToken() {
+        String token = integrationsProperties.getGithub().getToken();
+        return token != null && !token.trim().isEmpty();
+    }
+
     public String getGitHubToken() {
         String token = integrationsProperties.getGithub().getToken();
         if (token == null || token.trim().isEmpty()) {
