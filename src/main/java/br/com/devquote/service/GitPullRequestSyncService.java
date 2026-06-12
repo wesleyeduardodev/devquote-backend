@@ -4,6 +4,8 @@ public interface GitPullRequestSyncService {
 
     void syncMergedPullRequests();
 
+    void syncMergedPullRequestsDevelopmentFlow();
+
     void syncMergedPullRequestsAsync();
 
     boolean checkAndUpdatePullRequestStatus(Long deliveryItemId);

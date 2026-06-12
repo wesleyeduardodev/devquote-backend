@@ -57,11 +57,16 @@ Sem profiles `dev/prod` separados. Tudo via env var com defaults para localhost.
 
 ## Jobs agendados (`@Scheduled`, fuso America/Sao_Paulo)
 
-Hoje **não há jobs agendados ativos**. Os antigos `GitPullRequestSyncJob` (6h) e `ClickUpSyncJob` (7h) foram removidos — sincronização passou a ser **só sob demanda, por entrega**, via UI da tela de Entregas (botões "Atualizar Branch" e "Atualizar Status" na coluna de ações, ou nas telas de Ver/Editar). Os endpoints manuais e em massa continuam disponíveis para chamada via API:
+**Job ativo:** `GitPullRequestSyncJob` (`job/GitPullRequestSyncJob.java`) roda **06:00 diário** (cron fixo em `application.yml` → `jobs.git-pr-sync.cron`). Chama `GitPullRequestSyncService.syncMergedPullRequestsDevelopmentFlow()`: varre **só itens de entrega do fluxo DESENVOLVIMENTO com PR preenchido** (`DeliveryItemRepository.findEligibleForGitSyncDevelopment()`), checa no GitHub se o PR foi mergeado e, se sim, marca o item como `PRODUCTION` + recalcula o status da entrega. **Escopo só local (git/PR) — NÃO empurra pro ClickUp** (diferente do botão "Atualizar Status", que faz git + clickup). Curto-circuita se `GITHUB_INTEGRATION_ENABLED=false` (no-op no dev local). O antigo `ClickUpSyncJob` (7h) segue removido — ClickUp é só sob demanda.
+
+O mesmo job pode ser disparado **manualmente** pelo botão **"Verificar PRs"** no header da tela de Entregas (`/deliveries`, ADMIN-only) → `POST /api/git-sync/sync/development`.
+
+A sincronização **por entrega** continua **sob demanda**, via UI da tela de Entregas (botões "Atualizar Branch" e "Atualizar Status" na coluna de ações, ou nas telas de Ver/Editar). Os endpoints manuais e em massa continuam disponíveis para chamada via API:
 
 | Operação | Endpoint |
 |---|---|
-| Sync PRs mergeados (em massa) | `POST /api/git-sync/sync` |
+| Verificar PRs mergeados — fluxo DESENVOLVIMENTO, git-only (= job diário) | `POST /api/git-sync/sync/development` |
+| Sync PRs mergeados (em massa) + ClickUp | `POST /api/git-sync/sync` |
 | Sync ClickUp status (em massa) | `POST /api/clickup-sync/sync` |
 | Sync ClickUp status de 1 entrega | `POST /api/clickup-sync/sync/{deliveryId}` |
 | Sync PRs/branch de 1 entrega | `POST /api/clickup-sync/deliveries/{deliveryId}/pull-requests` |

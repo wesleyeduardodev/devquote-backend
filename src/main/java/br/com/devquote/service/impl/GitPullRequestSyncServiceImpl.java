@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -33,20 +34,31 @@ public class GitPullRequestSyncServiceImpl implements GitPullRequestSyncService 
     @Override
     @Transactional
     public void syncMergedPullRequests() {
+        runSync("Sincronizacao PRs Git", deliveryItemRepository::findEligibleForGitSync);
+    }
+
+    @Override
+    @Transactional
+    public void syncMergedPullRequestsDevelopmentFlow() {
+        runSync("Sincronizacao PRs Git (fluxo DESENVOLVIMENTO)",
+                deliveryItemRepository::findEligibleForGitSyncDevelopment);
+    }
+
+    private void runSync(String label, Supplier<List<DeliveryItem>> itemsSupplier) {
         long startTime = System.currentTimeMillis();
-        log.info("=== INICIO: Sincronizacao PRs Git ===");
+        log.info("=== INICIO: {} ===", label);
 
         if (!parameterHelper.isIntegrationEnabled()) {
             log.info("Integracao com Git desabilitada. Pulando sincronizacao.");
             return;
         }
 
-        List<DeliveryItem> eligibleItems = deliveryItemRepository.findEligibleForGitSync();
+        List<DeliveryItem> eligibleItems = itemsSupplier.get();
         log.info("Encontrados {} itens elegiveis para verificacao", eligibleItems.size());
 
         if (eligibleItems.isEmpty()) {
             log.info("Nenhum item elegivel para sincronizacao");
-            log.info("=== FIM: Sincronizacao PRs Git | Nenhum item para processar ===");
+            log.info("=== FIM: {} | Nenhum item para processar ===", label);
             return;
         }
 
@@ -94,8 +106,8 @@ public class GitPullRequestSyncServiceImpl implements GitPullRequestSyncService 
         }
 
         long duration = System.currentTimeMillis() - startTime;
-        log.info("=== FIM: Sincronizacao PRs Git | Atualizados: {}, Erros: {}, Pulados: {}, Total: {} ({}ms) ===",
-                updatedCount.get(), errorCount.get(), skippedCount.get(), eligibleItems.size(), duration);
+        log.info("=== FIM: {} | Atualizados: {}, Erros: {}, Pulados: {}, Total: {} ({}ms) ===",
+                label, updatedCount.get(), errorCount.get(), skippedCount.get(), eligibleItems.size(), duration);
     }
 
     @Override

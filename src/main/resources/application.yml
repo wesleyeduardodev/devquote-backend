@@ -98,6 +98,12 @@ integrations:
     enabled: ${CLICKUP_INTEGRATION_ENABLED:false}
     token: ${CLICKUP_TOKEN:}
 
+jobs:
+  # Job diario que marca itens de entrega (fluxo DESENVOLVIMENTO) como PRODUCTION
+  # quando o PR e detectado como mergeado. 06:00 America/Sao_Paulo.
+  git-pr-sync:
+    cron: "0 0 6 * * *"
+
 management:
   endpoints:
     web:

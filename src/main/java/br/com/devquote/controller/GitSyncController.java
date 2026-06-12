@@ -55,6 +55,37 @@ public class GitSyncController implements GitSyncControllerDoc {
         }
     }
 
+    @PostMapping("/sync/development")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Override
+    public ResponseEntity<Map<String, Object>> syncMergedDevelopmentPullRequests() {
+        log.info("Sincronizacao manual de PRs (fluxo DESENVOLVIMENTO) iniciada via API");
+
+        long startTime = System.currentTimeMillis();
+
+        try {
+            gitPullRequestSyncService.syncMergedPullRequestsDevelopmentFlow();
+
+            long duration = System.currentTimeMillis() - startTime;
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Verificacao de PRs mergeados (Desenvolvimento) executada com sucesso");
+            response.put("durationMs", duration);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Erro na sincronizacao manual de PRs (Desenvolvimento): {}", e.getMessage(), e);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Erro na sincronizacao: " + e.getMessage());
+
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
     @PostMapping("/check/{deliveryItemId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Override

@@ -21,6 +21,15 @@ public interface GitSyncControllerDoc {
     })
     ResponseEntity<Map<String, Object>> syncMergedPullRequests();
 
+    @Operation(summary = "Executar verificacao de PRs mergeados (fluxo DESENVOLVIMENTO)",
+            description = "Mesma rotina do job diario: verifica os DeliveryItems de entregas do fluxo DESENVOLVIMENTO com PR pendente e marca como PRODUCTION os que foram mergeados, recalculando o status da entrega. Nao sincroniza com o ClickUp.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Verificacao executada com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Usuario nao autenticado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
+    })
+    ResponseEntity<Map<String, Object>> syncMergedDevelopmentPullRequests();
+
     @Operation(summary = "Verificar status de PR de um DeliveryItem especifico",
             description = "Verifica se o PR de um DeliveryItem foi mergeado e atualiza o status se necessario")
     @ApiResponses({
