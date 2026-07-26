@@ -8,6 +8,7 @@ import br.com.devquote.enums.FlowType;
 import br.com.devquote.repository.BillingPeriodRepository;
 import br.com.devquote.repository.BillingPeriodTaskRepository;
 import br.com.devquote.service.BillingPeriodService;
+import br.com.devquote.service.BillingNoteService;
 import br.com.devquote.service.BillingPeriodAttachmentService;
 import br.com.devquote.service.EmailService;
 import br.com.devquote.service.storage.FileStorageStrategy;
@@ -40,6 +41,7 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     private final ExcelReportUtils excelReportUtils;
     private final EmailService emailService;
     private final BillingPeriodAttachmentService billingPeriodAttachmentService;
+    private final BillingNoteService billingNoteService;
     private final FileStorageStrategy fileStorageStrategy;
 
     @Override
@@ -181,6 +183,14 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
         }
         
         try {
+            billingNoteService.deleteAllByBillingPeriod(id);
+            log.debug("Deleted all billing notes for billing period ID: {}", id);
+        } catch (Exception e) {
+            log.error("CRITICAL: Failed to delete billing notes for period {}: {}", id, e.getMessage());
+            throw e;
+        }
+
+        try {
             billingPeriodTaskRepository.deleteByBillingPeriodId(id);
             log.debug("Deleted all BillingPeriodTask records for billing period ID: {}", id);
         } catch (Exception e) {
@@ -196,6 +206,9 @@ public class BillingPeriodServiceImpl implements BillingPeriodService {
     public void deleteBulk(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return;
+        }
+        for (Long id : ids) {
+            billingNoteService.deleteAllByBillingPeriod(id);
         }
         billingPeriodRepository.deleteAllById(ids);
     }

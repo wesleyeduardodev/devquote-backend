@@ -109,6 +109,7 @@ public class InlineImageServiceImpl implements InlineImageService {
             case DELIVERY_DEVELOPMENT_ITEM -> String.format("deliveries/%d/development-items/%d/inline-images/%s", parentId, entityId, fileName);
             case DELIVERY_OPERATIONAL_ITEM -> String.format("deliveries/%d/operational-items/%d/inline-images/%s", parentId, entityId, fileName);
             case BILLING_PERIOD -> String.format("billing-periods/%d/inline-images/%s", entityId, fileName);
+            case BILLING_NOTE -> String.format("billing-notes/%d/inline-images/%s", entityId, fileName);
         };
     }
 
