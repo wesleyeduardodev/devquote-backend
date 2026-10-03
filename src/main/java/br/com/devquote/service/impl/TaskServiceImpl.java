@@ -152,18 +152,7 @@ public class TaskServiceImpl implements TaskService {
 
         FlowType flowType = FlowType.fromString(dto.getFlowType());
 
-        if (flowType == FlowType.OPERACIONAL) {
-            String generatedCode = generateRandomCode();
-            dto.setCode(generatedCode);
-            log.debug("Generated code for OPERACIONAL task: {}", generatedCode);
-        } else {
-            if (dto.getCode() == null || dto.getCode().trim().isEmpty()) {
-                throw new BusinessException("Código é obrigatório para tarefas de desenvolvimento", "CODE_REQUIRED");
-            }
-            if (taskRepository.existsByCode(dto.getCode())) {
-                throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
-            }
-        }
+        dto.setCode(resolveCodeOnCreate(flowType, dto.getCode()));
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitante", dto.getRequesterId()));
@@ -304,18 +293,7 @@ public class TaskServiceImpl implements TaskService {
 
         FlowType flowType = FlowType.fromString(dto.getFlowType());
 
-        if (flowType == FlowType.OPERACIONAL) {
-            String generatedCode = generateRandomCode();
-            dto.setCode(generatedCode);
-            log.debug("Generated code for OPERACIONAL task: {}", generatedCode);
-        } else {
-            if (dto.getCode() == null || dto.getCode().trim().isEmpty()) {
-                throw new BusinessException("Código é obrigatório para tarefas de desenvolvimento", "CODE_REQUIRED");
-            }
-            if (taskRepository.existsByCode(dto.getCode())) {
-                throw new BusinessException("Já existe uma tarefa com o código '" + dto.getCode() + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
-            }
-        }
+        dto.setCode(resolveCodeOnCreate(flowType, dto.getCode()));
 
         Requester requester = requesterRepository.findById(dto.getRequesterId())
                 .orElseThrow(() -> new RuntimeException("Requester not found"));
@@ -1182,6 +1160,26 @@ public class TaskServiceImpl implements TaskService {
 
         task.setTaskEmailSent(true);
         taskRepository.save(task);
+    }
+
+    /**
+     * Código informado é sempre respeitado (e precisa ser único). Vazio só é aceito em OPERACIONAL,
+     * que então recebe um código aleatório.
+     */
+    private String resolveCodeOnCreate(FlowType flowType, String code) {
+        String trimmed = code == null ? "" : code.trim();
+        if (trimmed.isEmpty()) {
+            if (flowType != FlowType.OPERACIONAL) {
+                throw new BusinessException("Código é obrigatório para tarefas de desenvolvimento", "CODE_REQUIRED");
+            }
+            String generatedCode = generateRandomCode();
+            log.debug("Generated code for OPERACIONAL task: {}", generatedCode);
+            return generatedCode;
+        }
+        if (taskRepository.existsByCode(trimmed)) {
+            throw new BusinessException("Já existe uma tarefa com o código '" + trimmed + "'. Por favor, use um código diferente.", "DUPLICATE_TASK_CODE");
+        }
+        return trimmed;
     }
 
     private String generateRandomCode() {
